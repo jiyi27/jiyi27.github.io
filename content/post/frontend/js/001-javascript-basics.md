@@ -10,11 +10,11 @@ tags:
 
 ## 1. Javascript objects
 
-在其他语言, 如C++,Java, 对象是一个类的实例(instance), 对象必须由对应类的constructor生成. 
+在其他语言, 如C++, Java, 对象是一个类的实例(instance), 对象必须由对应类的constructor生成. 
 
 可是在JS里面, 类的概念变得模糊了, 我很少用到 `new`, 但又有人说 “JavaScript is designed on a simple object-based paradigm”, I‘m confused now. 
 
-什么是variable, type, type 和 object 的关系是什么? 什么又是value? 我尝试在迷惑中找出答案:
+什么是 variable, type, type 和 object 的关系是什么? 什么又是value? 我尝试在迷惑中找出答案:
 
 > Javascript is dynamic language, which means values have types, not variables. 
 >
