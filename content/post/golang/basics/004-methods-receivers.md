@@ -11,63 +11,24 @@ tags:
 
 ## 1. Different behaviors - pointer and value receiver
 
-There are two reasons to use a pointer receiver:
+**修改能力**:
 
-- The first is so that the method can modify **the value** that its receiver points to.
+值接收器：方法内部操作的是结构体的副本，无法修改原始数据
 
-- The second is to avoid copying **the value** on each method call. This can be more efficient if the receiver is a large struct, for example.
+指针接收器：方法可以直接修改原始结构体的数据
 
-> "the value" above refers to an object of the struct, but there is no object in golang, we call all of them **value**. 
+**内存效率**: 
 
-I'll explain it to you the different behaviors between pointer receiver and value receiver first, see the code below:
-
-```go 
-type Person struct {
-	name string
+```golang
+type BigStruct struct {
+    data [1024]int  // 很大的数组
 }
 
-func (p Person) foo() *Person {
-	// As in all languages in the C family, everything in Go is passed by value.
-	// 'p' here, is a copy of 'coco'
-	return &p
-}
+// 值接收器：每次调用都会复制整个结构体
+func (b BigStruct) Process() { }
 
-func (p Person) setName(name string) {
-  // 'p' here, is a copy of 'coco'
-	p.name = name
-}
-
-func (p Person) getName() string {
-	return p.name
-}
-
-func main() {
-	coco := Person{name: "Coco"}
-	coco.setName("Bella")
-	fmt.Println(coco.getName()) // print: Coco
-}
-```
-
-As you can see here, value receiver method will make a copy of that "object". There is no object in golang, using term "object" here is for easy understanding. This is that if you want to avoid copying the value of the struct **on each method call**, try to use a pointer receiver. And if you want modify the value's fields, try to use a pointer receiver. 
-
-I find a snippet in go source code, e.g.,
-
-```go
-type Handler interface {
-	ServeHTTP(ResponseWriter, *Request)
-}
-
-type HandlerFunc func(ResponseWriter, *Request)
-
-// 1. We don't need to modify any fileds of the value of HandlerFunc, just a function
-// 2. There is no a lot copies, when we call this method, just a copy of function type, 
-// small as a pointer so choosing a value receiver probably more appropriate here
-// or thinking in this way probably better
-// I know what I do, this is a function type, it has no filed
-// no concurrency issues we mentioned above
-func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
-	f(w, r)
-}
+// 指针接收器：只复制指针（8字节）
+func (b *BigStruct) ProcessEfficient() { }
 ```
 
 > **NOTE:** Generally, in practice, we seldom use pointer types whose base types are slice types, map types, channel types, function types, string types and interface types. The costs of copying values of these assumed base types are very small. 
