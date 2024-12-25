@@ -35,7 +35,57 @@ func (b *BigStruct) ProcessEfficient() { }
 >
 > Source: https://go101.org/article/value-copy-cost.html
 
-## 2. Method receivers in concurrency
+**表达意图:**
+
+使用指针接收器更清晰地表达这是一个有状态的对象, 不需要拷贝值, 而是所有方法都访问相同的一个值. 
+
+## 2. 例子
+
+有如下接口, 
+
+```go
+type UserRepository interface {
+	Create(user *types.User) error
+	GetByID(id string) (*types.User, error)
+}
+```
+
+即所有实现该接口的类型都可以, 比如指针:
+
+```go
+type PostgresUserRepository struct {
+	pool *pgxpool.Pool
+}
+
+func NewPostgresUserRepository(pool *pgxpool.Pool) repos.UserRepository {
+	return &PostgresUserRepository{pool: pool}
+}
+
+func (s *PostgresUserRepository) Create(user *types.User) error {
+	return nil
+}
+
+func (s *PostgresUserRepository) GetByID(id string) (*types.User, error) {
+	return nil, nil
+}
+```
+
+也就是说 `*PostgresUserRepository` 实现了 `UserRepository`, 因此 可以有如下代码:
+
+```go
+type UserHandler struct {
+	userRepo UserRepository
+}
+
+func NewUserHandler(us repos.UserRepository) *UserHandler {
+	return &UserHandler{userRepo: us}
+}
+
+repo := &PostgresUserRepository{} // 指针
+svc := NewUserHandler(repo)       // repo 是接口类型, 指针 *PostgresUserRepository 实现了该接口
+```
+
+## 3. Method receivers in concurrency
 
 I came across a satement about when to use value receiver but forget where I found:
 
@@ -85,4 +135,6 @@ func (s Stats) Sum() int {
 A similar pitfall can occur with types that maintain slices of values, and of course there is the possibility for an [unintended data race](http://dave.cheney.net/2015/11/18/wednesday-pop-quiz-spot-the-race).
 
 In short, I think that you should prefer declaring methods on `*T` unless you have a strong reason to do otherwise.
+
+
 
