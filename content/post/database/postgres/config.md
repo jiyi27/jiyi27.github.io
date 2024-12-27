@@ -6,12 +6,14 @@ tags:
  - postgres
 ---
 
-Mac
+安装
 
 ```bash
 $ brew install postgresql@15
 $ brew services start postgresql@15
 ```
+
+创建
 
 ```postgresql
 -- 创建用户
@@ -28,6 +30,8 @@ CREATE DATABASE skymates;
 GRANT ALL PRIVILEGES ON DATABASE skymates TO admin;
 ```
 
+登录
+
 ```postgresql
 $ psql -U admin -d skymates
 psql (15.10 (Homebrew))
@@ -43,6 +47,8 @@ skymates=>
 > 所以当你输入 `psql postgres`, 默认用户是 `david`, 数据库就是你指定的  `postgres`, 所在的 schema 默认是 `public`
 
 -----
+
+常用命令
 
 ```postgresql
 -- 查看当前用户
