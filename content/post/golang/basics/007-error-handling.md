@@ -8,6 +8,146 @@ tags:
  - golang
 ---
 
+## 0. Use `%w` instead of `%v` or `%s`
+
+> Should I use %s or %v to format errors? `return fmt.Errorf("malformed import path %q: %v", path, err)`
+>
+> Neither. Use `%w` in 99.99% of cases. In the other 0.001% of cases, `%v` and `%s`probably "should" behave the same, except when the error value is `nil`, but there are no guarantees. The friendlier output of `%v` for `nil` errors may be reason to prefer `%v` (see below). 
+>
+> As of Go 1.13, you can use the `%w` verb, only for `error` values, which wraps the error such that it can later be unwrapped with [`errors.Unwrap`](https://golang.org/pkg/errors/#Unwrap), and so that it can be considered with [`errors.Is`](https://golang.org/pkg/errors/#Is) and [`errors.As`](https://golang.org/pkg/errors/#As).
+>
+> [Stackoverflow](https://stackoverflow.com/a/61287626/16317008)
+
+```go
+type ErrorKind int
+
+const (
+    KindDatabase ErrorKind = iota
+    KindNotFound
+    //KindValidation
+    //KindUnauthorized
+)
+
+type ServerError struct {
+    Kind    ErrorKind
+    Message string
+    Err     error
+}
+
+// *ServerError implements error interface
+func (e *ServerError) Error() string {
+    if e.Err != nil {
+       return fmt.Sprintf("%s: %v", e.Message, e.Err)
+    }
+    return e.Message
+}
+
+// 这里添加 Is() 方法是为了 自定义 通过 errors.Is(err, target error) 比较错误时的比较逻辑
+// 可以看到函数体中 我们先把 target 转为 *ServerError 再进行判断
+// 这是因为 target 类型是 error 接口, 无法访问 Kind field 
+// 可是为什么我们的 Is() 函数的参数是 error 类型, 而不能是 *ServerError 类型呢?
+// 还记得前面我们说的为什么要定义这个函数吗, 为了使用 errors.Is() 来比较两个我们的自定义错误是不是同一个 ErrorKind
+// 你不知道的是 errors.Is() 内部会尝试调用两个参数的 Is() 方法 来判断两个 error 是否相等, 
+// 若我们的 Is() 方法的参数是 *ServerError 类型, 则会导致调用失败,
+// 因为 errors.Is(err, target error) 中的 err 和 target 都是 error 类型, 而不是 *ServerError 类型
+func (e *ServerError) Is(target error) bool {
+    // 将 target (interface) 转换为 *ServerError 类型, 并将结果存储在 t 中
+    var t *ServerError
+    ok := errors.As(target, &t)
+
+    if !ok {
+       return false
+    }
+    return e.Kind == t.Kind
+}
+
+func NewDatabaseError(msg string, err error) *ServerError {
+    return &ServerError{
+       Kind:    KindDatabase,
+       Message: msg,
+       Err:     err,
+    }
+}
+
+func NewNotFoundError(msg string, err error) *ServerError {
+    return &ServerError{
+       Kind:    KindNotFound,
+       Message: msg,
+       Err:     err,
+    }
+}
+```
+
+```go
+func main() {
+    // 创建两个基础错误
+    baseErr1 := NewDatabaseError("connection failed", nil)
+    baseErr2 := NewDatabaseError("query failed", nil)
+    // 它们的 Kind 相同，但 Message 不同
+
+    // 1. 直接比较
+    fmt.Println(errors.Is(baseErr1, baseErr2)) // true
+    // 为什么是 true？因为我们的 Is() 方法只比较 Kind 字段
+    
+    // 2. 使用 %w 包装
+    wrap1 := fmt.Errorf("operation failed: %w", baseErr1)
+    fmt.Println(errors.Is(wrap1, baseErr2)) // true
+    // 为什么是 true？因为：
+    // - %w 保持了错误链，errors.Is 可以通过 Unwrap 找到 baseErr1
+    // - 然后调用 baseErr1.Is(baseErr2)
+    // - 发现两者的 Kind 都是 KindDatabase，返回 true
+
+    // 3. 使用 %v 包装
+    wrap2 := fmt.Errorf("operation failed: %v", baseErr1)
+    fmt.Println(errors.Is(wrap2, baseErr2)) // false
+    // 为什么是 false？因为：
+    // - %v 只是创建了一个新的字符串错误，切断了错误链
+    // - wrap2 变成了一个普通的 error，没有 Unwrap 方法
+    // - errors.Is 无法找到原始的 baseErr1
+    // - 所以无法调用 baseErr1.Is(baseErr2)
+    
+    // 4. 验证错误种类
+    dbErr := NewDatabaseError("some error", nil)
+    notFoundErr := NewNotFoundError("not found", nil)
+    fmt.Println(errors.Is(dbErr, notFoundErr)) // false
+    // 为什么是 false？因为：
+    // - dbErr.Is(notFoundErr) 比较了两者的 Kind
+    // - 一个是 KindDatabase，一个是 KindNotFound，不相等
+    
+    // 5. 错误链示例
+    origErr := errors.New("原始错误")
+    serverErr := NewDatabaseError("db error", origErr) // origErr 存储在 Err 字段
+    wrapServerErr := fmt.Errorf("wrap: %w", serverErr)
+    
+    fmt.Printf("serverErr: %v\n", serverErr)      // 输出: db error: 原始错误
+    fmt.Printf("wrapServerErr: %v\n", wrapServerErr) // 输出: wrap: db error: 原始错误
+}
+```
+
+`errors.Is(err, target error)` 的工作流程：
+
+- 先尝试 Unwrap 找到原始错误
+- 然后调用其参数 `err ` 和 `target` 各自的 Is() 方法进行比较
+- 如果找不到原始错误（比如用 %v 包装），就无法进行比较
+
+这也是为什么例子 `1.` 会返回 true, 也是为什么我们要自定义 `Is()` 函数 
+
+关键点解释：
+
+1. `*ServerError` 的 `Is()` 方法的参数为什么是 `error` 而不是 `*ServerError`：
+   - `errors.Is(err, target error)` 会尝试在这两个参数上调用 `Is` 方法
+   - 如果我们的 `Is` 方法参数是 `*ServerError`，那么当 `target` 是普通的 `error` 时，就无法调用这个方法
+   - 所以参数必须是 `error` 接口类型，然后在方法内部用 `errors.As` 转换为具体类型
+
+2. `%w` vs `%v` 的区别：
+   - `%w` 维持错误链，让 `errors.Is` 能够找到并使用原始错误的比较逻辑
+   - `%v` 创建新的错误，切断错误链，使得无法使用原始错误的比较逻辑
+
+3. `ServerError` 的 `Is` 方法实现：
+   - 只比较 `Kind` 字段，忽略 `Message` 和 `Err` 字段
+   - 使得同类型的错误（比如所有数据库错误）可以被认为是相等的
+   - 这种设计允许我们基于错误类型而不是具体消息来处理错误
+
 ## 1.`error` interface
 
 The `error` type is an interface type. An `error` variable represents any value that **can** describe itself as a string.
