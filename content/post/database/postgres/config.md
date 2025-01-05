@@ -13,44 +13,61 @@ $ brew install postgresql@15
 $ brew services start postgresql@15
 ```
 
-创建
-
-```postgresql
--- 创建用户
-CREATE ROLE admin WITH 
-    LOGIN 
-    PASSWORD '778899' 
-    CREATEDB     -- 添加创建数据库的权限
-    CREATEROLE;  -- 添加创建角色的权限
-
--- 创建新的数据库 skymates
-CREATE DATABASE skymates;
-
--- 授予用户 admin 在 skymates 数据库上的权限
-GRANT ALL PRIVILEGES ON DATABASE skymates TO admin;
-```
-
 登录
 
-```postgresql
-$ psql -U admin -d skymates
+```bash
+$ psql postgres
 psql (15.10 (Homebrew))
 Type "help" for help.
 
-skymates=>
+postgres=# SELECT current_user;
+ current_user
+--------------
+ david
+(1 row)
+
+postgres=# ALTER USER current_user WITH PASSWORD '778899';
+ALTER ROLE
+
+postgres=# \c skymates ;
+You are now connected to database "skymates" as user "david"
+
+skymates=# \d users
+                                  Table "public.users"
+     Column      |           Type           | Collation | Nullable |      Default
+-----------------+--------------------------+-----------+----------+--------------------
+ id              | uuid                     |           | not null | uuid_generate_v4()
+ username        | character varying(50)    |           | not null |
+ hashed_password | character varying(100)   |           | not null |
+ email           | character varying(255)   |           | not null |
+ avatar_url      | text                     |           |          |
+ created_at      | timestamp with time zone |           |          | CURRENT_TIMESTAMP
+ updated_at      | timestamp with time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+    "users_email_key" UNIQUE CONSTRAINT, btree (email)
+    "users_username_key" UNIQUE CONSTRAINT, btree (username)
+Triggers:
+    handle_users_update BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION triggers.handle_record_update()
 ```
 
-> PostgreSQL 安装后会自动创建一个名为 `postgres` 的数据库, 所以 `psql postgres` 的意思是连接到 `postgres` 数据库 
+>PostgreSQL 安装后会自动创建一个名为 `postgres` 的数据库, 所以 `psql postgres` 的意思是连接到 `postgres` 数据库 
 >
-> 默认情况下, PostgreSQL 使用当前系统用户的名称作为数据库用户名, 如果你的系统登录用户名是 david，PostgreSQL 会假定你也有一个名为 david 的数据库用户，并尝试以这个用户登录
+>默认情况下, PostgreSQL 使用当前系统用户的名称作为数据库用户名, 且不需要密码, 你可以给他添加一个密码, 之后登录`psql -U david -d your-database`
 >
-> 所以当你输入 `psql postgres`, 默认用户是 `david`, 数据库就是你指定的  `postgres`, 所在的 schema 默认是 `public`
+>所以当你输入 `psql postgres`, 默认用户是 `david`, 数据库就是你指定的  `postgres`, 所在的 schema 默认是 `public`
 
 -----
 
 常用命令
 
 ```postgresql
+\l          	  -- 列出所有数据库
+\du             -- 列出所有用户
+\dt             -- 列出当前数据库的所有表
+\d table_name   -- 显示表结构
+
+
 -- 查看当前用户
 SELECT current_user;
 -- 切换用户
@@ -62,13 +79,6 @@ CREATE DATABASE mydb;
 SELECT current_database();
 -- 切换数据库
 \c database_name
-
--- 其他实用命令:
-\l          -- 列出所有数据库
-\du         -- 列出所有用户
-\dt         -- 列出当前数据库的所有表
-\d table_name   -- 显示表结构
-
 ```
 
 `\d` 是一个通用的描述命令，它的行为会根据后面的参数有所不同：
