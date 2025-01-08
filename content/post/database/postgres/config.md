@@ -195,6 +195,7 @@ CREATE TABLE terms (
     term VARCHAR(100) NOT NULL UNIQUE,  -- UNIQUE 会自动创建唯一索引
     text_explanation TEXT,
     video_url VARCHAR(500),
+    source VARCHAR(200),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
