@@ -194,8 +194,8 @@ CREATE TABLE terms (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     term VARCHAR(100) NOT NULL UNIQUE,  -- UNIQUE 会自动创建唯一索引
     text_explanation TEXT,
-    video_url VARCHAR(500),
     source VARCHAR(200),
+    video_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -240,6 +240,10 @@ skymates=# \d
 \d+ terms
 \d+ term_categories
 \d+ term_category_relations
+
+\d terms
+\d term_categories
+\d term_category_relations
 ```
 
 解释:
