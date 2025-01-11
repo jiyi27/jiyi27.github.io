@@ -192,7 +192,7 @@ CREATE TABLE term_categories (
 -- 专业术语表
 CREATE TABLE terms (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    term VARCHAR(100) NOT NULL UNIQUE,  -- UNIQUE 会自动创建唯一索引
+    name VARCHAR(100) NOT NULL UNIQUE,  -- UNIQUE 会自动创建唯一索引
     text_explanation TEXT,
     source VARCHAR(200),
     video_url VARCHAR(500),
