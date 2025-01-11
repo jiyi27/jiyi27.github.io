@@ -58,6 +58,25 @@ interface RefObject<T> {
 
 看到了吧, `<HTMLElement | null>` 指的是 其属性 `current` 的类型, 
 
+----
+
+用户余额是个比较常访问的信息, 我们把它放到 session 中, 因为频繁从数据库查询数据会浪费时间, 可是每次我们修改内存中的 session, 就会造成与数据库数据不一致, 所以我想的是每次 session 过期, 通过 channel 传给用户, 以便 session 数据可以在被删除前写入数据库信息, 可是为这种情况写个 单独 gc 合适并不合适, 
+
+```go
+// 更好的方法, 写时同步更新
+type Session struct {
+    values map[string]interface{}
+    onUpdate func(key string, value interface{})
+}
+
+func (s *Session) Set(key string, value interface{}) {
+    s.values[key] = value
+    if s.onUpdate != nil {
+        // 异步更新数据库
+        go s.onUpdate(key, value)
+    }
+}
+```
 
 
- 
+
