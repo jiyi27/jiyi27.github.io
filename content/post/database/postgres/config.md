@@ -178,15 +178,25 @@ CREATE TRIGGER handle_users_update
 创建术语相关表:
 
 ```postgresql
+-- 先删除触发器
+DROP TRIGGER IF EXISTS handle_terms_update ON terms;
+
+-- 删除现有表（注意删除顺序，因为有外键关系）
+DROP TABLE IF EXISTS term_category_relations;
+DROP TABLE IF EXISTS terms;
+DROP TABLE IF EXISTS term_categories;
+
 -- 上面已经启用 UUID 扩展, 这里不用执行
 -- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 术语类别表
+-- timestamp 不存储时区信息
+-- timestamptz 在内部统一使用 UTC 存储，显示时会根据连接的时区自动转换
 CREATE TABLE term_categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(50) NOT NULL UNIQUE,
     parent_id UUID DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 专业术语表
@@ -196,15 +206,15 @@ CREATE TABLE terms (
     text_explanation TEXT,
     source VARCHAR(200),
     video_url VARCHAR(500),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 术语-类别关系表
 CREATE TABLE term_category_relations (
     term_id UUID NOT NULL,
     category_id UUID NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (term_id, category_id),
     FOREIGN KEY (term_id) REFERENCES terms(id),
     FOREIGN KEY (category_id) REFERENCES term_categories(id)
@@ -218,6 +228,7 @@ CREATE TRIGGER handle_terms_update
 
 -- 因为 UNIQUE 会自动创建唯一索引, 我们不用单独为 terms 表在 term 列创建 index
 -- CREATE INDEX idx_terms_term ON terms(term);
+
 -- 只用为 term_category_relations 创建组合索引
 CREATE INDEX idx_term_category_relations_category_term 
     ON term_category_relations(category_id, term_id);
