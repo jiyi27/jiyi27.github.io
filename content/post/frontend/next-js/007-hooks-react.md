@@ -13,30 +13,30 @@ tags:
 
 ## useCallback & useMemo
 
-React.memo 缓存了整个组件 (拿缓存换效率), 让一个组件只有在 props 改变的时候才会被重新渲染, 
+当一个组件被渲染, 它的所有子组件都会被重新渲染, 即使子组件没有任何变化, 若渲染子组件的代价很大, 父组件的频繁渲染则会导致效率问题, 我们可以 React.memo() 用来缓存整个组件, 让组件只有在其 props 改变的时候才会被重新渲染, 
 
-函数或变量都可以当作 props 传递给子组件, 因此若父组件重新渲染, 那么函数和变量其实也是重新定义的, 即使他们的定义或者数值没有改变, 这又回导致子组件被重新渲染 , 即使我们使用了 React.memo
+当 props 为变量的时候还好, React.memo 会比较 props 的值, 看有没有变化, 进而判断子组件是不是应该被重新渲染, 我们知道函数或变量都可以当作 props 传递给子组件, 若父组件重新渲染, 那么函数也是重新定义的, 也就是说函数也就变了(函数是对象, 对象被重新创建, 地址会变), 这会导致子组件被重新渲染 , 即使我们使用了 React.memo(). 
 
-这时候就需要 useCallback 和 useMemo 上场了, 
+这时候就需要 useCallback 和 useMemo 上场了, 我们可以使用 useCallback 或 useMemo 包装一下作为 props 传递给子组件的函数或变量, 这样即使父组件重新渲染, 他们也不会被重新创建, 进而子组件也不会因为 props 的 “改变”, 而重新渲染, 因为他们的值被缓存了, 也就是说我们拿空间 内存 和额外的比较逻辑 (判断 props 是否改变 ) 来减少子组件重新渲染的次数, 因此, 若子组件逻辑很简单, 不要使用这种优化, 因为可能会适得其反, 
 
 ```ts
-const cachedFunction = useCallback(fn, dependencies)
-const cachedVariable = useCallback(fn, dependencies)
+function useCallback<T extends (...args: any[]) => any>(
+  callback: T,
+  dependencies: DependencyList
+): T
+function useMemo<T>(
+  factory: () => T,
+  dependencies: DependencyList
+): T
 ```
-
-- useCallback包裹的**函数**, 相当于对函数做了缓存, 当父组件重新渲染时, 函数不会重新定义即 props 不会改变 ==>子组件不会重新渲染
-
-- useMemo包裹的**变量**, 相当于对变量做了缓存, 当父组件重新渲染时, 变量不会改变即 props 不会改变 ==》子组件不会重渲染
-
-useCallback 和 useMemo 参数相同, 第一个参数是函数, 第二个参数是依赖项的数组
 
 useMemo, useCallback 都是使参数（函数）不会因为其他不相关的参数变化而重新渲染, 主要区别是 React.useMemo 将调用 fn 函数并返回其结果, 而 React.useCallback 只是返回 fn 函数而不调用它
 
-useMemo、useCallback 与 useEffect 类似, [] 内可以放入你改变数值就重新渲染参数（函数）的对象, 如果 [] 为空就是只渲染一次，之后都不会渲染
+- `useCallback` 接收一个函数并返回这个函数的缓存版本
 
-> useCallback不能滥用, 否则只会消耗性能, 利用闭包缓存上次结果, 成本为额外的缓存, 与比较逻辑, 不是绝对的优化, 而是一种成本的交换，并非使用所有场景
+- `useMemo` 接收一个工厂函数（factory function）并返回这个函数运行的结果
 
-参考: https://juejin.cn/post/6997231767077781540
+> useCallback 和 useMemo 不能滥用, 否则只会消耗性能, 利用闭包缓存上次结果, 成本为额外的缓存, 与比较逻辑, 不是绝对的优化, 而是一种成本的交换，并非使用所有场景
 
 ## Custom hooks
 
