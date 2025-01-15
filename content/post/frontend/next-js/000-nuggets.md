@@ -78,5 +78,88 @@ func (s *Session) Set(key string, value interface{}) {
 }
 ```
 
+----
+
+```ts
+export async function fetchApi<T>(
+    endpoint: string,
+    options: RequestInit = {}
+): Promise<Response<T>> {
+    // as const 将对象的所有属性设为只读
+    const defaultHeaders = {
+        'Content-Type': 'application/json',
+    } as const;
+
+    // 最好不要直接修改 options 对象, 而是创建一个新的对象
+    // 这样可以避免副作用 (没有修改传进来的参数), 使函数更容易测试和调试
+    const mergedOptions: RequestInit = {
+        ...options,
+        headers: {
+            ...defaultHeaders,
+            ...options.headers,
+        },
+    };
+  
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+    // 使用类型断言(type assertion), 更好的进行类型推断
+    // Type assertion as ApiResponse<T> provides compile-time type checking.
+    const data = await response.json() as ApiResponse<T>;
+  
+    return {
+        ...data,
+        statusCode: response.status,
+    };
+}
+```
+
+------
+
+可选定义真的是搞的头大, 我们来看一下:
+
+```ts
+interface User {
+    name?: string;   // name 是可选的
+    age: number;     // age 是必需的
+}
+
+// 1. 创建对象 - 正确的方式
+const user1: User = {
+    age: 25          // ✅ 正确，name 是可选的可以不传
+};
+
+const user2: User = {
+    name: 'Tom',     // ✅ 正确，提供了可选的 name
+    age: 25
+};
+
+const user3: User = {
+    name: undefined, // ✅ 正确，显式设置为 undefined
+    age: 25
+};
+
+// 2. 访问字段
+function processUser(user: User) {
+    // 访问必需字段 age - 直接访问
+    console.log(user.age);  // ✅ 安全，因为 age 一定存在
+
+    // 访问可选字段 name - 需要安全访问
+    console.log(user.name?.toUpperCase());  // ✅ 安全，如果 name 不存在返回 undefined
+    
+    // 使用默认值
+    const displayName = user.name ?? '匿名用户';
+    
+    // if 判断
+    if (user.name) {
+        console.log(user.name.toUpperCase());  // 在这个块中 name 一定存在
+    }
+}
+
+// 3. 解构赋值
+function printUser(user: User) {
+    const { name, age } = user;
+    console.log(name ?? '匿名', age);  // age 直接使用，name 需要考虑默认值
+}
+```
+
 
 
