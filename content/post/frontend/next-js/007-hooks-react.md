@@ -79,3 +79,76 @@ function useFetch(url) {
 }
 ```
 
+## useRef 
+
+useRef 是 React 提供的一个 Hook，主要用于两个场景：
+
+1. 获取 DOM 元素的引用
+2. useRef 的第二个常见用途是"在多次渲染之间保持数据" : useRef 返回的对象是在首次渲染时创建, 后续渲染时返回的是同一个对象引用 
+
+```ts
+// 1. 基础用法 - 获取 DOM 元素
+import { useRef, useEffect } from 'react';
+
+function TextInputWithFocus() {
+  // 明确指定 ref 的类型为 HTMLInputElement
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  useEffect(() => {
+    // 组件挂载后自动聚焦输入框
+    // 因为初始值是 null，所以需要判空
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  return <input ref={inputRef} type="text" />;
+}
+```
+
+防抖（避免频繁操作）
+
+```ts
+function SearchInput() {
+  const timeoutRef = useRef<NodeJS.Timeout>();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 清除之前的定时器
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // 设置新的定时器
+    timeoutRef.current = setTimeout(() => {
+      console.log('搜索:', e.target.value);
+    }, 500);
+  };
+
+  return <input onChange={handleChange} placeholder="输入搜索内容" />;
+}
+```
+
+控制视频播放
+
+```ts
+function VideoPlayer() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const handlePlay = () => {
+    videoRef.current?.play();
+  };
+
+  const handlePause = () => {
+    videoRef.current?.pause();
+  };
+
+  return (
+    <div>
+      <video ref={videoRef} src="..." />
+      <button onClick={handlePlay}>播放</button>
+      <button onClick={handlePause}>暂停</button>
+    </div>
+  );
+}
+```
+
