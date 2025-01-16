@@ -114,6 +114,14 @@ fetch('https://api.example.com/not-exist')
 	.catch(error => console.log('会捕获：网络错误、HTTP 错误状态、JSON 解析错误等'));
 ```
 
+> Fetch API: how to determine if an error is a network error
+>
+> When using `fetch`, you can't differentiate network errors from other errors caused by building an incorrect request, as both are thrown as `TypeError`. (See https://developer.mozilla.org/en-US/docs/Web/API/fetch#exceptions). (即不止网络错误为 TypeError, 还有其他错误都会出发 TypeError, 所以不能仅凭 TypeError 判断是否为网络错误.) 
+>
+> This is quite a flaw, as application defects that cause an incorrectly built request may go unnoticed, masked as if they were circumstantial network errors.
+>
+> https://stackoverflow.com/a/70103102/16317008
+
 ------
 
 可选定义真的是搞的头大, 我们来看一下:
