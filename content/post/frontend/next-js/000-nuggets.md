@@ -80,36 +80,38 @@ func (s *Session) Set(key string, value interface{}) {
 
 ----
 
-```ts
-export async function fetchApi<T>(
-    endpoint: string,
-    options: RequestInit = {}
-): Promise<Response<T>> {
-    // as const 将对象的所有属性设为只读
-    const defaultHeaders = {
-        'Content-Type': 'application/json',
-    } as const;
+> A `fetch()` promise **only rejects** when the request fails, for example, because of a badly-formed request URL or a network error. A `fetch()` promise *does not* reject if the server responds with HTTP status codes that indicate errors (`404`, `504`, etc.). https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch
 
-    // 最好不要直接修改 options 对象, 而是创建一个新的对象
-    // 这样可以避免副作用 (没有修改传进来的参数), 使函数更容易测试和调试
-    const mergedOptions: RequestInit = {
-        ...options,
-        headers: {
-            ...defaultHeaders,
-            ...options.headers,
-        },
-    };
-  
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-    // 使用类型断言(type assertion), 更好的进行类型推断
-    // Type assertion as ApiResponse<T> provides compile-time type checking.
-    const data = await response.json() as ApiResponse<T>;
-  
-    return {
-        ...data,
-        statusCode: response.status,
-    };
-}
+在 JavaScript 中，Promise（承诺）有三种状态：
+
+1. pending（等待中）- 初始状态
+2. fulfilled（已完成）- 操作成功完成
+3. rejected（已拒绝）- 操作失败
+
+`fetch()` 返回的 Promise 只会在以下情况下变成 rejected（拒绝）状态：
+
+- 网络错误, 比如无法连接服务器
+- URL 格式错误, 比如 URL 语法不正确
+
+HTTP 错误状态（比如 404 或 500）不会导致 fetch reject, 服务器返回错误响应也不会导致 fetch reject
+
+```js
+// 这个请求会 reject，因为 URL 格式错误
+fetch('not-a-valid-url')
+  .then(response => console.log('这里不会执行'))
+  .catch(error => console.log('会执行这里，因为 URL 无效'));
+
+// 这个请求不会 reject，即使返回 404
+fetch('https://api.example.com/not-exist')
+  .then(response => {
+    // 这里会执行！即使是 404 错误
+    // 需要手动检查 response.ok 或 response.status
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
+	.catch(error => console.log('会捕获：网络错误、HTTP 错误状态、JSON 解析错误等'));
 ```
 
 ------
