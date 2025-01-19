@@ -27,5 +27,5 @@ sudo systemctl start sshd
 service sshd status
 ```
 
-注意上面我们检查ssh服务是否打开输入的是 `service sshd status`, 并不是上面的`ssh status`, 在我的服务器上输入`ssh status`会显示`Unit ssh.service could not be found.`所以根据实际情况而定. 
+
 

@@ -16,7 +16,7 @@ Then I think maybe there is a "bad" process which takes a lot of cpu usages make
 
 ```shell 
 $ top
-60841 asterisk -11   0 1025372 325376   9300 R  99.9  32.9 980:16.51 asterisk                                 
+60841 asterisk -11   0 1025372 325376   9300 R  99.9  32.9 980:16.51 asterisk
 ```
 
 The asterisk which takes up 99.9% of my cup!!!

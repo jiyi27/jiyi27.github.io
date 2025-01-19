@@ -16,7 +16,7 @@ Go creates **static binaries** by default unless you use cgo to call C code, in 
 
 standard packages `os/user` and `net`  use cgo, so importing either (directly or indirectly) will result in a dynamic binary. 
 
-> Note that `net` use cgo does't mean that all its implementation is cgo, cgo is just used for Name Resolution and some teivial features. https://pkg.go.dev/net#section-documentation
+> Note that `net` use cgo does't mean that all the codes in `net` are cgo, cgo is just used for Name Resolution(resolving domain names) and some teivial features in `net`. https://pkg.go.dev/net#section-documentation
 
 I do this test on my Ubuntu server firstly without cgo:
 
