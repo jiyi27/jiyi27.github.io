@@ -62,7 +62,7 @@ def index():
 
 ## 2. session
 
-> Session和Cookie的目的相同, 都是为了弥补HTTP协议无状态的缺陷, Session和Cookie都是用来保存客户端状态信息的手段, 不同之处在于Cookie是存储在客户端浏览器方便客户端请求时使用, Session是存储在服务端用于存储客户端连接状态信息的, 从存储的数据类型来看, Cookie仅支持存储字符串, Session可支持多种数据类型 [source](https://studygolang.com/articles/34361)
+> Session 和 Cookie 的目的相同, 都是为了弥补 HTTP 协议无状态的缺陷, Session 和 Cookie 都是用来保存客户端状态信息的手段, 不同之处在于 Cookie 是存储在客户端浏览器方便客户端请求时使用, Session 是存储在服务端用于存储客户端连接状态信息的, 从存储的数据类型来看, Cookie仅支持存储字符串, Session可支持多种数据类型 [source](https://studygolang.com/articles/34361)
 
 http 是无状态的, 即下一次请求无法得知上一次请求所包含的状态数据, 所以产生了 cookie, 使服务器可以“记住”客户端, 大致逻辑为:
 
