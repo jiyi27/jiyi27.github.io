@@ -222,13 +222,13 @@ cut: 选择内容后 按 x
 
 ### Prettier - Code formatter
 
-搜索: Change Tab Display Size, 设置 Prettier Tab Size 4 
+搜索设置 Prettier Tab Width 4
 
 > 设置不对的话, 因为 tab size 不匹配, rainbow indent 可能回标红缩进: https://stackoverflow.com/q/70231635/16317008
 
 ### Indent-Rainbow extension
 
-搜索: Change Tab Display Size, 设置 Tab Size: 2
+搜索: Change Tab Display Size, 设置 Tab Size: 4
 
 显示竖线而不是彩虹杠:
 
@@ -265,7 +265,11 @@ You can also toggle the indentation dots in case they went away
 "editor.renderWhitespace": "all",
 ```
 
-以上设置均可以通过 vscode 设置搜索找到, 
+以上设置均可以通过 vscode 设置搜索找到, 最后 settings.json 的最后部分设置如下:
+
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/e7a93ffc132d014abe2ecddfe0606ce8.jpg)
+
+
 
 来源: https://www.reddit.com/r/vscode/comments/11ohhiu/comment/jbt00qa/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button
 
