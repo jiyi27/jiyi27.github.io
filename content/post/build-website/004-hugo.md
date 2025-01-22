@@ -10,6 +10,7 @@ tags:
 ## 1. Recover
 
 ```shell
+$ brew install hugo
 $ hugo new site blogs && cd blogs
 ```
 
