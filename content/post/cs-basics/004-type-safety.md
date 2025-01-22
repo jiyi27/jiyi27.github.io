@@ -1,10 +1,11 @@
 ---
-title: Type Safety from Why Rusy - Jim Blandy
+title: Rust 引发的类型安全的思考
 date: 2023-08-05 18:32:53
 categories:
-  - cs basics
+  - 计算机基础
 tags:
-  - cs basics
+  - rust
+  - 类型安全
 ---
 
 关于 type safety, 一直没有一个确切的定义, 每个语言的作者对 type safety 可能有不同的理解, 我比较喜欢的是维基百科对 type safety 的定义, 即 type safety 阻止或者使 type errors 不容易发生, 而什么是 type errors 在下面这段话里也给出了定义: 

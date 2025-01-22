@@ -2,11 +2,9 @@
 title: HTTPS SSL TLS 
 date: 2023-10-07 08:30:26
 categories:
-  - cs basics
+  - http
 tags:
-  - cryptography
-  - build website
-  - cs basics
+  - https
   - http
 ---
 
@@ -32,7 +30,7 @@ HTTPS, HTTP, and TLS are all protocols. HTTPS utilizes the encryption and digita
 
 ## 3. The process of establishing a HTTPS connection
 
-When we click a link on our browser will send a or multiple http requets to the target server, then the server will responds us with html file or some images or other resources. But transfer data there are other things needed to do under the hood:
+When we click a link on our browser will send a or multiple http requets to the target server, then the server will respond us with html file or some images or other resources. But transfer data there are other things needed to do under the hood:
 
 - A tcp connection needed to be established (envolves three way handshake). 
 - Make a [TLS handshake](https://www.cloudflare.com/learning/ssl/what-happens-in-a-tls-handshake/)
@@ -98,5 +96,4 @@ References:
 
 - [Does an established HTTPS connection mean a line is really secure? - Information Security Stack Exchange](https://security.stackexchange.com/questions/5/does-an-established-https-connection-mean-a-line-is-really-secure)
 - [php - POST data encryption - Is HTTPS enough? - Stack Overflow](https://stackoverflow.com/questions/5309997/post-data-encryption-is-https-enough)
-
 

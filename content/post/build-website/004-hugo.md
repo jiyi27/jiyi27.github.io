@@ -11,7 +11,7 @@ tags:
 
 ```shell
 $ brew install hugo
-$ hugo new site blogs && cd blogs
+$ hugo new site blog && cd blog
 ```
 
 ## 2. Deploy to Github Pages

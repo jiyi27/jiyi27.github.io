@@ -1,11 +1,11 @@
 ---
-title: 说说编码 - encoding
+title: 说说编码 (顺带说说 Python 字符串的编码)
 date: 2023-06-01 22:13:25 
 categories:
-  - cs basics
+  - 计算机基础
 tags:
   - python
-  - cs basics
+  - 编码
 ---
 
 编码问题很常见, 有时候读文件打开是乱码, 有的语言说自己字符串采用unicode表示字符, 可又来utf-8编码, 这都是什么? 

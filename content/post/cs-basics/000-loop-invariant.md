@@ -2,7 +2,7 @@
 title: Loop Invariant
 date: 2024-01-19 20:32:25 
 categories:
-  - cs basics
+  - 计算机基础
 tags:
   - cs basics
 ---
