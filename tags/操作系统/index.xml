@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>操作系统 on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/</link>
+    <description>Recent content in 操作系统 on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Wed, 22 Jan 2025 14:58:10 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>虚拟内存  - 八股文</title>
+      <link>https://blog.jiyi27.com/posts/interview/001-virtual-memory/</link>
+      <pubDate>Wed, 22 Jan 2025 14:58:10 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/001-virtual-memory/</guid>
+      <description></description>
+      <content>&lt;h2 id=&#34;1-virtual-memory&#34;&gt;1. Virtual Memory&lt;/h2&gt;
+&lt;p&gt;Virtual memory is a memory management technique that gives applications the impression that they have contiguous working memory (a continuous and complete address space), even though physical memory may be fragmented and some data may be temporarily stored on external disk storage, being swapped between them as needed.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;A memory management unit (MMU) is &lt;strong&gt;a computer hardware unit&lt;/strong&gt; that examines all memory references on the memory bus, translating these requests, known as virtual memory addresses, into physical addresses in main memory. &lt;a href=&#34;https://en.wikipedia.org/wiki/Memory_management_unit&#34;&gt;Memory management unit&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-risc&#34; data-lang=&#34;risc&#34;&gt;ld r1, 400(r2)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This instruction means to load data into register r1 from the address calculated by adding an offset of 400 to the content of register r2.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Calculate the Virtual Address:
+&lt;ul&gt;
+&lt;li&gt;Assume the register r2 currently holds the virtual address 0x1000 (4096 in decimal).&lt;/li&gt;
+&lt;li&gt;The offset 400 (0x190) is added to the content of r2.&lt;/li&gt;
+&lt;li&gt;Therefore, the calculated virtual address is 0x1000 + 0x190 = 0x1190 (virtual address).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Virtual to Physical Address Translation:
+&lt;ul&gt;
+&lt;li&gt;The MMU receives the virtual address 0x1190 and begins to look up the page table for the current process.&lt;/li&gt;
+&lt;li&gt;Suppose the page table entry shows that this virtual address maps to the physical address 0x5000.&lt;/li&gt;
+&lt;li&gt;The page offset (offset within the page) remains 0x190.&lt;/li&gt;
+&lt;li&gt;Thus, the complete physical address is 0x5000 + 0x190 = 0x5190.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Access Physical Memory and Execute Instruction:
+&lt;ul&gt;
+&lt;li&gt;Once the physical address is determined, the MMU instructs the system to load data from physical address 0x5190.&lt;/li&gt;
+&lt;li&gt;The data is loaded into register r1.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;2-how-does-virtual-memory-work&#34;&gt;2. How Does Virtual Memory Work&lt;/h2&gt;
+&lt;p&gt;RISC is a type of microprocessor design. Both MIPS and ARM are types of RISC architectures. MIPS gives each program its own 32-bit address space. Programs can only access any byte in their own address space.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;What if we don&amp;rsquo;t have enough memory?&lt;/li&gt;
+&lt;li&gt;Holes in our address space?&lt;/li&gt;
+&lt;li&gt;Keeping programs secure with virtual memory.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.youtube.com/watch?v=59rEMnKWoS4&amp;amp;list=PLiwt1iVUib9s2Uo5BeYmwkDFUh70fJPxX&amp;amp;index=4&#34;&gt;Virtual Memory: 4 How Does Virtual Memory Work?&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-how-does-a-game-that-is-several-hundred-gigabytes-run-on-a-computer-with-only-a-few-gigabytes-of-memory&#34;&gt;3. How does a game that is several hundred gigabytes run on a computer with only a few gigabytes of memory?&lt;/h2&gt;
+&lt;p&gt;It&amp;rsquo;s Not All Loaded at Once:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Games, even huge ones, don&amp;rsquo;t need all their data in memory at the same time. Think of a vast open-world game: you only need the data for the area immediately around your character.&lt;/li&gt;
+&lt;li&gt;The game constantly loads and unloads data as you move through the world. This is called &lt;strong&gt;streaming&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;The operating system (OS) swaps data between your RAM and your storage drive (HDD or SSD). This means less frequently used game data sits on the drive until needed.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;4-segment-fault&#34;&gt;4. Segment Fault&lt;/h2&gt;
+&lt;p&gt;A segmentation fault is a specific type of error that occurs when a program tries to access a segment of memory that it doesn’t have the permissions to access or that doesn’t exist, leading to the program’s abrupt termination by the operating system.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.percona.com/blog/segmentation-fault-a-dba-perspective/&#34;&gt;Understanding Segmentation Fault: What it is &amp;amp; How to Fix it&lt;/a&gt;&lt;/p&gt;</content>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Index and Primary Key :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Index concepts Learn more: https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html
+2. When will index be created Primary Key: By default, when you define a primary key constraint on a column or set of columns using the PRIMARY KEY keyword, MySQL automatically creates an index on that column(s).
+# index will created on user_id column create table `user` ( `user_id` smallint not null auto_increment, `username` varchar(20) not null, `password` varchar(20) not null, primary key (`user_id`) ); Unique Constraints: When you define a unique constraint on a column or set of columns using the UNIQUE keyword, MySQL automatically creates an index to enforce uniqueness.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/database/mysql/002-index-primary-key/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.583a79711b9ad488dc8a0d22d8a60c8e1ec10f9deefb1196750cd21c2290036c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.00125962708925857e7b66dbc58391d55be1191a3d0ce2034de8c9cd2c481c36.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.fe8dc560fccb53a458b0db19ccb7b265764ac46b68596b7e099c6793054dd457.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.fc74ca360273c1d828da3c02b8174eba435607b369d98418ccc6f2243cd4e75d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.9023bbc24533d09e97a51a0a42a5a7bfe4c591ae167c5551fb1d2191d11977c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/syntax.min.cc789ed9377260d7949ea4c18781fc58959a89287210fe4edbff44ebfc1511b6.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terminal.min.a3ace6ba3a41dfe0ace0ea00529938ba5be6061e185b7fa3575c19201bbdaac7.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Index and Primary Key">
+<meta property="og:description" content="1. Index concepts Learn more: https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html
+2. When will index be created Primary Key: By default, when you define a primary key constraint on a column or set of columns using the PRIMARY KEY keyword, MySQL automatically creates an index on that column(s).
+# index will created on user_id column create table `user` ( `user_id` smallint not null auto_increment, `username` varchar(20) not null, `password` varchar(20) not null, primary key (`user_id`) ); Unique Constraints: When you define a unique constraint on a column or set of columns using the UNIQUE keyword, MySQL automatically creates an index to enforce uniqueness.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/database/mysql/002-index-primary-key/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="database" />
+
+
+  <meta property="article:published_time" content="2023-10-03 12:06:36 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    为霜的博客
+  </div>
+</a>
+
+    </div>
+    
+      <ul class="menu menu--mobile">
+  <li class="menu__trigger">Menu&nbsp;▾</li>
+  <li>
+    <ul class="menu__dropdown">
+      
+        
+          <li><a href="/showcase">Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories">文章分类</a></li>
+        
+      
+      
+    </ul>
+  </li>
+</ul>
+
+    
+    
+  </div>
+  
+    <nav class="navigation-menu">
+  <ul class="navigation-menu__inner menu--desktop">
+    
+      
+        
+          <li><a href="/showcase" >Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories" >文章分类</a></li>
+        
+      
+      
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/database/mysql/002-index-primary-key/">Index and Primary Key</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-10-03</time><span class="post-reading-time">10 分钟阅读 (1970 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/database/">database</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/mysql/">mysql</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-index-concepts">1. Index concepts<a href="#1-index-concepts" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Learn more: <a href="https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html">https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html</a></p>
+<h2 id="2-when-will-index-be-created">2. When will index be created<a href="#2-when-will-index-be-created" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>Primary Key:</strong> By default, when you define a primary key constraint on a column or set of columns using the PRIMARY KEY keyword, MySQL automatically creates an index on that column(s).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#f92672">#</span> <span style="color:#66d9ef">index</span> will created <span style="color:#66d9ef">on</span> user_id <span style="color:#66d9ef">column</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">create</span> <span style="color:#66d9ef">table</span> <span style="color:#f92672">`</span><span style="color:#66d9ef">user</span><span style="color:#f92672">`</span> (
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>user_id<span style="color:#f92672">`</span> smallint <span style="color:#66d9ef">not</span> <span style="color:#66d9ef">null</span> auto_increment,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>username<span style="color:#f92672">`</span> varchar(<span style="color:#ae81ff">20</span>) <span style="color:#66d9ef">not</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>password<span style="color:#f92672">`</span> varchar(<span style="color:#ae81ff">20</span>) <span style="color:#66d9ef">not</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">primary</span> <span style="color:#66d9ef">key</span> (<span style="color:#f92672">`</span>user_id<span style="color:#f92672">`</span>)
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><p><strong>Unique Constraints:</strong> When you define a unique constraint on a column or set of columns using the UNIQUE keyword, MySQL automatically creates an index to enforce uniqueness.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#f92672">#</span> <span style="color:#66d9ef">index</span> will be created <span style="color:#66d9ef">on</span> username <span style="color:#66d9ef">column</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">create</span> <span style="color:#66d9ef">table</span> <span style="color:#f92672">`</span><span style="color:#66d9ef">user</span><span style="color:#f92672">`</span> (
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>user_id<span style="color:#f92672">`</span> smallint <span style="color:#66d9ef">not</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>username<span style="color:#f92672">`</span> varchar(<span style="color:#ae81ff">20</span>) <span style="color:#66d9ef">not</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>password<span style="color:#f92672">`</span> varchar(<span style="color:#ae81ff">20</span>) <span style="color:#66d9ef">not</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">unique</span> (<span style="color:#f92672">`</span>username<span style="color:#f92672">`</span>)
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span><span style="color:#f92672">#</span> there will be two indexes
+</span></span><span style="display:flex;"><span><span style="color:#f92672">#</span> <span style="color:#66d9ef">index</span> will be created <span style="color:#66d9ef">on</span> <span style="color:#66d9ef">both</span> user_id <span style="color:#66d9ef">and</span> username <span style="color:#66d9ef">column</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">create</span> <span style="color:#66d9ef">table</span> <span style="color:#f92672">`</span><span style="color:#66d9ef">user</span><span style="color:#f92672">`</span> (
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>user_id<span style="color:#f92672">`</span> smallint <span style="color:#66d9ef">not</span> <span style="color:#66d9ef">null</span> auto_increment,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>username<span style="color:#f92672">`</span> varchar(<span style="color:#ae81ff">20</span>) <span style="color:#66d9ef">not</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>password<span style="color:#f92672">`</span> varchar(<span style="color:#ae81ff">20</span>) <span style="color:#66d9ef">not</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">primary</span> <span style="color:#66d9ef">key</span> (<span style="color:#f92672">`</span>user_id<span style="color:#f92672">`</span>),
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">unique</span> (<span style="color:#f92672">`</span>username<span style="color:#f92672">`</span>)
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><h2 id="3-why-use-index">3. Why use index<a href="#3-why-use-index" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Indexes are used to find rows with specific column values quickly. Without an index, MySQL must begin with the first row and then read through the entire table to find the relevant rows. The larger the table, the more this costs. If the table has an index for the columns in question, MySQL can quickly determine the position to seek to in the middle of the data file without having to look at all the data. This is much faster than reading every row sequentially.</p>
+<p>Most MySQL indexes (<code>PRIMARY KEY</code>, <code>UNIQUE</code>, <code>INDEX</code>, and <code>FULLTEXT</code>) are stored in <a href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_b_tree">B-trees</a>. Exceptions: Indexes on spatial data types use R-trees; <code>MEMORY</code> tables also support <a href="https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_hash_index">hash indexes</a>; <code>InnoDB</code> uses inverted lists for <code>FULLTEXT</code> indexes.</p>
+<p>The best way to improve the performance of <a href="https://dev.mysql.com/doc/refman/8.0/en/select.html"><code>SELECT</code></a> operations is to create indexes on one or more of the columns that are tested in the query. <strong>The index entries act like pointers to the table rows</strong>, allowing the query to quickly determine which rows match a condition in the <code>WHERE</code> clause, and retrieve the other column values for those rows. All MySQL data types can be indexed.</p>
+<blockquote>
+<p>Although it can be tempting to create an indexes for every possible column used in a query, unnecessary indexes waste space and waste time for MySQL to determine which indexes to use. Indexes also add to the cost of inserts, updates, and deletes because each index must be updated. You must find the right balance to achieve fast queries using the optimal set of indexes.</p>
+</blockquote>
+<p>Source: <a href="https://dev.mysql.com/doc/refman/8.0/en/optimization-indexes.html">MySQL :: MySQL 8.0 Reference Manual :: 8.3 Optimization and Indexes</a></p>
+<p>Learn when index will be used in MySQL operations: <a href="https://dev.mysql.com/doc/refman/8.0/en/mysql-indexes.html">https://dev.mysql.com/doc/refman/8.0/en/mysql-indexes.html</a></p>
+<h2 id="4-table-types">4. Table types<a href="#4-table-types" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><code>MyISAM</code> and <code>InnoDB</code> are two different storage engines in MySQL, each with its own characteristics and features.</p>
+<h3 id="41-innodb-tables">4.1. InnoDB tables<a href="#41-innodb-tables" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>InnoDB tables provide B-tree indexes. The indexes provide no packing or prefix compression. In addition, InnoDB also requires a primary key for each table. As with BDB, though, if you don’t provide a primary key, MySQL will supply a 64-bit value for you.</p>
+<p>The indexes are stored in the InnoDB tablespace, just like the data and data dictionary (table definitions, etc.). Furthermore, <code>InnoDB</code> uses clustered indexes. That is, the <strong>primary key’s value directly affects the physical location of the row</strong> as well as its corresponding index node. Because of this, lookups based on primary key in InnoDB are very fast. Once the index node is found, the relevant records are likely to already be cached in InnoDB’s buffer pool.</p>
+<blockquote>
+<p>With <em>clustered indexes</em>, the primary key and the record itself are “clustered” together, and the records are all stored in primary-key order. InnoDB table uses clustered indexes.</p>
+</blockquote>
+<h3 id="42-myisam-tables">4.2. MyISAM tables<a href="#42-myisam-tables" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>MySQL’s default table type provides B-tree indexes, and as of Version 4.1.0, it provides R-tree indexes for spatial data.</p>
+<p>With MyISAM tables, the indexes are kept in a completely separate file that contains a list of primary (and possibly secondary) keys and a value that represents the byte offset for the record. These ensure MySQL can find and then quickly skip to that point within the database to locate the record. MySQL has to store the indexes this way because <strong>the records are stored in essentially random order</strong>.</p>
+<blockquote>
+<p>Note that the difference between MyISAM table and InnoDB table is that the records are stored in random order, another tables&rsquo;s record stored according to clustered indexe (primary key).</p>
+<p>With a standard MyISAM table index, there are two lookups, one to the index, and a second to the table itself via the location specified in the index. With clustered indexes in InnoDB table, there’s a single lookup that points directly to the record in question. Therefore, when your data is almost always searched on via its primary key, clustered indexes can make lookups incredibly fast.</p>
+</blockquote>
+<h2 id="5-clustered-vs-secondary-indexes">5. Clustered vs secondary indexes<a href="#5-clustered-vs-secondary-indexes" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Each <code>InnoDB</code> table has a special index called the <strong>clustered index</strong> that stores row data. Typically, the clustered index is synonymous with the primary key. To get the best performance from queries, inserts, and other database operations, it is important to understand how <code>InnoDB</code> uses the clustered index to optimize the common lookup and DML operations.</p>
+<ul>
+<li>When you define a <code>PRIMARY KEY</code> on a table, <code>InnoDB</code> uses it as the clustered index. A primary key should be defined for each table. If there is no logical unique and non-null column or set of columns to use a the primary key, add an auto-increment column. Auto-increment column values are unique and are added automatically as new rows are inserted.</li>
+<li>If you do not define a <code>PRIMARY KEY</code> for a table, <code>InnoDB</code> uses the first <code>UNIQUE</code> index with all key columns defined as <code>NOT NULL</code> as the clustered index.</li>
+<li>If a table has no <code>PRIMARY KEY</code> or suitable <code>UNIQUE</code> index, <code>InnoDB</code> generates a hidden clustered index named <code>GEN_CLUST_INDEX</code> on a synthetic column that contains row ID values. The rows are ordered by the row ID that <code>InnoDB</code> assigns. The row ID is a 6-byte field that increases monotonically as new rows are inserted. Thus, the rows ordered by the row ID are physically in order of insertion.</li>
+</ul>
+<p>Source: <a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-index-types.html">https://dev.mysql.com/doc/refman/8.0/en/innodb-index-types.html</a></p>
+<p><strong>Secondary indexes</strong> point to the primary key rather than the row. Therefore, if you index on a very large value and have several secondary indexes, you will end up with many duplicate copies of that primary index, first as the clustered index stored alongside the records themselves, but then again for as many times as you have secondary indexes pointing to those clustered indexes. With a small value as the primary key, this may not be so bad, but if you are using something potentially long, such as a URL, this repeated storage of the primary key on disk may cause storage issues.</p>
+<p>Some operations render clustered indexes less effective. For instance, consider when a secondary index is in use. Going back to our phone book example, suppose you have <code>last_name</code> set as the primary index and <code>phone_number</code> set as a secondary index, and you perform the following query:</p>
+<pre tabindex="0"><code>SELECT * FROM phone_book WHERE phone_number = &#39;555-7271&#39;
+</code></pre><p>MySQL scans the <code>phone_number</code> index to find the entry for <code>555-7271</code>, which contains the primary key entry <code>Zawodny</code> because <code>phone_book</code>’s primary index is the last name. MySQL then skips to the relevant entry in the database itself.</p>
+<p>In other words, lookups based on your primary key happen exceedingly fast, and lookups based on secondary indexes happen at essentially the same speed as MyISAM index lookups would.</p>
+<p>Another less common but equally problematic condition happens when the data is altered such that the <strong>primary key is changed on a record</strong>. This is the most costly function of clustered indexes. A number of things can happen to make this operation a more severe performance hit:</p>
+<ul>
+<li>Alter the record in question according to the query that was issued.</li>
+<li>Determine the new primary key for that record, based on the altered data record.</li>
+<li>Relocate the stored records so that the record in question is moved to the proper location in the tablespace.</li>
+<li>Update any secondary indexes that point to that primary key.</li>
+</ul>
+<p>As you might imagine, if you’re altering the primary key for a number of records, that <code>UPDATE</code> command might take quite some time to do its job, especially on larger tables. Choose your primary keys wisely. Use values that are unlikely to change, such as a Social Security account number instead of a last name, serial number instead of a product name, and so on.</p>
+<p>Source: <a href="https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html">https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html</a></p>
+<h2 id="6-should-each-table-have-a-primary-key">6. Should each table have a primary key<a href="#6-should-each-table-have-a-primary-key" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Short answer: yes, each table should have a PRIMARY KEY so that you could distinguish two records.</p>
+<p>In MySQL, the <strong>InnoDB storage engine</strong> always creates a primary key if you didn&rsquo;t specify it explicitly, thus making an extra column you don&rsquo;t have access to.</p>
+<p>Learn more: <a href="https://stackoverflow.com/a/840182/16317008">https://stackoverflow.com/a/840182/16317008</a></p>
+<h2 id="7-unique-indexes-versus-primary-keys">7. Unique indexes versus primary keys<a href="#7-unique-indexes-versus-primary-keys" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>If you’re coming from other relational databases, you might wonder what the difference between a primary key and a unique index is in MySQL. As usual, it depends. In <strong>MyISAM tables</strong>, there’s almost no difference. The only thing special about a primary key is that it can’t contain NULL values. The primary key is simply a <code>NOT</code> <code>NULL</code> <code>UNIQUE</code> <code>INDEX</code> named <code>PRIMARY</code>. MyISAM tables don’t require that you declare a primary key.</p>
+<p><strong>InnoDB and BDB tables</strong> require primary keys for every table. There’s no requirement that you specify one, however. If you don’t, the storage engine automatically adds a hidden primary key for you. In both cases, the primary keys are simply incrementing numeric values, similar to an <code>AUTO-INCREMENT</code> column. If you decide to add your own primary key at a later time, simply use <code>ALTER</code> <code>TABLE</code> to add one. Both storage engines will discard their internally generated keys in favor of yours. Heap tables don’t require a primary key but will create one for you. In fact, you can create Heap tables with no indexes at all.</p>
+<h2 id="8-index-adds-places-and-time-overhead">8. Index adds places and time overhead<a href="#8-index-adds-places-and-time-overhead" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>Time overhead</strong> is easy to understand, indexes add to the cost of inserts, updates, and deletes because each index must be updated.</p>
+<p><strong>For taking up place,</strong> there is an example: try to think our book or dictionary which have index (table of contents) which helps us to find the content quickly, the table of contents usually has multiple pages, just like this, index in a table also will take up some place which makes a table bigger.</p>
+<p>Given that creating an index requires additional disk space (277,778 blocks extra from the above example, a ~28% increase), and that too many indices can cause issues arising from the file systems size limits, careful thought must be used to select the correct fields to index. Learn more: <a href="https://stackoverflow.com/a/1130/16317008">https://stackoverflow.com/a/1130/16317008</a></p>
+<p>Since indices are only used to speed up the searching for a matching field within the records, it stands to reason that <strong>indexing fields used only for output</strong> would be simply a waste of disk space and processing time when doing an insert or delete operation, and thus should be avoided.</p>
+<p>What does &ldquo;<em>indexing fields used only for output</em>&rdquo; mean?</p>
+<p>For example, imagine a table of products. Some fields like &ldquo;name&rdquo; or &ldquo;price&rdquo; are used for searching and filtering, while other fields like &ldquo;description&rdquo; or &ldquo;image_url&rdquo; are used only to provide additional information in the output. Creating an index on fields used only for output is not helpful and can waste resources.</p>
+<blockquote>
+<p>Indexes trade space for performance. Because MySQL needs to maintain a separate list of indexes’ values and keep them updated as your data changes, you really don’t want to index every column in a table. Indexes are a trade-off between space and time. You’re sacrificing some extra disk space and a bit of CPU overhead on each <code>INSERT</code>, <code>UPDATE</code>, and <code>DELETE</code> query to make most (if not all) your queries much faster. Source: <a href="https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html">https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html</a></p>
+</blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/golang/advance/010-defer-close/" class="button inline prev">
+        Don&#39;t Defer Close() on Writable Files - Go Notes
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/database/redis/004-session-vs-cache/" class="button inline next">
+        Caching &amp; Session Management
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2025 Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/panr/hugo-theme-terminal" target="_blank">Theme</a> made by <a href="https://github.com/panr" target="_blank">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

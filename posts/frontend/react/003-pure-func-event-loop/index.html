@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Pure Function &amp; State &amp; Event Loop - React :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="State When you call useState, you are telling React that you want this component to remember something:
+const [index, setIndex] = useState(0); In this case, you want React to remember index.
+State is tied to a position in the render tree: When you give a component state, you might think the state “lives” inside the component. But the state is actually held inside React. React associates each piece of state it’s holding with the correct component by where that component sits in the render tree. source
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/frontend/react/003-pure-func-event-loop/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.583a79711b9ad488dc8a0d22d8a60c8e1ec10f9deefb1196750cd21c2290036c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.00125962708925857e7b66dbc58391d55be1191a3d0ce2034de8c9cd2c481c36.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.fe8dc560fccb53a458b0db19ccb7b265764ac46b68596b7e099c6793054dd457.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.fc74ca360273c1d828da3c02b8174eba435607b369d98418ccc6f2243cd4e75d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.9023bbc24533d09e97a51a0a42a5a7bfe4c591ae167c5551fb1d2191d11977c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/syntax.min.cc789ed9377260d7949ea4c18781fc58959a89287210fe4edbff44ebfc1511b6.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terminal.min.a3ace6ba3a41dfe0ace0ea00529938ba5be6061e185b7fa3575c19201bbdaac7.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Pure Function &amp; State &amp; Event Loop - React">
+<meta property="og:description" content="State When you call useState, you are telling React that you want this component to remember something:
+const [index, setIndex] = useState(0); In this case, you want React to remember index.
+State is tied to a position in the render tree: When you give a component state, you might think the state “lives” inside the component. But the state is actually held inside React. React associates each piece of state it’s holding with the correct component by where that component sits in the render tree. source
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/frontend/react/003-pure-func-event-loop/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="front-end" />
+
+
+  <meta property="article:published_time" content="2024-01-07 10:27:22 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    为霜的博客
+  </div>
+</a>
+
+    </div>
+    
+      <ul class="menu menu--mobile">
+  <li class="menu__trigger">Menu&nbsp;▾</li>
+  <li>
+    <ul class="menu__dropdown">
+      
+        
+          <li><a href="/showcase">Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories">文章分类</a></li>
+        
+      
+      
+    </ul>
+  </li>
+</ul>
+
+    
+    
+  </div>
+  
+    <nav class="navigation-menu">
+  <ul class="navigation-menu__inner menu--desktop">
+    
+      
+        
+          <li><a href="/showcase" >Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories" >文章分类</a></li>
+        
+      
+      
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/frontend/react/003-pure-func-event-loop/">Pure Function &amp; State &amp; Event Loop - React</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2024-01-07</time><span class="post-reading-time">4 分钟阅读 (793 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/front-end/">front-end</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="state">State<a href="#state" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>When you call <code>useState</code>, you are telling React that you want this component to remember something:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">index</span>, <span style="color:#a6e22e">setIndex</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>(<span style="color:#ae81ff">0</span>);
+</span></span></code></pre></div><p>In this case, you want React to remember <code>index</code>.</p>
+<blockquote>
+<p><strong>State is tied to a position in the render tree</strong>: When you give a component state, you might think the state “lives” inside the component. But the state is actually held inside React. React associates each piece of state it’s holding with the correct component by where that component sits in the render tree. <a href="https://arc.net/l/quote/hwsdijzo">source</a></p>
+</blockquote>
+<p>Here’s how that happens in action:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">index</span>, <span style="color:#a6e22e">setIndex</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>(<span style="color:#ae81ff">0</span>);
+</span></span></code></pre></div><ol>
+<li><strong>Your component renders the first time.</strong> Because you passed 0 to useState as the initial value for <code>index</code>, it will return [0, setIndex]. React remembers 0 is the latest state value.</li>
+<li><strong>You update the state.</strong> When a user clicks the button, it calls setIndex(index + 1). <code>index</code> is 0, so it’s setIndex(1). This tells React to remember index is 1 now and triggers another render.</li>
+<li><strong>Your component’s second render.</strong> React still sees useState(0), but because React remembers that you set <code>index</code> to 1, it returns [1, setIndex] instead.</li>
+</ol>
+<blockquote>
+<p>State is local to a <strong>component instance</strong> on the screen. In other words, if you render the same component twice, each copy will have completely isolated state! Changing one of them will not affect the other.</p>
+</blockquote>
+<p>Learn more:</p>
+<ul>
+<li><a href="https://react.dev/learn/state-as-a-snapshot">State as a Snapshot – React</a></li>
+<li><a href="https://react.dev/learn/queueing-a-series-of-state-updates">Queueing a Series of State Updates – React</a></li>
+</ul>
+<h2 id="什么是副作用">什么是副作用<a href="#什么是副作用" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<blockquote>
+<p>Anything that results in changes that can be observed when the calculation is completed, beside the return value of the calculation itself, is a side effect. Calculation should return just result of the calculation. Anything else is side-effect. <a href="https://www.reddit.com/r/reactjs/comments/8avfej/comment/dx218q1/?utm_source=share&amp;utm_medium=web2x&amp;context=3">source</a></p>
+</blockquote>
+<p><strong>Components should only return their JSX</strong>, and not change any objects or variables that existed before rendering—that would make them impure!</p>
+<p>While functional programming relies heavily on purity, at some point, somewhere, something has to change. That’s kind of the point of programming! These <strong>changes—updating the screen, starting an animation, changing the data (call setState)</strong>—are called side effects. They’re things that happen “on the side”, not during rendering.</p>
+<blockquote>
+<p>所以严格来说 console.log 也是副作用.</p>
+</blockquote>
+<p>In React, side effects usually belong inside event handlers. Event handlers are functions that React runs when you perform some action—for example, when you click a button. Even though event handlers are defined inside your component, they don’t run during rendering! So event handlers don’t need to be pure.</p>
+<p>If you’ve exhausted all other options and can’t find the right event handler for your side effect, you can still attach it to your returned JSX with a useEffect call in your component. This tells React to execute it later, after rendering, when side effects are allowed. However, this approach should be your last resort.</p>
+<blockquote>
+<p>修改或读取外部变量, 修改 props 是不被允许的, 在哪都不行, 你可以把 外部变量通过 props 传进来, 然后在组件内部读取.</p>
+</blockquote>
+<p>Learn more: <a href="https://react.dev/learn/keeping-components-pure#side-effects-unintended-consequences">Keeping Components Pure – React</a></p>
+<h2 id="函数组件无副作用">函数组件无副作用<a href="#函数组件无副作用" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="render-logic-must-not">Render logic must not<a href="#render-logic-must-not" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ol>
+<li>
+<p><strong>Same inputs, same output</strong>: 函数组件的输出（即渲染的UI）仅依赖于它的props和state。换句话说，给定相同的props和state，组件将始终渲染相同的输出。</p>
+</li>
+<li>
+<p><strong>不改变外部状态</strong>: 在理想情况下，函数组件不应该改变外部状态，不应该直接修改传入的props或外部的全局变量。</p>
+<ul>
+<li>注意 props, 和 外部的变量 就是不允许被修改的, 即使在 <a href="https://react.dev/learn/responding-to-events">event handler</a> 中, 也不能修改, 这是 React 的设计哲学</li>
+<li>state 是可以被修改的, 但是只能通过 <code>setState</code> 在 event handler 或一些 hooks中修改, 不能在渲染逻辑中修改, 否则会导致死循环.</li>
+<li>官方文档有例子, 在文章最后: <a href="https://react.dev/learn/keeping-components-pure">https://react.dev/learn/keeping-components-pure</a></li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>The React philosophy is that props should be immutable and top-down. This means that a parent can send whatever prop values it likes to a child, but the child cannot modify its own props. What you do is react to the incoming props and then, if you want to, modify your child&rsquo;s state based on incoming props. <a href="https://stackoverflow.com/a/26089687/16317008">source</a></p>
+</blockquote>
+<ol start="3">
+<li><strong>无副作用操作</strong>: 函数组件在其主体内(渲染逻辑中)不应该执行有副作用的操作，比如直接进行网络请求、订阅事件、直接操作DOM等。这些操作应该放在 <a href="https://react.dev/learn/responding-to-events">event handlers</a> 或钩子（如<code>useEffect</code>）中。</li>
+</ol>
+<blockquote>
+<p><strong>Can event handlers have side effects?</strong> Absolutely! Event handlers are the best place for side effects. Unlike rendering functions, event handlers don’t need to be pure, so it’s a great place to change something—for example, change an input’s value in response to typing, or change a list in response to a button press. However, in order to change some information, you first need some way to store it. In React, this is done by using state, a component’s memory. You will learn all about it on the next page. <a href="https://arc.net/l/quote/pioepdhv">source</a></p>
+</blockquote>
+<h3 id="render-logic-may">Render logic may<a href="#render-logic-may" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>Mutate objects that were newly created while rendering</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">MyComponent</span> <span style="color:#f92672">=</span> () =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">user</span> <span style="color:#f92672">=</span> { <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Alice&#39;</span> };
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Bob&#39;</span>; <span style="color:#75715e">// Mutating a local object is fine
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span><span style="color:#f92672">&gt;</span>{<span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">name</span>}<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/div&gt;;</span>
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><ul>
+<li>Throw errors</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">MyComponent</span> <span style="color:#f92672">=</span> ({ <span style="color:#a6e22e">id</span> }) =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">id</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;ID is required&#39;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">ID</span><span style="color:#f92672">:</span> {<span style="color:#a6e22e">id</span>}<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/div&gt;;</span>
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><blockquote>
+<p>Strive to express your component’s logic in the JSX you return. When you need to “change things”, you’ll usually want to do it in an <strong><a href="https://react.dev/learn/responding-to-events">event handler</a></strong>. <strong>As a last resort, you can useEffect.</strong> <a href="#ZgotmplZ">source</a></p>
+</blockquote>
+<blockquote>
+<p>It is useful to remember which operations on arrays mutate them, and which don’t. For example, push, pop, reverse, and sort will mutate the original array, but slice, filter, and map will create a new one. <a href="https://react.dev/learn/keeping-components-pure">source</a></p>
+</blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/react/004-rendering/" class="button inline prev">
+        Rendering - React
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/styling-css/001-block-inline-flex/" class="button inline next">
+        Block vs Inline vs Flex
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2025 Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/panr/hugo-theme-terminal" target="_blank">Theme</a> made by <a href="https://github.com/panr" target="_blank">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Caching Strategies and What should be Cached :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Previous post: https://davidzhu.xyz/post/database/redis/004-session-vs-cache/
+A paragraph I like, and share it here with you:
+“The real problem is that programmers have spent far too much time worrying about efficiency in the wrong places and at the wrong times; premature optimization is the root of all evil (or at least most of it) in programming.” - Donald Knuth
+Premature optimization is always a disaster. It&rsquo;s not too late to add caching when actual bottlenecks are discovered after deployment or users&rsquo; feedback.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/database/redis/003-caching/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.583a79711b9ad488dc8a0d22d8a60c8e1ec10f9deefb1196750cd21c2290036c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.00125962708925857e7b66dbc58391d55be1191a3d0ce2034de8c9cd2c481c36.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.fe8dc560fccb53a458b0db19ccb7b265764ac46b68596b7e099c6793054dd457.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.fc74ca360273c1d828da3c02b8174eba435607b369d98418ccc6f2243cd4e75d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.9023bbc24533d09e97a51a0a42a5a7bfe4c591ae167c5551fb1d2191d11977c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/syntax.min.cc789ed9377260d7949ea4c18781fc58959a89287210fe4edbff44ebfc1511b6.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terminal.min.a3ace6ba3a41dfe0ace0ea00529938ba5be6061e185b7fa3575c19201bbdaac7.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Caching Strategies and What should be Cached">
+<meta property="og:description" content="Previous post: https://davidzhu.xyz/post/database/redis/004-session-vs-cache/
+A paragraph I like, and share it here with you:
+“The real problem is that programmers have spent far too much time worrying about efficiency in the wrong places and at the wrong times; premature optimization is the root of all evil (or at least most of it) in programming.” - Donald Knuth
+Premature optimization is always a disaster. It&rsquo;s not too late to add caching when actual bottlenecks are discovered after deployment or users&rsquo; feedback.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/database/redis/003-caching/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="database" />
+
+
+  <meta property="article:published_time" content="2023-10-01 17:56:58 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    为霜的博客
+  </div>
+</a>
+
+    </div>
+    
+      <ul class="menu menu--mobile">
+  <li class="menu__trigger">Menu&nbsp;▾</li>
+  <li>
+    <ul class="menu__dropdown">
+      
+        
+          <li><a href="/showcase">Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories">文章分类</a></li>
+        
+      
+      
+    </ul>
+  </li>
+</ul>
+
+    
+    
+  </div>
+  
+    <nav class="navigation-menu">
+  <ul class="navigation-menu__inner menu--desktop">
+    
+      
+        
+          <li><a href="/showcase" >Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories" >文章分类</a></li>
+        
+      
+      
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/database/redis/003-caching/">Caching Strategies and What should be Cached</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-10-01</time><span class="post-reading-time">10 分钟阅读 (1987 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/database/">database</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/redis/">redis</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>Previous post: <a href="https://davidzhu.xyz/post/database/redis/004-session-vs-cache/">https://davidzhu.xyz/post/database/redis/004-session-vs-cache/</a></p>
+<p>A paragraph I like, and share it here with you:</p>
+<blockquote>
+<p>“The real problem is that programmers have spent far too much time worrying about efficiency in the wrong places and at the wrong times; <strong>premature optimization</strong> is the root of all evil (or at least most of it) in programming.” - <a href="https://en.wikipedia.org/wiki/Donald_Knuth">Donald Knuth</a></p>
+</blockquote>
+<p>Premature optimization is always a disaster. It&rsquo;s not too late to add caching when actual bottlenecks are discovered after deployment or users&rsquo; feedback.</p>
+<h2 id="1-what-should-be-cached">1. What should be cached<a href="#1-what-should-be-cached" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Generally you want to cache:</p>
+<ul>
+<li>Metadata/configuration data that <strong>does not change frequently.</strong> E.g. country/state lists, external resource addresses, logic/branching settings, product/price/tax definitions, etc.</li>
+<li>Data that is costly to retrieve or generate and that does not need to frequently change. E.g. historical data sets for reports.</li>
+<li>Data that is unique to the current user&rsquo;s session.</li>
+</ul>
+<p>The last item above is where you need to be careful as you can drastically increase your app&rsquo;s memory usage, by adding a few megabytes to the data for every active session. It implies <strong>different levels of caching &ndash; application wide, user session</strong>, etc.</p>
+<p>Generally you should NOT cache data that is under active change.</p>
+<p>This is a really broad question, and the answer depends heavily on the specific application/system you are building. <strong>Caching is only a performance optimization technique</strong>, and as with any optimization, measure first before making substantial changes, to avoid wasting time optimizing the wrong thing. <strong>Maybe you don&rsquo;t need much caching, and it would only complicate your app</strong>. Maybe the data you are thinking of caching can be retrieved in a faster way, or less of it can be retrieved at once.</p>
+<p>Source: <a href="https://stackoverflow.com/a/13519206/16317008">https://stackoverflow.com/a/13519206/16317008</a></p>
+<p>e.g.,</p>
+<p>Each user on my server has a credit balance which needs to be changed frequently, obviously we shouldn&rsquo;t cache it, instead we should fecth it from database directly, <a href="https://www.reddit.com/r/golang/comments/16xw0zx/can_cache_be_viewed_as_a_method_of_storing/?utm_source=share&amp;utm_medium=web2x&amp;context=3">a comment</a> from Reddit:</p>
+<blockquote>
+<p>If the credit balance (which sounds financial) query is simple and quick then pulling it directly from the backend storage should be fine and would <strong>eliminate the complexities of using a caching layer</strong> and trying to keep it in sync with the persistent storage layer.</p>
+</blockquote>
+<h2 id="2-where-cache-should-sit">2. Where cache should sit<a href="#2-where-cache-should-sit" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>In larger systems you also need to think about where the cache(s) will sit. Is it possible to have one central cache server (Redis), or is it good enough for each server/process to handle its own caching (local memory)?</p>
+<p>Generally, Redis is used for distributed caching. But sometimes local caching like <em>Guava Cache</em> and <em>Caffeine</em> can also be considered. There are some disadvantages to using <em>local caching</em>: it cannot perform large-scale data storage, and the cache will become invalid when the application process restarts.</p>
+<p>However, using caching brings up issues that need to be considered: how to ensure <strong>consistency between redis and database</strong>, cache penetration, cache breakdown and cache avalanche, clustering.</p>
+<p>e.g.,</p>
+<p>A app is small enough that we haven&rsquo;t had to scale a single instance yet. The three caching avenues I&rsquo;m looking into are:</p>
+<ul>
+<li>in-memory - use HttpContext.Session for user data caching, with sticky sessions on the server. This is the one I tried out because it&rsquo;s simplest. (This belongs to the server handle its own caching above, local memory caching)</li>
+<li>Redis - Add on MemoryDB or ElastiCache in our AWS stack. (Use Redis as a central cache server)</li>
+<li>Database caching- Use a DB table to keep that user data. I&rsquo;d rather avoid this, the whole point is to avoid that round trip to the DB every pageload</li>
+</ul>
+<p>Source: <a href="https://www.reddit.com/r/dotnet/comments/vp873j/whats_your_preferred_session_data_caching/">https://www.reddit.com/r/dotnet/comments/vp873j/whats_your_preferred_session_data_caching/</a></p>
+<h2 id="3-basic-caching-strategies">3. Basic Caching Strategies<a href="#3-basic-caching-strategies" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>To maximize the advantages of the <strong>Go-Redis connection</strong>, it’s imperative to employ the right caching strategy. Each strategy has its own set of merits and potential pitfalls, making the choice critical based on specific application needs. Let’s deep-dive into some basic caching strategies and their respective implementation in Go.</p>
+<h3 id="31-cache-aside-lazy-loading">3.1. Cache-aside <strong>(Lazy Loading)</strong><a href="#31-cache-aside-lazy-loading" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Cache-aside, often termed lazy loading, is a caching pattern where the application code is responsible for loading data into the cache, updating, and invalidating cache entries.</p>
+<h4 id="311-implementation">3.1.1. Implementation:<a href="#311-implementation" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ol>
+<li>Check the Cache:
+<ul>
+<li>Initially, the application checks the cache to determine if the desired data is present.</li>
+</ul>
+</li>
+<li>Database Call:
+<ul>
+<li>If not present in the cache, the application fetches the data from the primary data store (e.g., a database) and then places it in the cache.</li>
+</ul>
+</li>
+<li>Go Code:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">value</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#e6db74">&#34;key&#34;</span>).<span style="color:#a6e22e">Result</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">redis</span>.<span style="color:#a6e22e">Nil</span> { <span style="color:#75715e">// Cache miss</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Fetch data from database</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">data</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fetchDataFromDB</span>(<span style="color:#e6db74">&#34;key&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">Set</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#e6db74">&#34;key&#34;</span>, <span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Hour</span>) <span style="color:#75715e">// Store in cache</span>
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>    panic(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Data from cache:&#34;</span>, <span style="color:#a6e22e">value</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></li>
+</ol>
+<h4 id="312-advantages--disadvantages">3.1.2. Advantages <strong>&amp; Disadvantages</strong>:<a href="#312-advantages--disadvantages" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ul>
+<li>Advantages:
+<ul>
+<li><strong>Minimal Initial Load</strong>: Since data is loaded on-demand, the initial loading time is reduced.</li>
+<li><strong>Always Updated</strong>: Data in the cache is guaranteed to be current since it’s fetched only when needed.</li>
+</ul>
+</li>
+<li>Disadvantages:
+<ul>
+<li><strong>Latency</strong>: The first-time data is fetched (cache miss) has an additional latency since it requires a database call.</li>
+<li><strong>Stale Data</strong>: If not managed correctly, there can be periods where stale data remains in the cache.</li>
+</ul>
+</li>
+</ul>
+<h3 id="32-write-through-cache">3.2. Write-through <strong>Cache</strong><a href="#32-write-through-cache" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>In a write-through caching strategy, every write to the application data also writes to the cache. The cache is always updated with fresh data.</p>
+<h4 id="321-implementation">3.2.1. <strong>Implementation</strong>:<a href="#321-implementation" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ol>
+<li>
+<p>Write Operation:</p>
+<ul>
+<li>Every time there’s a write operation to the primary data store, the same data is written to the cache.</li>
+</ul>
+</li>
+<li>
+<p><strong>Go Code</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Data update function</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">updateData</span>(<span style="color:#a6e22e">key</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">value</span> <span style="color:#66d9ef">string</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">updateDatabase</span>(<span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">value</span>)  <span style="color:#75715e">// Update primary data store</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">Set</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">value</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Hour</span>)  <span style="color:#75715e">// Update cache</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></li>
+</ol>
+<h4 id="322-advantages--disadvantages">3.2.2 Advantages <strong>&amp; Disadvantages</strong>:<a href="#322-advantages--disadvantages" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ul>
+<li>Advantages:
+<ul>
+<li><strong>Data Consistency</strong>: The cache always contains the latest data.</li>
+<li><strong>Read Speed</strong>: Read operations are fast as data is always available in the cache.</li>
+</ul>
+</li>
+<li>Disadvantages:
+<ul>
+<li><strong>Write Penalty</strong>: Every write operation comes with an overhead of updating the cache.</li>
+<li><strong>Resource Intensive</strong>: It can be resource-intensive for write-heavy applications.</li>
+</ul>
+</li>
+</ul>
+<h3 id="33-write-behind-or-write-back-cache">3.3. Write-behind <strong>(or Write-back) Cache</strong><a href="#33-write-behind-or-write-back-cache" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Here, the application writes directly to the cache, which then periodically updates the primary data store. This reduces the latency associated with every write operation.</p>
+<h4 id="331-implementation">3.3.1. Implementation:<a href="#331-implementation" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ol>
+<li>
+<p>Buffered Writes:</p>
+<ul>
+<li>Writes are buffered in the cache and are periodically flushed to the primary data store.</li>
+</ul>
+</li>
+<li>
+<p><strong>Go Code</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Buffered data update function</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">bufferedUpdate</span>(<span style="color:#a6e22e">key</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">value</span> <span style="color:#66d9ef">string</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">Set</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">value</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Hour</span>)  <span style="color:#75715e">// Update cache</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// A separate routine or process will flush the cache to the primary data store</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></li>
+</ol>
+<h4 id="332-advantages--disadvantages">3.3.2. Advantages <strong>&amp; Disadvantages</strong>:<a href="#332-advantages--disadvantages" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ul>
+<li>Advantages:
+<ul>
+<li><strong>Fast Writes</strong>: Write operations are speedy since they only update the cache initially.</li>
+<li><strong>Batch Processing</strong>: Periodic flushing can leverage batch processing for efficiency.</li>
+</ul>
+</li>
+<li>Disadvantages:
+<ul>
+<li><strong>Data Loss</strong>: If the cache fails before a flush, data can be lost.</li>
+<li><strong>Complexity</strong>: Implementing a reliable flushing mechanism adds complexity.</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-eviction-policies-keeping-your-cache-optimized">4. <strong>Eviction</strong> Policies: <strong>Keeping Your Cache Optimized</strong><a href="#4-eviction-policies-keeping-your-cache-optimized" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Redis provides several eviction policies, ensuring optimal use of memory:</p>
+<ol>
+<li>No Eviction:
+<ul>
+<li>Redis returns errors when the memory limit is reached.</li>
+</ul>
+</li>
+<li>AllKeys LRU:
+<ul>
+<li>Evicts least recently used keys first.</li>
+</ul>
+</li>
+<li>AllKeys Random:
+<ul>
+<li>Evicts random keys.</li>
+</ul>
+</li>
+<li>Volatile LRU:
+<ul>
+<li>Evicts least recently used keys, but only among those set to expire.</li>
+</ul>
+</li>
+<li>Volatile Random:
+<ul>
+<li>Random eviction, but only among keys with an expiration set.</li>
+</ul>
+</li>
+<li>Volatile TTL:
+<ul>
+<li>Evicts the keys with the nearest expiration time first.</li>
+</ul>
+</li>
+</ol>
+<p>In Go, you can set the desired eviction policy using:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">ConfigSet</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#e6db74">&#34;maxmemory-policy&#34;</span>, <span style="color:#e6db74">&#34;allkeys-lru&#34;</span>)
+</span></span></code></pre></div><h2 id="5-best-practices-for-go-redis-caching">5. <strong>Best Practices for Go-Redis Caching</strong><a href="#5-best-practices-for-go-redis-caching" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="51-cache-key-naming-conventions">5.1. <strong>Cache</strong> key naming conventions<a href="#51-cache-key-naming-conventions" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Choosing an appropriate naming convention for your cache keys can significantly improve cache manageability, readability, and prevent key collisions.</p>
+<ol>
+<li>
+<p>Descriptive Names: A key should provide hints about the data it holds.</p>
+<ul>
+<li><em>Bad</em>: <code>k1234</code></li>
+<li><em>Good</em>: <code>user:profile:1234</code></li>
+</ul>
+</li>
+<li>
+<p>Namespacing: Use colons <code>:</code> for separating different parts of your keys to simulate namespaces.</p>
+<ul>
+<li>Example: <code>post:comments:4567</code></li>
+</ul>
+</li>
+<li>
+<p>Versioning: When your data structure changes, you can use versioning in your keys to avoid conflicts.</p>
+<ul>
+<li>Example: <code>v2:user:profile:1234</code></li>
+</ul>
+</li>
+<li>
+<p>Keep It Concise: While descriptiveness is essential, long keys take more memory.</p>
+<ul>
+<li>
+<p>Example in Go:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">key</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;post:%d:comments&#34;</span>, <span style="color:#a6e22e">postID</span>)
+</span></span></code></pre></div></li>
+</ul>
+</li>
+</ol>
+<h3 id="52-handling-cache-misses-efficiently">5.2. <strong>Handling</strong> Cache <strong>Misses Efficiently</strong><a href="#52-handling-cache-misses-efficiently" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Cache misses can be expensive. Here’s how to manage them wisely:</p>
+<ol>
+<li>Implementing a Loading Strategy:
+<ul>
+<li>On a cache miss, fetch the data from the primary data source and load it into the cache for future requests. This can be implemented with the Cache-aside (Lazy Loading) pattern we discussed earlier.</li>
+</ul>
+</li>
+<li>Avoid Cache Stampede:
+<ul>
+<li>This occurs when multiple clients try to read a key that’s missing from the cache, causing them all to hit the database simultaneously. One way to avoid this is by using a mutex or a semaphore to ensure only one client fetches from the database.</li>
+</ul>
+</li>
+<li>Set Reasonable TTLs (Time-To-Live):
+<ul>
+<li>For infrequently changed data, longer TTLs are apt, while frequently changed data benefits from shorter TTLs.</li>
+</ul>
+</li>
+</ol>
+<h2 id="6-common-pitfalls-in-go-redis-caching-and-how-to-avoid-them">6. Common Pitfalls in Go-Redis Caching and How to Avoid Them<a href="#6-common-pitfalls-in-go-redis-caching-and-how-to-avoid-them" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="61-not-considering-serialization-costs">6.1. Not Considering Serialization Costs<a href="#61-not-considering-serialization-costs" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ol>
+<li><strong>The Pitfall</strong>: Overlooking the time and CPU overhead of serializing and deserializing data when caching complex data structures.</li>
+<li><strong>The Solution</strong>: Choose efficient serialization libraries and formats. In Go, libraries like <code>encoding/gob</code> or third-party solutions like <code>msgpack</code> can be considered. Test serialization strategies to see which works best for your specific data types and access patterns.</li>
+</ol>
+<p>e.g.,</p>
+<p><a href="https://www.reddit.com/r/golang/comments/9krlqv/serialization_of_cache_items_encodinggob/">Serialization of cache items (encoding/gob?)</a></p>
+<p>I switched our in-memory caching to Redis and used <code>encoding/gob</code> to serialize the cache items. It seemed nice considering it carries type info and gave my &ldquo;generic&rdquo; caches a nice api (as I could just keep the redis store as an interchangeable <code>Store</code> interface, easily switched out for an in-memory cache without serialization or whatever), and benchmarked quite well as compared to json. But now I&rsquo;m seeing a pretty massive CPU usage on our servers, and having read a bit more it might not have been a great use case for gob, which apparently is better suited for streams of data where one encoder instance is &ldquo;paired&rdquo; to one decoder instance. I end up having to initialize <code>GobEncoder</code> and <code>GobDecoder</code> on every ser/deser, and I suspect it&rsquo;s taking a pretty heavy toll on CPU.</p>
+<p>Is there any way around this while still using gob? I tried keeping an encoder/decoder alive with a buffer along with a mutex, and clearing the buffer with <code>buffer.Reset()</code> on every ser/deser, but that fails. There seems to be more internal state to gob than that.</p>
+<p>What other serialization formats do people normally use for storing stuff in redis or equivalent?</p>
+<p><strong>Comments:</strong></p>
+<p><strong>OP:</strong> The thing I&rsquo;m unsure about is whether gob is a viable solution for these &ldquo;one off&rdquo; ser/deserializations? Since it&rsquo;s primarily meant for streams of data, and I end up using something like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Serialize</span>(<span style="color:#a6e22e">item</span> <span style="color:#a6e22e">Item</span>) ([]<span style="color:#66d9ef">byte</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">b</span> <span style="color:#f92672">:=</span> new(<span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">Buffer</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#a6e22e">b</span>).<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">item</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">Bytes</span>(), <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Deserialize</span>(<span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">Item</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">b</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">NewBuffer</span>(<span style="color:#a6e22e">data</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">item</span> <span style="color:#a6e22e">Item</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">item</span>, <span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">NewDecoder</span>(<span style="color:#a6e22e">b</span>).<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">item</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>Someone:</strong> Yeah, gob isn&rsquo;t the best fit for storing singular values.</p>
+<p><a href="https://golang.org/pkg/encoding/gob/#Encoder.Encode">https://golang.org/pkg/encoding/gob/#Encoder.Encode</a></p>
+<blockquote>
+<p>&hellip; guaranteeing that all necessary type information has been transmitted first.</p>
+</blockquote>
+<p>This could be the gotcha you&rsquo;re facing, <a href="https://golang.org/src/encoding/gob/decoder.go#L153">https://golang.org/src/encoding/gob/decoder.go#L153</a> will likely end up running for every single value (as each stored value is in effect a complete stream with a single element).</p>
+<p>edit: <a href="https://github.com/alecthomas/go_serialization_benchmarks">https://github.com/alecthomas/go_serialization_benchmarks</a> may be helpful</p>
+<p><strong>Someone:</strong> You&rsquo;ll also find that gob uses more space than many other encodings when storing singular values - it&rsquo;s just not suited to this task.</p>
+<p><strong>OP:</strong> Ended up using msgpack as it performed way, way better for this single value scenario. Gob is just meant for streaming I suppose.</p>
+<h3 id="62-cache-invalidation-woes">6.2. Cache Invalidation Woes<a href="#62-cache-invalidation-woes" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ol>
+<li><strong>The Pitfall</strong>: Not invalidating or updating the cache when the underlying data changes, leading to stale data being served.</li>
+<li><strong>The Solution</strong>: Implement a robust cache invalidation strategy. This might include setting appropriate TTLs, using write-through caching, or manually invalidating keys when data changes.</li>
+</ol>
+<h3 id="63-not-preparing-for-redis-failures">6.3. Not Preparing for Redis Failures<a href="#63-not-preparing-for-redis-failures" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ol>
+<li><strong>The Pitfall</strong>: Failing to consider scenarios where the Redis server might become unavailable.</li>
+<li><strong>The Solution</strong>: Implement redundancy using Redis Sentinel or Redis Cluster. On the application side, ensure that your Go application can handle Redis downtimes gracefully, potentially serving stale data or reverting to the primary data source.</li>
+</ol>
+<p>Learn more:</p>
+<ul>
+<li><a href="https://voskan.host/2023/08/10/redis-and-golang-complete-guide/">Complete Guide to Redis in Go - From Installation to Advanced Features | Master Redis with Golang</a></li>
+<li><a href="https://voskan.host/2023/08/14/golang-redis-caching/">Go-Redis Caching: Strategies, Best Practices &amp; Common Pitfalls</a></li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/database/redis/004-session-vs-cache/" class="button inline prev">
+        Caching &amp; Session Management
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/golang/practice/006-gorilla-redis-store-code/" class="button inline next">
+        Gorilla Sessions RedisStore Source Code Analysis
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2025 Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/panr/hugo-theme-terminal" target="_blank">Theme</a> made by <a href="https://github.com/panr" target="_blank">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

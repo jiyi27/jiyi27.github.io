@@ -1,0 +1,824 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Git on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/git/</link>
+    <description>Recent content in Git on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 15 Sep 2023 10:20:23 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/git/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>git merge vs git rebase</title>
+      <link>https://blog.jiyi27.com/posts/git/010-git-rebase-merge/</link>
+      <pubDate>Fri, 15 Sep 2023 10:20:23 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/git/010-git-rebase-merge/</guid>
+      <description>&lt;p&gt;In Git, there are two main ways to integrate changes from one branch into another: the &lt;code&gt;merge&lt;/code&gt; and the &lt;code&gt;rebase&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;1-fast-forward-vs-three-way-merge&#34;&gt;1. fast-forward vs three-way merge&lt;/h2&gt;
+&lt;p&gt;There are two type of merge:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;three-way merge,
+&lt;ul&gt;
+&lt;li&gt;happens when the branches&amp;rsquo; commit have diverged&lt;/li&gt;
+&lt;li&gt;will result a merge commit&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;fast-forward merge,
+&lt;ul&gt;
+&lt;li&gt;happens when there is a liner structure in the commit history&lt;/li&gt;
+&lt;li&gt;we usually prevent fast-forward merge, because &lt;strong&gt;there is no merge commit&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;can be suppressed with the &lt;code&gt;--no-ff&lt;/code&gt; option&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The liner structure commit structure looks like this:&lt;/p&gt;</description>
+      <content>&lt;p&gt;In Git, there are two main ways to integrate changes from one branch into another: the &lt;code&gt;merge&lt;/code&gt; and the &lt;code&gt;rebase&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;1-fast-forward-vs-three-way-merge&#34;&gt;1. fast-forward vs three-way merge&lt;/h2&gt;
+&lt;p&gt;There are two type of merge:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;three-way merge,
+&lt;ul&gt;
+&lt;li&gt;happens when the branches&amp;rsquo; commit have diverged&lt;/li&gt;
+&lt;li&gt;will result a merge commit&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;fast-forward merge,
+&lt;ul&gt;
+&lt;li&gt;happens when there is a liner structure in the commit history&lt;/li&gt;
+&lt;li&gt;we usually prevent fast-forward merge, because &lt;strong&gt;there is no merge commit&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;can be suppressed with the &lt;code&gt;--no-ff&lt;/code&gt; option&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The liner structure commit structure looks like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      A---B fixbug
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     /
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...--E master
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Branches&amp;rsquo; diverged commit structure looks like this:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;      A---B fixbug
+     /
+...--E--F master
+&lt;/code&gt;&lt;/pre&gt;&lt;pre&gt;&lt;code&gt;&amp;lt;div style=&amp;quot;position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;&amp;quot;&amp;gt;
+  &amp;lt;iframe allow=&amp;quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&amp;quot; allowfullscreen=&amp;quot;allowfullscreen&amp;quot; loading=&amp;quot;eager&amp;quot; referrerpolicy=&amp;quot;strict-origin-when-cross-origin&amp;quot; src=&amp;quot;https://www.youtube.com/embed/zOnwgxiC0OA?autoplay=0&amp;amp;amp;controls=1&amp;amp;amp;end=0&amp;amp;amp;loop=0&amp;amp;amp;mute=0&amp;amp;amp;start=0&amp;quot; style=&amp;quot;position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;&amp;quot; title=&amp;quot;YouTube video&amp;quot;&amp;gt;&amp;lt;/iframe&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Video: &lt;a href=&#34;https://youtu.be/zOnwgxiC0OA&#34;&gt;https://youtu.be/zOnwgxiC0OA&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-git-rebase&#34;&gt;2. git rebase&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;The Golden Rule of Rebasing reads: “Never rebase while you’re on a public branch.”&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://www.gitkraken.com/blog/golden-rule-of-rebasing-in-git&#34;&gt;https://www.gitkraken.com/blog/golden-rule-of-rebasing-in-git&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;On &lt;code&gt;main&lt;/code&gt; branch:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* commit 41bc8e89e60d75e21e034aaabcbd20103a61fca4 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;HEAD -&amp;gt; main&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;|     main: Fri &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt; Sep &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; 13:01:02 ADT
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* commit 2220b67f9c8ccf5f47e51bff7bd3a3fca6e141b6
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      main: Fri &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt; Sep &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; 11:47:54 ADT
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;On &lt;code&gt;fixbug&lt;/code&gt; branch:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* commit 0096a2dfa2b4e4c40011213b6cce12ee73833ca9 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;HEAD -&amp;gt; fixbug&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;|     fixbug: Fri &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt; Sep &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; 11:48:53 ADT
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* commit fd900fa0c05632757f45fd6fee236eb84c99bb94
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;|     fixbug: Fri &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt; Sep &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; 11:48:27 ADT
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* commit 2220b67f9c8ccf5f47e51bff7bd3a3fca6e141b6
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      main: Fri &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt; Sep &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; 11:47:54 AD
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Now the &lt;strong&gt;commit history of all branches&lt;/strong&gt; looks like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      A---B fixbug
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     /
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...--E---F main
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Go to &lt;code&gt;main&lt;/code&gt; branch and make rebase.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ git switch main
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ git rebase fixbug
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Successfully rebased and updated refs/heads/main.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Check the log, you can see, these two branches combined but the commit histroy structure is linear:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* commit 918260ae4f0b7f7d573a9a640ce380ea0f861a6a &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;HEAD -&amp;gt; main&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;|     main: Fri &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt; Sep &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; 13:01:02 ADT
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* commit 0096a2dfa2b4e4c40011213b6cce12ee73833ca9 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;fixbug&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;|     fixbug: Fri &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt; Sep &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; 11:48:53 ADT
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* commit fd900fa0c05632757f45fd6fee236eb84c99bb94
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;|     fixbug: Fri &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt; Sep &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; 11:48:27 ADT
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* commit 2220b67f9c8ccf5f47e51bff7bd3a3fca6e141b6
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      main: Fri &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt; Sep &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; 11:47:54 ADT
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Now &lt;strong&gt;the commit history of &lt;code&gt;main&lt;/code&gt; branch&lt;/strong&gt; looks like this (and you can delete &lt;code&gt;fixbug&lt;/code&gt; branch):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      A---B---F&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt; main
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     /
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...--E
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see, rebase just make a fast-forward merge happen even the branches has diverged.&lt;/p&gt;
+&lt;p&gt;And note that the &lt;code&gt;F&#39;&lt;/code&gt; mean it&amp;rsquo;s a copy of original commit &lt;code&gt;F&lt;/code&gt; (git will do this internally), this is why we should not use rebase on a shared branch, &lt;code&gt;main&lt;/code&gt; for example, because &lt;code&gt;rebase&lt;/code&gt; will &amp;ldquo;change&amp;rdquo; the commit history of branch &lt;code&gt;main&lt;/code&gt;.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div style=&amp;quot;position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;&amp;quot;&amp;gt;
+  &amp;lt;iframe allow=&amp;quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&amp;quot; allowfullscreen=&amp;quot;allowfullscreen&amp;quot; loading=&amp;quot;eager&amp;quot; referrerpolicy=&amp;quot;strict-origin-when-cross-origin&amp;quot; src=&amp;quot;https://www.youtube.com/embed/zOnwgxiC0OA?autoplay=0&amp;amp;amp;controls=1&amp;amp;amp;end=0&amp;amp;amp;loop=0&amp;amp;amp;mute=0&amp;amp;amp;start=0&amp;quot; style=&amp;quot;position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;&amp;quot; title=&amp;quot;YouTube video&amp;quot;&amp;gt;&amp;lt;/iframe&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&#34;3-git-rebase-vs-merge&#34;&gt;3. git rebase vs merge&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Merge preserves commit history.
+&lt;ul&gt;
+&lt;li&gt;Use merge on a &lt;strong&gt;public branch&lt;/strong&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Rebase rewrites (makes copy) history.
+&lt;ul&gt;
+&lt;li&gt;Use rebase on a &lt;strong&gt;private branch&lt;/strong&gt; to catch up update form remote.&lt;/li&gt;
+&lt;li&gt;Why rebase rewrite commit history: &lt;a href=&#34;https://youtu.be/zOnwgxiC0OA?si=CwbvoPI35pHgJ1pn&amp;amp;t=401&#34;&gt;https://youtu.be/zOnwgxiC0OA?si=CwbvoPI35pHgJ1pn&amp;t=401&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;git push --force&lt;/code&gt; on shared branches is an absolute no-no.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that we say use rebase on a private branch means we can use the command&lt;code&gt;git rebase master&lt;/code&gt; on a private, please don&amp;rsquo;t use &lt;code&gt;git rebase fixissue&lt;/code&gt; on &lt;code&gt;master&lt;/code&gt; branch which apparently is a publick branch.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://youtu.be/zOnwgxiC0OA?si=CwbvoPI35pHgJ1pn&amp;amp;t=401&#34;&gt;https://youtu.be/zOnwgxiC0OA?si=CwbvoPI35pHgJ1pn&amp;t=401&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div style=&amp;quot;position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;&amp;quot;&amp;gt;
+  &amp;lt;iframe allow=&amp;quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&amp;quot; allowfullscreen=&amp;quot;allowfullscreen&amp;quot; loading=&amp;quot;eager&amp;quot; referrerpolicy=&amp;quot;strict-origin-when-cross-origin&amp;quot; src=&amp;quot;https://www.youtube.com/embed/CRlGDDprdOQ?autoplay=0&amp;amp;amp;controls=1&amp;amp;amp;end=0&amp;amp;amp;loop=0&amp;amp;amp;mute=0&amp;amp;amp;start=0&amp;quot; style=&amp;quot;position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;&amp;quot; title=&amp;quot;YouTube video&amp;quot;&amp;gt;&amp;lt;/iframe&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://youtu.be/f1wnYdLEpgI?si=QTeScOvk_yNzzud-&#34;&gt;Learn Git Rebase in 6 minutes // explained with live animations!&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://youtu.be/zOnwgxiC0OA?si=zUXhbnfTX7Ve8BiJ&#34;&gt;Git MERGE vs REBASE: The Definitive Guide&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://youtu.be/CRlGDDprdOQ?si=zSduuwUYe6YpoVUG&#34;&gt;Git MERGE vs REBASE&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>HEAD and Three Trees - Git</title>
+      <link>https://blog.jiyi27.com/posts/git/006-head-three-tress/</link>
+      <pubDate>Fri, 15 Sep 2023 10:18:30 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/git/006-head-three-tress/</guid>
+      <description>&lt;h2 id=&#34;1-three-trees&#34;&gt;1. Three trees&lt;/h2&gt;
+&lt;p&gt;Git as a system manages and manipulates three trees in its normal operation:&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th style=&#34;text-align: left&#34;&gt;Tree&lt;/th&gt;
+          &lt;th style=&#34;text-align: left&#34;&gt;Role&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: left&#34;&gt;HEAD&lt;/td&gt;
+          &lt;td style=&#34;text-align: left&#34;&gt;Last commit snapshot, next parent&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: left&#34;&gt;Index&lt;/td&gt;
+          &lt;td style=&#34;text-align: left&#34;&gt;Proposed next commit snapshot&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: left&#34;&gt;Working Directory&lt;/td&gt;
+          &lt;td style=&#34;text-align: left&#34;&gt;Sandbox&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;The Git index is a critical data structure in Git. It serves as the “staging area” between the files you have on your filesystem and your commit history. When you run &lt;code&gt;git add&lt;/code&gt;, the files from your working directory are hashed and stored as objects in the index, leading them to be “staged changes”. When you run &lt;code&gt;git commit&lt;/code&gt;, the staged changes as stored in the index are used to create that new commit.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-three-trees&#34;&gt;1. Three trees&lt;/h2&gt;
+&lt;p&gt;Git as a system manages and manipulates three trees in its normal operation:&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th style=&#34;text-align: left&#34;&gt;Tree&lt;/th&gt;
+          &lt;th style=&#34;text-align: left&#34;&gt;Role&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: left&#34;&gt;HEAD&lt;/td&gt;
+          &lt;td style=&#34;text-align: left&#34;&gt;Last commit snapshot, next parent&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: left&#34;&gt;Index&lt;/td&gt;
+          &lt;td style=&#34;text-align: left&#34;&gt;Proposed next commit snapshot&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td style=&#34;text-align: left&#34;&gt;Working Directory&lt;/td&gt;
+          &lt;td style=&#34;text-align: left&#34;&gt;Sandbox&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;The Git index is a critical data structure in Git. It serves as the “staging area” between the files you have on your filesystem and your commit history. When you run &lt;code&gt;git add&lt;/code&gt;, the files from your working directory are hashed and stored as objects in the index, leading them to be “staged changes”. When you run &lt;code&gt;git commit&lt;/code&gt;, the staged changes as stored in the index are used to create that new commit.&lt;/p&gt;
+&lt;h2 id=&#34;2-head&#34;&gt;2. HEAD&lt;/h2&gt;
+&lt;h3 id=&#34;21-head-is-you&#34;&gt;2.1. HEAD is YOU&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;HEAD&lt;/code&gt;is a symbolic reference pointing to wherever you are in your commit history. It follows you wherever you go, whatever you do, like a shadow. If you make a commit, &lt;code&gt;HEAD&lt;/code&gt; will move. If you checkout something, &lt;code&gt;HEAD&lt;/code&gt; will move. Whatever you do, if you have moved somewhere new in your commit history, &lt;code&gt;HEAD&lt;/code&gt; has moved along with you. To address one common misconception: you cannot detach yourself from &lt;code&gt;HEAD&lt;/code&gt;. That is not what a detached HEAD state is. If you ever find yourself thinking: &amp;ldquo;oh no, i&amp;rsquo;m in detached HEAD state! I&amp;rsquo;ve lost my HEAD!&amp;rdquo; Remember, it&amp;rsquo;s your HEAD. HEAD is you. You haven&amp;rsquo;t detached from the HEAD, you and your HEAD have detached from something else.&lt;/p&gt;
+&lt;p&gt;Acutally, HEAD is just a special pointer that points to the &lt;strong&gt;local branch&lt;/strong&gt; you’re currently on.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ cat .git/HEAD                 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ref: refs/heads/hugo-blog
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Sometimes you&amp;rsquo;ll get something like this:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;a3c485d9688e3c6bc14b06ca1529f0e78edd3f86
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;That&amp;rsquo;s what happens when &lt;code&gt;HEAD&lt;/code&gt; points directly to a commit. This is called a detached HEAD, because &lt;code&gt;HEAD&lt;/code&gt; is pointing to something other than a branch reference.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In Git, HEAD refers to the currently checked-out branch’s latest commit. However, in a &lt;em&gt;detached&lt;/em&gt; HEAD state, the HEAD does not point to any branch, but instead points to a &lt;strong&gt;specific commit&lt;/strong&gt; or the &lt;strong&gt;remote repository&lt;/strong&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;22-what-can-head-attach-to&#34;&gt;2.2. What can HEAD attach to?&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;HEAD&lt;/code&gt; can point to a commit, yes, but typically it does not. Let me say that again. Typically &lt;code&gt;HEAD&lt;/code&gt; does not point to a commit. It points to a branch reference. It is &lt;em&gt;attached&lt;/em&gt; to that branch, and when you do certain things (e.g., &lt;code&gt;commit&lt;/code&gt; or &lt;a href=&#34;https://stackoverflow.com/a/54934887/7936744&#34;&gt;&lt;code&gt;reset&lt;/code&gt;&lt;/a&gt;), the attached branch will move along with &lt;code&gt;HEAD&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;HEAD&lt;/code&gt; is you. It points to whatever you checked out, wherever you are. &lt;strong&gt;Typically that is not a commit, it is a local branch.&lt;/strong&gt; If &lt;code&gt;HEAD&lt;/code&gt; &lt;em&gt;does&lt;/em&gt; point to a commit (or tag), even if it&amp;rsquo;s the same commit (or tag) that a branch also points to, you (and &lt;code&gt;HEAD&lt;/code&gt;) have been detached from that branch. Since you don&amp;rsquo;t have a branch attached to you, the branch won&amp;rsquo;t follow along with you as you make new commits. The &lt;code&gt;HEAD&lt;/code&gt;, however, will.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div style=&amp;quot;position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;&amp;quot;&amp;gt;
+  &amp;lt;iframe allow=&amp;quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&amp;quot; allowfullscreen=&amp;quot;allowfullscreen&amp;quot; loading=&amp;quot;eager&amp;quot; referrerpolicy=&amp;quot;strict-origin-when-cross-origin&amp;quot; src=&amp;quot;https://www.youtube.com/embed/GN36mrrM12k?autoplay=0&amp;amp;amp;controls=1&amp;amp;amp;end=0&amp;amp;amp;loop=0&amp;amp;amp;mute=0&amp;amp;amp;start=0&amp;quot; style=&amp;quot;position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;&amp;quot; title=&amp;quot;YouTube video&amp;quot;&amp;gt;&amp;lt;/iframe&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Source:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://stackoverflow.com/a/54935492/16317008&#34;&gt;https://stackoverflow.com/a/54935492/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://circleci.com/blog/git-detached-head-state/&#34;&gt;https://circleci.com/blog/git-detached-head-state/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://youtu.be/GN36mrrM12k?si=S6_VTBQDZgG_fHre&#34;&gt;https://youtu.be/GN36mrrM12k?si=S6_VTBQDZgG_fHre&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Git Push with force</title>
+      <link>https://blog.jiyi27.com/posts/git/009-push-with-force/</link>
+      <pubDate>Thu, 14 Sep 2023 10:00:23 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/git/009-push-with-force/</guid>
+      <description>&lt;h2 id=&#34;1-git-push--f-is-dangerous&#34;&gt;1. &lt;code&gt;git push -f&lt;/code&gt; is dangerous&lt;/h2&gt;
+&lt;p&gt;The commit history on my local and remote repo are same:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;second commit
+first commit
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Then I added a file &lt;code&gt;docs.md&lt;/code&gt; driectly on github and make a commit so there is another new commit history on remote repo which is different form the commit history of my local repo.&lt;/p&gt;
+&lt;p&gt;Commit history on &lt;strong&gt;remote repo&lt;/strong&gt;:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;create docs.md
+second commit
+first commit
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Files on &lt;strong&gt;remote repo&lt;/strong&gt;:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;README.md
+main.c
+docs.md
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Then I made some modifications on local repo and make a commit.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-git-push--f-is-dangerous&#34;&gt;1. &lt;code&gt;git push -f&lt;/code&gt; is dangerous&lt;/h2&gt;
+&lt;p&gt;The commit history on my local and remote repo are same:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;second commit
+first commit
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Then I added a file &lt;code&gt;docs.md&lt;/code&gt; driectly on github and make a commit so there is another new commit history on remote repo which is different form the commit history of my local repo.&lt;/p&gt;
+&lt;p&gt;Commit history on &lt;strong&gt;remote repo&lt;/strong&gt;:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;create docs.md
+second commit
+first commit
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Files on &lt;strong&gt;remote repo&lt;/strong&gt;:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;README.md
+main.c
+docs.md
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Then I made some modifications on local repo and make a commit.&lt;/p&gt;
+&lt;p&gt;Commit history on &lt;strong&gt;local repo&lt;/strong&gt;:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;third commit
+second commit
+first commit
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Files on &lt;strong&gt;local repo:&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;README.md
+main.c
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Now when I try to push my local changes to github:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;$ git push origin master
+To github.com:shwezhu/test_repo.git
+ ! [rejected]        master -&amp;gt; master (fetch first)
+error: failed to push some refs to &amp;#39;github.com:shwezhu/test_repo.git&amp;#39;
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref. You may want to first integrate the remote changes
+hint: (e.g., &amp;#39;git pull ...&amp;#39;) before pushing again.
+hint: See the &amp;#39;Note about fast-forwards&amp;#39; in &amp;#39;git push --help&amp;#39; for details.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This happens because the commit history of the master branch in local and remote repo are different.&lt;/p&gt;
+&lt;p&gt;One way to slolve this is to fetch the remote and merge the changes (commit history will be merged too), then push will succeed. Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/git/practice/001-rejected-push-fix-conflicts/&#34;&gt;Push on Github get Rejected - Solved - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Another way is to use &lt;code&gt;git push -f&lt;/code&gt; but this will overwirte your remote repo, which means **the commit history and the work place on remote rep will be overwritten **.&lt;/p&gt;
+&lt;p&gt;After use  &lt;code&gt;git push -f&lt;/code&gt;, the commit history and workplace of  the remote repo will looks exactly like the local:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;third commit
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;second commit
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;first commit
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Noew the file &lt;code&gt;docs.md&lt;/code&gt; will miss which means &lt;strong&gt;&lt;code&gt;git push -f&lt;/code&gt; is dangerous.&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-force-with-lease&#34;&gt;2. &lt;code&gt;–force-with-lease&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;Git’s &lt;code&gt;push --force&lt;/code&gt; is destructive because it unconditionally overwrites the remote repository with whatever you have locally, possibly overwriting any changes that a team member has pushed in the meantime. However there is a better way; the option –force-with-lease can help when you do need to do a forced push but still ensure you don’t overwrite other’s work.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;--force&lt;/code&gt; on shared branches is an absolute no-no.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://blog.developer.atlassian.com/force-with-lease/&#34;&gt;-force considered harmful; understanding git&amp;rsquo;s -force-with-lease - Atlassian Developer Blog&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Commit Message Guidelines</title>
+      <link>https://blog.jiyi27.com/posts/git/008-concise-commit/</link>
+      <pubDate>Mon, 11 Sep 2023 07:47:23 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/git/008-concise-commit/</guid>
+      <description>&lt;p&gt;A properly formed git commit subject line should always be able to complete the following sentence:&lt;/p&gt;
+&lt;p&gt;If applied, this commit will &lt;em&gt;&lt;!-- raw HTML omitted --&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id=&#34;1-things-to-avoid-when-creating-commits&#34;&gt;1. Things to avoid when creating commits&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Sending large new features in a single giant commit.&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Mixing two unrelated functional changes.&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;Again the reviewer will find it harder to identify flaws if two unrelated changes are mixed together. If it becomes necessary to later revert a broken commit, the two unrelated changes will need to be untangled, with further risk of bug creation.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Mixing whitespace changes with functional code changes.&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;If a code change can be split into a sequence of patches/commits, 
+then it should be split. Less is not more. More is more.
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;2-commit-message-format&#34;&gt;2. Commit message format&lt;/h2&gt;
+&lt;p&gt;Each commit message consists of a header, a body, and a footer.&lt;/p&gt;</description>
+      <content>&lt;p&gt;A properly formed git commit subject line should always be able to complete the following sentence:&lt;/p&gt;
+&lt;p&gt;If applied, this commit will &lt;em&gt;&lt;!-- raw HTML omitted --&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;h2 id=&#34;1-things-to-avoid-when-creating-commits&#34;&gt;1. Things to avoid when creating commits&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Sending large new features in a single giant commit.&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Mixing two unrelated functional changes.&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;Again the reviewer will find it harder to identify flaws if two unrelated changes are mixed together. If it becomes necessary to later revert a broken commit, the two unrelated changes will need to be untangled, with further risk of bug creation.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Mixing whitespace changes with functional code changes.&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;If a code change can be split into a sequence of patches/commits, 
+then it should be split. Less is not more. More is more.
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;2-commit-message-format&#34;&gt;2. Commit message format&lt;/h2&gt;
+&lt;p&gt;Each commit message consists of a header, a body, and a footer.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;lt;header&amp;gt;
+&amp;lt;BLANK LINE&amp;gt;
+&amp;lt;body&amp;gt;
+&amp;lt;BLANK LINE&amp;gt;
+&amp;lt;footer&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;21-commit-message-header&#34;&gt;2.1. Commit message header&lt;/h3&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;lt;type&amp;gt;(&amp;lt;scope&amp;gt;): &amp;lt;short summary&amp;gt;
+  │       │             │
+  │       │             └─⫸ Summary in present tense. Not capitalized. No period at the end.
+  │       │
+  │       └─⫸ Commit Scope: animations|bazel|benchpress|common|compiler|compiler-cli|core|
+  │                          elements|forms|http|language-service|localize|platform-browser|
+  │                          platform-browser-dynamic|platform-server|router|service-worker|
+  │                          upgrade|zone.js|packaging|changelog|docs-infra|migrations|ngcc|ve|
+  │                          devtools
+  │
+  └─⫸ Commit Type: build|ci|docs|feat|fix|perf|refactor|test
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The &lt;code&gt;&amp;lt;type&amp;gt;&lt;/code&gt; and &lt;code&gt;&amp;lt;summary&amp;gt;&lt;/code&gt; fields are mandatory, the &lt;code&gt;(&amp;lt;scope&amp;gt;)&lt;/code&gt; field is optional.&lt;/p&gt;
+&lt;h5 id=&#34;type&#34;&gt;Type&lt;/h5&gt;
+&lt;p&gt;Must be one of the following:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;build&lt;/strong&gt;: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;ci&lt;/strong&gt;: Changes to our CI configuration files and scripts (examples: CircleCi, SauceLabs)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;docs&lt;/strong&gt;: Documentation only changes&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;feat&lt;/strong&gt;: A new feature&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;fix&lt;/strong&gt;: A bug fix&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;perf&lt;/strong&gt;: A code change that improves performance&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;refactor&lt;/strong&gt;: A code change that neither fixes a bug nor adds a feature&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;test&lt;/strong&gt;: Adding missing tests or correcting existing tests&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;summary&#34;&gt;Summary&lt;/h5&gt;
+&lt;p&gt;Use the summary field to provide a succinct description of the change:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;use the imperative, present tense: &amp;ldquo;change&amp;rdquo; not &amp;ldquo;changed&amp;rdquo; nor &amp;ldquo;changes&amp;rdquo;
+&lt;ul&gt;
+&lt;li&gt;This convention matches up with commit messages generated by commands like git merge and git revert.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;don&amp;rsquo;t capitalize the first letter&lt;/li&gt;
+&lt;li&gt;no dot (.) at the end&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-information-in-commit-messages&#34;&gt;3. Information in commit messages&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;      commit 468e64d019f51d364afb30b0eed2ad09483e0b98
+      Author: [removed]
+      Date:   Mon Jun 18 16:07:37 2012 -0400
+
+      Fix missing import in compute/utils.py
+
+      Fixes bug 1014829
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Problem: this does not mention what imports where missing and why they were needed. This info was actually in the bug tracker, and should have been copied into the commit message, so that it would provide a self-contained description. e.g.:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;      Add missing import of &amp;#39;exception&amp;#39; in compute/utils.py
+
+      nova/compute/utils.py makes a reference to exception.NotFound,
+      however exception has not been imported.
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;4-common-wrods&#34;&gt;4. Common wrods&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;feat: add support for configuring libvirt VM clock and timers
+feat: add libvirt version check, min 0.9.7
+feat: update default policies for KVM guest PIT &amp;amp; RTC timers
+
+perf: refine serialize
+refactor: reformat code
+refactor: rename type and namespace
+refactor: add a comment to rpc.queue_get_for()
+
+Add, Fix, Remove, Refactor, Reformat, Optimise and Update
+Add = Create a capability e.g. feature, test, dependency.
+Remove = Remove a capability e.g. feature, test, dependency.
+Fix = Fix an issue e.g. bug, typo, accident, misstatement.
+Refactor = A code change that MUST be just a refactoring.
+Reformat = Refactor of formatting, e.g. omit whitespace.
+Optimise = Refactor of performance, e.g. speed up code.
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;5-check-commit-history&#34;&gt;5. Check commit history&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ git config --global alias.lgg &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;log --graph --pretty=format:&amp;#39;%Cred%h%Creset -%C(yellow)%d%Creset %s %C(bold blue)&amp;lt;%an&amp;gt;%Creset&amp;#39; --abbrev-commit --date=relative&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ git lgg
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* d7c4459 - &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;HEAD, M, fromA&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; M &amp;lt;VonC&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;*   82b011d - &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;L&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; Merge commit &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;J&amp;#39;&lt;/span&gt; into fromA &amp;lt;VonC&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;|&lt;span style=&#34;color:#ae81ff&#34;&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;| * 190265b - &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;J, master&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; J &amp;lt;VonC&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| *   ef8e325 - &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;I&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; Merge commit &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;F&amp;#39;&lt;/span&gt; &amp;lt;VonC&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| |&lt;span style=&#34;color:#ae81ff&#34;&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;| | * 4b6d976 - &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;F, fromB&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; F &amp;lt;VonC&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| * | 45a5d4d - &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;H&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; H &amp;lt;VonC&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| * |   834b239 - &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;G&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; Merge commit &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;E&amp;#39;&lt;/span&gt; &amp;lt;VonC&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| |&lt;span style=&#34;color:#ae81ff&#34;&gt;\ \
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;| | |/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| | * f8e9272 - &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;E&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; E &amp;lt;VonC&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| | * 96b5538 - &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;D&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; D &amp;lt;VonC&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| * | 49eff7f - &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;C&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; C &amp;lt;VonC&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| |/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;| * 02c3ef4 - &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;B&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; B &amp;lt;VonC&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* | c0d9e1e - &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;K&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; K &amp;lt;VonC&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;|/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* 6530d79 - &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;A&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; A &amp;lt;VonC&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Source: &lt;a href=&#34;https://stackoverflow.com/a/6744268/16317008&#34;&gt;https://stackoverflow.com/a/6744268/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53&#34;&gt;Commit message guidelines&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://gist.github.com/brianclements/841ea7bffdb01346392c&#34;&gt;Angular Commit Format Reference Sheet&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/knowbl/git-commit-message&#34;&gt;knowbl/git-commit-message: Git commit message verbs used by Knowbl.&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://gist.github.com/scmx/411f6fea4ee3832806720d536a7d5d8f&#34;&gt;Example list of verbs / first word to use in git commit title #git #commit #title&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Backup Blogs with Git - Sovled</title>
+      <link>https://blog.jiyi27.com/posts/git/practice/003-blog-backup/</link>
+      <pubDate>Fri, 01 Sep 2023 14:12:50 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/git/practice/003-blog-backup/</guid>
+      <description>&lt;h2 id=&#34;problem&#34;&gt;Problem&lt;/h2&gt;
+&lt;p&gt;On github &lt;code&gt;shwezhu.github.io&lt;/code&gt; repository I have two branch already, one is &lt;code&gt;master&lt;/code&gt; for static html files that is generate web page, another is &lt;code&gt;backup&lt;/code&gt; for backup of my hexo themes files and blogs.&lt;/p&gt;
+&lt;p&gt;I want backup the hugo theme files with my blog files.&lt;/p&gt;
+&lt;h2 id=&#34;solution&#34;&gt;Solution&lt;/h2&gt;
+&lt;p&gt;I&amp;rsquo;m using hugo now but I don&amp;rsquo;t want to override or delete the theme files for hexo, therefore, I cannot just fetch remote branch &lt;code&gt;backup&lt;/code&gt; and merge it with my local branch and then push. This will override the files stored on &lt;code&gt;backup&lt;/code&gt; before.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;problem&#34;&gt;Problem&lt;/h2&gt;
+&lt;p&gt;On github &lt;code&gt;shwezhu.github.io&lt;/code&gt; repository I have two branch already, one is &lt;code&gt;master&lt;/code&gt; for static html files that is generate web page, another is &lt;code&gt;backup&lt;/code&gt; for backup of my hexo themes files and blogs.&lt;/p&gt;
+&lt;p&gt;I want backup the hugo theme files with my blog files.&lt;/p&gt;
+&lt;h2 id=&#34;solution&#34;&gt;Solution&lt;/h2&gt;
+&lt;p&gt;I&amp;rsquo;m using hugo now but I don&amp;rsquo;t want to override or delete the theme files for hexo, therefore, I cannot just fetch remote branch &lt;code&gt;backup&lt;/code&gt; and merge it with my local branch and then push. This will override the files stored on &lt;code&gt;backup&lt;/code&gt; before.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# should not do this&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git fetch origin backup
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git branch -a
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git merge origin/backup --allow-unrelated-histories
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;So I create a new branch called &lt;code&gt;backup-hugo&lt;/code&gt;, and push all files to this branch.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cd blogs
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git init
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# you can add .gitignore here&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git add .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git commit...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git branch -M backup-hugo &lt;span style=&#34;color:#75715e&#34;&gt;# rename current branch&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git push -u origin backup-hugo
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;other-findings&#34;&gt;Other Findings&lt;/h2&gt;
+&lt;p&gt;During this process, when I do commit I got wrong message that there is another git repository under &lt;code&gt;themes/even/&lt;/code&gt;, however, I have do &lt;code&gt;git add .&lt;/code&gt;, what should I do now is to go to &lt;code&gt;themes/even/&lt;/code&gt; and delete &lt;code&gt;.git&lt;/code&gt; file, then undo &lt;code&gt;git add&lt;/code&gt; which is called unstage file from index area,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cd themes/even.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;rm -rf .git
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cd .. &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; cd ..
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git rm --cached themes/even/.git
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git add .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git commit...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;git rm --cached&lt;/code&gt; is a very useful command, it can make file from tracked to untracked status.&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Pushed a Wrong File to Github - Solved</title>
+      <link>https://blog.jiyi27.com/posts/git/practice/002-pushed-wrong-files/</link>
+      <pubDate>Sun, 20 Aug 2023 07:40:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/git/practice/002-pushed-wrong-files/</guid>
+      <description>&lt;h2 id=&#34;问题描述&#34;&gt;问题描述&lt;/h2&gt;
+&lt;p&gt;写完博客把内容 push 到了 GitHub, 发现有个文件 &lt;code&gt;a.txt&lt;/code&gt;  不应该被追踪, &lt;code&gt;a.txt&lt;/code&gt; 已经被追踪了,&lt;/p&gt;
+&lt;h2 id=&#34;原因分析&#34;&gt;原因分析&lt;/h2&gt;
+&lt;p&gt;首先你可能会想到 直接在本地删除  &lt;code&gt;a.txt&lt;/code&gt;  commit, 然后 push 就行了, 可是即使这样 GitHub依然会有  &lt;code&gt;a.txt&lt;/code&gt;  , 况且  &lt;code&gt;a.txt&lt;/code&gt;  不能删除, 就是留在本地有用但是因为隐私不想放到GitHub, 而且这么做岂不是太粗鲁了,&lt;/p&gt;
+&lt;h2 id=&#34;解决办法&#34;&gt;解决办法&lt;/h2&gt;
+&lt;p&gt;解决方法不唯一, 这里介绍两个,&lt;/p&gt;
+&lt;p&gt;其中一个可行的是在 GitHub 手动删除 &lt;code&gt;a.txt&lt;/code&gt;  , 然后在本地进行 fetch, 再merge, ummm, 貌似比前面还粗鲁,&lt;/p&gt;
+&lt;p&gt;比较优雅的做法是在本地仓库使用 &lt;code&gt; git rm --cached &amp;lt;filename&amp;gt;&lt;/code&gt; 让 &lt;code&gt;a.txt&lt;/code&gt; 从 tracked -&amp;gt; untracked,&lt;/p&gt;
+&lt;p&gt;然后把 &lt;code&gt;a.txt&lt;/code&gt; 加入到 &lt;code&gt;.gitignore&lt;/code&gt;, 再进行 commit 和 push, 此时 github 上的 &lt;code&gt;a.txt&lt;/code&gt; 会消失&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;问题描述&#34;&gt;问题描述&lt;/h2&gt;
+&lt;p&gt;写完博客把内容 push 到了 GitHub, 发现有个文件 &lt;code&gt;a.txt&lt;/code&gt;  不应该被追踪, &lt;code&gt;a.txt&lt;/code&gt; 已经被追踪了,&lt;/p&gt;
+&lt;h2 id=&#34;原因分析&#34;&gt;原因分析&lt;/h2&gt;
+&lt;p&gt;首先你可能会想到 直接在本地删除  &lt;code&gt;a.txt&lt;/code&gt;  commit, 然后 push 就行了, 可是即使这样 GitHub依然会有  &lt;code&gt;a.txt&lt;/code&gt;  , 况且  &lt;code&gt;a.txt&lt;/code&gt;  不能删除, 就是留在本地有用但是因为隐私不想放到GitHub, 而且这么做岂不是太粗鲁了,&lt;/p&gt;
+&lt;h2 id=&#34;解决办法&#34;&gt;解决办法&lt;/h2&gt;
+&lt;p&gt;解决方法不唯一, 这里介绍两个,&lt;/p&gt;
+&lt;p&gt;其中一个可行的是在 GitHub 手动删除 &lt;code&gt;a.txt&lt;/code&gt;  , 然后在本地进行 fetch, 再merge, ummm, 貌似比前面还粗鲁,&lt;/p&gt;
+&lt;p&gt;比较优雅的做法是在本地仓库使用 &lt;code&gt; git rm --cached &amp;lt;filename&amp;gt;&lt;/code&gt; 让 &lt;code&gt;a.txt&lt;/code&gt; 从 tracked -&amp;gt; untracked,&lt;/p&gt;
+&lt;p&gt;然后把 &lt;code&gt;a.txt&lt;/code&gt; 加入到 &lt;code&gt;.gitignore&lt;/code&gt;, 再进行 commit 和 push, 此时 github 上的 &lt;code&gt;a.txt&lt;/code&gt; 会消失&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Push on Github get Rejected - Solved</title>
+      <link>https://blog.jiyi27.com/posts/git/practice/001-rejected-push-fix-conflicts/</link>
+      <pubDate>Tue, 15 Aug 2023 22:18:50 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/git/practice/001-rejected-push-fix-conflicts/</guid>
+      <description>&lt;h2 id=&#34;problem&#34;&gt;Problem&lt;/h2&gt;
+&lt;p&gt;GitHub 新建一个 repository, 并选择了自动创建 &lt;code&gt;README.md&lt;/code&gt;, 在本地初始化项目后进行push, 报错:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ git push -u origin master
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;To github.com:shwezhu/gptbot.git
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; ! &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;rejected&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;        master -&amp;gt; master &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;fetch first&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;error: failed to push some refs to &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;github.com:shwezhu/gptbot.git&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hint: Updates were rejected because the remote contains work that you &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hint: not have locally. This is usually caused by another repository pushing
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hint: to the same ref. You may want to first integrate the remote changes
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hint: &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;e.g., &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;git pull ...&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; before pushing again.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hint: See the &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Note about fast-forwards&amp;#39;&lt;/span&gt; in &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;git push --help&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; details.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;原因分析&#34;&gt;原因分析&lt;/h2&gt;
+&lt;p&gt;远程仓库存在本地仓库没有的 commit, 导致 push 被拒绝,&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;problem&#34;&gt;Problem&lt;/h2&gt;
+&lt;p&gt;GitHub 新建一个 repository, 并选择了自动创建 &lt;code&gt;README.md&lt;/code&gt;, 在本地初始化项目后进行push, 报错:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ git push -u origin master
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;To github.com:shwezhu/gptbot.git
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; ! &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;rejected&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;        master -&amp;gt; master &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;fetch first&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;error: failed to push some refs to &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;github.com:shwezhu/gptbot.git&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hint: Updates were rejected because the remote contains work that you &lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hint: not have locally. This is usually caused by another repository pushing
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hint: to the same ref. You may want to first integrate the remote changes
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hint: &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;e.g., &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;git pull ...&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; before pushing again.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hint: See the &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Note about fast-forwards&amp;#39;&lt;/span&gt; in &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;git push --help&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; details.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;原因分析&#34;&gt;原因分析&lt;/h2&gt;
+&lt;p&gt;远程仓库存在本地仓库没有的 commit, 导致 push 被拒绝,&lt;/p&gt;
+&lt;h2 id=&#34;解决办法&#34;&gt;解决办法&lt;/h2&gt;
+&lt;p&gt;fetch 下来查看都是什么 commit, 再决定是否进行 merge,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# git fetch &amp;lt;remote&amp;gt; &amp;lt;branch&amp;gt;, &amp;lt;branch&amp;gt; is optional&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git fetch origin
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# list all branches&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git branch -v -a
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;* master                a48d922 Rework handler
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  remotes/origin/master f6c60de Initial commit
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# check the work on the remote&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git checkout origin/master
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Note: switching to &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;origin/master&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 切换远程分支后, workplace 只剩下一个 `README.md` 文件, &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 发现没什么问题, 切换回本地原分支,  (假装查看变化)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git switch master
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 注意 如果查看变化后你不想合并这个远程分支 直接删除该分支即可&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# git branch -r -d origin/master, 必须加上 -r 否则报错找不到分支&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git merge origin/master
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;fatal: refusing to merge unrelated histories
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git merge origin/master --allow-unrelated-histories
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Merge made by the &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ort&amp;#39;&lt;/span&gt; strategy.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; README.md | &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; +
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; file changed, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; insertion&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;+&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; create mode &lt;span style=&#34;color:#ae81ff&#34;&gt;100644&lt;/span&gt; README.md
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 查看 commit history&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git log
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;commit 14daf2d5ae37dea131416629c6df22e1fe8ab456 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;HEAD -&amp;gt; master&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Merge: a48d922 f6c60de
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Author: David Zhu &amp;lt;shaowenzhu@dal.ca&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Date:   Tue Aug &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt; 23:03:47 &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; -0300
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Merge remote-tracking branch &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;origin/master&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;commit f6c60de218933dcb40e507a88998318b4644034c &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;origin/master&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Author: David Zhu &amp;lt;shwezhu@qq.com&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Date:   Wed Aug &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt; 06:29:10 &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; +0800
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Initial commit
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;commit a48d922d19e96b76f71dd09e0048f16d8feea03d
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Author: David Zhu &amp;lt;shaowenzhu@dal.ca&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Date:   Tue Aug &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt; 19:28:27 &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; -0300
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Rework handler
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 此时再 push&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git push -u origin master
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;通过 &lt;code&gt;git fetch origin&lt;/code&gt; 拉取远程仓库的commit&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;通过 &lt;code&gt;git branch -v -a&lt;/code&gt; 查看所有分支, 选择是否进行merge&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;执行 merge 时 git 会自动做一次 commit&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;git merge origin/master --allow-unrelated-histories&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>git rm &amp; git restore</title>
+      <link>https://blog.jiyi27.com/posts/git/001-git-basics/</link>
+      <pubDate>Fri, 05 May 2023 09:31:30 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/git/001-git-basics/</guid>
+      <description>&lt;h2 id=&#34;1-status-switch&#34;&gt;1. Status Switch&lt;/h2&gt;
+&lt;p&gt;Remember that each file in your &lt;strong&gt;working directory&lt;/strong&gt; can be in one of &lt;strong&gt;two states&lt;/strong&gt;: &lt;em&gt;&lt;code&gt;tracked&lt;/code&gt;&lt;/em&gt; or &lt;em&gt;&lt;code&gt;untracked&lt;/code&gt;&lt;/em&gt;. Tracked files are files that were in the last &lt;strong&gt;snapshot&lt;/strong&gt;, as well as any newly &lt;strong&gt;staged files&lt;/strong&gt;; they can be &lt;code&gt;unmodified&lt;/code&gt;, &lt;code&gt;modified&lt;/code&gt;, or &lt;code&gt;staged&lt;/code&gt;. In short, tracked files are files that Git knows about. As you edit files, Git sees them as modified, because you’ve changed them since your last commit. As you work, you selectively stage these modified files and then commit all those staged changes, and the cycle repeats.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-status-switch&#34;&gt;1. Status Switch&lt;/h2&gt;
+&lt;p&gt;Remember that each file in your &lt;strong&gt;working directory&lt;/strong&gt; can be in one of &lt;strong&gt;two states&lt;/strong&gt;: &lt;em&gt;&lt;code&gt;tracked&lt;/code&gt;&lt;/em&gt; or &lt;em&gt;&lt;code&gt;untracked&lt;/code&gt;&lt;/em&gt;. Tracked files are files that were in the last &lt;strong&gt;snapshot&lt;/strong&gt;, as well as any newly &lt;strong&gt;staged files&lt;/strong&gt;; they can be &lt;code&gt;unmodified&lt;/code&gt;, &lt;code&gt;modified&lt;/code&gt;, or &lt;code&gt;staged&lt;/code&gt;. In short, tracked files are files that Git knows about. As you edit files, Git sees them as modified, because you’ve changed them since your last commit. As you work, you selectively stage these modified files and then commit all those staged changes, and the cycle repeats.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/001-git-basics/a.png&#34; alt=&#34;a&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Some commands are used frequently, the commands below will make a diffference on &lt;em&gt;&lt;strong&gt;Git repository&lt;/strong&gt;&lt;/em&gt; but won&amp;rsquo;t change the &lt;em&gt;&lt;strong&gt;wok place&lt;/strong&gt;&lt;/em&gt; (file system):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# just untrack file&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git rm --cached file-name
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# just unstatge file&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git restore --staged file-name
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The commands below will change both work place and Git repository:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# untrack file &amp;amp; rm file&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git rm file-name
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# unstatge file &amp;amp; discard uncommitted local changes&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git restore file-name
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-untrack-file&#34;&gt;2. Untrack File&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git rm file-name
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git rm --cached file-name
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &amp;ldquo;rm&amp;rdquo; command helps you to remove files from a Git repository. It allows you to not only delete a file from the &lt;em&gt;repository&lt;/em&gt;, but also - if you wish - from the &lt;em&gt;filesystem&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;Deleting a file from the filesystem can of course easily be done in many other applications, e.g. a text editor, IDE or file browser. But deleting the file from the &lt;em&gt;actual Git repository&lt;/em&gt; is a separate task, for which &lt;code&gt;git rm&lt;/code&gt; was made.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;&lt;code&gt;--cached&lt;/code&gt;&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Removes the file only from the Git repository, but not from the filesystem.&lt;/strong&gt; By default, the &lt;code&gt;git rm&lt;/code&gt; command deletes files both from the Git repository as well as the filesystem. Using the &lt;code&gt;--cached&lt;/code&gt; flag, the actual file on disk will &lt;em&gt;not&lt;/em&gt; be deleted.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;&lt;code&gt;-r&lt;/code&gt;&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Recursively removes folders.&lt;/strong&gt; When a path to a directory is specified, the &lt;code&gt;-r&lt;/code&gt; flag allows Git to remove that folder including all its contents.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;3-unstage-file&#34;&gt;3. Unstage File&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git restore file-name
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git restore --staged file-name
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &amp;ldquo;restore&amp;rdquo; command helps to unstage or even discard uncommitted local changes. On the one hand, the command can be used to undo the effects of &lt;code&gt;git add&lt;/code&gt; and unstage changes you have previously added to the &lt;em&gt;&lt;strong&gt;Staging Area&lt;/strong&gt;&lt;/em&gt;.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;&lt;code&gt;--staged&lt;/code&gt;&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Removes the file from the Staging Area, but leaves its actual modifications untouched.&lt;/strong&gt; By default, the &lt;code&gt;git restore&lt;/code&gt; command will discard any local, uncommitted changes in the corresponding files and thereby restore their last committed state. With the &lt;code&gt;--staged&lt;/code&gt; option, however, the file will only be removed from the Staging Area - but its actual modifications will remain untouched.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;&lt;code&gt;--source &amp;lt;ref&amp;gt;&lt;/code&gt;&lt;/strong&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Restores a specific revision of the file.&lt;/strong&gt; By default, the file will be restored to its last committed state (or simply be unstaged). The &lt;code&gt;--source&lt;/code&gt; option, however, allows you to restore the file at a &lt;em&gt;specific revision&lt;/em&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ git restore --source 7173808e index.html
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ git restore --source master~2 index.html
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The first example will restore the file as it was in commit #7173808e, while the second one will restore it as it was &amp;ldquo;two commits before the current tip of the master branch&amp;rdquo;.&lt;/p&gt;
+&lt;h2 id=&#34;3-stage-file&#34;&gt;3. Stage File&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git add file-name
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;It adds changes to Git&amp;rsquo;s &lt;em&gt;&lt;strong&gt;Staging Area&lt;/strong&gt;&lt;/em&gt; (index), the contents of which can then be wrapped up in a new revision with the &lt;code&gt;git commit&lt;/code&gt; command.&lt;/p&gt;
+&lt;h2 id=&#34;4-conclusion&#34;&gt;4. Conclusion&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Git repository, Work place (Filesystem,  Working tree), Staging Area (Index),&lt;/li&gt;
+&lt;li&gt;Stage the file: &lt;code&gt;git add &amp;lt;filename&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Unstage: &lt;code&gt; git restore --staged &amp;lt;filename&amp;gt;&lt;/code&gt;, &lt;code&gt;git restore &amp;lt;filename&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Untrack: &lt;code&gt; git rm --cached &amp;lt;filename&amp;gt;&lt;/code&gt;, &lt;code&gt;git rm &amp;lt;filname&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository&#34;&gt;https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.git-tower.com/learn/git/commands/git-rm&#34;&gt;https://www.git-tower.com/learn/git/commands/git-rm&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.git-tower.com/learn/git/commands/git-restore&#34;&gt;https://www.git-tower.com/learn/git/commands/git-restore&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>git branch</title>
+      <link>https://blog.jiyi27.com/posts/git/002-git-branch/</link>
+      <pubDate>Sat, 22 Apr 2023 00:47:50 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/git/002-git-branch/</guid>
+      <description>&lt;h2 id=&#34;1-commands-used-in-branch&#34;&gt;1. Commands used in branch&lt;/h2&gt;
+&lt;p&gt;You can use &lt;code&gt;git branch -h&lt;/code&gt; to check these commands&amp;rsquo; explanation.&lt;/p&gt;
+&lt;p&gt;List branches:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;git branch&lt;/code&gt;,  local, equals to &lt;code&gt;ls ./.git/refs/heads/&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;git branch -r&lt;/code&gt;, remote&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;git branch -a&lt;/code&gt;, all&lt;/li&gt;
+&lt;li&gt;you can add &lt;code&gt;-v&lt;/code&gt; option, &lt;code&gt;git branch -v -a&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Check which branch you are on:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;git status&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Create branch:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;git branch &amp;lt;name&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Switch branch:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;git switch &amp;lt;name&amp;gt;&lt;/code&gt;, only can switch to the branches on your local repository&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;git checkout &amp;lt;name&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Delete branch:&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-commands-used-in-branch&#34;&gt;1. Commands used in branch&lt;/h2&gt;
+&lt;p&gt;You can use &lt;code&gt;git branch -h&lt;/code&gt; to check these commands&amp;rsquo; explanation.&lt;/p&gt;
+&lt;p&gt;List branches:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;git branch&lt;/code&gt;,  local, equals to &lt;code&gt;ls ./.git/refs/heads/&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;git branch -r&lt;/code&gt;, remote&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;git branch -a&lt;/code&gt;, all&lt;/li&gt;
+&lt;li&gt;you can add &lt;code&gt;-v&lt;/code&gt; option, &lt;code&gt;git branch -v -a&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Check which branch you are on:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;git status&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Create branch:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;git branch &amp;lt;name&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Switch branch:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;git switch &amp;lt;name&amp;gt;&lt;/code&gt;, only can switch to the branches on your local repository&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;git checkout &amp;lt;name&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Delete branch:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;delete fully merged branch: &lt;code&gt;git branch -d &amp;lt;name&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;delete branch (even if not merged):  &lt;code&gt;git branch -D &amp;lt;name&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;delete a fetched branch locally: &lt;code&gt;git branch -r -d &amp;lt;name&amp;gt;&lt;/code&gt;, e.g., &lt;code&gt;git branch -r -d origin/master &lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Merge benach &lt;code&gt;issue003&lt;/code&gt; into current branch：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;git merge &amp;lt;issue003&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Rename Current Branch&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;move/rename a branch and its &lt;a href=&#34;https://www.atlassian.com/git/tutorials/rewriting-history/git-reflog&#34;&gt;reflog&lt;/a&gt;: &lt;code&gt;git branch -m &amp;lt;branch-name&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;move/rename a branch, even if target exists: &lt;code&gt;git branch -M &amp;lt;branch-name&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2-切换分支需要注意的事&#34;&gt;2. 切换分支需要注意的事&lt;/h2&gt;
+&lt;h3 id=&#34;21-在本地修改远程对应分支&#34;&gt;2.1. 在本地修改远程对应分支&lt;/h3&gt;
+&lt;p&gt;想要 push 到远程某个分支, 就必须在本地对应的分支修改文件, 否则会导致 push 到错误的分支,&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;错误例子&lt;/strong&gt;: 有两个分支&lt;code&gt;main&lt;/code&gt;和&lt;code&gt;backup&lt;/code&gt;, 我想要把文件 push 到 &lt;code&gt;backup&lt;/code&gt; 分支上以用于备份, 可是我却每次在本地的 main 分支编辑博客, 导致往远程分支 &lt;code&gt;origin/backup&lt;/code&gt; push 的时候说 everything is up-to-date. 然后到github看是否备份, 发现并没有备份, 就出现了这种摸不清头绪的问题.&lt;/p&gt;
+&lt;h3 id=&#34;22-新建分支必须做一次-commit&#34;&gt;2.2. 新建分支必须做一次 commit&lt;/h3&gt;
+&lt;p&gt;创建的分支后必须在该分支下做一次commit, 分支创建才会生效,&lt;/p&gt;
+&lt;p&gt;如创建并转到分支 &lt;code&gt;backup&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git switch -c backup
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;若没做任何 commit 就转到分支 &lt;code&gt; master&lt;/code&gt;, 则分支 &lt;code&gt; branch&lt;/code&gt; 并没有成功创建, 此时从 &lt;code&gt; master&lt;/code&gt; 分支转到 &lt;code&gt;backup&lt;/code&gt; 分支, 会报错&lt;code&gt;fatal: invalid reference: backup&lt;/code&gt;,&lt;/p&gt;
+&lt;h3 id=&#34;23-切换分支前确保已经做了-commit&#34;&gt;2.3. 切换分支前确保已经做了 commit&lt;/h3&gt;
+&lt;p&gt;正常情况下在一个分支 A 做一些修改或者新建文件, commit 后再切换到分支B, 在分支 B 无法看到刚在分支 A 做的修改,&lt;/p&gt;
+&lt;p&gt;如果在切换分之前没有commit, 即使你在某分支新建文件或者修改(但没commit), 跳到其他分支后仍可以看到你在那个分支做的修改, 所以 &lt;strong&gt;在切换分支前一定要确保你已经做了commit&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;还有一种特殊情况, 比如在&lt;code&gt;master&lt;/code&gt;分支创建文件&lt;code&gt;a.txt&lt;/code&gt;, 然后commit, 此时若新建一个分支 &lt;code&gt;B&lt;/code&gt;, 则在分支 &lt;code&gt;B&lt;/code&gt; 可以看到 master 分支所有的文件, 这是因为 &lt;code&gt;B&lt;/code&gt; 分支还没被创建 文件 &lt;code&gt;a.txt&lt;/code&gt; 就已经存在了, 即新建分支的内容是在原有分支内容的基础上产生的, 如果现在 在&lt;code&gt;master&lt;/code&gt;分支创建文件 &lt;code&gt;test.txt&lt;/code&gt;, 然后commit, 再新建个分 支&lt;code&gt;dev&lt;/code&gt;, 这时候 &lt;code&gt;dev&lt;/code&gt; 可以看到&lt;code&gt;master&lt;/code&gt;分支所有的文件 &lt;code&gt;a.txt&lt;/code&gt;, &lt;code&gt;test.txt&lt;/code&gt;, 但已存在的分支 &lt;code&gt;B&lt;/code&gt; 看不到 &lt;code&gt;test.txt&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;有时切换分支会出现错误:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ git switch main 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;error: Your local changes to the following files would be overwritten by checkout:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	content/posts/Merge&amp;amp;Rebase.md
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Please commit your changes or stash them before you switch branches.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Aborting
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#-------------------------#&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ git switch master
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;error: The following untracked working tree files would be overwritten by checkout:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	.DS_Store
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Please move or remove them before you switch branches.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Aborting
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;所以结论是, &lt;strong&gt;切换分支前, 一定要记得commit, 别在A分支修改你想提交到B分支的文件&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;了解 stash: &lt;a href=&#34;https://git-scm.com/docs/git-stash&#34;&gt;git-stash Documentation&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>git fetch - the Essence of &#34;origin&#34;</title>
+      <link>https://blog.jiyi27.com/posts/git/004-git-fetch-origin/</link>
+      <pubDate>Fri, 21 Apr 2023 21:46:44 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/git/004-git-fetch-origin/</guid>
+      <description>&lt;h2 id=&#34;1-git-fetch&#34;&gt;1. &lt;code&gt;git fetch&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;git fetch&lt;/code&gt; command downloads commits, files, and refs from a remote repository into your local repo. Fetching is what you do when you want to see what everybody else has been working on. &lt;strong&gt;Git isolates fetched content from existing local content; it has absolutely no effect on your local development work&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Fetch all of the branches from the repository. This also downloads all of the required commits and files from the other repository.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-git-fetch&#34;&gt;1. &lt;code&gt;git fetch&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;git fetch&lt;/code&gt; command downloads commits, files, and refs from a remote repository into your local repo. Fetching is what you do when you want to see what everybody else has been working on. &lt;strong&gt;Git isolates fetched content from existing local content; it has absolutely no effect on your local development work&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Fetch all of the branches from the repository. This also downloads all of the required commits and files from the other repository.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ git fetch &amp;lt;remote&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Same as the above command, but only fetch the specified branch.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# e.g., git fetch origin master&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ git fetch &amp;lt;remote&amp;gt; &amp;lt;branch&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-what-is-origin&#34;&gt;2. What is &lt;code&gt;origin&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;remote&amp;gt;&lt;/code&gt; here is the url of the remote repository, we usually set an alias (often set as &lt;code&gt;origin&lt;/code&gt;) so that we can refer it conveniently. Check here, we set the alias when specify the remote repository to local:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# means: origin=git@github.com:shwezhu/MyProject.git&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git remote add origin git@github.com:shwezhu/your-repo.git
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You can set the alias to other name like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git remote add my-repo-github git@github.com:shwezhu/your-repo.git
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;But you have to use &lt;code&gt;my-repo-github&lt;/code&gt; when you want to refer that url:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# equals to: git fetch git@github.com:shwezhu/your-repo.git your-branch&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git push my-repo-github your-branch
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git fetch my-repo-github your-branch
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You can change the alias:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git remote rename repo origin
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-git-remote-command&#34;&gt;3. &lt;code&gt;git remote&lt;/code&gt; command&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;git remote&lt;/code&gt; command is also a convenience or &amp;lsquo;helper&amp;rsquo; method for modifying a repo&amp;rsquo;s &lt;code&gt;./.git/config&lt;/code&gt; file. The commands presented below let you manage connections with other repositories. The following commands will modify the repo&amp;rsquo;s &lt;code&gt;/.git/config&lt;/code&gt; file. The result of the following commands can also be achieved by directly editing the &lt;code&gt;./.git/config&lt;/code&gt; file with a text editor.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git remote add &amp;lt;name&amp;gt; &amp;lt;url&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Create a new connection to a remote repository. After adding a remote, you’ll be able to use &lt;code&gt;＜name＞&lt;/code&gt; as a convenient shortcut for &lt;code&gt;＜url＞&lt;/code&gt; in other Git commands.&lt;/p&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.atlassian.com/git/tutorials/syncing&#34;&gt;Git Remote | Atlassian Git Tutorial&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.atlassian.com/git/tutorials/syncing/git-fetch&#34;&gt;Git Fetch | Atlassian Git Tutorial&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

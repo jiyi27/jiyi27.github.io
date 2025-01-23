@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Spring Security Filter Chian 自定义 RobotFilter, Spring学习(六) :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="视频介绍 此文章参考视频的 54:35 之后, 用于做笔记, 可直接观看视频:
+{% youtube iJ2muJniikY %}
+关于 authentication object, 可以参考上一篇或者观看视频 33:00, 关于 filter chain, 可参考视频 39:15, 或参考: FIlter Architecture Spring Security 功能陈述 添加一个管理员角色, 可以不用登录, 通过 special header 就可访问所有需要认证的页面, 大概下面这样: curl localhost:8080/private -H &quot;x-robot-password: beep-boop&quot; -v 项目结构 此文章所用代码在上一篇文章基础上编写, 本篇文章代码地址: https://github.com/shwezhu/springboot-learning/tree/master/spring-mr-robot-filter-demo
+└── david └── zhu ├── RobotAuthentication.java ├── RobotFilter.java ├── SpringSecurityDemoApplication.java ├── WebController.java └── WebSecurityConfig.java 主要是为了理解 FilterChian 是一个 list 结构, 即有多个 filter, 然后每个 filter 都有 doFilter 方法, 他们是在方法体里被调用的 而不是 for loop 结构被循环调用, 这样的好处是我们可以决定在方法体的哪部分进行 doFilter 调用, doFilter 就是进入下一个 filter, 这里说的不准确, 深入理解参考: FIlter Architecture Spring Security
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/java/backend/006-spring-security/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.583a79711b9ad488dc8a0d22d8a60c8e1ec10f9deefb1196750cd21c2290036c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.00125962708925857e7b66dbc58391d55be1191a3d0ce2034de8c9cd2c481c36.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.fe8dc560fccb53a458b0db19ccb7b265764ac46b68596b7e099c6793054dd457.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.fc74ca360273c1d828da3c02b8174eba435607b369d98418ccc6f2243cd4e75d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.9023bbc24533d09e97a51a0a42a5a7bfe4c591ae167c5551fb1d2191d11977c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/syntax.min.cc789ed9377260d7949ea4c18781fc58959a89287210fe4edbff44ebfc1511b6.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terminal.min.a3ace6ba3a41dfe0ace0ea00529938ba5be6061e185b7fa3575c19201bbdaac7.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Spring Security Filter Chian 自定义 RobotFilter, Spring学习(六)">
+<meta property="og:description" content="视频介绍 此文章参考视频的 54:35 之后, 用于做笔记, 可直接观看视频:
+{% youtube iJ2muJniikY %}
+关于 authentication object, 可以参考上一篇或者观看视频 33:00, 关于 filter chain, 可参考视频 39:15, 或参考: FIlter Architecture Spring Security 功能陈述 添加一个管理员角色, 可以不用登录, 通过 special header 就可访问所有需要认证的页面, 大概下面这样: curl localhost:8080/private -H &quot;x-robot-password: beep-boop&quot; -v 项目结构 此文章所用代码在上一篇文章基础上编写, 本篇文章代码地址: https://github.com/shwezhu/springboot-learning/tree/master/spring-mr-robot-filter-demo
+└── david └── zhu ├── RobotAuthentication.java ├── RobotFilter.java ├── SpringSecurityDemoApplication.java ├── WebController.java └── WebSecurityConfig.java 主要是为了理解 FilterChian 是一个 list 结构, 即有多个 filter, 然后每个 filter 都有 doFilter 方法, 他们是在方法体里被调用的 而不是 for loop 结构被循环调用, 这样的好处是我们可以决定在方法体的哪部分进行 doFilter 调用, doFilter 就是进入下一个 filter, 这里说的不准确, 深入理解参考: FIlter Architecture Spring Security
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/java/backend/006-spring-security/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="Java" />
+
+  <meta property="article:section" content="Backend" />
+
+
+  <meta property="article:published_time" content="2023-08-07 20:58:53 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    为霜的博客
+  </div>
+</a>
+
+    </div>
+    
+      <ul class="menu menu--mobile">
+  <li class="menu__trigger">Menu&nbsp;▾</li>
+  <li>
+    <ul class="menu__dropdown">
+      
+        
+          <li><a href="/showcase">Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories">文章分类</a></li>
+        
+      
+      
+    </ul>
+  </li>
+</ul>
+
+    
+    
+  </div>
+  
+    <nav class="navigation-menu">
+  <ul class="navigation-menu__inner menu--desktop">
+    
+      
+        
+          <li><a href="/showcase" >Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories" >文章分类</a></li>
+        
+      
+      
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/java/backend/006-spring-security/">Spring Security Filter Chian 自定义 RobotFilter, Spring学习(六)</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-08-07</time><span class="post-reading-time">3 分钟阅读 (539 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/java/">Java</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/spring-boot/">Spring Boot</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="视频介绍">视频介绍<a href="#视频介绍" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>此文章参考视频的 54:35 之后, 用于做笔记, 可直接观看视频:</p>
+<p>{% youtube iJ2muJniikY %}</p>
+<ul>
+<li>关于 authentication object, 可以参考<a href="https://davidzhu.xyz/2023/08/04/Java/Backend/005-spring-security/">上一篇</a>或者观看<a href="https://youtu.be/iJ2muJniikY">视频 33:00</a>,</li>
+<li>关于 filter chain, 可参考视频 39:15, 或参考: <a href="https://docs.spring.io/spring-security/reference/servlet/architecture.html">FIlter Architecture Spring Security</a>
+<img src="/006-spring-security/1.png" alt="1"></li>
+</ul>
+<h2 id="功能陈述">功能陈述<a href="#功能陈述" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<ul>
+<li>添加一个管理员角色, 可以不用登录, 通过 special header 就可访问所有需要认证的页面, 大概下面这样:
+<ul>
+<li><code>curl localhost:8080/private -H &quot;x-robot-password: beep-boop&quot; -v</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="项目结构">项目结构<a href="#项目结构" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>此文章所用代码在上一篇文章基础上编写, 本篇文章代码地址: <a href="https://github.com/shwezhu/springboot-learning/tree/master/spring-mr-robot-filter-demo">https://github.com/shwezhu/springboot-learning/tree/master/spring-mr-robot-filter-demo</a></p>
+<pre tabindex="0"><code>└── david
+     └── zhu
+          ├── RobotAuthentication.java
+          ├── RobotFilter.java
+          ├── SpringSecurityDemoApplication.java
+          ├── WebController.java
+          └── WebSecurityConfig.java
+</code></pre><p>主要是为了理解 FilterChian 是一个 list 结构, 即有多个 filter, 然后每个 filter 都有 doFilter 方法, 他们是在方法体里被调用的 而不是 for loop 结构被循环调用, 这样的好处是我们可以决定在方法体的哪部分进行 doFilter 调用, doFilter 就是进入下一个 filter, 这里说的不准确, 深入理解参考: <a href="https://docs.spring.io/spring-security/reference/servlet/architecture.html">FIlter Architecture Spring Security</a></p>
+<h2 id="自定义-filter---robotfilter类">自定义 Filter - <code>RobotFilter</code>类<a href="#自定义-filter---robotfilter类" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">RobotFilter</span> <span style="color:#66d9ef">extends</span> OncePerRequestFilter {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">doFilterInternal</span>(
+</span></span><span style="display:flex;"><span>            HttpServletRequest request,
+</span></span><span style="display:flex;"><span>            HttpServletResponse response,
+</span></span><span style="display:flex;"><span>            FilterChain filterChain) <span style="color:#66d9ef">throws</span> ServletException, IOException {
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;🤖️ HELLO FORM Robot Filter~&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Every Filter has a doFilter() method,</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// But they are not called by for loop over a list of filters</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// but actually a chain of responsibility</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// video: https://youtu.be/iJ2muJniikY, at 00:42:53</span>
+</span></span><span style="display:flex;"><span>        filterChain.<span style="color:#a6e22e">doFilter</span>(request, response);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>把该 Filter 添加到 SecurityFilterChain, 在我们上篇文章常见的 <code>WebSecurityConfig</code> 类内,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    <span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> SecurityFilterChain <span style="color:#a6e22e">securityFilterChain</span>(HttpSecurity http) <span style="color:#66d9ef">throws</span> Exception {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> http
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">authorizeHttpRequests</span>(authorizeConfig <span style="color:#f92672">-&gt;</span> {
+</span></span><span style="display:flex;"><span>                            authorizeConfig.<span style="color:#a6e22e">requestMatchers</span>(<span style="color:#e6db74">&#34;/&#34;</span>).<span style="color:#a6e22e">permitAll</span>();
+</span></span><span style="display:flex;"><span>                  					...
+</span></span><span style="display:flex;"><span>                        })
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">formLogin</span>(withDefaults())
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">oauth2Login</span>(withDefaults())
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">// !!! add this line below:</span>
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">addFilterBefore</span>(<span style="color:#66d9ef">new</span> RobotFilter(), UsernamePasswordAuthenticationFilter.<span style="color:#a6e22e">class</span>)
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">build</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p>然后输入</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ curl localhost:8080   
+</span></span><span style="display:flex;"><span>Hello David~% 
+</span></span></code></pre></div><p>项目终端输出,</p>
+<pre tabindex="0"><code>🤖️ HELLO FORM Robot Filter~
+</code></pre><p>解释下为何继承 <code> OncePerRequestFilter</code> ,</p>
+<p>每个 servlet 都可以有不同的 SecurityFilterChain, 也就是说一个项目可以有多个 SecurityFilterChain, 在上一篇文章中提到的一个 <code>WebSecurityConfig</code> 类, 我们在该类中配置了 SecurityFilterChain, 其实 SecurityFilterChain 可以有多个, 即我们现在的项目不够复杂, 只用了一个, 比如我们可以再加个 SecurityFilterChain 让其只处理 <code>/api/**</code> 相关 endpoints, 如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    <span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> SecurityFilterChain <span style="color:#a6e22e">securityFilterChain</span>(HttpSecurity http) <span style="color:#66d9ef">throws</span> Exception {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> http
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">// https://stackoverflow.com/a/75219552/16317008</span>
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">securityMatcher</span>(<span style="color:#e6db74">&#34;/api&#34;</span>)
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">authorizeHttpRequests</span>(authorizeConfig <span style="color:#f92672">-&gt;</span> {
+</span></span><span style="display:flex;"><span>                            authorizeConfig.<span style="color:#a6e22e">requestMatchers</span>(<span style="color:#e6db74">&#34;/&#34;</span>).<span style="color:#a6e22e">permitAll</span>();
+</span></span><span style="display:flex;"><span>                  					...
+</span></span><span style="display:flex;"><span>                        })
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">formLogin</span>(withDefaults())
+</span></span><span style="display:flex;"><span>          			...
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p>写 JSP 的时候一个 servlet 负责的是一个对应的 endpoint, 我们写 spring 代码的时候只是用个简单的注解指定对应endpoint, Spring 框架在底层帮我们实现了对应的 servlet , 然后运行的时候这些 servlet 运行在 tomcat 中, tomcat 会把每个 request 分类然后转发给对应的 servlet, 说这些只是想说, servlet 才是真正处理 request 的东西, 即产生 http response, 而 filter 则是工作在 servlet 之前或者之后帮我们过滤, 认证 request, servlet 很笨, 只负责处理传给他的 request, 像是个没大脑的工厂,</p>
+<p>上面我们提到, 每个 servlet 都可以有不同的 SecurityFilterChain, 于是再看下面这些解释使用 <code> OncePerRequestFilter</code> 的原因, 你就能看懂了,</p>
+<blockquote>
+<p>The request could be dispatched to a different (or the same) servlet using the request dispatcher. A common use-case is in Spring Security, where authentication and access control functionality is typically implemented as filters that sit in front of the main application servlets. When a request is dispatched using a request dispatcher, it has to go through the filter chain again (or possibly a different one) before it gets to the servlet that is going to deal with it. The problem is that some of the security filter actions should only be performed once for a request. Hence the need for <em>this</em> filter. <a href="https://stackoverflow.com/questions/13152946/what-is-onceperrequestfilter?answertab=scoredesc#tab-top">What is OncePerRequestFilter? - Stack Overflow</a></p>
+</blockquote>
+<blockquote>
+<p>A <em><a href="https://www.baeldung.com/spring-boot-add-filter">Filter</a></em> can be called either before or after servlet execution. When a request is dispatched to a servlet, the <em><code>RequestDispatcher</code></em> may forward it to another servlet. There&rsquo;s a possibility that the other servlet also has the same filter. In such scenarios, the <strong>same filter gets invoked multiple times.</strong> Spring guarantees that the <em><code>OncePerRequestFilter</code></em> is executed only once for a given request. <a href="https://www.baeldung.com/spring-onceperrequestfilter">What Is OncePerRequestFilter? | Baeldung</a></p>
+</blockquote>
+<p>其实这里还有需要深入探讨的东西, 比如 <em><code>RequestDispatcher</code></em> 是做什么的, 现在我们要知道的是, 一个项目可以有多个 FilterChain, Servlet 才是真正处理 http request的东西, FilterChain 只是帮 servlet 过滤 request, 至于 每个 request 怎么被 tomcat 分配到 对应servlet的, 这还需要深入的学习才能理解, 关于 FIlterChain 可参考: <a href="https://docs.spring.io/spring-security/reference/servlet/architecture.html">Architecture Spring Security</a></p>
+<h2 id="实现思路">实现思路<a href="#实现思路" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<ul>
+<li>创建我们的特殊 RobotFilter, 通过继承 <code>OncePerRequestFilter</code> 实现</li>
+<li>因为访问的页面需要 authenticated, 因此创建特殊 RobotFilter 时, 需要新建一个 authentication object <code>RobotAuthentication</code> 来表示 robot 用户</li>
+<li>在账号密码登录认证 filter 前添加我们刚自定义的 <code>RobotFilter</code>, 通过修改 <code>WebSecurityConfig::securityFilterChain</code> 方法实现</li>
+</ul>
+<p>本文主要参考: <a href="https://www.youtube.com/watch?v=iJ2muJniikY&amp;list=PLn7Fivb51OvJLdfD8KrhgiawFINb94j9X&amp;index=2&amp;t=3741s">Spring Security, demystified by Daniel Garnier Moiroux</a></p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/java/backend/007-spring-security/" class="button inline prev">
+        CSRF Filter &amp; ProviderManager &amp; AuthenticationProviders, Spring学习(七)
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/java/basics/004-java-optional/" class="button inline next">
+        Java 8 Optional &amp; Method Reference
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2025 Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/panr/hugo-theme-terminal" target="_blank">Theme</a> made by <a href="https://github.com/panr" target="_blank">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

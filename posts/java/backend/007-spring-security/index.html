@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>CSRF Filter &amp; ProviderManager &amp; AuthenticationProviders, Spring学习(七) :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="{% youtube iJ2muJniikY %}
+视频内容位置:
+Cross Site Request Forgery: 1:16:00 CSRF Spring CSRF Filter 源码分析: 1:22:00 Trace level log 分析: 1:26:00 logging: level: org.springframework.security: TRACE 1:30:35 理论: AuthenticationManager, ProviderManager, AuthenticationProvider Authentication Object stands for either the request to login or the result of a successful login request ,
+上图中, 如果账号密码正确, 则 ProviderManager 返回的 UsernamePasswordAuthenticationToken 就是同一个对象, 只不过内容从 password, username 变成了一个 richer object (内容更丰富), 如 UserDetails 对象可能包含 你喜欢的颜色, 生日, 等信息, 而 Authority 对象可能包含你的权限, 如 user 还是 admin,
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/java/backend/007-spring-security/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.583a79711b9ad488dc8a0d22d8a60c8e1ec10f9deefb1196750cd21c2290036c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.00125962708925857e7b66dbc58391d55be1191a3d0ce2034de8c9cd2c481c36.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.fe8dc560fccb53a458b0db19ccb7b265764ac46b68596b7e099c6793054dd457.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.fc74ca360273c1d828da3c02b8174eba435607b369d98418ccc6f2243cd4e75d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.9023bbc24533d09e97a51a0a42a5a7bfe4c591ae167c5551fb1d2191d11977c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/syntax.min.cc789ed9377260d7949ea4c18781fc58959a89287210fe4edbff44ebfc1511b6.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terminal.min.a3ace6ba3a41dfe0ace0ea00529938ba5be6061e185b7fa3575c19201bbdaac7.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="CSRF Filter &amp; ProviderManager &amp; AuthenticationProviders, Spring学习(七)">
+<meta property="og:description" content="{% youtube iJ2muJniikY %}
+视频内容位置:
+Cross Site Request Forgery: 1:16:00 CSRF Spring CSRF Filter 源码分析: 1:22:00 Trace level log 分析: 1:26:00 logging: level: org.springframework.security: TRACE 1:30:35 理论: AuthenticationManager, ProviderManager, AuthenticationProvider Authentication Object stands for either the request to login or the result of a successful login request ,
+上图中, 如果账号密码正确, 则 ProviderManager 返回的 UsernamePasswordAuthenticationToken 就是同一个对象, 只不过内容从 password, username 变成了一个 richer object (内容更丰富), 如 UserDetails 对象可能包含 你喜欢的颜色, 生日, 等信息, 而 Authority 对象可能包含你的权限, 如 user 还是 admin,
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/java/backend/007-spring-security/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="Java" />
+
+  <meta property="article:section" content="Backend" />
+
+
+  <meta property="article:published_time" content="2023-08-08 20:58:54 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    为霜的博客
+  </div>
+</a>
+
+    </div>
+    
+      <ul class="menu menu--mobile">
+  <li class="menu__trigger">Menu&nbsp;▾</li>
+  <li>
+    <ul class="menu__dropdown">
+      
+        
+          <li><a href="/showcase">Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories">文章分类</a></li>
+        
+      
+      
+    </ul>
+  </li>
+</ul>
+
+    
+    
+  </div>
+  
+    <nav class="navigation-menu">
+  <ul class="navigation-menu__inner menu--desktop">
+    
+      
+        
+          <li><a href="/showcase" >Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories" >文章分类</a></li>
+        
+      
+      
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/java/backend/007-spring-security/">CSRF Filter &amp; ProviderManager &amp; AuthenticationProviders, Spring学习(七)</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-08-08</time><span class="post-reading-time">6 分钟阅读 (1275 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/java/">Java</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/spring-boot/">Spring Boot</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>{% youtube iJ2muJniikY %}</p>
+<p>视频内容位置:</p>
+<ul>
+<li>Cross Site Request Forgery: <code>1:16:00</code>
+<ul>
+<li><a href="https://docs.spring.io/spring-security/reference/features/exploits/csrf.html">CSRF Spring</a></li>
+</ul>
+</li>
+<li>CSRF Filter 源码分析: <code> 1:22:00</code></li>
+<li>Trace level log 分析: <code>1:26:00</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">logging</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">level</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">org.springframework.security</span>: <span style="color:#ae81ff">TRACE</span>
+</span></span></code></pre></div><p><img src="/007-spring-security/1.png" alt="1"></p>
+<h4 id="-13035-理论-authenticationmanager-providermanager-authenticationprovider"><code> 1:30:35</code> 理论: AuthenticationManager, ProviderManager, AuthenticationProvider<a href="#-13035-理论-authenticationmanager-providermanager-authenticationprovider" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<blockquote>
+<p>Authentication Object stands for either the request to login or the result of a successful login request ,</p>
+</blockquote>
+<p><img src="/007-spring-security/2.png" alt="2"></p>
+<p><img src="/007-spring-security/3.png" alt="3"></p>
+<p>上图中, 如果账号密码正确, 则 ProviderManager 返回的 UsernamePasswordAuthenticationToken 就是同一个对象, 只不过内容从 password, username 变成了一个 richer object (内容更丰富), 如 UserDetails 对象可能包含 你喜欢的颜色, 生日, 等信息, 而 Authority 对象可能包含你的权限, 如 user 还是 admin,</p>
+<blockquote>
+<p><a href="https://docs.spring.io/spring-security/site/docs/6.1.2/api/org/springframework/security/authentication/ProviderManager.html"><em><strong><code>ProviderManager</code></strong></em></a> is the most commonly used implementation of <a href="https://docs.spring.io/spring-security/reference/servlet/authentication/architecture.html#servlet-authentication-authenticationmanager"><em><strong><code>AuthenticationManager</code></strong></em></a>.</p>
+<p><a href="https://docs.spring.io/spring-security/reference/servlet/authentication/architecture.html#servlet-authentication-authenticationprovider"><em><strong><code>AuthenticationProvider</code></strong></em></a> is used by <a href="https://docs.spring.io/spring-security/site/docs/6.1.2/api/org/springframework/security/authentication/ProviderManager.html"><em><strong><code>ProviderManager</code></strong></em></a>  to perform a specific type of authentication.</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">AuthenticationManager</span> {
+</span></span><span style="display:flex;"><span>  Authentication <span style="color:#a6e22e">authenticate</span>(Authentication authentication) <span style="color:#66d9ef">throws</span> AuthenticationException;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 我们经常自己实现这个接口, 实现自定义 AuthenticationProvider</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">AuthenticationProvider</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	Authentication <span style="color:#a6e22e">authenticate</span>(Authentication authentication)
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">throws</span> AuthenticationException;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">supports</span>(Class<span style="color:#f92672">&lt;?&gt;</span> authentication);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Basically <code>AuthenticationProvider</code> is the specialized version of the <code>ProviderManager</code> that says I only deal with username password authentication tokens, I only deal with robot authentications, I only deal with over 2 login authentication tokens.</p>
+<p>And this allows you to extend Spring Security in a very specific place for changing the way someone logs in, <em>without having to write a custom filter that takes the request</em>, that does some transformation, maybe you don&rsquo;t need to go that far, maybe you have special rules around, you know the email of the user that comes in, well here an <code>AuthenticationProvider</code> would be good enough.</p>
+<p><img src="/007-spring-security/4.png" alt="4"></p>
+<p>A <code>ProviderManager</code> just like this, kind of the same idea of the filters, but applied to transforming authentication requests into authenciated objects, it&rsquo;s a for loop over a list of <code>AuthenticationProvider</code>.</p>
+<h4 id="-13550-实践-authenticationproviders-providermanager-authenticationprovider"><code> 1:35:50</code> 实践: AuthenticationProviders, ProviderManager, AuthenticationProvider<a href="#-13550-实践-authenticationproviders-providermanager-authenticationprovider" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p>Our website is great, it has two beautiful pages I can log in with username and password, or with Google login, and have a robot a robot account, I can hit my endpoints and get stuff with credentials that are not in the database for example,</p>
+<p>The problem with my website is that I have a an admin called Daniel, he&rsquo;s really fine, he&rsquo;s neat,  he&rsquo;s kind he&rsquo;s very handsome, uh but he has really bad memory, and and for for the for the love of anything he cannot remember his password, that&rsquo;s very unfortunate, so we&rsquo;re going to make an escape hatch for Daniel so that he doesn&rsquo;t have to remember his password, and so we&rsquo;re going to do this by implementing a special <code>AuthenticationProvider</code>,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">DavidAuthenticationProvider</span> <span style="color:#66d9ef">implements</span> AuthenticationProvider {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> Authentication <span style="color:#a6e22e">authenticate</span>(Authentication authentication) <span style="color:#66d9ef">throws</span> AuthenticationException {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> username <span style="color:#f92672">=</span> authentication.<span style="color:#a6e22e">getName</span>();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#e6db74">&#34;david&#34;</span>.<span style="color:#a6e22e">equals</span>(username)) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> UsernamePasswordAuthenticationToken.<span style="color:#a6e22e">authenticated</span>(
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;david&#34;</span>,
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>                    AuthorityUtils.<span style="color:#a6e22e">createAuthorityList</span>(<span style="color:#e6db74">&#34;ROLE_admin&#34;</span>)
+</span></span><span style="display:flex;"><span>            );
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// What do we do in case it&#39;s not Daniel</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Well we don&#39;t know what to do with this, like the user password this must be handled</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//by some other AuthenticationProvider, so to Signal this, we&#39;re returning null</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">supports</span>(Class<span style="color:#f92672">&lt;?&gt;</span> authentication) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> UsernamePasswordAuthenticationToken.<span style="color:#a6e22e">class</span>.<span style="color:#a6e22e">isAssignableFrom</span>(authentication);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>
+<p><code>UsernamePasswordAuthenticationToken</code>: 实现了 <code> Authentication</code> 接口, 就像我们上节自定义的 <code> RobotAuthentication</code>,  都是用来代表一个自定义的认证用户 (authentication request), 只不过我们的 <code> RobotAuthentication</code> 用来代表通过 http header 认证的用户 (authentication request), 而前者则代表: An <code>Authentication</code> implementation that is designed for simple presentation of a username and password.</p>
+</li>
+<li>
+<p><code>isAssignableFrom()</code>: Determines if the class or interface represented by this Class object is either the same as, or is a superclass or superinterface of, the class or interface represented by the specified Class parameter.</p>
+<ul>
+<li>别忘了 <code>Class&lt;T&gt;</code> 是个包装器, 参考: <a href="https://davidzhu.xyz/2023/08/05/Java/Basics/002-reflection-object-class">https://davidzhu.xyz/2023/08/05/Java/Basics/002-reflection-object-class</a></li>
+<li>因此 <code>supports()</code> 方法代表的意思是: If the <code>authentication</code> argument is an instance of <code>UsernamePasswordAuthenticationToken</code> or any of its subclasses, the method returns <code>true</code>, indicating that this <code>AuthenticationProvider</code> implementation supports the provided authentication object. Otherwise, it returns <code>false</code>.</li>
+</ul>
+</li>
+<li>
+<p>The <code>authenticate()</code> method is responsible for performing the authentication process based on the provided authentication object and returning a fully authenticated <code>Authentication</code> object if the authentication is successful.</p>
+<ul>
+<li>when the <code>ProviderManager</code> calls this <code>authenticate()</code> method, it&rsquo;s going to always pass in a <code>UsernamePasswordAuthenticationToken</code> or a subclass.</li>
+</ul>
+</li>
+</ul>
+<p>This is the same way as we did with the the filter:</p>
+<ul>
+<li>Do I want to handle this request, is it the right type?
+<ul>
+<li><code>DavidAuthenticationProvider</code> 的 <code> supports(Class&lt;?&gt; authentication)</code> 用来判断参数 authentication 是不是属于 UsernamePasswordAuthenticationToken子类或就是该类型, 若是才可进行处理</li>
+<li><code>RobotFilter</code> 的 <code>doFilterInternal()</code> 中我们判断 header 中是否有 &ldquo;x-robot-password&rdquo; 字段, 若无则直接调用 doFilter() 并 return,</li>
+</ul>
+</li>
+<li>And is the is the content of the payload the thing I care about?
+<ul>
+<li><code>RobotFilter</code> 判断密码是否正确</li>
+<li><code>DavidAuthenticationProvider</code> 判断用户名是否为 <code>david</code></li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>The other thing that the <code>AuthenticationProvider</code> can do is throw in an <code>AuthenticationException</code>, so basically this account has expired and so you&rsquo;re not allowed to log in, or the credentials are wrong,</p>
+</blockquote>
+<blockquote>
+<p>AuthenticationProvider can return three things, either an <em><strong><code>authentication object</code></strong></em> so the result of something that passed me credentials and they said the credentials are good, and <em><strong><code>an exception</code></strong></em> if I want to say stop processing this is invalid this should not go forever, or <em><strong><code>null</code></strong></em> if we delegate to the rest.</p>
+</blockquote>
+<p>If nothing can authenticate, if every <strong>provider</strong> returns null, it will throw an exception in the end , and the <code>ProviderManager</code> will say no I don&rsquo;t care about this,</p>
+<p>We mount it into the filter chain, go to the <code>WebSecurityConfig</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">formLogin</span>(withDefaults())
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">oauth2Login</span>(withDefaults())
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">addFilterBefore</span>(<span style="color:#66d9ef">new</span> RobotFilter(), UsernamePasswordAuthenticationFilter.<span style="color:#a6e22e">class</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 在这</span>
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">authenticationProvider</span>(<span style="color:#66d9ef">new</span> DavidAuthenticationProvider())
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">build</span>();
+</span></span></code></pre></div><h4 id="14120-总结解释-为什么-我们应该自定义authenticationprovider-而不是-一个-filter"><code>1:41:20</code> 总结解释 为什么 我们应该自定义AuthenticationProvider 而不是 一个 FIlter<a href="#14120-总结解释-为什么-我们应该自定义authenticationprovider-而不是-一个-filter" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<blockquote>
+<p>Usually when you want to do a custom authentication, you should do a custom AuthenticationProvider rather than a full filter.</p>
+</blockquote>
+<p>When I log in <code>ProviderManager</code> produces an event, when I fail to log in and it also produces an event a spring event, so this means we can listen to those events and do stuff when an event is done.</p>
+<p><img src="/007-spring-security/5.png" alt="5"></p>
+<h4 id="14500-change-our-custom-robotfilter-to-custom-authenticationprovider"><code>1:45:00</code> Change our Custom RobotFilter to Custom AuthenticationProvider<a href="#14500-change-our-custom-robotfilter-to-custom-authenticationprovider" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p>源码: <a href="https://github.com/shwezhu/springboot-learning/tree/master/3-spring-security-authenciation-provider">https://github.com/shwezhu/springboot-learning/tree/master/3-spring-security-authenciation-provider</a></p>
+<p>注意结构, 比起下面这个:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> Authentication <span style="color:#a6e22e">authenticate</span>(Authentication authentication) <span style="color:#66d9ef">throws</span> AuthenticationException {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> authRequest <span style="color:#f92672">=</span> (RobotAuthentication) authentication;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> password <span style="color:#f92672">=</span> authRequest.<span style="color:#a6e22e">getPassword</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">passwords</span>.<span style="color:#a6e22e">contains</span>(password)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 可以发现, 实现了Authentication接口的类一般有个 authenticated() 静态方法, 也可称为factory method</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 比如我们的自定义RobotAuthentication,再比如UsernamePasswordAuthenticationToken</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> RobotAuthentication.<span style="color:#a6e22e">authenticated</span>();
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>       <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> BadCredentialsException(<span style="color:#e6db74">&#34;You are not Mr Robot 🤖️&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>用这样的结构更好:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> Authentication <span style="color:#a6e22e">authenticate</span>(Authentication authentication) <span style="color:#66d9ef">throws</span> AuthenticationException {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> authRequest <span style="color:#f92672">=</span> (RobotAuthentication) authentication;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> password <span style="color:#f92672">=</span> authRequest.<span style="color:#a6e22e">getPassword</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">passwords</span>.<span style="color:#a6e22e">contains</span>(password)) {
+</span></span><span style="display:flex;"><span>       <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> BadCredentialsException(<span style="color:#e6db74">&#34;You are not Mr Robot 🤖️&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> RobotAuthentication.<span style="color:#a6e22e">authenticated</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="-15600-authenticationprovider-调用顺序及优点"><code> 1:56:00</code> AuthenticationProvider 调用顺序及优点<a href="#-15600-authenticationprovider-调用顺序及优点" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">logging</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">level</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">org.springframework.security</span>: <span style="color:#ae81ff">TRACE</span>
+</span></span></code></pre></div><p><img src="/007-spring-security/7.png" alt="7"></p>
+<p><img src="/007-spring-security/9.png" alt="8"></p>
+<p>从图中可以看出 使用如下登录, 则会匹配到我们的 DavidAuthenticationProvider,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ curl -u <span style="color:#e6db74">&#34;david:asd&#34;</span> http://localhost:8080/private -v
+</span></span></code></pre></div><p><img src="/007-spring-security/8.png" alt="9"></p>
+<p>若使用正常用户密码登录, 则会跳过 DavidAuthenticationProvider, 使用 DaoAuthenticationProvider 验证,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>curl -u <span style="color:#e6db74">&#34;user-1:asd&#34;</span> http://localhost:8080/private -v
+</span></span></code></pre></div><p>看完上图会发现每次 RobotFilter 都先于 UsernamePasswordAuthenticationFilter 调用, 这是因为我们的 SecurityChain 配置代码:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">addFilterBefore</span>(<span style="color:#66d9ef">new</span> RobotFilter(authManager), UsernamePasswordAuthenticationFilter.<span style="color:#a6e22e">class</span>)
+</span></span></code></pre></div><p>从上面的输出我们会发现:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>Invoking BasicAuthenticationFilter
+</span></span><span style="display:flex;"><span>Found username <span style="color:#e6db74">&#39;david&#39;</span> in Basic Authorization header
+</span></span></code></pre></div><p>这是因为我们通过代码</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">formLogin</span>(withDefaults())
+</span></span><span style="display:flex;"><span>.<span style="color:#a6e22e">httpBasic</span>(withDefaults())
+</span></span></code></pre></div><p>把 BasicAuthenticationFilter 加入到了 Security, 然后验证的时候正如输出那样, 一层一层的调用Filter, 进行匹配, 我们此时使用的是命令行 <code>curl -u &quot;&quot;</code> 进行验证的, 而 BasicAuthenticationFilter 就是做这个的, 如果我们把 BasicAuthenticationFilter 从我们的SecurityChian中移除也就是删除代码 <code>.httpBasic(withDefaults())</code>, 那我们通过 <code>curl -u</code> 提供的账号密码就不会被发现, 然后导致验证失败, 原因是所有的 filter 都被依次掉用完, 但依然没有发现匹配的,</p>
+<p><img src="/007-spring-security/10.png" alt="10"></p>
+<p>通过这个我们也会发现, 如果使用自定义 filter 进行验证, 如使用 DavidFIlter, 而不是DavidAuthenticationProvider, 那我们还需要去验证 post 里面的账号密码, 具体分析参考视频 <code>1:58:15</code></p>
+<h4 id="15925--filterchain-调用顺序"><code>1:59:25 </code> FilterChain 调用顺序<a href="#15925--filterchain-调用顺序" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<h4 id="20000-recap"><code>2:00:00</code> Recap<a href="#20000-recap" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p><img src="/007-spring-security/11.png" alt="11"></p>
+<h4 id="20135--configurers---navigate-spring-security"><code>2:01:35</code>  Configurers - &ldquo;navigate Spring Security&rdquo;<a href="#20135--configurers---navigate-spring-security" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<blockquote>
+<p>Configurers are an abstraction that allows you to configure the filter chain and do multiple operations on the the HTTP builder(),</p>
+</blockquote>
+<p><img src="/007-spring-security/12.png" alt="12"></p>
+<p><img src="/007-spring-security/13.png" alt="13"></p>
+<p><code>RobotLoginConfigurer.java</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">RobotLoginConfigurer</span> <span style="color:#66d9ef">extends</span> AbstractHttpConfigurer<span style="color:#f92672">&lt;</span>RobotLoginConfigurer, HttpSecurity<span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">final</span> List<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">&gt;</span> passwords <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ArrayList<span style="color:#f92672">&lt;&gt;</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">init</span>(HttpSecurity builder) <span style="color:#66d9ef">throws</span> Exception {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// step 1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// initializes a bunch of objects</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// -&gt; AuthenticationProviders</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// all the AuthenticationProviders are populated at init() they&#39;re put in the builder,</span>
+</span></span><span style="display:flex;"><span>        builder.<span style="color:#a6e22e">authenticationProvider</span>(<span style="color:#66d9ef">new</span> RobotAuthenticationProvider(passwords));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">configure</span>(HttpSecurity builder) <span style="color:#66d9ef">throws</span> Exception {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// step 2</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// this also initializes objects, but can reuse objects from step 1, even from other configurers</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// -&gt; Filters</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// each filter chain may have their own AuthenticationManager</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> authenticationManager <span style="color:#f92672">=</span> builder.<span style="color:#a6e22e">getSharedObject</span>(AuthenticationManager.<span style="color:#a6e22e">class</span>);
+</span></span><span style="display:flex;"><span>        builder.<span style="color:#a6e22e">addFilterBefore</span>(<span style="color:#66d9ef">new</span> RobotFilter(authenticationManager), UsernamePasswordAuthenticationFilter.<span style="color:#a6e22e">class</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> RobotLoginConfigurer <span style="color:#a6e22e">password</span>(String password) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">passwords</span>.<span style="color:#a6e22e">add</span>(password);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>WebSecurityConfig.java</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> SecurityFilterChain <span style="color:#a6e22e">securityFilterChain</span>(HttpSecurity http) <span style="color:#66d9ef">throws</span> Exception {
+</span></span><span style="display:flex;"><span>    http
+</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">authorizeHttpRequests</span>(authorizeConfig <span style="color:#f92672">-&gt;</span> {
+</span></span><span style="display:flex;"><span>                    authorizeConfig.<span style="color:#a6e22e">requestMatchers</span>(<span style="color:#e6db74">&#34;/&#34;</span>).<span style="color:#a6e22e">permitAll</span>();
+</span></span><span style="display:flex;"><span>                    authorizeConfig.<span style="color:#a6e22e">requestMatchers</span>(<span style="color:#e6db74">&#34;/error&#34;</span>).<span style="color:#a6e22e">permitAll</span>();
+</span></span><span style="display:flex;"><span>                    authorizeConfig.<span style="color:#a6e22e">requestMatchers</span>(<span style="color:#e6db74">&#34;/favicon.ico&#34;</span>).<span style="color:#a6e22e">permitAll</span>();
+</span></span><span style="display:flex;"><span>                    authorizeConfig.<span style="color:#a6e22e">anyRequest</span>().<span style="color:#a6e22e">authenticated</span>();
+</span></span><span style="display:flex;"><span>                })
+</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">formLogin</span>(withDefaults())
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// By calling httpBasic(), an instance of the BasicAuthenticationFilter is added to the filter chain.</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// https://stackoverflow.com/a/57577530/16317008</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 为了实现通过 curl -u &#34;user:password&#34; http://localhost:8080/private 登录</span>
+</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">httpBasic</span>(withDefaults())
+</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">oauth2Login</span>(withDefaults()) <span style="color:#75715e">// return HttpSecurity</span>
+</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">authenticationProvider</span>(<span style="color:#66d9ef">new</span> DavidAuthenticationProvider()) <span style="color:#75715e">// return HttpSecurity</span>
+</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">new</span> RobotLoginConfigurer()) <span style="color:#75715e">// return Configurer</span>
+</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">password</span>(<span style="color:#e6db74">&#34;beep-boop&#34;</span>) <span style="color:#75715e">// return Configurer</span>
+</span></span><span style="display:flex;"><span>        .<span style="color:#a6e22e">password</span>(<span style="color:#e6db74">&#34;boop-beep&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> http.<span style="color:#a6e22e">build</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="21040-lambda-dsl"><code>2:10:40</code> Lambda DSL<a href="#21040-lambda-dsl" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/git/practice/001-rejected-push-fix-conflicts/" class="button inline prev">
+        Push on Github get Rejected - Solved
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/java/backend/006-spring-security/" class="button inline next">
+        Spring Security Filter Chian 自定义 RobotFilter, Spring学习(六)
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2025 Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/panr/hugo-theme-terminal" target="_blank">Theme</a> made by <a href="https://github.com/panr" target="_blank">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

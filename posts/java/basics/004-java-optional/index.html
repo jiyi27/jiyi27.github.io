@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Java 8 Optional &amp; Method Reference :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Optional Class Java 8 Optional 定义如下:
+// A container object which may or may not contain a non-null value. If a value is present, `isPresent()` will return `true` and `get()` will return the value. public final class Optional&lt;T&gt; extends Object 之前讨论的 java.lang.Class, 也是一个类包装器, 若一个函数的返回值为 Optional&lt;?&gt; 则就是返回 Optional&lt;?&gt; 的对象, 这很容易看出来, 不要加个泛型就迷了, 如一个方法的签名为 public Cat foo(); 则该方法返回的一定是 Cat 的对象,
+Optional 就是为了减少我们的 null check 代码, Helps you avoid NullPointerException, 所以不要乱用 optional, 下面这个视频讲的很好:
+{% youtube vKVzRbsMnTQ %}
+看完视频再啰嗦几句, 此文章看似是了解 Java 8 Optional, 其实涉及到了generics和functional interface, 了解后阅读源码也会容易很多, 因为很多都用到了这两个特性, 了解更多:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/java/basics/004-java-optional/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.583a79711b9ad488dc8a0d22d8a60c8e1ec10f9deefb1196750cd21c2290036c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.00125962708925857e7b66dbc58391d55be1191a3d0ce2034de8c9cd2c481c36.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.fe8dc560fccb53a458b0db19ccb7b265764ac46b68596b7e099c6793054dd457.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.fc74ca360273c1d828da3c02b8174eba435607b369d98418ccc6f2243cd4e75d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.9023bbc24533d09e97a51a0a42a5a7bfe4c591ae167c5551fb1d2191d11977c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/syntax.min.cc789ed9377260d7949ea4c18781fc58959a89287210fe4edbff44ebfc1511b6.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terminal.min.a3ace6ba3a41dfe0ace0ea00529938ba5be6061e185b7fa3575c19201bbdaac7.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Java 8 Optional &amp; Method Reference">
+<meta property="og:description" content="1. Optional Class Java 8 Optional 定义如下:
+// A container object which may or may not contain a non-null value. If a value is present, `isPresent()` will return `true` and `get()` will return the value. public final class Optional&lt;T&gt; extends Object 之前讨论的 java.lang.Class, 也是一个类包装器, 若一个函数的返回值为 Optional&lt;?&gt; 则就是返回 Optional&lt;?&gt; 的对象, 这很容易看出来, 不要加个泛型就迷了, 如一个方法的签名为 public Cat foo(); 则该方法返回的一定是 Cat 的对象,
+Optional 就是为了减少我们的 null check 代码, Helps you avoid NullPointerException, 所以不要乱用 optional, 下面这个视频讲的很好:
+{% youtube vKVzRbsMnTQ %}
+看完视频再啰嗦几句, 此文章看似是了解 Java 8 Optional, 其实涉及到了generics和functional interface, 了解后阅读源码也会容易很多, 因为很多都用到了这两个特性, 了解更多:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/java/basics/004-java-optional/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="Java" />
+
+  <meta property="article:section" content="Basics" />
+
+
+  <meta property="article:published_time" content="2023-08-06 15:44:52 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    为霜的博客
+  </div>
+</a>
+
+    </div>
+    
+      <ul class="menu menu--mobile">
+  <li class="menu__trigger">Menu&nbsp;▾</li>
+  <li>
+    <ul class="menu__dropdown">
+      
+        
+          <li><a href="/showcase">Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories">文章分类</a></li>
+        
+      
+      
+    </ul>
+  </li>
+</ul>
+
+    
+    
+  </div>
+  
+    <nav class="navigation-menu">
+  <ul class="navigation-menu__inner menu--desktop">
+    
+      
+        
+          <li><a href="/showcase" >Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories" >文章分类</a></li>
+        
+      
+      
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/java/basics/004-java-optional/">Java 8 Optional &amp; Method Reference</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-08-06</time><span class="post-reading-time">2 分钟阅读 (418 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/java/">Java</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-optional-class">1. Optional Class<a href="#1-optional-class" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Java 8 Optional 定义如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// A container object which may or may not contain a non-null value. If a value is present, `isPresent()` will return `true` and `get()` will return the value. </span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Optional</span><span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">extends</span> Object
+</span></span></code></pre></div><p>之前讨论的 <a href="https://davidzhu.xyz/2023/08/05/Java/Basics/002-reflection-object-class/"><code>java.lang.Class</code></a>, 也是一个类包装器, 若一个函数的返回值为 <code> Optional&lt;?&gt;</code> 则就是返回<code> Optional&lt;?&gt;</code> 的对象, 这很容易看出来, 不要加个泛型就迷了, 如一个方法的签名为 <code> public Cat foo();</code>  则该方法返回的一定是 <code> Cat</code>  的对象,</p>
+<p>Optional 就是为了减少我们的 null check 代码, Helps you avoid NullPointerException, 所以不要乱用 optional,  <a href="https://youtu.be/vKVzRbsMnTQ">下面这个视频</a>讲的很好:</p>
+<p>{% youtube vKVzRbsMnTQ %}</p>
+<p>看完视频再啰嗦几句, 此文章看似是了解 Java 8 Optional, 其实涉及到了generics和functional interface, 了解后阅读源码也会容易很多, 因为很多都用到了这两个特性, 了解更多:</p>
+<ul>
+<li><a href="https://davidzhu.xyz/2023/08/06/Java/Basics/003-functional-interfaces/">Functional Interfaces &amp; Anonymous Classes &amp; Lambda Expressions - Java | 橘猫小八的鱼</a></li>
+<li><a href="https://davidzhu.xyz/2023/08/05/Java/Basics/002-reflection-object-class/">java.lang.Object &amp; java.lang.Class | 橘猫小八的鱼</a></li>
+</ul>
+<h2 id="2-method-reference">2. Method Reference<a href="#2-method-reference" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>学 Spring Security, 看到一段自定义代码, 用来获取通过 Open ID 登录用户的 email:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> String <span style="color:#a6e22e">getName</span>(Authentication authentication) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> Optional.<span style="color:#a6e22e">of</span>(authentication.<span style="color:#a6e22e">getPrincipal</span>())
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">filter</span>(OidcUser.<span style="color:#a6e22e">class</span>::isInstance)
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">map</span>(OidcUser.<span style="color:#a6e22e">class</span>::cast)
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">map</span>(OidcUser::getEmail)
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">orElseGet</span>(authentication::getName);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="21--filter">2.1. <code> filter()</code><a href="#21--filter" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>简单分析一下 <code>filter()</code>,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> Optional<span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">filter</span>(Predicate<span style="color:#f92672">&lt;?</span> <span style="color:#66d9ef">super</span> T<span style="color:#f92672">&gt;</span> predicate);
+</span></span></code></pre></div><p>关于 <code> filter()</code> 的介绍: <em>If a value is present, and the value matches the given predicate, return an Optional describing the value, otherwise return an empty Optional.</em> 这是什么意思呢?</p>
+<p>假设我们有个方法 getCat() 可以从数据库获取 Cat 对象, 然后我们调用它:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>Optional<span style="color:#f92672">&lt;</span>Cat<span style="color:#f92672">&gt;</span> optionalCat <span style="color:#f92672">=</span> getCat(<span style="color:#e6db74">&#34;Milo&#34;</span>);
+</span></span></code></pre></div><p>此时 optionalCat 就是一个 Cat 对象的包装器, a Optional that describes the value, 然后我们接着做下面的事情:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>optionalCat.<span style="color:#a6e22e">filter</span>(cat <span style="color:#f92672">-&gt;</span> cat.<span style="color:#a6e22e">getName</span>().<span style="color:#a6e22e">equals</span>(<span style="color:#e6db74">&#34;Milo&#34;</span>));
+</span></span></code></pre></div><p>如果 optionalCat 不为空, 且 lambada 表达式返回值为 true 即上面表述: <em>If a value is present, and the value matches the given predicate,</em> 则 <em>return an Optional describing the value</em>, 即相当于对 cat 对象进行二次筛选, 第一次不为空, 第二次需要 cat 名字为 “milo”, 若这俩条件都满足, 此时 filter() 才会返回一个 <code>Optional&lt;Cat&gt;</code> 对象, 也就是和最初的 optionalCat 相同, 若那两个条件有一个没满足, 则 filter()  返回一个空 Optional 对象,</p>
+<p>另外该方法参数类型是一个 functional interface, 即 <code> Predicate&lt;? super T&gt;</code> , 可以看看其定义,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@FunctionalInterface</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">Predicate</span><span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">test</span>(T t);
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>如果你了解 functional interface, 不难发现对于这种参数类型我们可以直接传 lambda expression, 但是上面代码传的是 <code>OidcUser.class::isInstance</code> 这是什么鬼?  别慌, 这不是 c++ 的 namespace, 这是 Java 8 的新特性 Method Reference,</p>
+<blockquote>
+<p><strong>Method references are a special type of lambda expressions</strong>. They&rsquo;re often used to create simple lambda expressions by referencing existing methods. <a href="https://www.baeldung.com/java-method-references">Method References in Java</a></p>
+</blockquote>
+<p>不得不说 Java 8 带来了很多的新的特性: Optional, Method Reference, Lambda,</p>
+<h3 id="22--map">2.2. <code> map()</code><a href="#22--map" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>对于另一个方法 <code> map()</code> , 则是会返回一个新类型的 Optional 对象,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#f92672">&lt;</span>U<span style="color:#f92672">&gt;</span> Optional<span style="color:#f92672">&lt;</span>U<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">map</span>(Function<span style="color:#f92672">&lt;?</span> <span style="color:#66d9ef">super</span> T,<span style="color:#f92672">?</span> <span style="color:#66d9ef">extends</span> U<span style="color:#f92672">&gt;</span> mapper);
+</span></span></code></pre></div><p>If a value is present, apply the provided mapping function to it, and if the result is non-null, return an <code>Optional</code> describing the result. Otherwise return an empty <code>Optional</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Main</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String<span style="color:#f92672">[]</span> args) {
+</span></span><span style="display:flex;"><span>        Optional<span style="color:#f92672">&lt;</span>Cat<span style="color:#f92672">&gt;</span> optionalCat <span style="color:#f92672">=</span> getCat(<span style="color:#e6db74">&#34;Milo&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">int</span> age <span style="color:#f92672">=</span> optionalCat
+</span></span><span style="display:flex;"><span>                    .<span style="color:#a6e22e">filter</span>(cat <span style="color:#f92672">-&gt;</span> cat.<span style="color:#a6e22e">getName</span>().<span style="color:#a6e22e">equals</span>(<span style="color:#e6db74">&#34;Milo&#34;</span>) )
+</span></span><span style="display:flex;"><span>                    .<span style="color:#a6e22e">map</span>(Cat::getAge) 
+</span></span><span style="display:flex;"><span>                    .<span style="color:#a6e22e">orElse</span>(0);
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(age);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> Optional<span style="color:#f92672">&lt;</span>Cat<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">getCat</span>(String name) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 模拟查找数据</span>
+</span></span><span style="display:flex;"><span>        Cat cat <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Cat(name, 2);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> Optional.<span style="color:#a6e22e">ofNullable</span>(cat);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>若 filter() 返回的不是空 Optional, 且 Cat::getAge 没有返回空值, 则返回一个新的 Optional, 类型为 Optional<!-- raw HTML omitted -->,  即 return an <code>Optional</code> describing the result,</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/java/backend/006-spring-security/" class="button inline prev">
+        Spring Security Filter Chian 自定义 RobotFilter, Spring学习(六)
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/java/basics/003-functional-interfaces/" class="button inline next">
+        Functional Interfaces &amp; Anonymous Classes &amp; Lambda Expressions - Java
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2025 Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/panr/hugo-theme-terminal" target="_blank">Theme</a> made by <a href="https://github.com/panr" target="_blank">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mysql on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/mysql/</link>
+    <description>Recent content in Mysql on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Wed, 10 Jan 2024 23:06:36 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/mysql/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Practice of MySQL</title>
+      <link>https://blog.jiyi27.com/posts/database/mysql/001-practice/</link>
+      <pubDate>Wed, 10 Jan 2024 23:06:36 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/database/mysql/001-practice/</guid>
+      <description>&lt;h2 id=&#34;store-string&#34;&gt;Store string&lt;/h2&gt;
+&lt;p&gt;The most commonly used string data types in the context of databases are CHAR and VARCHAR. TEXT and LONGTEXT are also commonly used string data types.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;char(10)&lt;/code&gt; vs &lt;code&gt;varchar(10) &lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;When you define a column as CHAR(10), it will always occupy 10 characters of storage, regardless of the actual data length. If you store a string shorter than 10 characters, it will be padded with spaces to fill up the remaining space.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;store-string&#34;&gt;Store string&lt;/h2&gt;
+&lt;p&gt;The most commonly used string data types in the context of databases are CHAR and VARCHAR. TEXT and LONGTEXT are also commonly used string data types.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;char(10)&lt;/code&gt; vs &lt;code&gt;varchar(10) &lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;When you define a column as CHAR(10), it will always occupy 10 characters of storage, regardless of the actual data length. If you store a string shorter than 10 characters, it will be padded with spaces to fill up the remaining space.&lt;/p&gt;
+&lt;p&gt;When you define a column as VARCHAR(10), you store a string shorter than 10 characters, it will use only the necessary amount of storage, without any padding.&lt;/p&gt;
+&lt;p&gt;In general, the performance difference between CHAR and VARCHAR is usually negligible unless you&amp;rsquo;re dealing with extremely large datasets or have specific performance requirements.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;When the length of strings to be written to the field is explicitly specified choose CHAR as the data type. When the number of strings that users will input is not fixed, but there is a limit based on the number of characters, use VARCHAR as the data type. For example, for a username that can vary in length, VARCHAR is used as the data type.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;存储时间&#34;&gt;存储时间&lt;/h2&gt;
+&lt;h3 id=&#34;不要用字符串存储日期&#34;&gt;不要用字符串存储日期&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;字符串占用的空间更大&lt;/li&gt;
+&lt;li&gt;字符串存储的日期比较效率比较低（逐个字符进行比对），无法用日期相关的 API 进行计算和比较&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;datetime-and-timestamp&#34;&gt;Datetime and Timestamp&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;Datetime&lt;/code&gt; 和 &lt;code&gt;Timestamp&lt;/code&gt; 是 MySQL 提供的两种比较相似的保存时间的数据类型, 通常我们都会首选 &lt;code&gt;Timestamp&lt;/code&gt;. 因为DateTime类型没有时区信息的, 而Timestamp可以存储time zone信息, 并且做转换.&lt;/p&gt;
+&lt;p&gt;Timestamp 只需要使用 4 个字节的存储空间，但是 DateTime 需要耗费 8 个字节的存储空间。但是，这样同样造成了一个问题，Timestamp 表示的时间范围更小。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;DateTime ：1000-01-01 00:00:00 ~ 9999-12-31 23:59:59&lt;/li&gt;
+&lt;li&gt;Timestamp： 1970-01-01 00:00:01 ~ 2037-12-31 23:59:59&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;time_zone_test&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; int &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; AUTO_INCREMENT,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;date_time&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; datetime &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;time_stamp&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;timestamp&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;INSERT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INTO&lt;/span&gt; time_zone_test(date_time) &lt;span style=&#34;color:#66d9ef&#34;&gt;VALUES&lt;/span&gt;(NOW());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;select&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;from&lt;/span&gt; time_zone_test;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;----+---------------------+---------------------+
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; date_time           &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; time_stamp          &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;----+---------------------+---------------------+
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;04&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;01&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;45&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;04&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;04&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;01&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;45&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;04&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;----+---------------------+---------------------+
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这也说明了一个问题, 就是我们插入数据的时候, 没必要在逻辑上获取时间再加入, 我们只需要在创建表的时候设置一个time column并为其设置default值, 即可, 每次只用在Java代码中插入其他column, 然后时间会被mysql自动加上去.&lt;/p&gt;
+&lt;p&gt;对于上面的数据, 我们修改会话的时区, 可以看到时间就变了:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;set&lt;/span&gt; time_zone&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;+8:00&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;----+---------------------+---------------------+
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; date_time           &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; time_stamp          &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;----+---------------------+---------------------+
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;04&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;01&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;45&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;04&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;04&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;01&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;45&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;04&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;----+---------------------+---------------------+
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;查看-mysql-warning&#34;&gt;查看 MySQL Warning&lt;/h2&gt;
+&lt;p&gt;有时候我们创建表的时候或者执行SQL语句, 虽然执行成功了但是会显示有警告,但是还不告诉你警告内容, 这时候你需要立刻执行&lt;code&gt;SHOW WARNINGS;&lt;/code&gt;语句, 否则你执行了其他语句再执行这个show, 那现实的就不是上一个语句的warnings了, 如下图:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/001-mysql-basics/a.png&#34; alt=&#34;a&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;default-vs-not-null&#34;&gt;Default vs NOT NULL&lt;/h2&gt;
+&lt;p&gt;有没有想过, 建表的时候default 和 not null一起使用, 是不是有点redundant? 因为比如你不插入值的时候mysql会帮你插入默认值,&lt;/p&gt;
+&lt;p&gt;其实这么想你就错了, 你想的是我不插入, mysql就会帮我插入个默认值, 所以似乎not null没起作用, 但是你有没有想过如果你只设置了default而没有设置not null限制, 那这时候我插入null个呢, 显然可以插入成功, 但有时候为null, 比如一个日期, 当我们在写Java或者其他代码的时候查询数据然后把date转为string, 如果数据为null可能就会发生异常~&lt;/p&gt;
+&lt;h2 id=&#34;naming-conventions&#34;&gt;Naming conventions&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;General&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Using lowercase&lt;/strong&gt; will help speed typing, avoid mistakes as MYSQL is case sensitive.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Space replaced with Underscore&lt;/strong&gt; — Using space between words is not advised.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Numbers are not for names — While naming, it is essential that it contains only Alpha English alphabets.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;Table&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Table names are lower case, uses underscores to separate words, and are &lt;strong&gt;singular&lt;/strong&gt; (e.g. &lt;code&gt;foo&lt;/code&gt;, &lt;code&gt;foo_bar&lt;/code&gt;, etc.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;Columns&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Always use the singular name.&lt;/li&gt;
+&lt;li&gt;Always use lowercase except where it may make sense not to such as proper nouns.&lt;/li&gt;
+&lt;li&gt;Where possible &lt;strong&gt;avoid simply using &lt;code&gt;id&lt;/code&gt;&lt;/strong&gt; as the primary identifier for the table.&lt;/li&gt;
+&lt;li&gt;Do not add a column with the same name as its table and vice versa.&lt;/li&gt;
+&lt;li&gt;I generally (not always) have a auto increment PK. I use the following convention: &lt;code&gt;tablename_id&lt;/code&gt; (e.g. &lt;code&gt;foo_id&lt;/code&gt;, &lt;code&gt;foo_bar_id&lt;/code&gt;, etc.).&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;参考:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://medium.com/@centizennationwide/mysql-naming-conventions-e3a6f6219efe&#34;&gt;MYSQL Naming Conventions. What is MYSQL? | by Centizen Nationwide | Medium&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://stackoverflow.com/questions/7899200/is-there-a-naming-convention-for-mysql&#34;&gt;Is there a naming convention for MySQL? - Stack Overflow&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.sqlstyle.guide/#columns&#34;&gt;SQL style guide by Simon Holywell&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://juejin.cn/post/7165675545965887525&#34;&gt;MySQL数据库中常见的几种表字段数据类型 - 掘金&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://juejin.cn/post/6844904047489581063&#34;&gt;老生常谈！数据库如何存储时间？你真的知道吗？ - 掘金&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Basic MySQL</title>
+      <link>https://blog.jiyi27.com/posts/database/mysql/002-basic-sql/</link>
+      <pubDate>Wed, 10 Jan 2024 11:51:35 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/database/mysql/002-basic-sql/</guid>
+      <description>&lt;h2 id=&#34;denormalization&#34;&gt;Denormalization&lt;/h2&gt;
+&lt;h3 id=&#34;normalization&#34;&gt;Normalization&lt;/h3&gt;
+&lt;p&gt;首先，了解什么是 Normalization 很重要。在关系型数据库设计中，Normalization 是一个组织数据的过程，目的是减少数据冗余和提高数据完整性。它涉及将数据分解成多个相互关联的表。这种设计减少了数据的重复，但&lt;strong&gt;通常会导致更复杂的查询，因为需要多个JOIN操作来重建原始信息&lt;/strong&gt;。&lt;/p&gt;
+&lt;h3 id=&#34;denormalization-1&#34;&gt;Denormalization&lt;/h3&gt;
+&lt;p&gt;Denormalization 是 Normalization 的对立面。它涉及将数据从多个表合并到一个表中，有时通过添加冗余数据来实现。在非关系型数据库，如MongoDB中，Denormalization 通常表现为：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;嵌入子文档&lt;/strong&gt;：将相关的数据直接嵌入到一个文档中，而不是将它们分散到多个集合（表）中。例如，而不是在单独的集合中维护用户地址，可以将地址作为子文档直接嵌入到用户文档中。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;使用数组&lt;/strong&gt;：在文档中使用数组来存储相关项的列表。例如，一个产品文档可能包含一个评论的数组，而不是将评论存储在一个单独的集合中。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;denormalization-的优点和缺点&#34;&gt;Denormalization 的优点和缺点&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;优点&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;提高查询性能&lt;/strong&gt;：由于相关数据更紧密地存储在一起，因此减少了查询所需的JOIN操作或跨文档查找。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;简化查询逻辑&lt;/strong&gt;：数据模型更直观，容易理解和操作，特别是对于文档数据库。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;缺点&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;数据冗余(Data Redundancy)&lt;/strong&gt;：相同的数据在多个地方重复，可能导致&lt;strong&gt;数据同步问题&lt;/strong&gt;。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;更新操作复杂化(Complexity in Updates)&lt;/strong&gt;：当需要更新冗余数据时，&lt;strong&gt;可能需要在多个地方进行更新&lt;/strong&gt;，增加了复杂性。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;结论&#34;&gt;结论&lt;/h3&gt;
+&lt;p&gt;在MongoDB这样的非关系型数据库中，反规范化是一种常见的数据建模技术，特别&lt;strong&gt;适用于读取操作远多于写入操作的场景&lt;/strong&gt;。它通过牺牲一定程度的数据冗余来换取读取性能的提升和查询逻辑的简化。然而，设计时需要平衡冗余带来的管理复杂性和性能优势。&lt;/p&gt;
+&lt;h2 id=&#34;join--foreign-key&#34;&gt;Join &amp;amp; Foreign Key&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Join: &lt;a href=&#34;https://www.youtube.com/watch?v=G3lJAxg1cy8&#34;&gt;MySQL: JOINS are easy (INNER, LEFT, RIGHT)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Foreign Key is used to ensure the consistency and integrity of data.
+&lt;ul&gt;
+&lt;li&gt;既然有了 join, 为什么还需要 foreign key: &lt;a href=&#34;https://chat.openai.com/share/419afe95-279b-477f-8afa-8f75ab76edad&#34;&gt;https://chat.openai.com/share/419afe95-279b-477f-8afa-8f75ab76edad&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;MongoDB 没有 join 和 foreign key 的的概念, 但是可以通过嵌套文档来实现类似 Join 的功能, 以及使用 Reference 来实现类似 Foreign Key 的功能.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;denormalization&#34;&gt;Denormalization&lt;/h2&gt;
+&lt;h3 id=&#34;normalization&#34;&gt;Normalization&lt;/h3&gt;
+&lt;p&gt;首先，了解什么是 Normalization 很重要。在关系型数据库设计中，Normalization 是一个组织数据的过程，目的是减少数据冗余和提高数据完整性。它涉及将数据分解成多个相互关联的表。这种设计减少了数据的重复，但&lt;strong&gt;通常会导致更复杂的查询，因为需要多个JOIN操作来重建原始信息&lt;/strong&gt;。&lt;/p&gt;
+&lt;h3 id=&#34;denormalization-1&#34;&gt;Denormalization&lt;/h3&gt;
+&lt;p&gt;Denormalization 是 Normalization 的对立面。它涉及将数据从多个表合并到一个表中，有时通过添加冗余数据来实现。在非关系型数据库，如MongoDB中，Denormalization 通常表现为：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;嵌入子文档&lt;/strong&gt;：将相关的数据直接嵌入到一个文档中，而不是将它们分散到多个集合（表）中。例如，而不是在单独的集合中维护用户地址，可以将地址作为子文档直接嵌入到用户文档中。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;使用数组&lt;/strong&gt;：在文档中使用数组来存储相关项的列表。例如，一个产品文档可能包含一个评论的数组，而不是将评论存储在一个单独的集合中。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;denormalization-的优点和缺点&#34;&gt;Denormalization 的优点和缺点&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;优点&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;提高查询性能&lt;/strong&gt;：由于相关数据更紧密地存储在一起，因此减少了查询所需的JOIN操作或跨文档查找。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;简化查询逻辑&lt;/strong&gt;：数据模型更直观，容易理解和操作，特别是对于文档数据库。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;缺点&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;数据冗余(Data Redundancy)&lt;/strong&gt;：相同的数据在多个地方重复，可能导致&lt;strong&gt;数据同步问题&lt;/strong&gt;。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;更新操作复杂化(Complexity in Updates)&lt;/strong&gt;：当需要更新冗余数据时，&lt;strong&gt;可能需要在多个地方进行更新&lt;/strong&gt;，增加了复杂性。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;结论&#34;&gt;结论&lt;/h3&gt;
+&lt;p&gt;在MongoDB这样的非关系型数据库中，反规范化是一种常见的数据建模技术，特别&lt;strong&gt;适用于读取操作远多于写入操作的场景&lt;/strong&gt;。它通过牺牲一定程度的数据冗余来换取读取性能的提升和查询逻辑的简化。然而，设计时需要平衡冗余带来的管理复杂性和性能优势。&lt;/p&gt;
+&lt;h2 id=&#34;join--foreign-key&#34;&gt;Join &amp;amp; Foreign Key&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Join: &lt;a href=&#34;https://www.youtube.com/watch?v=G3lJAxg1cy8&#34;&gt;MySQL: JOINS are easy (INNER, LEFT, RIGHT)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Foreign Key is used to ensure the consistency and integrity of data.
+&lt;ul&gt;
+&lt;li&gt;既然有了 join, 为什么还需要 foreign key: &lt;a href=&#34;https://chat.openai.com/share/419afe95-279b-477f-8afa-8f75ab76edad&#34;&gt;https://chat.openai.com/share/419afe95-279b-477f-8afa-8f75ab76edad&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;MongoDB 没有 join 和 foreign key 的的概念, 但是可以通过嵌套文档来实现类似 Join 的功能, 以及使用 Reference 来实现类似 Foreign Key 的功能.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;JOIN操作经常利用外键来连接两个表, 虽然JOIN操作不一定要求存在外键约束, 但外键为JOIN提供了自然的连接点, 如下例子:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Users表&lt;/strong&gt; 存储用户信息：UserID (用户ID，主键), UserName (用户名)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Orders表&lt;/strong&gt; 存储订单信息：OrderID (订单ID，主键) OrderDate (订单日期) UserID (用户ID，外键)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在这个情况下，&lt;code&gt;Orders.UserID&lt;/code&gt; 是一个外键，它指向&lt;code&gt;Users.UserID&lt;/code&gt;。这意味着每个订单都与一个特定的用户相关联，外键保证了每个订单中的UserID都对应于一个有效的用户。假设我们想获取订单信息以及下单的用户的名称。我们可以使用以下SQL查询：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; Users.UserName, Orders.OrderID, Orders.OrderDate
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; Orders
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;JOIN&lt;/span&gt; Users &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; Orders.UserID &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Users.UserID;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这个查询中：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;JOIN Users ON Orders.UserID = Users.UserID&lt;/code&gt;这一句是JOIN的核心，它说明了如何连接这两个表。我们通过&lt;code&gt;Orders&lt;/code&gt;表中的&lt;code&gt;UserID&lt;/code&gt;（外键）与&lt;code&gt;Users&lt;/code&gt;表中的&lt;code&gt;UserID&lt;/code&gt;（主键）进行匹配。&lt;/li&gt;
+&lt;li&gt;由于使用了JOIN，我们可以同时从&lt;code&gt;Orders&lt;/code&gt;表和&lt;code&gt;Users&lt;/code&gt;表中选择数据。因此，我们能够在同一个查询结果中同时看到用户的名字和他们的订单信息。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;one-to-many--many-to-many&#34;&gt;One to Many &amp;amp; Many to Many&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;一对多关系&lt;/strong&gt;：通过在“多”的一方表中设置外键指向“一”的一方的主键来实现。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;多对多关系&lt;/strong&gt;：通过创建一个额外的关联表，其中包含指向两个相关表主键的外键来实现。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在&lt;strong&gt;一对多&lt;/strong&gt;关系中，一个记录在一个表中对应着多个记录在另一个表中。这种关系通常通过在“多”的一方使用外键（Foreign Key）来实现。如 &lt;code&gt;Posts&lt;/code&gt; 表和 &lt;code&gt;Comments&lt;/code&gt; 表, 此时 &lt;code&gt;Comments&lt;/code&gt; 表中的 &lt;code&gt;PostID&lt;/code&gt; 就是一个外键, 它指向 &lt;code&gt;Posts&lt;/code&gt; 表中的 &lt;code&gt;PostID&lt;/code&gt;. 通过这个外键, 我们可以追踪哪个评论属于哪个帖子, 从而实现一对多关系。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;多对多&lt;/strong&gt;关系是指两个表中的记录可以相互关联, 在关系型数据库中, 这种关系通常通过第三个表（称为关联表或连接表）来实现，这个表包含了两个表的外键. 假设有两个表：&lt;code&gt;Students&lt;/code&gt; 和 &lt;code&gt;Courses&lt;/code&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Students表&lt;/strong&gt; 存储学生的信息，如：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;StudentID (主键)&lt;/li&gt;
+&lt;li&gt;StudentName&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Courses表&lt;/strong&gt; 存储课程的信息，如：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;CourseID (主键)&lt;/li&gt;
+&lt;li&gt;CourseName&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Enrollments表&lt;/strong&gt; 作为关联表，存储学生和课程之间的关系，如：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;EnrollmentID (主键)&lt;/li&gt;
+&lt;li&gt;StudentID (外键，指向Students表)&lt;/li&gt;
+&lt;li&gt;CourseID (外键，指向Courses表)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在这个例子中，每个学生可以选修多个课程，同时每个课程也可以被多个学生选修。通过Enrollments表，我们可以追踪哪个学生选修了哪个课程，从而实现多对多关系。&lt;/p&gt;
+&lt;h2 id=&#34;one-to-many-and-many-to-many-in-nosql-mongodb&#34;&gt;One-to-Many and Many-to-Many in NoSQL MongoDB&lt;/h2&gt;
+&lt;h3 id=&#34;one-to-many&#34;&gt;One-to-Many&lt;/h3&gt;
+&lt;p&gt;一对多关系在MongoDB中通常有两种表示方式：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;嵌入文档（Embedded Documents）&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在这种方法中，&amp;lsquo;多&amp;rsquo;的部分作为子文档嵌入到&amp;rsquo;一&amp;rsquo;的部分中。&lt;/li&gt;
+&lt;li&gt;例如，如果一个用户有多个地址，那么地址可以直接嵌入到用户文档中。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;示例&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;userId123&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;John Doe&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;addresses&amp;#34;&lt;/span&gt;: [
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;street&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;123 Apple St&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;city&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;New York&amp;#34;&lt;/span&gt;},
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;street&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;456 Orange Ave&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;city&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Boston&amp;#34;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  ]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;引用（References）&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在这种方法中，&amp;lsquo;多&amp;rsquo;的一方会包含指向&amp;rsquo;一&amp;rsquo;方的引用（通常是ID）。&lt;/li&gt;
+&lt;li&gt;这类似于关系型数据库中的外键&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;示例&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// User document
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;userId123&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;John Doe&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Address documents
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;[
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  {&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;addressId1&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;userId&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;ObjectID(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;userId123&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;)&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;street&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;123 Apple St&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;city&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;New York&amp;#34;&lt;/span&gt;},
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  {&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;addressId2&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;userId&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;ObjectID(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;userId123&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;)&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;street&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;456 Orange Ave&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;city&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Boston&amp;#34;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Looking at how you model &lt;code&gt;users&lt;/code&gt; and &lt;code&gt;orders&lt;/code&gt; illustrates another common relationship: one-to-many. That is, every user has many orders. In an RDBMS, you’d use a &lt;strong&gt;foreign key&lt;/strong&gt; in your &lt;code&gt;orders&lt;/code&gt; table; here, the convention is similar. Learn more: Action in MongoDB: 4.2.2  Users and orders (one-to-many)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;many-to-many&#34;&gt;Many-to-Many&lt;/h3&gt;
+&lt;p&gt;多对多关系在MongoDB中通常通过引用来表示, 每个文档存储与之相关联的其他文档的ID, &lt;strong&gt;an array of object IDs&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;了解更多: MongoDB in Action: 4.2.1 Many-to-many relationships&lt;/p&gt;
+&lt;h4 id=&#34;示例&#34;&gt;示例&lt;/h4&gt;
+&lt;p&gt;假设有学生和课程，每个学生可以选修多门课程，每门课程也可以由多个学生选修。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;学生文档&lt;/strong&gt;可能包含它们所选课程的ID列表。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;studentId1&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;courses&amp;#34;&lt;/span&gt;: [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;courseId1&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;courseId2&amp;#34;&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;课程文档&lt;/strong&gt;可能包含选修该课程的学生ID列表。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;courseId1&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;courseName&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Mathematics&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;students&amp;#34;&lt;/span&gt;: [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;studentId1&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;studentId3&amp;#34;&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;嵌入文档可以提高读取性能，因为所有相关数据都在一个文档内；而引用更灵活，可以更容易地维护大量动态关联数据。&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Index and Primary Key</title>
+      <link>https://blog.jiyi27.com/posts/database/mysql/002-index-primary-key/</link>
+      <pubDate>Tue, 03 Oct 2023 12:06:36 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/database/mysql/002-index-primary-key/</guid>
+      <description>&lt;h2 id=&#34;1-index-concepts&#34;&gt;1. Index concepts&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&#34;&gt;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-when-will-index-be-created&#34;&gt;2. When will index be created&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Primary Key:&lt;/strong&gt; By default, when you define a primary key constraint on a column or set of columns using the PRIMARY KEY keyword, MySQL automatically creates an index on that column(s).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;index&lt;/span&gt; will created &lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt; user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;create&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; smallint &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt; auto_increment,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;password&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;primary&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;key&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Unique Constraints:&lt;/strong&gt; When you define a unique constraint on a column or set of columns using the UNIQUE keyword, MySQL automatically creates an index to enforce uniqueness.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-index-concepts&#34;&gt;1. Index concepts&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&#34;&gt;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-when-will-index-be-created&#34;&gt;2. When will index be created&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Primary Key:&lt;/strong&gt; By default, when you define a primary key constraint on a column or set of columns using the PRIMARY KEY keyword, MySQL automatically creates an index on that column(s).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;index&lt;/span&gt; will created &lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt; user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;create&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; smallint &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt; auto_increment,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;password&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;primary&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;key&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Unique Constraints:&lt;/strong&gt; When you define a unique constraint on a column or set of columns using the UNIQUE keyword, MySQL automatically creates an index to enforce uniqueness.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;index&lt;/span&gt; will be created &lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt; username &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;create&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; smallint &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;password&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;   &lt;span style=&#34;color:#66d9ef&#34;&gt;unique&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; there will be two indexes
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;index&lt;/span&gt; will be created &lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;both&lt;/span&gt; user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;and&lt;/span&gt; username &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;create&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; smallint &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt; auto_increment,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;password&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;primary&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;key&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;unique&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-why-use-index&#34;&gt;3. Why use index&lt;/h2&gt;
+&lt;p&gt;Indexes are used to find rows with specific column values quickly. Without an index, MySQL must begin with the first row and then read through the entire table to find the relevant rows. The larger the table, the more this costs. If the table has an index for the columns in question, MySQL can quickly determine the position to seek to in the middle of the data file without having to look at all the data. This is much faster than reading every row sequentially.&lt;/p&gt;
+&lt;p&gt;Most MySQL indexes (&lt;code&gt;PRIMARY KEY&lt;/code&gt;, &lt;code&gt;UNIQUE&lt;/code&gt;, &lt;code&gt;INDEX&lt;/code&gt;, and &lt;code&gt;FULLTEXT&lt;/code&gt;) are stored in &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_b_tree&#34;&gt;B-trees&lt;/a&gt;. Exceptions: Indexes on spatial data types use R-trees; &lt;code&gt;MEMORY&lt;/code&gt; tables also support &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_hash_index&#34;&gt;hash indexes&lt;/a&gt;; &lt;code&gt;InnoDB&lt;/code&gt; uses inverted lists for &lt;code&gt;FULLTEXT&lt;/code&gt; indexes.&lt;/p&gt;
+&lt;p&gt;The best way to improve the performance of &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.0/en/select.html&#34;&gt;&lt;code&gt;SELECT&lt;/code&gt;&lt;/a&gt; operations is to create indexes on one or more of the columns that are tested in the query. &lt;strong&gt;The index entries act like pointers to the table rows&lt;/strong&gt;, allowing the query to quickly determine which rows match a condition in the &lt;code&gt;WHERE&lt;/code&gt; clause, and retrieve the other column values for those rows. All MySQL data types can be indexed.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Although it can be tempting to create an indexes for every possible column used in a query, unnecessary indexes waste space and waste time for MySQL to determine which indexes to use. Indexes also add to the cost of inserts, updates, and deletes because each index must be updated. You must find the right balance to achieve fast queries using the optimal set of indexes.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.0/en/optimization-indexes.html&#34;&gt;MySQL :: MySQL 8.0 Reference Manual :: 8.3 Optimization and Indexes&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Learn when index will be used in MySQL operations: &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.0/en/mysql-indexes.html&#34;&gt;https://dev.mysql.com/doc/refman/8.0/en/mysql-indexes.html&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-table-types&#34;&gt;4. Table types&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;MyISAM&lt;/code&gt; and &lt;code&gt;InnoDB&lt;/code&gt; are two different storage engines in MySQL, each with its own characteristics and features.&lt;/p&gt;
+&lt;h3 id=&#34;41-innodb-tables&#34;&gt;4.1. InnoDB tables&lt;/h3&gt;
+&lt;p&gt;InnoDB tables provide B-tree indexes. The indexes provide no packing or prefix compression. In addition, InnoDB also requires a primary key for each table. As with BDB, though, if you don’t provide a primary key, MySQL will supply a 64-bit value for you.&lt;/p&gt;
+&lt;p&gt;The indexes are stored in the InnoDB tablespace, just like the data and data dictionary (table definitions, etc.). Furthermore, &lt;code&gt;InnoDB&lt;/code&gt; uses clustered indexes. That is, the &lt;strong&gt;primary key’s value directly affects the physical location of the row&lt;/strong&gt; as well as its corresponding index node. Because of this, lookups based on primary key in InnoDB are very fast. Once the index node is found, the relevant records are likely to already be cached in InnoDB’s buffer pool.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;With &lt;em&gt;clustered indexes&lt;/em&gt;, the primary key and the record itself are “clustered” together, and the records are all stored in primary-key order. InnoDB table uses clustered indexes.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;42-myisam-tables&#34;&gt;4.2. MyISAM tables&lt;/h3&gt;
+&lt;p&gt;MySQL’s default table type provides B-tree indexes, and as of Version 4.1.0, it provides R-tree indexes for spatial data.&lt;/p&gt;
+&lt;p&gt;With MyISAM tables, the indexes are kept in a completely separate file that contains a list of primary (and possibly secondary) keys and a value that represents the byte offset for the record. These ensure MySQL can find and then quickly skip to that point within the database to locate the record. MySQL has to store the indexes this way because &lt;strong&gt;the records are stored in essentially random order&lt;/strong&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that the difference between MyISAM table and InnoDB table is that the records are stored in random order, another tables&amp;rsquo;s record stored according to clustered indexe (primary key).&lt;/p&gt;
+&lt;p&gt;With a standard MyISAM table index, there are two lookups, one to the index, and a second to the table itself via the location specified in the index. With clustered indexes in InnoDB table, there’s a single lookup that points directly to the record in question. Therefore, when your data is almost always searched on via its primary key, clustered indexes can make lookups incredibly fast.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;5-clustered-vs-secondary-indexes&#34;&gt;5. Clustered vs secondary indexes&lt;/h2&gt;
+&lt;p&gt;Each &lt;code&gt;InnoDB&lt;/code&gt; table has a special index called the &lt;strong&gt;clustered index&lt;/strong&gt; that stores row data. Typically, the clustered index is synonymous with the primary key. To get the best performance from queries, inserts, and other database operations, it is important to understand how &lt;code&gt;InnoDB&lt;/code&gt; uses the clustered index to optimize the common lookup and DML operations.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;When you define a &lt;code&gt;PRIMARY KEY&lt;/code&gt; on a table, &lt;code&gt;InnoDB&lt;/code&gt; uses it as the clustered index. A primary key should be defined for each table. If there is no logical unique and non-null column or set of columns to use a the primary key, add an auto-increment column. Auto-increment column values are unique and are added automatically as new rows are inserted.&lt;/li&gt;
+&lt;li&gt;If you do not define a &lt;code&gt;PRIMARY KEY&lt;/code&gt; for a table, &lt;code&gt;InnoDB&lt;/code&gt; uses the first &lt;code&gt;UNIQUE&lt;/code&gt; index with all key columns defined as &lt;code&gt;NOT NULL&lt;/code&gt; as the clustered index.&lt;/li&gt;
+&lt;li&gt;If a table has no &lt;code&gt;PRIMARY KEY&lt;/code&gt; or suitable &lt;code&gt;UNIQUE&lt;/code&gt; index, &lt;code&gt;InnoDB&lt;/code&gt; generates a hidden clustered index named &lt;code&gt;GEN_CLUST_INDEX&lt;/code&gt; on a synthetic column that contains row ID values. The rows are ordered by the row ID that &lt;code&gt;InnoDB&lt;/code&gt; assigns. The row ID is a 6-byte field that increases monotonically as new rows are inserted. Thus, the rows ordered by the row ID are physically in order of insertion.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.0/en/innodb-index-types.html&#34;&gt;https://dev.mysql.com/doc/refman/8.0/en/innodb-index-types.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Secondary indexes&lt;/strong&gt; point to the primary key rather than the row. Therefore, if you index on a very large value and have several secondary indexes, you will end up with many duplicate copies of that primary index, first as the clustered index stored alongside the records themselves, but then again for as many times as you have secondary indexes pointing to those clustered indexes. With a small value as the primary key, this may not be so bad, but if you are using something potentially long, such as a URL, this repeated storage of the primary key on disk may cause storage issues.&lt;/p&gt;
+&lt;p&gt;Some operations render clustered indexes less effective. For instance, consider when a secondary index is in use. Going back to our phone book example, suppose you have &lt;code&gt;last_name&lt;/code&gt; set as the primary index and &lt;code&gt;phone_number&lt;/code&gt; set as a secondary index, and you perform the following query:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;SELECT * FROM phone_book WHERE phone_number = &amp;#39;555-7271&amp;#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;MySQL scans the &lt;code&gt;phone_number&lt;/code&gt; index to find the entry for &lt;code&gt;555-7271&lt;/code&gt;, which contains the primary key entry &lt;code&gt;Zawodny&lt;/code&gt; because &lt;code&gt;phone_book&lt;/code&gt;’s primary index is the last name. MySQL then skips to the relevant entry in the database itself.&lt;/p&gt;
+&lt;p&gt;In other words, lookups based on your primary key happen exceedingly fast, and lookups based on secondary indexes happen at essentially the same speed as MyISAM index lookups would.&lt;/p&gt;
+&lt;p&gt;Another less common but equally problematic condition happens when the data is altered such that the &lt;strong&gt;primary key is changed on a record&lt;/strong&gt;. This is the most costly function of clustered indexes. A number of things can happen to make this operation a more severe performance hit:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Alter the record in question according to the query that was issued.&lt;/li&gt;
+&lt;li&gt;Determine the new primary key for that record, based on the altered data record.&lt;/li&gt;
+&lt;li&gt;Relocate the stored records so that the record in question is moved to the proper location in the tablespace.&lt;/li&gt;
+&lt;li&gt;Update any secondary indexes that point to that primary key.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;As you might imagine, if you’re altering the primary key for a number of records, that &lt;code&gt;UPDATE&lt;/code&gt; command might take quite some time to do its job, especially on larger tables. Choose your primary keys wisely. Use values that are unlikely to change, such as a Social Security account number instead of a last name, serial number instead of a product name, and so on.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&#34;&gt;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;6-should-each-table-have-a-primary-key&#34;&gt;6. Should each table have a primary key&lt;/h2&gt;
+&lt;p&gt;Short answer: yes, each table should have a PRIMARY KEY so that you could distinguish two records.&lt;/p&gt;
+&lt;p&gt;In MySQL, the &lt;strong&gt;InnoDB storage engine&lt;/strong&gt; always creates a primary key if you didn&amp;rsquo;t specify it explicitly, thus making an extra column you don&amp;rsquo;t have access to.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://stackoverflow.com/a/840182/16317008&#34;&gt;https://stackoverflow.com/a/840182/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;7-unique-indexes-versus-primary-keys&#34;&gt;7. Unique indexes versus primary keys&lt;/h2&gt;
+&lt;p&gt;If you’re coming from other relational databases, you might wonder what the difference between a primary key and a unique index is in MySQL. As usual, it depends. In &lt;strong&gt;MyISAM tables&lt;/strong&gt;, there’s almost no difference. The only thing special about a primary key is that it can’t contain NULL values. The primary key is simply a &lt;code&gt;NOT&lt;/code&gt; &lt;code&gt;NULL&lt;/code&gt; &lt;code&gt;UNIQUE&lt;/code&gt; &lt;code&gt;INDEX&lt;/code&gt; named &lt;code&gt;PRIMARY&lt;/code&gt;. MyISAM tables don’t require that you declare a primary key.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;InnoDB and BDB tables&lt;/strong&gt; require primary keys for every table. There’s no requirement that you specify one, however. If you don’t, the storage engine automatically adds a hidden primary key for you. In both cases, the primary keys are simply incrementing numeric values, similar to an &lt;code&gt;AUTO-INCREMENT&lt;/code&gt; column. If you decide to add your own primary key at a later time, simply use &lt;code&gt;ALTER&lt;/code&gt; &lt;code&gt;TABLE&lt;/code&gt; to add one. Both storage engines will discard their internally generated keys in favor of yours. Heap tables don’t require a primary key but will create one for you. In fact, you can create Heap tables with no indexes at all.&lt;/p&gt;
+&lt;h2 id=&#34;8-index-adds-places-and-time-overhead&#34;&gt;8. Index adds places and time overhead&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Time overhead&lt;/strong&gt; is easy to understand, indexes add to the cost of inserts, updates, and deletes because each index must be updated.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;For taking up place,&lt;/strong&gt; there is an example: try to think our book or dictionary which have index (table of contents) which helps us to find the content quickly, the table of contents usually has multiple pages, just like this, index in a table also will take up some place which makes a table bigger.&lt;/p&gt;
+&lt;p&gt;Given that creating an index requires additional disk space (277,778 blocks extra from the above example, a ~28% increase), and that too many indices can cause issues arising from the file systems size limits, careful thought must be used to select the correct fields to index. Learn more: &lt;a href=&#34;https://stackoverflow.com/a/1130/16317008&#34;&gt;https://stackoverflow.com/a/1130/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Since indices are only used to speed up the searching for a matching field within the records, it stands to reason that &lt;strong&gt;indexing fields used only for output&lt;/strong&gt; would be simply a waste of disk space and processing time when doing an insert or delete operation, and thus should be avoided.&lt;/p&gt;
+&lt;p&gt;What does &amp;ldquo;&lt;em&gt;indexing fields used only for output&lt;/em&gt;&amp;rdquo; mean?&lt;/p&gt;
+&lt;p&gt;For example, imagine a table of products. Some fields like &amp;ldquo;name&amp;rdquo; or &amp;ldquo;price&amp;rdquo; are used for searching and filtering, while other fields like &amp;ldquo;description&amp;rdquo; or &amp;ldquo;image_url&amp;rdquo; are used only to provide additional information in the output. Creating an index on fields used only for output is not helpful and can waste resources.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Indexes trade space for performance. Because MySQL needs to maintain a separate list of indexes’ values and keep them updated as your data changes, you really don’t want to index every column in a table. Indexes are a trade-off between space and time. You’re sacrificing some extra disk space and a bit of CPU overhead on each &lt;code&gt;INSERT&lt;/code&gt;, &lt;code&gt;UPDATE&lt;/code&gt;, and &lt;code&gt;DELETE&lt;/code&gt; query to make most (if not all) your queries much faster. Source: &lt;a href=&#34;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&#34;&gt;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

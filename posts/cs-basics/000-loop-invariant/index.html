@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Loop Invariant :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Definition In simple words, a loop invariant is some predicate (condition) that holds for every iteration of the loop. For example, let&rsquo;s look at a simple for loop that looks like this:
+int j = 9; for(int i=0; i&lt;10; i&#43;&#43;) j--; In this example it is true (for every iteration) that i &#43; j == 9. A weaker invariant that is also true is that i &gt;= 0 &amp;&amp; i &lt;= 10.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/cs-basics/000-loop-invariant/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.583a79711b9ad488dc8a0d22d8a60c8e1ec10f9deefb1196750cd21c2290036c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.00125962708925857e7b66dbc58391d55be1191a3d0ce2034de8c9cd2c481c36.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.fe8dc560fccb53a458b0db19ccb7b265764ac46b68596b7e099c6793054dd457.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.fc74ca360273c1d828da3c02b8174eba435607b369d98418ccc6f2243cd4e75d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.9023bbc24533d09e97a51a0a42a5a7bfe4c591ae167c5551fb1d2191d11977c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/syntax.min.cc789ed9377260d7949ea4c18781fc58959a89287210fe4edbff44ebfc1511b6.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terminal.min.a3ace6ba3a41dfe0ace0ea00529938ba5be6061e185b7fa3575c19201bbdaac7.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Loop Invariant">
+<meta property="og:description" content="Definition In simple words, a loop invariant is some predicate (condition) that holds for every iteration of the loop. For example, let&rsquo;s look at a simple for loop that looks like this:
+int j = 9; for(int i=0; i&lt;10; i&#43;&#43;) j--; In this example it is true (for every iteration) that i &#43; j == 9. A weaker invariant that is also true is that i &gt;= 0 &amp;&amp; i &lt;= 10.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/cs-basics/000-loop-invariant/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="计算机基础" />
+
+
+  <meta property="article:published_time" content="2024-01-19 20:32:25 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    为霜的博客
+  </div>
+</a>
+
+    </div>
+    
+      <ul class="menu menu--mobile">
+  <li class="menu__trigger">Menu&nbsp;▾</li>
+  <li>
+    <ul class="menu__dropdown">
+      
+        
+          <li><a href="/showcase">Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories">文章分类</a></li>
+        
+      
+      
+    </ul>
+  </li>
+</ul>
+
+    
+    
+  </div>
+  
+    <nav class="navigation-menu">
+  <ul class="navigation-menu__inner menu--desktop">
+    
+      
+        
+          <li><a href="/showcase" >Showcase</a></li>
+        
+      
+        
+          <li><a href="/categories" >文章分类</a></li>
+        
+      
+      
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/cs-basics/000-loop-invariant/">Loop Invariant</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2024-01-19</time><span class="post-reading-time">2 分钟阅读 (325 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/cs-basics/">cs basics</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="definition">Definition<a href="#definition" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>In simple words, a loop invariant is some predicate (condition) that holds for every iteration of the loop. For example, let&rsquo;s look at a simple for loop that looks like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> j <span style="color:#f92672">=</span> <span style="color:#ae81ff">9</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>; i<span style="color:#f92672">&lt;</span><span style="color:#ae81ff">10</span>; i<span style="color:#f92672">++</span>)  
+</span></span><span style="display:flex;"><span>  j<span style="color:#f92672">--</span>;
+</span></span></code></pre></div><p>In this example it is true (for every iteration) that i + j == 9. A weaker invariant that is also true is that i &gt;= 0 &amp;&amp; i &lt;= 10.</p>
+<p>As people point out, the loop invariant must be true:</p>
+<ol>
+<li>before the loop starts</li>
+<li><strong>before</strong> each iteration of the loop</li>
+<li>after the loop terminates</li>
+</ol>
+<blockquote>
+<p>就是正确的算法在循环的各个阶段, 总是存在一个固定不变的特性, 找出这个特性并且你写的代码可以证明其固定不变, 则可推断出你写的代码是正确的.
+如何证明那个特性(循环不变式)固定不变呢? 具体的说就是证明它满足上面的三个条件.</p>
+</blockquote>
+<p>( although it can temporarily be false during the body of the loop ). On the other hand the <strong>loop conditional</strong> must be false after the loop terminates, otherwise the loop would never terminate. Thus the <strong>loop invariant</strong> and the <strong>loop conditional</strong> must be different conditions.</p>
+<h2 id="example">Example<a href="#example" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="binary-search">Binary Search<a href="#binary-search" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>第一步确定循环不变量</strong>：在每次迭代开始时以及循环结束时，如果目标元素存在于数组中，则它必定位于数组的 [low, high] 索引范围内 (左闭右闭区间)</p>
+<p><strong>第二步根据循环不变量来验证自己写好的代码</strong> (或者写代码的时候就开始验证):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">search</span>(self, nums, target):
+</span></span><span style="display:flex;"><span>    left <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    right <span style="color:#f92672">=</span> len(nums) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>  <span style="color:#75715e"># 记得减1, 因为我们循环不变量为左闭右闭区间</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> left <span style="color:#f92672">&lt;</span> right:
+</span></span><span style="display:flex;"><span>        m <span style="color:#f92672">=</span> (left <span style="color:#f92672">+</span> right) <span style="color:#f92672">//</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> target <span style="color:#f92672">&gt;</span> nums[m]:
+</span></span><span style="display:flex;"><span>            left <span style="color:#f92672">=</span> m <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> target <span style="color:#f92672">&lt;</span> nums[m]:
+</span></span><span style="display:flex;"><span>            right <span style="color:#f92672">=</span> m <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> m
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span></code></pre></div><p><strong>第三步验证</strong>：</p>
+<ol>
+<li>before the loop starts：若目标在数组中, 则其必在 [left, high] 区间内, 因此循环不变量成立</li>
+<li><strong>before</strong> each iteration of the loop: 每次迭代开始时, 我们都会将搜索区间减半, left = m + 1 或 right = m - 1, 排除了当前中间元素, 因此循环不变量成立</li>
+<li>after the loop terminates: 循环结束后, 有可能是 left == right, 比如 [3, 3], 若元素的index就是3, 则错过了, 循环不变量不成立, 因此要 while 结束的条件要改为 left &lt;= right 而不是 left &lt; right</li>
+</ol>
+<p>注意, 循环不变量本身用于确保算法逻辑的正确性，而不直接涉及到如何避免死循环, 若上面代码改为如下, 则会死循环:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> target <span style="color:#f92672">&gt;</span> nums[m]:
+</span></span><span style="display:flex;"><span>    left <span style="color:#f92672">=</span> m
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">elif</span> target <span style="color:#f92672">&lt;</span> nums[m]:
+</span></span><span style="display:flex;"><span>    right <span style="color:#f92672">=</span> m
+</span></span></code></pre></div><p>而此时循环不变量仍然成立: 若存在, 目标元素在 [left, right] 区间内,</p>
+<p>〉 <code>left = m + 1</code>, 或 <code>right = m - 1</code> 保证了每次迭代都会排除至少一个元素, 避免了死循环的发生</p>
+<p>结合以上各个算法，可以找出根据需要写二分查找的规律和具体步骤，比死记硬背要强不少，万变不离其宗嘛：</p>
+<p>　　(1)大体框架必然是二分，那么循环的key与array[mid]的比较必不可少，这是基本框架;</p>
+<p>　　(2)循环的条件可以先写一个粗略的，比如原始的while(left&lt;=right)就行，这个循环条件在后面可能需要修改；</p>
+<p>　　(3)确定每次二分的过程，要保证所求的元素必然不在被排除的元素中，换句话说，所求的元素要么在保留的其余元素中，要么可能从一开始就不存在于原始的元素中；</p>
+<p>　　(4)检查每次排除是否会导致保留的候选元素个数的减少？如果没有，分析这个边界条件，如果它能导致循环的结束，那么没有问题；否则，就会陷入死循环。为了避免死循环，需要修改循环条件，使这些情况能够终结。新的循环条件可能有多种选择：while(left&lt; right)、while(left&lt; right-1)等等，这些循环条件的变种同时意味着循环终止时候选数组的形态。</p>
+<p>　　(5)结合新的循环条件，分析终止时的候选元素的形态，并对分析要查找的下标是否它们之中、同时是如何表示的。</p>
+<p>　　对于(3)，有一些二分算法实现不是这样的，它会使left或right在最后一次循环时越界，相应的left或right是查找的目标的最终候选，这一点在理解时需要注意。当然，不利用这个思路也可以写出能完成功能的二分查找，而且易于理解。</p>
+<p>References:</p>
+<ul>
+<li><a href="https://stackoverflow.com/questions/3221577/what-is-a-loop-invariant">algorithm - What is a loop invariant? - Stack Overflow</a></li>
+<li><a href="https://kelvinmao.github.io/%E5%88%A9%E7%94%A8%E5%BE%AA%E7%8E%AF%E4%B8%8D%E5%8F%98%E5%BC%8F%E5%86%99%E5%87%BA%E6%AD%A3%E7%A1%AE%E7%9A%84%E4%BA%8C%E5%88%86%E6%9F%A5%E6%89%BE%E5%8F%8A%E5%85%B6%E8%A1%8D%E7%94%9F%E7%AE%97%E6%B3%95/">利用循环不变式写出正确的二分查找及其衍生算法 – KelvinMao Blog</a></li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/js/000-event-loop/" class="button inline prev">
+        Event Loop in Browser
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/microservice/grpc/002-proto-buffer/" class="button inline next">
+        Ptotocol Buffers
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2025 Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/panr/hugo-theme-terminal" target="_blank">Theme</a> made by <a href="https://github.com/panr" target="_blank">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
