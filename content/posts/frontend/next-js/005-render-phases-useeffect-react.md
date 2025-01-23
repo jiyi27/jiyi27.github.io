@@ -26,7 +26,7 @@ tags:
 
 返回清理函数可以防止内存泄漏, 不要忘了, useEffect 是用来执行副作用的地方, 比如我们可能在 useEffect 中建立了 TCP 连接, 组件多次渲染, 我们建立多个TCP连接, 可是同时只保存一个连接才是合理的, 这时候清理之前的, 就显得很必要:
 
-```js
+```javascript
 // 1. 数据获取 - 最常见的用例
 const UserProfile = () => {
   ...
@@ -130,7 +130,7 @@ function UserProfile() {
 1. 触发一个新的数据获取流程
 2. 通过 setState 引发新的**渲染周期**
 
-```ts
+```typescript
 // 🚫 错误理解：视图是个框架，等着数据填充
 <div id="user">{等待 useEffect 填充数据}</div>
 
