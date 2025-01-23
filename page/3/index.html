@@ -58,7 +58,7 @@
   <link rel="stylesheet" href="https://blog.jiyi27.com/css/syntax.min.cc789ed9377260d7949ea4c18781fc58959a89287210fe4edbff44ebfc1511b6.css">
 
   
-  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terminal.min.a3ace6ba3a41dfe0ace0ea00529938ba5be6061e185b7fa3575c19201bbdaac7.css">
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terminal.min.62ddabc5423dc7b0f1a305e47d4dac2440f4118597db8f2003bfea3bf61a1539.css">
 
   
   <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
@@ -170,316 +170,188 @@
 
   <div class="content">
     
+
+<div class="posts">
   
-  <div class="posts">
-    
-    
+  
+
+  
+  
+  
+  
+  
+
+  
+  <article class="post on-list">
+    <h2 class="post-title">
+      <a href="https://blog.jiyi27.com/posts/frontend/next-js/000-nuggets/">Next.js Notes</a>
+    </h2>
+
+    <div class="post-meta"><time class="post-date">2024-12-07</time></div>
 
     
-    
-      
-    
-    
-
-    
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/frontend/next-js/000-nuggets/">Next.js Notes</a>
-        </h2>
-
-        <div class="post-meta"><time class="post-date">2024-12-07</time></div>
-
-        
-          <span class="post-tags">
+    <span class="post-tags">
             
             #<a href="https://blog.jiyi27.com/tags/front-end/">front-end</a>&nbsp;
             
           </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p><strong>UUIDs vs. Auto-incrementing Keys</strong></p>
-<blockquote>
-<p>We use UUIDs instead of incrementing keys (e.g., 1, 2, 3, etc.). This makes the URL longer; however, UUIDs eliminate the risk of ID collision, are globally unique, and reduce the risk of enumeration attacks - making them ideal for large databases.</p>
-<p>However, if you prefer cleaner URLs, you might prefer to use auto-incrementing keys.</p>
-<p><a href="https://nextjs.org/learn/dashboard-app/mutating-data">source</a></p>
-</blockquote>
-<hr>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">SortOption</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;latest&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;hot&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;mostLiked&#39;</span>;
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// 不推荐, 若代码没有使用所有选项, 编译器会警告未使用变量, 其实是使用了, 只不过在运行时才能确定, 但编译器不知道, 不利于多人维护, 比如人家看没有使用的变量, 直接就删除了, 但用户通过点击选项来选择排序, 这是运行时才能确定的
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">sortFunctions</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">useMemo</span>(() <span style="color:#f92672">=&gt;</span> ({
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">latest</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">a</span>: <span style="color:#66d9ef">Post</span>, <span style="color:#a6e22e">b</span>: <span style="color:#66d9ef">Post</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">new</span> Date(<span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">createdAt</span>).<span style="color:#a6e22e">getTime</span>() <span style="color:#f92672">-</span> <span style="color:#66d9ef">new</span> Date(<span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">createdAt</span>).<span style="color:#a6e22e">getTime</span>(),
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">hot</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">a</span>: <span style="color:#66d9ef">Post</span>, <span style="color:#a6e22e">b</span>: <span style="color:#66d9ef">Post</span>) <span style="color:#f92672">=&gt;</span> (<span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">likesCount</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">commentsCount</span>) <span style="color:#f92672">-</span> (<span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">likesCount</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">commentsCount</span>),
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mostLiked</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">a</span>: <span style="color:#66d9ef">Post</span>, <span style="color:#a6e22e">b</span>: <span style="color:#66d9ef">Post</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">likesCount</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">likesCount</span>
-</span></span><span style="display:flex;"><span>}), []);
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// 解决办法, 指定 key 的类型
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">sortFunctions</span>: <span style="color:#66d9ef">Record</span>&lt;<span style="color:#f92672">SortOption</span>, <span style="color:#960050;background-color:#1e0010">(</span><span style="color:#a6e22e">a</span><span style="color:#960050;background-color:#1e0010">:</span> <span style="color:#a6e22e">Post</span>, <span style="color:#a6e22e">b</span><span style="color:#960050;background-color:#1e0010">:</span> <span style="color:#a6e22e">Post</span><span style="color:#960050;background-color:#1e0010">)</span> <span style="color:#960050;background-color:#1e0010">=</span>&gt; <span style="color:#66d9ef">number</span><span style="color:#f92672">&gt;</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">useMemo</span>(() <span style="color:#f92672">=&gt;</span> ({
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">latest</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">a</span>: <span style="color:#66d9ef">Post</span>, <span style="color:#a6e22e">b</span>: <span style="color:#66d9ef">Post</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">new</span> Date(<span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">createdAt</span>).<span style="color:#a6e22e">getTime</span>() <span style="color:#f92672">-</span> <span style="color:#66d9ef">new</span> Date(<span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">createdAt</span>).<span style="color:#a6e22e">getTime</span>(),
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">hot</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">a</span>: <span style="color:#66d9ef">Post</span>, <span style="color:#a6e22e">b</span>: <span style="color:#66d9ef">Post</span>) <span style="color:#f92672">=&gt;</span> (<span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">likesCount</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">commentsCount</span>) <span style="color:#f92672">-</span> (<span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">likesCount</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">commentsCount</span>),
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mostLiked</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">a</span>: <span style="color:#66d9ef">Post</span>, <span style="color:#a6e22e">b</span>: <span style="color:#66d9ef">Post</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">likesCount</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">likesCount</span>
-</span></span><span style="display:flex;"><span>}), []);
-</span></span></code></pre></div><blockquote>
-<p><code>Record&lt;K, V&gt;</code> 是 TypeScript 的一个工具类型, K 是键的类型, V 是值的类型</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/frontend/next-js/000-nuggets/">阅读更多</a>
-          </div>
-        
-      </article>
     
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/frontend/next-js/002-why-next-js/">Why Next.js Compared with Using React.js Directly</a>
-        </h2>
 
-        <div class="post-meta"><time class="post-date">2024-12-07</time></div>
+    
 
-        
-          <span class="post-tags">
+
+
+    
+
+    
+    <div>
+      <a class="read-more button inline" href="/posts/frontend/next-js/000-nuggets/">阅读更多</a>
+    </div>
+    
+  </article>
+  
+  <article class="post on-list">
+    <h2 class="post-title">
+      <a href="https://blog.jiyi27.com/posts/frontend/next-js/002-why-next-js/">Why Next.js Compared with Using React.js Directly</a>
+    </h2>
+
+    <div class="post-meta"><time class="post-date">2024-12-07</time></div>
+
+    
+    <span class="post-tags">
             
             #<a href="https://blog.jiyi27.com/tags/front-end/">front-end</a>&nbsp;
             
           </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="can-i-use-react-without-a-framework"><strong>Can I use React without a framework?</strong></h2>
-<p>You can definitely use React without a framework—that’s how you’d <a href="https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page">use React for a part of your page.</a> <strong>However, if you’re building a new app or a site fully with React, we recommend using a framework.</strong></p>
-<p>Here’s why.</p>
-<p>Even if you don’t need routing or data fetching at first, you’ll likely want to add some libraries for them. As your JavaScript bundle grows with every new feature, you might have to figure out how to split code for every route individually. As your data fetching needs get more complex, you are likely to encounter server-client network waterfalls that make your app feel very slow. As your audience includes more users with poor network conditions and low-end devices, you might need to generate HTML from your components to display content early—either on the server, or during the build time. Changing your setup to run some of your code on the server or during the build can be very tricky.</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/frontend/next-js/002-why-next-js/">阅读更多</a>
-          </div>
-        
-      </article>
     
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/csharp/dot-net/000-nuget/">NuGet Package Management</a>
-        </h2>
 
-        <div class="post-meta"><time class="post-date">2024-12-03</time></div>
+    
 
-        
-          <span class="post-tags">
+
+
+    
+
+    
+    <div>
+      <a class="read-more button inline" href="/posts/frontend/next-js/002-why-next-js/">阅读更多</a>
+    </div>
+    
+  </article>
+  
+  <article class="post on-list">
+    <h2 class="post-title">
+      <a href="https://blog.jiyi27.com/posts/csharp/dot-net/000-nuget/">NuGet Package Management</a>
+    </h2>
+
+    <div class="post-meta"><time class="post-date">2024-12-03</time></div>
+
+    
+    <span class="post-tags">
             
             #<a href="https://blog.jiyi27.com/tags/c#/">c#</a>&nbsp;
             
           </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p>Create new project with dotnet CLI</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$dotnet new list
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>$dotnet new &lt;template&gt; -n &lt;project-name&gt;
-</span></span></code></pre></div><hr>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># -n project name</span>
-</span></span><span style="display:flex;"><span>$dotnet new console -n tts-service-csharp
-</span></span><span style="display:flex;"><span>$ls 
-</span></span><span style="display:flex;"><span>Program.cs                obj                       tts-service-csharp.sln
-</span></span><span style="display:flex;"><span>bin                       tts-service-csharp.csproj
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># install a package for current project</span>
-</span></span><span style="display:flex;"><span>$ dotnet add package Microsoft.CognitiveServices.Speech
-</span></span></code></pre></div><ul>
-<li><code>Program.cs</code>: contains the <code>Main</code> method where your program starts executing</li>
-<li><code>bin</code> folder (binary): contains the compiled output of your program, after building, you&rsquo;ll find your executable (.exe) and other compiled files here.</li>
-<li><code>obj</code> folder (objects): contains temporary files used during compilation, these files can be safely deleted and will be recreated during the next build.</li>
-<li><code>tts-service-csharp.csproj</code>: the project file that defines your project settings, contains project configuration, dependencies, target framework</li>
-<li><code>ts-service-csharp.sln</code> (solution): a solution file that can contain multiple related projects, useful when your application grows and needs to be split into multiple projects.</li>
-</ul>
-<hr>
-<p><code>tts-service-csharp.csproj</code>:</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/csharp/dot-net/000-nuget/">阅读更多</a>
-          </div>
-        
-      </article>
     
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/frontend/ts/001-syntax/">Basic Syntax - TypeScript</a>
-        </h2>
 
-        <div class="post-meta"><time class="post-date">2024-11-29</time></div>
+    
 
-        
-          <span class="post-tags">
+
+
+    
+
+    
+    <div>
+      <a class="read-more button inline" href="/posts/csharp/dot-net/000-nuget/">阅读更多</a>
+    </div>
+    
+  </article>
+  
+  <article class="post on-list">
+    <h2 class="post-title">
+      <a href="https://blog.jiyi27.com/posts/frontend/ts/001-syntax/">Basic Syntax - TypeScript</a>
+    </h2>
+
+    <div class="post-meta"><time class="post-date">2024-11-29</time></div>
+
+    
+    <span class="post-tags">
             
             #<a href="https://blog.jiyi27.com/tags/typescript/">typescript</a>&nbsp;
             
           </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p><strong>Types</strong></p>
-<p>JavaScript has three very commonly used <a href="https://developer.mozilla.org/en-US/docs/Glossary/Primitive">primitives</a>: <code>string</code>, <code>number</code>, and <code>boolean</code>.</p>
-<p>TypeScript also has a special type, <code>any</code>, that you can use whenever you don’t want a particular value to cause typechecking errors.</p>
-<p><strong>Type Annotations on Variables</strong></p>
-<p>When you declare a variable using <code>const</code>, <code>var</code>, or <code>let</code>, you can <strong>optionally</strong> add a type annotation to explicitly specify the type of the variable:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">myName</span>: <span style="color:#66d9ef">string</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Alice&#34;</span>;
-</span></span></code></pre></div><blockquote>
-<p>In most cases, though, this isn’t needed. Wherever possible, TypeScript tries to automatically <em>infer</em> the types in your code.</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/frontend/ts/001-syntax/">阅读更多</a>
-          </div>
-        
-      </article>
     
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/frontend/styling-css/003-custom-styles/">Commonly Used Flex Styles</a>
-        </h2>
 
-        <div class="post-meta"><time class="post-date">2024-11-26</time></div>
+    
 
-        
-          <span class="post-tags">
+
+
+    
+
+    
+    <div>
+      <a class="read-more button inline" href="/posts/frontend/ts/001-syntax/">阅读更多</a>
+    </div>
+    
+  </article>
+  
+  <article class="post on-list">
+    <h2 class="post-title">
+      <a href="https://blog.jiyi27.com/posts/frontend/styling-css/003-custom-styles/">Commonly Used Flex Styles</a>
+    </h2>
+
+    <div class="post-meta"><time class="post-date">2024-11-26</time></div>
+
+    
+    <span class="post-tags">
             
             #<a href="https://blog.jiyi27.com/tags/front-end/">front-end</a>&nbsp;
             
           </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p>响应式: 导航栏</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">div</span>&gt;
-</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;mx-auto px-4 w-full max-w-7xl border-2&#34;</span>&gt;
-</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;flex justify-around items-center&#34;</span>&gt;
-</span></span><span style="display:flex;"><span>            &lt;<span style="color:#f92672">Link</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text-blue-600 dark:text-blue-400&#34;</span>&gt;首页&lt;/<span style="color:#f92672">Link</span>&gt;
-</span></span><span style="display:flex;"><span>            &lt;<span style="color:#f92672">Link</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/discuss&#34;</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text-blue-600 dark:text-blue-400&#34;</span>&gt;讨论&lt;/<span style="color:#f92672">Link</span>&gt;
-</span></span><span style="display:flex;"><span>            &lt;<span style="color:#f92672">Link</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/search&#34;</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text-blue-600 dark:text-blue-400&#34;</span>&gt;搜索&lt;/<span style="color:#f92672">Link</span>&gt;
-</span></span><span style="display:flex;"><span>        &lt;/<span style="color:#f92672">div</span>&gt;
-</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">div</span>&gt;
-</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">div</span>&gt;
-</span></span></code></pre></div><p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/12/a3f08d9ac96f269da225d22fa7b5bda3.png" alt=""></p>
-<blockquote>
-<p><code>max-w-7xl</code> 限制最大宽度在 7xl 以内, 注意 <code>w-full</code> 并不多余, 因为盒子可能不会自动占满整个宽度, 它确保了容器行为的可预测性</p>
-<p>水平方向: <code>justify-around</code> 控制 flex 子元素在主轴（默认是水平方向）上的分布, 子元素会平均分布，每个元素两侧有相等的空间, 与 <code>justify-between</code> 的区别是, <code>around</code> 在两端也会留有空间（约为中间空间的一半）</p>
-<p>垂直方向居中: <code>items-center</code>: 控制 flex 子元素在交叉轴（默认是垂直方向）上的对齐方式</p>
-</blockquote>
-<hr>
-<p>一个盒子, 两端各放一个</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-css" data-lang="css"><span style="display:flex;"><span><span style="color:#f92672">&lt;</span><span style="color:#f92672">div</span> <span style="color:#f92672">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;flex flex-between&#34;</span><span style="color:#f92672">&gt;</span>
-</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;</span><span style="color:#f92672">div</span><span style="color:#f92672">&gt;</span><span style="color:#f92672">Left</span> <span style="color:#f92672">element</span><span style="color:#f92672">&lt;/</span><span style="color:#f92672">div</span><span style="color:#f92672">&gt;</span>
-</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;</span><span style="color:#f92672">div</span><span style="color:#f92672">&gt;</span><span style="color:#f92672">Right</span> <span style="color:#f92672">element</span><span style="color:#f92672">&lt;/</span><span style="color:#f92672">div</span><span style="color:#f92672">&gt;</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/</span><span style="color:#f92672">div</span><span style="color:#f92672">&gt;</span>
-</span></span></code></pre></div><hr>
-<blockquote>
-<p><strong>常用技巧:</strong></p>
-<ol>
-<li>justify-between 主要是用来设置 flex items 之间的间距, 一般是让两个元素分布在容器左右或上下两端,</li>
-<li>聊天软件, 自己信息靠右, 对方信息靠左, 不可以使用 <code>justify-self</code> 或 <code>align-self</code>, 前者是用于 Grid 布局的, 后者是用于 Flex 布局的交叉轴上的对齐方式. 更不可以单独对一个元素设置 <code>justify-start</code> 或 <code>justify-end</code>, 因为这是 flex box 的属性, 会影响所有的 flex items, 而不是单个元素. 你可以使用 <code>margin-left: auto</code> 或 <code>margin-right: auto</code> 来实现这个效果.</li>
-<li><code>mx-auto</code> 用于水平居中, <code>my-auto</code> 用于垂直居中,</li>
-<li>也可使用 order 属性来调整元素的顺序, 配合 justify-between 使用 (控制在两端, 一左一右), 只有两个元素这种简单情况下推荐使用.</li>
-</ol>
-</blockquote>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Message</span>({<span style="color:#a6e22e">role</span>, <span style="color:#a6e22e">text</span>, <span style="color:#a6e22e">time</span>}) {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">messageClass</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">role</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;bot&#39;</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;mr-auto bg-gray-300 text-black&#39;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;ml-auto bg-blue-300 text-white&#39;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">timePos</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">role</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;bot&#39;</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;order-2&#39;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;order-1&#39;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">rolePos</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">role</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;bot&#39;</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;order-1&#39;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;order-2&#39;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">sentTime</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Date(<span style="color:#a6e22e">time</span>).<span style="color:#a6e22e">toLocaleString</span>()
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">messageClass</span>} <span style="color:#f92672">&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span>{<span style="color:#e6db74">&#39;flex flex-row justify-between&#39;</span>}<span style="color:#f92672">&gt;</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">span</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">rolePos</span>}<span style="color:#f92672">&gt;</span>{<span style="color:#a6e22e">role</span>}<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/span&gt;</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">span</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">timePos</span>}<span style="color:#f92672">&gt;</span>{<span style="color:#a6e22e">sentTime</span>}<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/span&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/div&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">p</span><span style="color:#f92672">&gt;</span>{<span style="color:#a6e22e">text</span>}<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/p&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/div&gt;</span>
-</span></span><span style="display:flex;"><span>    )
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><h2 id="3-水平和垂直居中---flex">3. 水平和垂直居中 - Flex</h2>
-<h3 id="31-水平居中">3.1 水平居中</h3>
-<p>对于 <code>flex-row</code> 主轴就是水平方向, 简单使用 justify-center (沿主轴方向操作 flex items) 即可使 flex items 水平居中.</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/frontend/styling-css/003-custom-styles/">阅读更多</a>
-          </div>
-        
-      </article>
     
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/bugs/011-cloudflare-r2/">Cloudflare R2 Pre-signed URL Cross-Origin Issue</a>
-        </h2>
 
-        <div class="post-meta"><time class="post-date">2024-10-20</time></div>
+    
 
-        
-          <span class="post-tags">
+
+
+    
+
+    
+    <div>
+      <a class="read-more button inline" href="/posts/frontend/styling-css/003-custom-styles/">阅读更多</a>
+    </div>
+    
+  </article>
+  
+  <article class="post on-list">
+    <h2 class="post-title">
+      <a href="https://blog.jiyi27.com/posts/bugs/011-cloudflare-r2/">Cloudflare R2 Pre-signed URL Cross-Origin Issue</a>
+    </h2>
+
+    <div class="post-meta"><time class="post-date">2024-10-20</time></div>
+
+    
+    <span class="post-tags">
             
             #<a href="https://blog.jiyi27.com/tags/bugs/">bugs</a>&nbsp;
             
           </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="1-problem-description">1. Problem description</h2>
-<p>获取到Cloudflare R2的Pre-signed URL后，使用网页上传文件时，总是返回各自各样的错误, 在网页遇到的是跨域问题, 总是报错说 pre flight request failed.</p>
-<p>查了一圈, 说是请求头的问题, 需要在平台设置 <code>Access-Control-Allow-Origin</code> 和 <code>Access-Control-Allow-Headers</code> 等请求头. 后面设置了, 也无济于事. 有的说得包含 Content-type 头, 即若前端通过pre-signed url上传文件, 设置了 Content-Type 头, 则后端请求pre-signed url时, 也必须设置 Content-Type 头. 什么必须要同一个方法 PUT, 都设置 都不行,</p>
-<p>后来使用 SwiftUI 开发, 想着换个环境, 就没有跨域问题了吧, 可是还是报错, 报错信息是 401, 没有权限.</p>
-<h2 id="2-problem-analysis">2. Problem analysis</h2>
-<p>结果问题出现在 Cloudflare R2 和 AWS S3 签名版本兼容问题上:</p>
-<blockquote>
-<p>Cloudflare R2 requires presigned URLs to be generated using AWS Signature Version 4. Any other signature version will result in authentication failures.</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/bugs/011-cloudflare-r2/">阅读更多</a>
-          </div>
-        
-      </article>
     
 
-    <div class="pagination">
+    
+
+
+
+    
+
+    
+    <div>
+      <a class="read-more button inline" href="/posts/bugs/011-cloudflare-r2/">阅读更多</a>
+    </div>
+    
+  </article>
+  
+
+  <div class="pagination">
   <div class="pagination__buttons">
     
       <a href="/page/2/" class="button prev">
@@ -496,7 +368,7 @@
   </div>
 </div>
 
-  </div>
+</div>
 
   </div>
 
