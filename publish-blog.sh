@@ -1,16 +1,15 @@
-#!/bin/bash -l
+#!/bin/bash
 
 # Required parameters:
 # @raycast.schemaVersion 1
-# @raycast.title Publish Blogs
+# @raycast.title Publish Blog
 # @raycast.mode fullOutput
 
 # Optional parameters:
 # @raycast.icon 🤖
 
 # Documentation:
-# @raycast.author David
-# @raycast.authorURL https://raycast.com/shwezhu
+# @raycast.author jiyi27
 
 hugo
 cd public/
