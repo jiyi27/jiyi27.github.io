@@ -3,18 +3,17 @@ title: Backup Blogs with Git - Sovled
 date: 2023-09-01 14:12:50
 categories:
   - git
-  - practice
 tags:
   - git
 ---
 
-## Problem
+## 1. Problem
 
 On github `shwezhu.github.io` repository I have two branch already, one is `master` for static html files that is generate web page, another is `backup` for backup of my hexo themes files and blogs. 
 
 I want backup the hugo theme files with my blog files. 
 
-## Solution
+## 2. Solution
 
 I'm using hugo now but I don't want to override or delete the theme files for hexo, therefore, I cannot just fetch remote branch `backup` and merge it with my local branch and then push. This will override the files stored on `backup` before. 
 

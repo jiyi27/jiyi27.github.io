@@ -7,10 +7,6 @@ tags:
   - git
 ---
 
-A properly formed git commit subject line should always be able to complete the following sentence:
-
-If applied, this commit will *<your subject line here>*
-
 ## 1. Things to avoid when creating commits
 
 - **Sending large new features in a single giant commit.**

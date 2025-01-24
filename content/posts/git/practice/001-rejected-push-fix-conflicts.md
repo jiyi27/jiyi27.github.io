@@ -8,7 +8,7 @@ tags:
   - git
 ---
 
-## Problem
+## 1. Problem
 
  GitHub 新建一个 repository, 并选择了自动创建 `README.md`, 在本地初始化项目后进行push, 报错:
 
@@ -24,11 +24,11 @@ hint: (e.g., 'git pull ...') before pushing again.
 hint: See the 'Note about fast-forwards' in 'git push --help' for details.
 ```
 
-## 原因分析
+## 2. 原因分析
 
 远程仓库存在本地仓库没有的 commit, 导致 push 被拒绝, 
 
-## 解决办法
+## 3. 解决办法
 
 fetch 下来查看都是什么 commit, 再决定是否进行 merge, 
 
@@ -85,7 +85,7 @@ Date:   Tue Aug 15 19:28:27 2023 -0300
 git push -u origin master
 ```
 
-## 总结
+## 4. 总结
 
 - 通过 `git fetch origin` 拉取远程仓库的commit
 
