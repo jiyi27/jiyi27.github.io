@@ -2,10 +2,9 @@
 title: C++ Operator Overloading
 date: 2023-05-22 23:03:12
 categories:
- - c++
- - basics
+ - C++
 tags:
- - c++
+ - C++
 ---
 
 ## 1. Operators as functions

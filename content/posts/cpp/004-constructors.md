@@ -2,10 +2,9 @@
 title: C++ Constructors
 date: 2023-05-15 18:56:01
 categories:
- - c++
- - basics
+ - C++
 tags:
- - c++
+ - C++
 ---
 
 ## 1. Member initialization list

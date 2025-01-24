@@ -2,10 +2,9 @@
 title: C++ Variable Assignment and Initialization
 date: 2023-05-14 18:29:32
 categories:
- - c++
- - basics
+ - C++
 tags:
- - c++
+ - C++
 ---
 
 ## 1. Define
