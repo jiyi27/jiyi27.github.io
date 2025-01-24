@@ -1,27 +1,24 @@
 ---
-title: Intros of C Standard Library
+title: C 标准库
 date: 2023-10-17 17:58:57
 categories:
  - c++
 tags:
- - c
- - c++
-typora-root-url: ../../../../static
+ - 标准库
+ - glibc
 ---
 
-## 1. ISO the International Organization for Standardization
+## 1. ISO 制定标准
 
-To clarify the relationship between **ISO**, **standards** and the **standard library**, ISO publishes standards, which essentially become the standard library. ISO discusses and develops **language standards** every year, resulting in standards for languages like C99 and C11. These standards primarily cover two main aspects: the functionality of the language itself and the standard library associated with that language. However, it's important to note that these standards are essentially specifications. The actual implementations of these standards are carried out by other entities; for instance, glibc and MSVCRT are implementations of the C standard library. 
+**ISO/IEC**（国际标准化组织/国际电工委员会）制定 C 和 C++ 编程语言的标准，其中包括**标准库**的规范。这些标准定义了语言的语法、语义以及标准库中包含的函数、类型和宏。例如，C 的标准是 ISO/IEC 9899，C++ 的标准是 ISO/IEC 14882。
 
-For example, the outcome of their discussions in 1999 is the **C99 standard**, formally known as [ISO/IEC 9899:1999(E) -- Programming Languages -- C](https://www.dii.uchile.cl/~daespino/files/Iso_C_1999_definition.pdf), The C99 standard comprises two main parts:
+**标准库**是标准定义的一组函数和类型，旨在提供一组通用的、跨平台的工具，用于执行常见的任务，例如输入/输出、字符串操作、数学计算等。标准库的规范只定义了接口（即函数原型、类型定义等），而**没有定义具体的实现**。
 
-- the C/C++ features and functionalities;
+**glibc**（GNU C Library）是 GNU 项目为 GNU 系统（包括 Linux）提供的 C 语言标准库的**一种实现**。它是 Linux 系统中最常用的 C 库，提供了符合 ISO C 标准的函数和类型，以及一些 Linux 特有的扩展。
 
-- the C/C++ API — a collection of classes, functions and macros that developers use in their C/C++ programs. It is called the **Standard Library**. 
+**MSVCRT**（Microsoft Visual C Runtime）是 Microsoft 为 Windows 操作系统提供的 C 和 C++ 运行时库，其中包含了 C 语言标准库的**一种实现**。它与 Microsoft Visual Studio 编译器紧密集成，为 Windows 应用程序提供必要的运行时支持。
 
-![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/64152677dd73f74719be0697f593dda6.png)
-
-No implementation, just a specifications. 
+> ISO/IEC 制定标准，定义了标准库的规范, glibc 和 MSVCRT 是标准库的不同实现，分别用于不同的操作系统（Linux 和 Windows）
 
 ## 2. Implementation of standard library
 
