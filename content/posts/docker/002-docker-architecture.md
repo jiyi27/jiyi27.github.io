@@ -2,17 +2,16 @@
 title: Docker Architecture
 date: 2023-10-11 10:38:35
 categories:
- - docker
+ - Docker
 tags:
- - docker
-typora-root-url: ../../../static
+ - Docker
 ---
 
 ##  1. Docker architecture
 
 Docker uses a client-server architecture. The **Docker client** talks to the **Docker daemon**, which does the heavy lifting of building, running, and distributing your **Docker containers**. The Docker client and daemon can run on the same system, or you can connect a Docker client to a remote Docker daemon. The Docker client and daemon communicate using a REST API, over UNIX sockets or a network interface. 
 
-<img src="/002-docker-architecture/a.png" alt="a" style="zoom:50%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/e8b32edce5939afa1e051041d591ffb0.png)
 
 Learn more about the Cocker client(`docker`), Docker daemon(`dockerd`) and Docker objects (images, containers): https://docs.docker.com/get-started/overview/
 
@@ -23,7 +22,7 @@ Docker Build implements a client-server architecture, where:
 - Buildx is the client and the user interface for running and managing builds
 - BuildKit is the server, or builder, that handles the build execution.
 
-![b](/002-docker-architecture/b.png)
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/4b1595b53889e9dbe8ba7ee47a7639b9.png)
 
 As of Docker Engine 23.0 and Docker Desktop 4.19, Buildx is the default build client.
 

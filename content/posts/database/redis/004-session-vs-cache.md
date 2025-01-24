@@ -2,10 +2,11 @@
 title: Caching & Session Management
 date: 2023-10-02 09:37:58
 categories:
- - database
+ - 数据库
 tags:
- - database
- - redis
+ - 数据库
+ - Redis
+ - 缓存
 ---
 
 ## 1. Session

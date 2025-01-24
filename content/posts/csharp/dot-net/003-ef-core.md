@@ -1,8 +1,12 @@
 ---
 title: EF Core Basics
 date: 2024-07-21 09:42:36
+categories:
+ - C#
 tags:
- - c#
+ - C#
+ - .Net
+ - ORM
 ---
 
 ## 1. Rider EF Core - Migrations
@@ -32,23 +36,3 @@ Tool 'dotnet-ef' was reinstalled with the stable version (version '8.0.7').
 Tool 'dotnet-ef' was successfully updated from version '8.0.7' to version '9.0.0-preview.1.24081.2'.
 ```
 
-
-
-
-
-
-## 3. Navigation Properties & Lazy Loading
-
-
-
-## 4. Exception
-
-
-
-You should never expose stacktrace to users. Thats a security risk. You should also never expose exception messages to users, only for custom exceptions that you know can not contain sensitive information is ok to expose.
-
-You should never build your release candidate on a developer machine. You should use a build agent for this. The best solution is to look at using build agents, for example Azure devops support this and is a pollished and well working continuous integration suit. edit: There is also another reason for not building on your machine. On your machine you can have stuff in the GAC that makes the project build just fine on your machine but will not run on the target host.
-
-Finally you should build the release candidate in release mode. Both for performance reasons and security.
-
-https://softwareengineering.stackexchange.com/a/402751/435322

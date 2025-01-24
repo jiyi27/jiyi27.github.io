@@ -2,10 +2,10 @@
 title: Index and Primary Key
 date: 2023-10-03 12:06:36
 categories:
- - database
+ - 数据库
 tags:
- - database
- - mysql
+ - 数据库
+ - MySQL
 ---
 
 ## 1. Index concepts

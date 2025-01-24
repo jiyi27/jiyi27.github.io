@@ -2,9 +2,9 @@
 title: Dockerfile Synatax
 date: 2023-10-11 12:27:35
 categories:
- - docker
+ - Docker
 tags:
- - docker
+ - Docker
 ---
 
 ## 1. WORKDIR

@@ -2,17 +2,17 @@
 title: MongoDB Aggregate
 date: 2024-01-04 17:51:35
 categories:
- - database
+ - 数据库
 tags:
- - database
- - mongodb
+ - 数据库
+ - MongoDB
 ---
 
-## Aggregate framework
+## 1. Aggregate framework
 
 The aggregation framework is MongoDB’s advanced query language, and it allows you to transform and combine data from multiple documents to generate new information not available in any single document.
 
-## Common aggregation stages
+## 2. Common aggregation stages
 
 Below is a list of common MongoDB aggregation pipeline stages and their typical order:
 

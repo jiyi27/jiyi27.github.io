@@ -10,10 +10,6 @@ tags:
 
 这几天弄服务器, 用ssh通过域名连接的时候总是出现超时(域名只有一个A记录即服务器IP), 问题下面是分析思路, 
 
-<!--more-->
-
-### 问题描述:
-
 I'm trying to use `ssh` to connect my server with my domain name `ssh root@www.davidzhu.xyz`, but I always get timeout. However I can connect my server when use my server ip directly `ssh root@144.202.12.32`, so I use `dig` to check the ip address of my domain on DNS, the output is:
 
 ```shell
@@ -33,8 +29,6 @@ But I only have one A record on my domain, this is the DNS Record of my domain n
 惊不惊讶, **`dig`返回的两个IP地址竟然都与我域名的A记录不同**!
 
 ----
-
-### **更新:** 
 
 原因是我的域名开启了 Cloudfalre 的 [reverse proxy](https://developers.cloudflare.com/fundamentals/concepts/how-cloudflare-works/), 通过域名获取到的是 Clouflare 的IP, 无法访问到我服务器真实IP:
 

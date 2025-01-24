@@ -4,6 +4,7 @@ date: 2023-06-01 22:13:25
 categories:
   - 计算机基础
 tags:
+  - 计算机基础
   - Python
   - 编码
 ---

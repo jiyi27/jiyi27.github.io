@@ -1,11 +1,14 @@
 ---
 title: Asp .Net Core Model Binding
 date: 2024-07-26 19:42:36
+categories:
+ - C#
 tags:
- - c#
+ - C#
+ - .Net
 ---
 
-### 1. Data Source
+## 1. Data Source
 
 By default, model binding gets data in the form of key-value pairs from the following sources in an HTTP request:
 
@@ -15,11 +18,11 @@ By default, model binding gets data in the form of key-value pairs from the foll
 4. Query string parameters
 5. Uploaded files
 
-### 2. Simple types
+## 2. Simple types
 
 [Model Binding in ASP.NET Core | Microsoft Learn](https://learn.microsoft.com/en-us/aspnet/core/mvc/models/model-binding?view=aspnetcore-8.0#simple-types)
 
-### 3. Complex Type
+## 3. Complex Type
 
 A complex type must have a **public default constructor** and **public writable properties** to bind. When model binding occurs, the class is instantiated using the public default constructor.
 

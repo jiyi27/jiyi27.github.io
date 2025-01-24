@@ -2,13 +2,14 @@
 title: MongoDB in Action Reading Note
 date: 2024-04-24 18:29:30
 categories:
- - database
+ - 数据库
 tags:
- - database
- - mongodb
+ - 数据库
+ - MongoDB
+ - 读书笔记
 ---
 
-## Basic Theory
+## 1. Basic Theory
 
 MongoDB stores its information in **documents** rather than **rows**. Where relational databases have **tables**, MongoDB has ***collections***. 
 
@@ -28,9 +29,9 @@ MongoDB 没有传统数据库中 join 操作和 foreign key, 但可以通过 [em
 
 关于 join 操作请参考: [SQL Joins Explained](https://www.youtube.com/watch?v=9yeOJ0ZMUYw)
 
-## Examples in the Book
+## 2. Examples in the Book
 
-### Reviews - One to Many Relationship
+### 2.1. Reviews - One to Many Relationship
 
 Each *product* can have many *reviews*, and you create this relationship by storing a `product_id` in each *review*, as shown in the sample document:
 
@@ -61,7 +62,7 @@ Also noteworthy is the decision to store votes in the review document itself. It
 >
 > 这段提到了一个关键概念：缓存（Caching）, 这里的 “缓存” 是指在文档中直接存储一个额外的数据项（在这个例子中是“有帮助的投票数”），而不是每次查询时计算这个数值。
 
-### Student & Courses - Many to Many Relationship
+### 2.2. Student & Courses - Many to Many Relationship
 
 **student:**
 
@@ -105,13 +106,13 @@ db.students.find( { "courses.courseName": "Database Design" } )
 
 This example is from [Many to many relationship and linked table/collection - Working with Data - MongoDB Developer Community Forums](https://www.mongodb.com/community/forums/t/many-to-many-relationship-and-linked-table-collection/130305/2)
 
-## Query Operators
+## 3. Query Operators
 
 前面介绍了find函数的基本用法和projection参数, 在实际查询中, 我们还需要使用一些操作符来构建更复杂的查询条件, 接下来一一介绍. 
 
 Learn more: [Query and Projection Operators — MongoDB Manual](https://www.mongodb.com/docs/manual/reference/operator/query/)
 
-### Set operators
+### 3.1. Set operators
 
 `$in`, `$nin`, `$all`
 
@@ -131,7 +132,7 @@ db.products.find({
 db.products.find({'details.color': {$in: ['blue', 'Green']}})
 ```
 
-### Boolean operators
+### 3.2. Boolean operators
 
 `$or`, `$and`, `$not`, `$nor`, `$exists`
 
@@ -146,9 +147,9 @@ db.products.find({
 })
 ```
 
-## Update, atomic operations, and delete - Action in MongoDB chapter 7
+## 4. Update, atomic operations, and delete - Action in MongoDB chapter 7
 
-### Update
+### 4.1. Update
 
 You can either replace the document altogether, or you can use update operators to modify specific fields within the document. 
 
@@ -173,7 +174,7 @@ db.users.update({_id: user_id},  {$set: {email: 'mongodb-user2@mongodb.com'}})
 
 > Performance-conscious users may balk at the idea of re-aggregating all product reviews for each update. **Much of this depends on the ratio of reads to writes**; it’s likely that more users will see product reviews than write their own, so it makes sense to re-aggregate on a write.
 
-### Standard update operators
+### 4.2. Standard update operators
 
 Certainly! Let's go through each MongoDB update operator with an explanation followed by a real-world example:
 
@@ -233,7 +234,7 @@ Certainly! Let's go through each MongoDB update operator with an explanation fol
    db.products.update({ productId: 'A123' }, { $mul: { price: 2 } });
    ```
 
-## Slow queries - Chapter 8 值得反复阅读
+## 5. Slow queries - Chapter 8 值得反复阅读
 
 Finding slow queries is easy with MongoDB’s profiler. Discovering why these queries are slow is trickier and may require some detective work. As mentioned, the causes of slow queries are manifold. If you’re lucky, resolving a slow query may be as easy as adding an index. In more difficult cases, you might have to rearrange indexes, restructure the data model, or upgrade hardware.
 

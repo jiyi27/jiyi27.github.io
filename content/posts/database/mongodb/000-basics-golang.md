@@ -2,13 +2,13 @@
 title: MongoDB Docs - Golang Basics
 date: 2024-04-23 08:38:35
 categories:
- - database
+ - 数据库
 tags:
- - database
- - mongodb
+ - 数据库
+ - MongoDB
 ---
 
-## Bson & Marshalling & Unmarshalling
+## 1. Bson & Marshalling & Unmarshalling
 
 The process of converting a Go type to BSON is called **marshalling**, while the reverse process is called **unmarshalling**.
 
@@ -36,7 +36,7 @@ Learn more:
 
 [Work with BSON - Go Driver v1.15](https://www.mongodb.com/docs/drivers/go/current/fundamentals/bson/)
 
-## Read Operation - Cursor
+## 2. Read Operation - Cursor
 
 To match a subset of documents, specify a **query filter**. In a query filter, you can match fields with [literal values](https://www.mongodb.com/docs/drivers/go/current/fundamentals/crud/read-operations/query-document/#std-label-golang-literal-values) or with [query operators](https://www.mongodb.com/docs/drivers/go/current/fundamentals/crud/read-operations/query-document/#std-label-golang-query-operators). When you don't know which method you should use, you can go to the [mongo driver go API](https://pkg.go.dev/go.mongodb.org/mongo-driver/mongo@v1.15.0#Collection) to check how to use them. 
 
@@ -69,7 +69,7 @@ If the number and size of documents returned by your query exceeds available app
 
 > When your application no longer requires a cursor, close the cursor with the `Close()` method. This method frees the resources your cursor consumes in both the client application and the MongoDB server.  Close the cursor when you [retrieve documents individually](https://www.mongodb.com/docs/drivers/go/current/fundamentals/crud/read-operations/cursor/#std-label-golang-individual-documents) because those methods make a cursor [tailable.](https://www.mongodb.com/docs/manual/core/tailable-cursors/)
 
-## Others
+## 3. Others
 
 - If the necessary database and collection don't exist when you perform a write operation, the server implicitly creates them. So you don't need to create database explicitly when use MongoDB. 
 

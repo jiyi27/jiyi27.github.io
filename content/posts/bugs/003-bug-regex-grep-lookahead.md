@@ -10,8 +10,6 @@ tags:
 
 刚开始使用`printf "123\n24567\n8930\n234\n" | egrep '(?<!2)3'`提示`egrep: repetition-operator operand invalid`, 然后查到可以使用参数`-P`, 如下:
 
-<!--more-->
-
 ```shell
 $ printf "123\n24567\n8930\n234\n" | grep -P '(?<!2)3' 
 ```

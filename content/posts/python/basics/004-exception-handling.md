@@ -8,6 +8,22 @@ tags:
 typora-root-url: ../../../../static
 ---
 
+## 3. Exception
+
+You should never expose stacktrace to users. Thats a security risk. You should also never expose exception messages to users, only for custom exceptions that you know can not contain sensitive information is ok to expose.
+
+You should never build your release candidate on a developer machine. You should use a build agent for this. The best solution is to look at using build agents, for example Azure devops support this and is a pollished and well working continuous integration suit. edit: There is also another reason for not building on your machine. On your machine you can have stuff in the GAC that makes the project build just fine on your machine but will not run on the target host.
+
+Finally you should build the release candidate in release mode. Both for performance reasons and security.
+
+https://softwareengineering.stackexchange.com/a/402751/435322
+
+
+
+
+
+
+
 两种编程异常处理风格:
 
 EAFP (Easier to Ask for Forgiveness than Permission):

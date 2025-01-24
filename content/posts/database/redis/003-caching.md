@@ -2,16 +2,12 @@
 title: Caching Strategies and What should be Cached
 date: 2023-10-01 17:56:58
 categories:
- - database
+ - 数据库
 tags:
- - database
- - redis
- - golang
+ - 数据库
+ - Redis
+ - 缓存
 ---
-
-Previous post: https://davidzhu.xyz/post/database/redis/004-session-vs-cache/
-
-A paragraph I like, and share it here with you:
 
 > “The real problem is that programmers have spent far too much time worrying about efficiency in the wrong places and at the wrong times; **premature optimization** is the root of all evil (or at least most of it) in programming.” - [Donald Knuth](https://en.wikipedia.org/wiki/Donald_Knuth)
 

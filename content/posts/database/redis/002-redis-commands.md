@@ -2,10 +2,10 @@
 title: Useful Redis Commands
 date: 2023-09-30 16:40:58
 categories:
- - database
+ - 数据库
 tags:
- - database
- - redis
+ - 数据库
+ - Redis
 ---
 
 ## 1. Install & run redis server
@@ -49,7 +49,7 @@ By default, `redis-cli` uses a plain TCP connection to connect to Redis. You may
 
 If the target server requires authentication using a client side certificate, you can specify a certificate and a corresponding private key using `--cert` and `--key`.
 
-### 3. `redis-cli MONITOR`
+## 3. `redis-cli MONITOR`
 
 All commands received by the active Redis instance will be printed to the standard output:
 

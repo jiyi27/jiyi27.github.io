@@ -1,12 +1,11 @@
 ---
 title: PostgreSQL COnfiguration
-date: 2024-12-27 17:51:35
+date: 2024-12-27 17:51:35categories:
+ - 数据库
 tags:
- - database
- - postgres
+ - 数据库
+ - PostgreSQL
 ---
-
-<!--more-->
 
 安装
 
