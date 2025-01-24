@@ -5,6 +5,7 @@ categories:
  - golang
 tags:
  - golang
+ - redis
 ---
 
 To prevent data race, `store.Get()` always creates a new session (or make a copy) and returns the session to user. 

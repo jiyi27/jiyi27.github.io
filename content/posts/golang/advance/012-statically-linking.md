@@ -3,12 +3,10 @@ title: Static Linking Go Programs
 date: 2023-10-10 12:09:35
 categories:
  - golang
- - advance
 tags:
  - golang
+ - 编译原理
 ---
-
-Previous post: [Statically Linking in C - David's Blog](https://davidzhu.xyz/post/c++/basics/002-statically-linking/)
 
 ## 1. Static linking on linux
 

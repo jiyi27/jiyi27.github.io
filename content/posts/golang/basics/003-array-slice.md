@@ -3,7 +3,6 @@ title: slice & array - Go
 date: 2023-12-06 23:40:59
 categories:
  - golang
- - basics
 tags:
  - golang
 ---
@@ -130,5 +129,4 @@ func main() {
 Bacsuse a slice likes a pointer, the two goroutines above share a same underlying array. You have to consider if there is a data race, if yes, consider make a deep copy of the slice: [Everything Passed by Value - Go - David's Blog](https://davidzhu.xyz/post/golang/basics/009-everything-passed-by-value/) 
 
 > Note that [iteration variable is re-used in each iteration](https://github.com/golang/go/wiki/CommonMistakes). 
-
 

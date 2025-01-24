@@ -3,9 +3,9 @@ title: Golang Web - A Simple gptbot with Openai API
 date: 2023-08-18 09:20:57
 categories:
  - golang
- - practice
 tags:
  - golang
+ - 后端开发
 ---
 
 ## 1. Introduction

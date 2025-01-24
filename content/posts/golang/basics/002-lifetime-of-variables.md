@@ -3,12 +3,10 @@ title: Lifetime of a Local Variable - Go
 date: 2023-05-15 22:52:03
 categories:
  - golang
- - basics
 tags:
  - golang
+ - 内存管理
 ---
-
-## Returns a address of local variable
 
 Find codes below:
 

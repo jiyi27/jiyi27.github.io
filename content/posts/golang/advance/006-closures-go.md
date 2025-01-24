@@ -3,12 +3,11 @@ title: Function Closures - Go
 date: 2023-09-18 23:32:55
 categories:
  - golang
- - practice
 tags:
  - golang
+ - 闭包
+ - 并发编程
 ---
-
-Previous post: [First-Class Functions - Go - David's Blog](https://davidzhu.xyz/post/golang/basics/012-first-class-functions/)
 
 ## 1. What is closure
 

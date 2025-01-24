@@ -3,7 +3,6 @@ title: Don't Defer Close() on Writable Files - Go Notes
 date: 2023-10-05 18:52:56
 categories:
  - golang
- - advance
 tags:
  - golang
 ---

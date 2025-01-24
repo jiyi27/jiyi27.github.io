@@ -3,9 +3,9 @@ title: Don't Overuse Channel - Go
 date: 2023-09-29 20:44:55
 categories:
  - golang
- - practice
 tags:
  - golang
+ - 并发编程
 ---
 
 In [previous post](https://davidzhu.xyz/post/golang/advance/006-closures-go/#21-pass-behaviour) we know that **don't mediate the access to shared memory with locks and mutexes** instead share that memory by communicating. However, is this always true? Sometimes you may want mutex and lock not channels, it depends on the situation. Channel is a way help mutiple groutines communicate with each other. I find some posts and share it here:

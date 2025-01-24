@@ -3,10 +3,9 @@ title: Goroutine & Channel - Go Basics
 date: 2023-08-24 10:06:10
 categories:
  - golang
- - basics
 tags:
  - golang
- - concurrency
+ - 并发编程
 ---
 
 ## 1. Goroutines

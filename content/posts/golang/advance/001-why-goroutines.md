@@ -3,10 +3,9 @@ title: Goroutines Model
 date: 2023-08-24 14:58:18
 categories:
  - golang
- - advance
 tags:
  - golang
- - concurrency
+ - 并发编程
 ---
 
 ## 1.  Two Styles of Concurrent Programming

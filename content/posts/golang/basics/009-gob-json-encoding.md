@@ -3,9 +3,9 @@ title: encoding/gob & encoding/json in Go
 date: 2023-08-31 11:38:20
 categories:
  - golang
- - basics
 tags:
  - golang
+ - 编码
 ---
 
 ## 1. Why do we need encoding

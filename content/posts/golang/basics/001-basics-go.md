@@ -3,15 +3,13 @@ title: Value, Variable and Types - Go
 date: 2023-12-07 10:00:20
 categories:
  - golang
- - basics
 tags:
  - golang
-typora-root-url: ../../../../static
 ---
 
 You should learn how to read the documentation provided Go, it's very important:
 
-![absd](/001-basics-go/absd.png)
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/d8078b517922fcdbc5f3a861c09fa09f.png)
 
 ## 1. static language
 

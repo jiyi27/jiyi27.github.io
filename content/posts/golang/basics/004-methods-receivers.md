@@ -3,10 +3,9 @@ title: Methods Receivers & Concurrency - Go
 date: 2023-09-02 22:18:20
 categories:
  - golang
- - basics
 tags:
  - golang
- - concurrency
+ - 并发编程
 ---
 
 ## 1. Different behaviors - pointer and value receiver

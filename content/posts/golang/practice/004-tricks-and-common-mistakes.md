@@ -3,9 +3,9 @@ title: Tricks and Common Mistakes - Go
 date: 2023-08-27 17:12:55
 categories:
  - golang
- - practice
 tags:
  - golang
+ - 编程小技巧
 ---
 
 ## Tricks

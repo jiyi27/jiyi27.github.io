@@ -3,10 +3,9 @@ title: Unit Test Basic Commands - Go
 date: 2023-09-05 15:10:18
 categories:
  - golang
- - advance
 tags:
  - golang
- - unit test
+ - 单元测试
 ---
 
 ## 1. Useful commands
@@ -38,7 +37,7 @@ go test -run=xxx -bench 'BenchmarkDirectRead|BenchmarkLimitedRead'
 # just one function, no single quote is fine: 
 $ go test -run=xxx -bench BenchmarkStore
 ```
-        
+
 Learn more: [go command - cmd/go - Go Packages](https://pkg.go.dev/cmd/go#hdr-Testing_flags) 
 
 ## 2. `-bench` & `-benchmem`

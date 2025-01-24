@@ -3,7 +3,6 @@ title: string, bytes, runes and characters - Go
 date: 2023-09-11 13:50:59
 categories:
  - golang
- - basics
 tags:
  - golang
 ---

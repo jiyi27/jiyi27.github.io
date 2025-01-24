@@ -3,9 +3,9 @@ title: Error handling - Go
 date: 2023-09-08 09:13:06
 categories:
  - golang
- - basics
 tags:
  - golang
+ - 错误处理
 ---
 
 ## 0. Use `%w` instead of `%v` or `%s`

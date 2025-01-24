@@ -1,9 +1,12 @@
 ---
 title: Parse Data - Go Web
 date: 2023-09-23 18:08:55
+categories:
+ - golang
 tags:
  - golang
  - http
+ - 后端开发
 ---
 
 ## 1. Parse Query String and `x-www-form-urlencoded` Format Body

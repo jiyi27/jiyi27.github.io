@@ -3,7 +3,6 @@ title: Interfaces Basics - Go
 date: 2023-12-07 15:12:32
 categories:
  - golang
- - basics
 tags:
  - golang
 ---

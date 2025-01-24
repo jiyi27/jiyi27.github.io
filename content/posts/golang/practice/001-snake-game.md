@@ -1,12 +1,11 @@
 ---
-title: 用Go实现一个简单的贪吃蛇
+title: 用 Go 实现一个简单的贪吃蛇
 date: 2023-05-20 19:59:09
 categories:
  - golang
- - practice
 tags:
  - golang
- - game
+ - 游戏
 ---
 
 **地图**

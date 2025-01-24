@@ -3,9 +3,9 @@ title: Cross Compilation - Go
 date: 2023-10-10 11:09:35
 categories:
  - golang
- - advance
 tags:
  - golang
+ - 交叉编译
 ---
 
 ## 1. What is cross compilation?
