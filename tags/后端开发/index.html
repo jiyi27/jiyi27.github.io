@@ -190,7 +190,11 @@
 
         <div class="post-content">
           
-            
+            <h3 id="1-sessions-状态管理">1. Sessions 状态管理</h3>
+<p>JWT由三部分组成, Header, Payload, Signature, JWT 的 Header 和 Payload 部分是经过 Base64 URL 编码的, 本质上是“明文”的, 不适合在Payload中存储敏感信息, 只有Signature部分是经过加密的, 用于验证数据的完整性. 了解更多: <a href="https://jwt.io/">https://jwt.io/</a></p>
+<blockquote>
+<p>JWTs provide a means of maintaining session state on the client instead of doing it on the server.</p>
+<p>With server-side sessions, you will either have to <strong>store the session identifier in a database</strong>, or else <strong>keep it in memory</strong> and make sure that the client always hits the same server.</p>
           
         </div>
 
@@ -227,6 +231,131 @@
         
           <div>
             <a class="read-more button inline" href="/posts/interview/002-qps-pv/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/cs-basics/007-multithread-singlethread-server/">Is Multithreaded Server Better than a Single Thread Server?</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-08-26</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <p><strong>Reference:</strong> <a href="https://qr.ae/pyztor">https://qr.ae/pyztor</a></p>
+<p><em>Why is a multithreaded web server better than a single thread server?</em> <strong>It isn’t.</strong></p>
+<p>There are four basic ways how a web server can handle concurrency:</p>
+<ol>
+<li>forking an OS process per request (like old versions of Apache)</li>
+<li>spawning an OS thread per request (like a new versions of Apache)</li>
+<li>using a single-threaded event loop (like nginx)</li>
+<li>using green threads or lightweight processes scheduled by a VM runtime instead of the OS (like in Erlang)</li>
+</ol>
+<p>Currently the most common approaches are number 2 and 3.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/cs-basics/007-multithread-singlethread-server/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/cs-basics/005-session-cookie/">Session, JWT &amp; Cookie</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-08-17</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/http/">HTTP</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <p>HTTP 是一个无状态协议, 对于每个用户 HTTP 请求, 服务器无法得知上一次请求所包含的状态, 可是在淘宝的某个页面中, 你进行了登陆操作, 当你跳转到商品页时, 服务端怎么记住你登陆的状态？</p>
+<h2 id="1-cookie">1. Cookie</h2>
+<p>首先产生了 cookie 这门技术来解决这个问题, cookie 是 http 协议的一部分, 它的处理分为如下几步:</p>
+<ul>
+<li>服务器主动向客户端发送 cookie, 通常使用 HTTP 协议规定的 <code>set-cookie</code> 头操作</li>
+<li>客户端浏览器自动保存 Cookie</li>
+<li>每次请求浏览器都会自动将 cookie 发向服务器</li>
+</ul>
+<p>这里有个问题, 用户会访问多个网站, 浏览器会保存来自不同网站服务器的 cookie, 浏览器怎么把知道应该把 cookie 发给正确的网站?</p>
+<p>答案是浏览器使用 Cookie 的域名 (Domain) 和路径 (Path) 属性来决定将哪些 Cookie 发送回哪个网站, 其实 Cookie 不仅仅是在一个值, 它是有很多属性的, 在后端服务器可以设置, 比如:</p>
+<ul>
+<li>path：表示 cookie 影响到的路径, 匹配该路径才发送这个 cookie</li>
+<li>expires 和 maxAge：expires 是 UTC 格式时间, maxAge 是 cookie 多久后过期的相对时间, 当不设置这两个选项时, cookie 默认是 transient，即当用户关闭浏览器时，就被清除</li>
+<li>secure: 仅HTTPS 中才有效</li>
+<li>httpOnly：禁止前端 JS 代码读取, 避免被 xss 攻击拿到 cookie</li>
+</ul>
+<blockquote>
+<p>后端开发小贴士 1 ⚠️: 设置此属性前, 需要先即把格式转为 UTC 格式, 因为客户端和服务器的时区可能不一样, 比如客户端比服务器快几个小时, 若直接设置 expires = Now() + 30, 半小时后过期, 传到客户端立刻过期了, 因为客户端浏览器默认来自服务器的 cookie expires 是 UTC,</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/cs-basics/005-session-cookie/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/cs-basics/006-thread-process/">Thread Stack and CPU Cores</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-05-27</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-thread">1. Thread</h2>
+<p>A thread is a segment or part of a process that executes some tasks of the process. A process can have multiple threads which can <strong>run concurrently</strong> within the process. Each thread has its own thread stack but multiple threads of a process share a common heap area of that process.</p>
+<h3 id="11-thread-stack">1.1. Thread stack</h3>
+<p>Each thread has its own call stack, &ldquo;call stack&rdquo; and &ldquo;thread stack&rdquo; are the same thing. Calling it a &ldquo;thread stack&rdquo; just emphasizes that the call stack is specific to the thread.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/cs-basics/006-thread-process/">阅读更多</a>
           </div>
         
       </article>

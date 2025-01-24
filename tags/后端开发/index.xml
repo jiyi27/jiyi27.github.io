@@ -13,7 +13,11 @@
       <pubDate>Wed, 22 Jan 2025 15:30:20 +0000</pubDate>
       
       <guid>https://blog.jiyi27.com/posts/interview/003-backend-nuggets/</guid>
-      <description></description>
+      <description>&lt;h3 id=&#34;1-sessions-状态管理&#34;&gt;1. Sessions 状态管理&lt;/h3&gt;
+&lt;p&gt;JWT由三部分组成, Header, Payload, Signature, JWT 的 Header 和 Payload 部分是经过 Base64 URL 编码的, 本质上是“明文”的, 不适合在Payload中存储敏感信息, 只有Signature部分是经过加密的, 用于验证数据的完整性. 了解更多: &lt;a href=&#34;https://jwt.io/&#34;&gt;https://jwt.io/&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;JWTs provide a means of maintaining session state on the client instead of doing it on the server.&lt;/p&gt;
+&lt;p&gt;With server-side sessions, you will either have to &lt;strong&gt;store the session identifier in a database&lt;/strong&gt;, or else &lt;strong&gt;keep it in memory&lt;/strong&gt; and make sure that the client always hits the same server.&lt;/p&gt;</description>
       <content>&lt;h3 id=&#34;1-sessions-状态管理&#34;&gt;1. Sessions 状态管理&lt;/h3&gt;
 &lt;p&gt;JWT由三部分组成, Header, Payload, Signature, JWT 的 Header 和 Payload 部分是经过 Base64 URL 编码的, 本质上是“明文”的, 不适合在Payload中存储敏感信息, 只有Signature部分是经过加密的, 用于验证数据的完整性. 了解更多: &lt;a href=&#34;https://jwt.io/&#34;&gt;https://jwt.io/&lt;/a&gt;&lt;/p&gt;
 &lt;blockquote&gt;
@@ -25,7 +29,8 @@
 &lt;li&gt;Transporting it securely. (后端设置 cookie, 只允许通过 HTTPS 传输)&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;[Stackoverflow][https://stackoverflow.com/a/45214431/16317008]&lt;/p&gt;
-&lt;/blockquote&gt;</content>
+&lt;/blockquote&gt;
+</content>
     </item>
     
     <item>
@@ -70,6 +75,145 @@
 &lt;p&gt;比如下面这个API压测数据，并发50至并发300的QPS都是220左右，但是并发2000的平均请求响应时间是60ms，平均QPS下降到33，那么我们可以理解为并发2000下API处于不可用状态了。&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/8dbc603d578987e024070cdad7b84227.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
 &lt;p&gt;来源: &lt;a href=&#34;https://zhuanlan.zhihu.com/p/609348456&#34;&gt;https://zhuanlan.zhihu.com/p/609348456&lt;/a&gt;&lt;/p&gt;</content>
+    </item>
+    
+    <item>
+      <title>Is Multithreaded Server Better than a Single Thread Server?</title>
+      <link>https://blog.jiyi27.com/posts/cs-basics/007-multithread-singlethread-server/</link>
+      <pubDate>Sat, 26 Aug 2023 19:03:59 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cs-basics/007-multithread-singlethread-server/</guid>
+      <description>&lt;p&gt;&lt;strong&gt;Reference:&lt;/strong&gt; &lt;a href=&#34;https://qr.ae/pyztor&#34;&gt;https://qr.ae/pyztor&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Why is a multithreaded web server better than a single thread server?&lt;/em&gt; &lt;strong&gt;It isn’t.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;There are four basic ways how a web server can handle concurrency:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;forking an OS process per request (like old versions of Apache)&lt;/li&gt;
+&lt;li&gt;spawning an OS thread per request (like a new versions of Apache)&lt;/li&gt;
+&lt;li&gt;using a single-threaded event loop (like nginx)&lt;/li&gt;
+&lt;li&gt;using green threads or lightweight processes scheduled by a VM runtime instead of the OS (like in Erlang)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Currently the most common approaches are number 2 and 3.&lt;/p&gt;</description>
+      <content>&lt;p&gt;&lt;strong&gt;Reference:&lt;/strong&gt; &lt;a href=&#34;https://qr.ae/pyztor&#34;&gt;https://qr.ae/pyztor&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Why is a multithreaded web server better than a single thread server?&lt;/em&gt; &lt;strong&gt;It isn’t.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;There are four basic ways how a web server can handle concurrency:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;forking an OS process per request (like old versions of Apache)&lt;/li&gt;
+&lt;li&gt;spawning an OS thread per request (like a new versions of Apache)&lt;/li&gt;
+&lt;li&gt;using a single-threaded event loop (like nginx)&lt;/li&gt;
+&lt;li&gt;using green threads or lightweight processes scheduled by a VM runtime instead of the OS (like in Erlang)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Currently the most common approaches are number 2 and 3.&lt;/p&gt;
+&lt;p&gt;There are pros and cons of both of them. For &lt;strong&gt;I/O-bound&lt;/strong&gt; operations (a characteristic of a typical web server) you get &lt;strong&gt;better performance&lt;/strong&gt; and &lt;strong&gt;higher number of concurrent requests&lt;/strong&gt; when you use a &lt;strong&gt;single-threaded event loop&lt;/strong&gt;. But the drawback is that you need to use exclusively asynchronous non-blocking I/O for all operations or otherwise you’ll block the event loop and lose performance. For that reason it’s easier to implement a multi-threaded server but you pay in performance.&lt;/p&gt;
+&lt;p&gt;For &lt;strong&gt;CPU-bound&lt;/strong&gt; operations (less common for a usual web server, maybe more common for a computationally intensive API) it’s best to have &lt;strong&gt;one OS thread or process per core&lt;/strong&gt;. It’s easy to do with single-threaded event loops because you can run a cluster of a number of processes one per core. It’s hard to do with multi-threaded servers because if spawning threads is your only way to handle concurrent requests then you cannot really control how many threads you will have - as you don’t control the number of requests. Once you have more threads than the number of CPU cores then you loose performance for &lt;strong&gt;context switches&lt;/strong&gt; and you also use a lot of RAM.&lt;/p&gt;
+&lt;p&gt;That is why a &lt;strong&gt;single-threaded nginx server&lt;/strong&gt; performs better than a multi-threaded Apache web server (and that is why nginx was created in the first place). Also &lt;strong&gt;Redis&lt;/strong&gt;, a database known for exceptionally high performance is &lt;strong&gt;single-threaded&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;A real example I can give you is this: My first web server was Apache running on a Linux machine with 500MB of RAM. It forked a new process for every request (it actually had a pool so there was not much forking involved but it had to keep those processes alive to reuse them and kill them once in a while to avoid resource leakage).&lt;/p&gt;
+&lt;p&gt;My OS used around 100MB of RAM. Every Apache process used 20MB of RAM. It meant that my server could only handle 20 concurrent requests and there was no way around it because I had no more RAM. The processes were mostly blocked on I/O so the CPU utilization was very low, every request above those 20 had to wait and if those 20 was e.g. long running downloads then my server was completely unresponsive.&lt;/p&gt;
+&lt;p&gt;When nginx web server was introduced it used a single-threaded event loop and didn’t block for any request. It could handle much more concurrent requests, having no problem with the mythical c10k problem - nginx was basically created to solve the c10k problem (10,000 concurrent requests).&lt;/p&gt;
+&lt;p&gt;Imagine how much RAM is wasted for 10,000 threads if you could even spawn that many and how much time is used for context switches.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Memory usage of multi-threaded Apache vs single-threaded nginx:&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/3753c8d5681b143ae824ebc3830d959d.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Incidentally, this is the reason why Ryan Dahl used a non-blocking I/O and a single-threaded event loop in Node.js and he still uses the same idea in Deno, because that is the way to write high performance network servers (contrary to what you might read in other answers here).&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that &lt;a href=&#34;https://nginx.org/en/docs/ngx_core_module.html#worker_processes&#34;&gt;nginx “core functionality” doc&lt;/a&gt; mentions that on most servers nginx defaults to multiple workers (which will be ran as threads) so it’s not always “single threaded.” &lt;a href=&#34;https://www.quora.com/profile/Alex-Sergeyev&#34;&gt;from a comment of this blog&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Session, JWT &amp; Cookie</title>
+      <link>https://blog.jiyi27.com/posts/cs-basics/005-session-cookie/</link>
+      <pubDate>Thu, 17 Aug 2023 07:39:56 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cs-basics/005-session-cookie/</guid>
+      <description>&lt;p&gt;HTTP 是一个无状态协议, 对于每个用户 HTTP 请求, 服务器无法得知上一次请求所包含的状态, 可是在淘宝的某个页面中, 你进行了登陆操作, 当你跳转到商品页时, 服务端怎么记住你登陆的状态？&lt;/p&gt;
+&lt;h2 id=&#34;1-cookie&#34;&gt;1. Cookie&lt;/h2&gt;
+&lt;p&gt;首先产生了 cookie 这门技术来解决这个问题, cookie 是 http 协议的一部分, 它的处理分为如下几步:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;服务器主动向客户端发送 cookie, 通常使用 HTTP 协议规定的 &lt;code&gt;set-cookie&lt;/code&gt; 头操作&lt;/li&gt;
+&lt;li&gt;客户端浏览器自动保存 Cookie&lt;/li&gt;
+&lt;li&gt;每次请求浏览器都会自动将 cookie 发向服务器&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这里有个问题, 用户会访问多个网站, 浏览器会保存来自不同网站服务器的 cookie, 浏览器怎么把知道应该把 cookie 发给正确的网站?&lt;/p&gt;
+&lt;p&gt;答案是浏览器使用 Cookie 的域名 (Domain) 和路径 (Path) 属性来决定将哪些 Cookie 发送回哪个网站, 其实 Cookie 不仅仅是在一个值, 它是有很多属性的, 在后端服务器可以设置, 比如:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;path：表示 cookie 影响到的路径, 匹配该路径才发送这个 cookie&lt;/li&gt;
+&lt;li&gt;expires 和 maxAge：expires 是 UTC 格式时间, maxAge 是 cookie 多久后过期的相对时间, 当不设置这两个选项时, cookie 默认是 transient，即当用户关闭浏览器时，就被清除&lt;/li&gt;
+&lt;li&gt;secure: 仅HTTPS 中才有效&lt;/li&gt;
+&lt;li&gt;httpOnly：禁止前端 JS 代码读取, 避免被 xss 攻击拿到 cookie&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;后端开发小贴士 1 ⚠️: 设置此属性前, 需要先即把格式转为 UTC 格式, 因为客户端和服务器的时区可能不一样, 比如客户端比服务器快几个小时, 若直接设置 expires = Now() + 30, 半小时后过期, 传到客户端立刻过期了, 因为客户端浏览器默认来自服务器的 cookie expires 是 UTC,&lt;/p&gt;</description>
+      <content>&lt;p&gt;HTTP 是一个无状态协议, 对于每个用户 HTTP 请求, 服务器无法得知上一次请求所包含的状态, 可是在淘宝的某个页面中, 你进行了登陆操作, 当你跳转到商品页时, 服务端怎么记住你登陆的状态？&lt;/p&gt;
+&lt;h2 id=&#34;1-cookie&#34;&gt;1. Cookie&lt;/h2&gt;
+&lt;p&gt;首先产生了 cookie 这门技术来解决这个问题, cookie 是 http 协议的一部分, 它的处理分为如下几步:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;服务器主动向客户端发送 cookie, 通常使用 HTTP 协议规定的 &lt;code&gt;set-cookie&lt;/code&gt; 头操作&lt;/li&gt;
+&lt;li&gt;客户端浏览器自动保存 Cookie&lt;/li&gt;
+&lt;li&gt;每次请求浏览器都会自动将 cookie 发向服务器&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这里有个问题, 用户会访问多个网站, 浏览器会保存来自不同网站服务器的 cookie, 浏览器怎么把知道应该把 cookie 发给正确的网站?&lt;/p&gt;
+&lt;p&gt;答案是浏览器使用 Cookie 的域名 (Domain) 和路径 (Path) 属性来决定将哪些 Cookie 发送回哪个网站, 其实 Cookie 不仅仅是在一个值, 它是有很多属性的, 在后端服务器可以设置, 比如:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;path：表示 cookie 影响到的路径, 匹配该路径才发送这个 cookie&lt;/li&gt;
+&lt;li&gt;expires 和 maxAge：expires 是 UTC 格式时间, maxAge 是 cookie 多久后过期的相对时间, 当不设置这两个选项时, cookie 默认是 transient，即当用户关闭浏览器时，就被清除&lt;/li&gt;
+&lt;li&gt;secure: 仅HTTPS 中才有效&lt;/li&gt;
+&lt;li&gt;httpOnly：禁止前端 JS 代码读取, 避免被 xss 攻击拿到 cookie&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;后端开发小贴士 1 ⚠️: 设置此属性前, 需要先即把格式转为 UTC 格式, 因为客户端和服务器的时区可能不一样, 比如客户端比服务器快几个小时, 若直接设置 expires = Now() + 30, 半小时后过期, 传到客户端立刻过期了, 因为客户端浏览器默认来自服务器的 cookie expires 是 UTC,&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;后端开发小贴士 2 ⚠️ : All HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT), without exception. For the purposes of HTTP, GMT is exactly equal to UTC (Coordinated Universal Time). &lt;em&gt;Both GMT and UTC display the same time&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://stackoverflow.com/a/35729939/16317008&#34;&gt;Stackoverflow&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-session--jwt&#34;&gt;2. Session &amp;amp; JWT&lt;/h2&gt;
+&lt;p&gt;Session 和 JWT 目的相同, 都是为了实现用户认证, 只不过前者在后端维护, 后者就是简单使用一个 token 来实现用户登录认证, Cookie 则是运输工具, 用来存储 Session ID 或者 JWT Token, 即: 服务器生成 Session ID 或 JWT Token, 然后把它们放到 Cookie 中, 之后每次发起请求时, 由浏览器自动发送给服务器, 实现服务器识别用户, 记住登录状态的目的,&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;后端开发小贴士 3 ⚠️: Cookie 本质上是明文存储和传输的, 直接在 Cookie 中存储敏感信息（如密码、银行账号等）是非常危险的&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;后端开发小贴士 4 ⚠️: Session在服务端是如何存储的呢？内存(一个多线程安全的map), Redis 缓存 (更好的横向拓展),&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;了解更多: &lt;a href=&#34;https://stackoverflow.com/a/45214431/16317008&#34;&gt;Authentication: JWT usage vs session&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Thread Stack and CPU Cores</title>
+      <link>https://blog.jiyi27.com/posts/cs-basics/006-thread-process/</link>
+      <pubDate>Sat, 27 May 2023 18:05:16 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cs-basics/006-thread-process/</guid>
+      <description>&lt;h2 id=&#34;1-thread&#34;&gt;1. Thread&lt;/h2&gt;
+&lt;p&gt;A thread is a segment or part of a process that executes some tasks of the process. A process can have multiple threads which can &lt;strong&gt;run concurrently&lt;/strong&gt; within the process. Each thread has its own thread stack but multiple threads of a process share a common heap area of that process.&lt;/p&gt;
+&lt;h3 id=&#34;11-thread-stack&#34;&gt;1.1. Thread stack&lt;/h3&gt;
+&lt;p&gt;Each thread has its own call stack, &amp;ldquo;call stack&amp;rdquo; and &amp;ldquo;thread stack&amp;rdquo; are the same thing. Calling it a &amp;ldquo;thread stack&amp;rdquo; just emphasizes that the call stack is specific to the thread.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-thread&#34;&gt;1. Thread&lt;/h2&gt;
+&lt;p&gt;A thread is a segment or part of a process that executes some tasks of the process. A process can have multiple threads which can &lt;strong&gt;run concurrently&lt;/strong&gt; within the process. Each thread has its own thread stack but multiple threads of a process share a common heap area of that process.&lt;/p&gt;
+&lt;h3 id=&#34;11-thread-stack&#34;&gt;1.1. Thread stack&lt;/h3&gt;
+&lt;p&gt;Each thread has its own call stack, &amp;ldquo;call stack&amp;rdquo; and &amp;ldquo;thread stack&amp;rdquo; are the same thing. Calling it a &amp;ldquo;thread stack&amp;rdquo; just emphasizes that the call stack is specific to the thread.&lt;/p&gt;
+&lt;p&gt;The &lt;em&gt;stack&lt;/em&gt; is used to store variables used on the inside of a function (including the &lt;code&gt;main()&lt;/code&gt; function). It’s a LIFO, “&lt;strong&gt;L&lt;/strong&gt;ast-&lt;strong&gt;I&lt;/strong&gt;n,-&lt;strong&gt;F&lt;/strong&gt;irst-&lt;strong&gt;O&lt;/strong&gt;ut”, structure. Every time a function declares a new variable it is “pushed” onto the stack. Then when a function finishes running, all the variables associated with that function on the stack are deleted, and the memory they use is freed up. This leads to the “local” scope of function variables. The stack is a special region of memory, and automatically managed by the CPU – so you don’t have to allocate or deallocate memory. Stack memory is divided into successive frames where each time a function is called, it allocates itself a fresh &lt;strong&gt;stack frame&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Note that there is generally a limit on the size of the stack – which can vary with the operating system (for example OSX currently has a default stack size of 8MB). If a program tries to put too much information on the stack, &lt;strong&gt;stack overflow&lt;/strong&gt; will occur. Stack overflow happens when all the memory in the stack has been allocated, and further allocations begin overflowing into other sections of memory. Stack overflow also occurs in situations where recursion is incorrectly used.&lt;/p&gt;
+&lt;h2 id=&#34;2-process&#34;&gt;2. Process&lt;/h2&gt;
+&lt;p&gt;A program is a set of instructions. It is stored on a disk of a computer and hence it is &lt;strong&gt;Passive&lt;/strong&gt;. When the same program is loaded into the main memory and the OS assigns some heap memory to this program(application) is under execution is called a &lt;strong&gt;Process&lt;/strong&gt;. Hence a process is a program under execution. So we can say it is &lt;strong&gt;Active&lt;/strong&gt;. A process can create child processes by using the &lt;strong&gt;fork&lt;/strong&gt; system calls.&lt;/p&gt;
+&lt;h2 id=&#34;3-relationship-between-a-thread-and-a-cpu-core&#34;&gt;3. Relationship between a thread and a CPU core&lt;/h2&gt;
+&lt;p&gt;A CPU core is a physical processing unit in a computer’s central processing unit (CPU) that can execute instructions independently. A thread, on the other hand, is a unit of execution within a process, which represents a sequence of instructions that can be executed independently by a CPU.&lt;/p&gt;
+&lt;p&gt;In general, the number of threads that can be executed simultaneously on a CPU is limited by the number of cores available in the CPU. Each core can execute one thread at a time, so having multiple cores allows for multiple threads to be executed in parallel, potentially leading to improved performance.&lt;/p&gt;
+&lt;p&gt;However, the relationship between threads and CPU cores is more complex than just one-to-one mapping.&lt;/p&gt;
+&lt;p&gt;In modern computer systems, threads can be scheduled dynamically on different cores by the operating system, and a single core can switch between multiple threads in order to maximize the utilization of available resources and CPU cores.&lt;/p&gt;
+&lt;p&gt;Additionally, some systems may also use techniques such as &lt;strong&gt;hyper-threading&lt;/strong&gt;, where a single physical core is treated as multiple virtual cores, potentially allowing for even more threads to be executed simultaneously.&lt;/p&gt;
+&lt;p&gt;Note that **simultaneous not equals to parallel. **&lt;/p&gt;
+&lt;p&gt;From this can also see the importance of those basic undergraduate courses, the principles of computer composition of a lot of content, including the CPU architecture, registers, buses, memory structure, how the CPU reads commands from the registers, which provides the basis for future operating system courses. For example, now we are learning about threads, processes, which are all part of the operating system curriculum, and hyper-threading, if you don&amp;rsquo;t know how the CPU handles instructions and how it waits for the bus to send data, how can you understand the interrupt system very well? Golang is very popular now, it is very good at concurrency, Goroutine is very lightweight, but why is goroutine lightweight? You&amp;rsquo;re probably going to get asked that in an interview, right? These are context switches, and you can&amp;rsquo;t understand why goroutines are so powerful without learning the above, but that&amp;rsquo;s just one example. This is just one example. Just one concurrency problem, and that&amp;rsquo;s a lot of knowledge and lessons. The rest of the course such as the network, compilation principles, are very important, may not have an immediate effect, but they will be the future to support you the most solid foundation of the building.&lt;/p&gt;
+&lt;p&gt;Related article:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/008-context-switching/&#34;&gt;Context Switching - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/006-cpu-architecture/&#34;&gt;Hyper-Threading &amp;amp; Physical Threads - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://medium.com/javarevisited/process-and-thread-context-switching-do-you-know-the-difference-updated-8fd93877dff6&#34;&gt;Process and Thread Context Switching, Do You Know the Difference? &lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://stackoverflow.com/questions/31145052/difference-between-call-stack-and-thread-stack&#34;&gt;java - Difference between &amp;ldquo;call stack&amp;rdquo; and &amp;ldquo;thread stack&amp;rdquo; - Stack Overflow&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://craftofcoding.wordpress.com/2015/12/07/memory-in-c-the-stack-the-heap-and-static/&#34;&gt;Memory in C – the stack, the heap, and static – The Craft of Coding&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
     </item>
     
   </channel>

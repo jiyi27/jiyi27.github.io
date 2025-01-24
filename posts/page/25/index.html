@@ -172,54 +172,6 @@
     
       <article class="post on-list">
         <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/golang/advance/005-unit-test-commands/">Unit Test Basic Commands - Go</a>
-        </h2>
-        <div class="post-meta"><time class="post-date">2023-09-05</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/unit-test/">unit test</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="1-useful-commands">1. Useful commands</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ go test -run <span style="color:#e6db74">&#34;ExampleSession|TestSession&#34;</span> -v
-</span></span></code></pre></div><blockquote>
-<p>Note that the <code>-run</code> flag is used for specifying test functions, <strong>not</strong> benchmarks, <strong>not</strong> fuzz test. Because example test is similar to test function, you can specify both example and test function with <code>-run</code> flag. If you want to specify benchmarks, use <code>-bench</code> flag:</p>
-</blockquote>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>-bench regexp
-</span></span><span style="display:flex;"><span>	Run benchmarks matching the regular expression.
-</span></span><span style="display:flex;"><span>-run regexp
-</span></span><span style="display:flex;"><span>	Run only tests and examples matching the regular expression.
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Flags below can be used with flags above.</span>
-</span></span><span style="display:flex;"><span>-race
-</span></span><span style="display:flex;"><span>	enable data race detection.
-</span></span><span style="display:flex;"><span>-cover
-</span></span><span style="display:flex;"><span>	enable code coverage instrumentation.
-</span></span></code></pre></div><blockquote>
-<p>Note that <code>-bench</code> does not disable the normal <code>test</code> selection. If you want run the benchmark test <strong>only</strong> you should pass <code>-run=xxx</code> to disable the normal test selection.</p>
-          
-        </div>
-
-        
-           <div>
-            <a class="read-more button inline" href="/posts/golang/advance/005-unit-test-commands/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h2 class="post-title">
           <a href="https://blog.jiyi27.com/posts/golang/basics/004-methods-receivers/">Methods Receivers &amp; Concurrency - Go</a>
         </h2>
         <div class="post-meta"><time class="post-date">2023-09-02</time></div>
@@ -423,6 +375,55 @@
         
            <div>
             <a class="read-more button inline" href="/posts/golang/basics/009-gob-json-encoding/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h2 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/practice/004-tricks-and-common-mistakes/">Tricks and Common Mistakes - Go</a>
+        </h2>
+        <div class="post-meta"><time class="post-date">2023-08-27</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="tricks">Tricks</h2>
+<h3 id="remove-an-element-from-a-slice">remove an element from a slice</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// remove the element at index i from a</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">a</span> = append(<span style="color:#a6e22e">a</span>[:<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>:]<span style="color:#f92672">...</span>)
+</span></span></code></pre></div><h3 id="handle-close">handle <code>close()</code></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// credit to: https://gist.github.com/benbjohnson/9eebd201ec096ab6430e1f33411e6427</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">doSomething</span>() <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">f</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Create</span>(<span style="color:#e6db74">&#34;foo&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ensure that it&#39;s definitely closed by the end</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Write</span>([]byte(<span style="color:#e6db74">&#34;bar&#34;</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Why we bother to care about getting error from <code>f.Close()</code>? We have got error from  <code>f.Write()</code>. Well, there are a lot to say, learn more: <a href="https://davidzhu.xyz/post/golang/advance/010-defer-close/">Don&rsquo;t Defer Close() on Writable Files - Go Notes</a></p>
+          
+        </div>
+
+        
+           <div>
+            <a class="read-more button inline" href="/posts/golang/practice/004-tricks-and-common-mistakes/">阅读更多</a>
           </div>
         
       </article>

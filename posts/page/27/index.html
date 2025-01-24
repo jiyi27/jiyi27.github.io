@@ -172,44 +172,6 @@
     
       <article class="post on-list">
         <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/git/practice/002-pushed-wrong-files/">Pushed a Wrong File to Github - Solved</a>
-        </h2>
-        <div class="post-meta"><time class="post-date">2023-08-20</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/git/">git</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="问题描述">问题描述</h2>
-<p>写完博客把内容 push 到了 GitHub, 发现有个文件 <code>a.txt</code>  不应该被追踪, <code>a.txt</code> 已经被追踪了,</p>
-<h2 id="原因分析">原因分析</h2>
-<p>首先你可能会想到 直接在本地删除  <code>a.txt</code>  commit, 然后 push 就行了, 可是即使这样 GitHub依然会有  <code>a.txt</code>  , 况且  <code>a.txt</code>  不能删除, 就是留在本地有用但是因为隐私不想放到GitHub, 而且这么做岂不是太粗鲁了,</p>
-<h2 id="解决办法">解决办法</h2>
-<p>解决方法不唯一, 这里介绍两个,</p>
-<p>其中一个可行的是在 GitHub 手动删除 <code>a.txt</code>  , 然后在本地进行 fetch, 再merge, ummm, 貌似比前面还粗鲁,</p>
-<p>比较优雅的做法是在本地仓库使用 <code> git rm --cached &lt;filename&gt;</code> 让 <code>a.txt</code> 从 tracked -&gt; untracked,</p>
-<p>然后把 <code>a.txt</code> 加入到 <code>.gitignore</code>, 再进行 commit 和 push, 此时 github 上的 <code>a.txt</code> 会消失</p>
-          
-        </div>
-
-        
-           <div>
-            <a class="read-more button inline" href="/posts/git/practice/002-pushed-wrong-files/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h2 class="post-title">
           <a href="https://blog.jiyi27.com/posts/golang/practice/003-gptbot/">Golang Web - A Simple gptbot with Openai API</a>
         </h2>
         <div class="post-meta"><time class="post-date">2023-08-18</time></div>
@@ -255,14 +217,16 @@
     
       <article class="post on-list">
         <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/cs-basics/005-session-cookie/">Cookie &amp; Session</a>
+          <a href="https://blog.jiyi27.com/posts/cs-basics/005-session-cookie/">Session, JWT &amp; Cookie</a>
         </h2>
         <div class="post-meta"><time class="post-date">2023-08-17</time></div>
 
         
           <span class="post-tags">
             
-            #<a href="https://blog.jiyi27.com/tags/cs-basics/">cs basics</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/http/">HTTP</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
             
           </span>
         
@@ -272,25 +236,24 @@
 
         <div class="post-content">
           
-            <p>众所周知，HTTP 是一个无状态协议，所以客户端每次发出请求时，下一次请求无法得知上一次请求所包含的状态数据，如何能把一个用户的状态数据关联起来呢？</p>
-<p>比如在淘宝的某个页面中，你进行了登陆操作。当你跳转到商品页时，服务端如何知道你是已经登陆的状态？</p>
-<h2 id="1-cookie">1. cookie</h2>
+            <p>HTTP 是一个无状态协议, 对于每个用户 HTTP 请求, 服务器无法得知上一次请求所包含的状态, 可是在淘宝的某个页面中, 你进行了登陆操作, 当你跳转到商品页时, 服务端怎么记住你登陆的状态？</p>
+<h2 id="1-cookie">1. Cookie</h2>
 <p>首先产生了 cookie 这门技术来解决这个问题, cookie 是 http 协议的一部分, 它的处理分为如下几步:</p>
 <ul>
-<li>服务器向客户端发送 cookie
-<ul>
-<li>通常使用 HTTP 协议规定的 set-cookie 头操作</li>
-<li>规范规定 cookie 的格式为 name=value 格式, 且必须包含这部分</li>
+<li>服务器主动向客户端发送 cookie, 通常使用 HTTP 协议规定的 <code>set-cookie</code> 头操作</li>
+<li>客户端浏览器自动保存 Cookie</li>
+<li>每次请求浏览器都会自动将 cookie 发向服务器</li>
 </ul>
-</li>
-<li>浏览器将 cookie 保存</li>
-<li>每次请求浏览器都会将 cookie 发向服务器</li>
+<p>这里有个问题, 用户会访问多个网站, 浏览器会保存来自不同网站服务器的 cookie, 浏览器怎么把知道应该把 cookie 发给正确的网站?</p>
+<p>答案是浏览器使用 Cookie 的域名 (Domain) 和路径 (Path) 属性来决定将哪些 Cookie 发送回哪个网站, 其实 Cookie 不仅仅是在一个值, 它是有很多属性的, 在后端服务器可以设置, 比如:</p>
+<ul>
+<li>path：表示 cookie 影响到的路径, 匹配该路径才发送这个 cookie</li>
+<li>expires 和 maxAge：expires 是 UTC 格式时间, maxAge 是 cookie 多久后过期的相对时间, 当不设置这两个选项时, cookie 默认是 transient，即当用户关闭浏览器时，就被清除</li>
+<li>secure: 仅HTTPS 中才有效</li>
+<li>httpOnly：禁止前端 JS 代码读取, 避免被 xss 攻击拿到 cookie</li>
 </ul>
 <blockquote>
-<p>浏览器可以自动发送 cookie, 即不用在前端写 js 代码手动发送, 服务器返回 cookie 的时需指定 Expires/MaxAge 参数, 客户端浏览器收到 response 后(也包括 cookie), 若 cookie 的 MaxAge 时间已过, 则浏览器会自动设置此 cookie 为 invalid, 之后发送请求并不会带上该 cookie, 另外 Expires/MaxAge只用指定其一, 但是未来兼容一些老浏览器如 IE, 有时候会同时设置 MaxAge 和 Expires</p>
-<p>了解更多: <a href="https://stackoverflow.com/a/35729939/16317008">https://stackoverflow.com/a/35729939/16317008</a></p>
-</blockquote>
-<p>其他可选的 cookie 参数会影响将 cookie 发送给服务器端的过程，主要有以下几种：</p>
+<p>后端开发小贴士 1 ⚠️: 设置此属性前, 需要先即把格式转为 UTC 格式, 因为客户端和服务器的时区可能不一样, 比如客户端比服务器快几个小时, 若直接设置 expires = Now() + 30, 半小时后过期, 传到客户端立刻过期了, 因为客户端浏览器默认来自服务器的 cookie expires 是 UTC,</p>
           
         </div>
 
@@ -449,6 +412,44 @@
         
            <div>
             <a class="read-more button inline" href="/posts/java/backend/006-spring-security/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h2 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/java/basics/004-java-optional/">Java 8 Optional &amp; Method Reference</a>
+        </h2>
+        <div class="post-meta"><time class="post-date">2023-08-06</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/java/">Java</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-optional-class">1. Optional Class</h2>
+<p>Java 8 Optional 定义如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// A container object which may or may not contain a non-null value. If a value is present, `isPresent()` will return `true` and `get()` will return the value. </span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Optional</span><span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">extends</span> Object
+</span></span></code></pre></div><p>之前讨论的 <a href="https://davidzhu.xyz/2023/08/05/Java/Basics/002-reflection-object-class/"><code>java.lang.Class</code></a>, 也是一个类包装器, 若一个函数的返回值为 <code> Optional&lt;?&gt;</code> 则就是返回<code> Optional&lt;?&gt;</code> 的对象, 这很容易看出来, 不要加个泛型就迷了, 如一个方法的签名为 <code> public Cat foo();</code>  则该方法返回的一定是 <code> Cat</code>  的对象,</p>
+<p>Optional 就是为了减少我们的 null check 代码, Helps you avoid NullPointerException, 所以不要乱用 optional,  <a href="https://youtu.be/vKVzRbsMnTQ">下面这个视频</a>讲的很好:</p>
+<p>{% youtube vKVzRbsMnTQ %}</p>
+<p>看完视频再啰嗦几句, 此文章看似是了解 Java 8 Optional, 其实涉及到了generics和functional interface, 了解后阅读源码也会容易很多, 因为很多都用到了这两个特性, 了解更多:</p>
+          
+        </div>
+
+        
+           <div>
+            <a class="read-more button inline" href="/posts/java/basics/004-java-optional/">阅读更多</a>
           </div>
         
       </article>
