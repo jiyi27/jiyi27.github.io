@@ -1,8 +1,11 @@
 ---
 title: Why a Component Needs to be a Pure Function - React.js
 date: 2024-12-12 08:38:30
+categories:
+ - 前端开发
 tags:
- - front-end
+ - 前端开发
+ - react
 ---
 
 > 永恒不变的真理: 默认情况下, 当一个组件重新渲染时, React 将递归渲染它的所有子组件

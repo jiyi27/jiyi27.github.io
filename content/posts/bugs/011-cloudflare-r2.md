@@ -2,11 +2,11 @@
 title: Cloudflare R2 Pre-signed URL Cross-Origin Issue
 date: 2024-10-20 10:42:22
 categories:
- - Bugs
+ - bugs
 tags:
- - Bugs
- - Cloudflare
- - AWS
+ - bugs
+ - cloudflare
+ - aws
  - 后端开发
 ---
 

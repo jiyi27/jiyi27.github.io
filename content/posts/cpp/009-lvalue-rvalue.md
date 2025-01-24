@@ -2,9 +2,9 @@
 title: 左值和右值
 date: 2023-05-17 11:27:07
 categories:
- - C++
+ - c++
 tags:
- - C++
+ - c++
 ---
 
 经常看到左值右值, 刚好有讲到, 摘取一些记录在这, 原文: [9.2 — Value categories (lvalues and rvalues) – Learn C++](https://www.learncpp.com/cpp-tutorial/value-categories-lvalues-and-rvalues/)

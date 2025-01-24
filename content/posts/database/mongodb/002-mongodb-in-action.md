@@ -5,8 +5,8 @@ categories:
  - 数据库
 tags:
  - 数据库
- - MongoDB
  - 读书笔记
+ - mongodb
 ---
 
 ## 1. Basic Theory

@@ -2,9 +2,10 @@
 title: Vite & Deployment - React
 date: 2023-12-20 19:44:22
 categories:
- - front-end
+ - 前端开发
 tags:
- - front-end
+ - 前端开发
+ - react
 ---
 
 ## 1. Create project with Vite

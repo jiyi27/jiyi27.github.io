@@ -5,7 +5,7 @@ categories:
  - 数据库
 tags:
  - 数据库
- - Redis
+ - redis
 ---
 
 ## 1. Install & run redis server

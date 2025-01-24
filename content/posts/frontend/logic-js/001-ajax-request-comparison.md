@@ -2,9 +2,10 @@
 title: AJAX Request Methods in JS
 date: 2024-08-04 20:02:10
 categories:
- - front-end
+ - 前端开发
 tags:
- - front-end
+ - 前端开发
+ - 异步编程
 ---
 
 | Method         | Promise-based | Progress Tracking^ | Auto JSON Transform | Browser Support |

@@ -2,11 +2,11 @@
 title: EF Core Basics
 date: 2024-07-21 09:42:36
 categories:
- - C#
+ - c#
 tags:
- - C#
- - .Net
- - ORM
+ - c#
+ - .net
+ - orm
 ---
 
 ## 1. Rider EF Core - Migrations

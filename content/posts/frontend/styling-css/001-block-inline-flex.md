@@ -2,10 +2,13 @@
 title: Block vs Inline vs Flex
 date: 2024-01-06 20:46:20
 categories:
- - front-end
+ - 前端开发
 tags:
- - front-end
+ - 前端开发
+ - css
 ---
+
+> **调试 bug:** 加上样式后 刷新页面 样式不符合预期时 可以进入开发者模式 查看真正被应用的元素样式 因为可能是缓存问题
 
 ## 1. Block vs Inline vs Flex Elements
 

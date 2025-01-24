@@ -5,7 +5,7 @@ categories:
  - 建站
 tags:
  - 建站
- - DNS
+ - dns
 ---
 
 ## 1. DNS Hierarchy

@@ -2,9 +2,10 @@
 title: useEffect Hook in React
 date: 2023-12-26 19:49:22
 categories:
- - front-end
+ - 前端开发
 tags:
- - front-end
+ - 前端开发
+ - react
 ---
 
 ## 为什么 useEffect 不能是异步函数

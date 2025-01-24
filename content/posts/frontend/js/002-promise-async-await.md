@@ -3,9 +3,10 @@ title: Promise Object in Javascript
 date: 2023-11-28 12:34:29
 categories:
   - javascript
-  - basics
 tags:
   - javascript
+  - 并发编程
+  - 异步编程
 ---
 
 ## 1. Concurrency models
@@ -35,7 +36,7 @@ The `Promise` object has several fields and methods, including:
 2. **`result`**: A **private** field that holds the result value if the promise is fulfilled or the reason if it is rejected.
 3. **`then()`**, **`catch()`**, **`finally()`** methods, only get executed when the state of Promise object is `fulfilled` or `rejected`. 
 
-## 3 Use `await/async` with Promise object
+## 3. Use `await/async` with Promise object
 
 ```js
 async function main() {
@@ -81,58 +82,4 @@ This is another syntax to call async function:
 (async () => {
   await main()
 })()
-```
-
-## Use `then()` with Promise object
-
-```js
-fetch('https://www.google.com')
-    .then(response => console.log(response.status))
-    .catch(err => console.error("An err occurred."))
-```
-
-Because `fetch()` retuens a Promise object, we can call `then()` directly, this looks more concise than ealier example. 
-
-But we usually use `await/async` instead of `then()` for readability in real world projects, because we need handle errors and consider different situations.
-
-```js
-async function fetchMessage(messages) {
-        setLoading(true)
-        controller.current = new AbortController()
-        try {
-            const response = await fetch(fetchPath, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': localStorage.getItem('token'),
-                },
-                body: JSON.stringify({messages}),
-                signal: controller?.current?.signal,
-            });
-            const data = await response.json();
-            setLoading(false)
-
-            if (!response.ok) {
-                // remove the last message
-                setMessages((messages) => messages.slice(0, -1));
-                message.error({
-                    content: "获取信息失败, 请联系截图主人喵~: " + data.error,
-                    duration: 5,
-                });
-                return;
-            }
-
-            return data;
-        } catch (e) {
-            setLoading(false)
-            // remove the last message
-            setMessages((messages) => messages.slice(0, -1));
-
-            if (e.name === 'AbortError') {
-                return
-            }
-
-            message.error("获取信息失败, 请联系截图主人喵~: " + e);
-        }
-    }
 ```

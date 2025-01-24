@@ -2,9 +2,13 @@
 title: HTML Elements
 date: 2024-05-05 17:20:20
 categories:
- - front-end
- - html
+ - 前端开发
+tags:
+ - 前端开发
+ - css
 ---
+
+> **调试 bug:** 加上样式后 刷新页面 样式不符合预期时 可以进入开发者模式 查看真正被应用的元素样式 因为可能是缓存问题
 
 CSS 内容, 并列的element放一块, 而不是分类放, 这样修改比较容易找位置看对比, 比如下面的内容, 最好是把 `course-details` 和 `course-title-description` 的 css 放一块, 这样我们想修改二者的css做对比的时候才比较好找他们对应的css, 而不是每次都得往下翻很久...
 

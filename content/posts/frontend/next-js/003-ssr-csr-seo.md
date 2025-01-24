@@ -1,8 +1,11 @@
 ---
 title: SSR vs CSR
 date: 2024-12-07 19:12:09
+categories:
+ - 前端开发
 tags:
- - front-end
+ - 前端开发
+ - next.js
 ---
 
 ## CSR (Client Side Rendering)

@@ -2,9 +2,9 @@
 title: 未初始化的变量和未定义行为
 date: 2023-05-15 09:57:02
 categories:
- - C++
+ - c++
 tags:
- - C++
+ - c++
 ---
 
 ## 1. Uninitialized variables

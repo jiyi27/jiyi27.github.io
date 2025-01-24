@@ -2,10 +2,10 @@
 title: Go File Server Cannot Handle Large Files
 date: 2023-11-30 21:43:22
 categories:
- - Bugs
+ - bugs
 tags:
- - Bugs
- - Cloudflare
+ - bugs
+ - cloudflare
  - 后端开发
  - 反向代理
 ---

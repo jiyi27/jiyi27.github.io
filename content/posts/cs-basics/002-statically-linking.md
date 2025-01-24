@@ -6,8 +6,8 @@ categories:
 tags:
  - 计算机基础
  - 编译原理
- - C语言
- - C++
+ - c语言
+ - c++
 ---
 
 ## 1. Compilation process in C

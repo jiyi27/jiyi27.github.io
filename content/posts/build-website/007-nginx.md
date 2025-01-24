@@ -6,7 +6,7 @@ categories:
 tags:
  - 建站
  - 后端开发
- - Nginx
+ - nginx
 ---
 
 ## 1. Common used commands

@@ -2,9 +2,9 @@
 title: Syntax Basics
 date: 2024-07-21 19:36:36
 categories:
- - C#
+ - c#
 tags:
- - C#
+ - c#
 ---
 
 ## 1. Auto-implemented Properties

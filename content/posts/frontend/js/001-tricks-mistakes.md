@@ -3,9 +3,10 @@ title: Tricks & Mistakes in Javascript
 date: 2024-03-12 10:55:20
 categories:
   - javascript
-  - basics
 tags:
   - javascript
+  - 编程技巧
+  - 前端开发
 ---
 
 ## 1. Minor tricks

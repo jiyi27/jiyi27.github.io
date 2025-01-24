@@ -1,8 +1,11 @@
 ---
 title: Basic Syntax - TypeScript
 date: 2024-11-29 09:50:02
+categories:
+ - 前端开发
 tags:
-  - typescript
+ - 前端开发
+ - typescript
 ---
 
 **Types**

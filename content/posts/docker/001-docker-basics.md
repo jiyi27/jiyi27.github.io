@@ -2,9 +2,9 @@
 title: Docker Basics
 date: 2023-10-09 21:09:35
 categories:
- - Docker
+ - docker
 tags:
- - Docker
+ - docker
 ---
 
 ## 1. Dockerfile example

@@ -1,8 +1,11 @@
 ---
 title: Why Next.js Compared with Using React.js Directly
 date: 2024-12-07 18:20:22
+categories:
+ - 前端开发
 tags:
- - front-end
+ - 前端开发
+ - next.js
 ---
 
 ## **Can I use React without a framework?** 

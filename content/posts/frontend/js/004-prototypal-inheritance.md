@@ -3,9 +3,9 @@ title: JS 继承之 Prototype Chain 的意义
 date: 2023-06-21 11:08:32
 categories:
   - javascript
-  - basics
 tags:
   - javascript
+  - 前端开发
 ---
 
 ## 1. Objects are values in Javascript

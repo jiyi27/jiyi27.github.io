@@ -5,7 +5,6 @@ categories:
  - 建站
 tags:
  - 建站
- - Google Cloud
 ---
 
 Google Cloud Page: https://console.cloud.google.com/welcome/new?organizationId=0

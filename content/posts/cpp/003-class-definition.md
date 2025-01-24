@@ -2,9 +2,9 @@
 title: C++ Class Definition Rules
 date: 2023-05-16 22:36:06
 categories:
- - C++
+ - c++
 tags:
- - C++
+ - c++
 ---
 
 - Make any member function that does not modify the state of the class object `const`, so that it can be called by const objects.

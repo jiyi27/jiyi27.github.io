@@ -2,9 +2,9 @@
 title: Docker Architecture
 date: 2023-10-11 10:38:35
 categories:
- - Docker
+ - docker
 tags:
- - Docker
+ - docker
 ---
 
 ##  1. Docker architecture

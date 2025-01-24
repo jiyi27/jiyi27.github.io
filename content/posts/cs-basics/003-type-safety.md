@@ -5,7 +5,7 @@ categories:
   - 计算机基础
 tags:
   - 计算机基础
-  - Rust
+  - rust
   - 类型安全
 ---
 

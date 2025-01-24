@@ -2,9 +2,10 @@
 title: Frontend JS Tricks
 date: 2024-08-05 22:17:19
 categories:
- - front-end
+ - 前端开发
 tags:
- - front-end
+ - 前端开发
+ - 编程小技巧
 ---
 
 ## 1. `e.preventDefault()`

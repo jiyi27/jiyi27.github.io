@@ -1,8 +1,11 @@
 ---
 title: Render Phases - React.js
 date: 2024-12-16 23:38:39
+categories:
+ - 前端开发
 tags:
- - front-end
+ - 前端开发
+ - next.js
 ---
 
 [一篇文章](https://eliav2.github.io/how-react-hooks-work/)总结的比较好, 渲染的两个阶段: Render, Commit:

@@ -2,9 +2,9 @@
 title: SSH连接远程主机出现的Connection Refused问题
 date: 2023-04-23 20:30:22
 categories:
- - Bugs
+ - bugs
 tags:
- - Bugs
+ - bugs
  - ssh
 ---
 

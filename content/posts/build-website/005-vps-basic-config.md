@@ -5,7 +5,7 @@ categories:
  - 建站
 tags:
  - 建站
- - VPS
+ - vps
 ---
 
 ## 1. Login without using keypairs

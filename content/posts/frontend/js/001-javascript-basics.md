@@ -3,9 +3,9 @@ title: Objects & Collections in Javascript
 date: 2023-06-20 20:51:31
 categories:
   - javascript
-  - basics
 tags:
   - javascript
+  - 前端开发
 ---
 
 ## 1. Javascript objects

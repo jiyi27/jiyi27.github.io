@@ -1,8 +1,11 @@
 ---
 title: NextAuth V5
 date: 2024-12-08 17:13:20
+categories:
+ - 前端开发
 tags:
- - front-end
+ - 前端开发
+ - next.js
 ---
 
 NextAuth v5 配置通常分为两个文件(在根目录)：`auth.config.ts` 和 `auth.ts`

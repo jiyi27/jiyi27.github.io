@@ -2,9 +2,9 @@
 title: C++ RAII (Resource Acquisition Is Initialization)
 date: 2023-05-16 20:32:04
 categories:
- - C++
+ - c++
 tags:
- - C++
+ - c++
  - 内存管理
 ---
 

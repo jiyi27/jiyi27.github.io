@@ -2,10 +2,10 @@
 title: System.Text.Json
 date: 2024-07-27 19:42:36
 categories:
- - C#
+ - c#
 tags:
- - C#
- - .Net
+ - c#
+ - .net
 ---
 
 Any JSON properties that aren't represented in your class are ignored [by default](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/missing-members). Also, if any properties on the type are [required](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/required-properties) but not present in the JSON payload, deserialization will fail. 

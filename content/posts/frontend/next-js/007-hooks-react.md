@@ -1,8 +1,11 @@
 ---
 title: Hooks React - Next.js
 date: 2024-12-11 20:50:01
+categories:
+ - 前端开发
 tags:
- - front-end
+ - 前端开发
+ - react
 ---
 
 > Always keep in mind: By default, React rerenders a component and all its children whenever the parent component rerenders - even if the props haven't changed.

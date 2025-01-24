@@ -5,8 +5,8 @@ categories:
  - 建站
 tags:
  - 建站
- - Cloudflare
- - CDN
+ - cloudflare
+ - cdn
 ---
 
 ## 1. Hosting your domain on Cloudflare (Enable CDN)

@@ -2,9 +2,9 @@
 title: An Analysis of high CPU and RAM usage caused by Go Program
 date: 2024-04-12 10:42:22
 categories:
- - Bugs
+ - bugs
 tags:
- - Bugs
+ - bugs
  - 后端开发
  - 问题排查
 ---

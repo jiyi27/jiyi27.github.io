@@ -1,8 +1,11 @@
 ---
 title: Next.js Notes
 date: 2024-12-07 18:20:22
+categories:
+ - 前端开发
 tags:
- - front-end
+ - 前端开发
+ - next.js
 ---
 
 **UUIDs vs. Auto-incrementing Keys**

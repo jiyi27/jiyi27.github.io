@@ -5,8 +5,8 @@ categories:
  - 建站
 tags:
  - 建站
- - UFW
- - AWS
+ - ufw
+ - aws
  - 后端开发
 ---
 

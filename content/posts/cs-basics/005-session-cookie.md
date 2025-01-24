@@ -5,7 +5,7 @@ categories:
   - 计算机基础
 tags:
   - 计算机基础
-  - HTTP
+  - http
   - 后端开发
 ---
 

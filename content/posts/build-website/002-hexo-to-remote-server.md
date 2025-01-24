@@ -5,7 +5,7 @@ categories:
  - 建站
 tags:
  - 建站
- - Nginx
+ - nginx
 ---
 
 ## 1. 安装Nginx和git (服务器端)

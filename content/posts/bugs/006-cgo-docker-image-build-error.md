@@ -2,10 +2,10 @@
 title: CGO Compile Error Building Docker Image
 date: 2023-10-21 10:24:22
 categories:
- - Bugs
+ - bugs
 tags:
- - Bugs
- - Docker
+ - bugs
+ - docker
  - 交叉编译
 ---
 

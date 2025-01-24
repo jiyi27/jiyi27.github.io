@@ -3,9 +3,9 @@ title: Error Handling Javascript
 date: 2023-12-17 23:30:29
 categories:
   - javascript
-  - basics
 tags:
   - javascript
+  - 前端开发
 ---
 
 ## 1. Error handling with promise objects

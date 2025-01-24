@@ -1,8 +1,12 @@
 ---
 title: npm vs npx vs pnpm
 date: 2024-12-08 15:20:22
+categories:
+ - 前端开发
 tags:
- - front-end
+ - 前端开发
+ - next.js
+ - npm
 ---
 
 ```bash
