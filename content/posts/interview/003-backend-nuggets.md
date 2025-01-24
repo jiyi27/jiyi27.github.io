@@ -7,8 +7,6 @@ tags:
  - 后端开发
 ---
 
-<!--more-->
-
 ### 1. Sessions 状态管理
 
 JWT由三部分组成, Header, Payload, Signature, JWT 的 Header 和 Payload 部分是经过 Base64 URL 编码的, 本质上是“明文”的, 不适合在Payload中存储敏感信息, 只有Signature部分是经过加密的, 用于验证数据的完整性. 了解更多: https://jwt.io/
