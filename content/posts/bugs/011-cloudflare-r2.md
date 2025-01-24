@@ -4,8 +4,9 @@ date: 2024-10-20 10:42:22
 categories:
  - Bugs
 tags:
- - Cloudflare R2
- - AWS S3
+ - Bugs
+ - Cloudflare
+ - AWS
  - 后端开发
 ---
 

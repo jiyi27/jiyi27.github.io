@@ -2,10 +2,11 @@
 title: Nginx
 date: 2023-12-30 14:01:50
 categories:
- - build website
+ - 建站
 tags:
- - build website
- - cs basics
+ - 建站
+ - 后端开发
+ - Nginx
 ---
 
 ## 1. Common used commands

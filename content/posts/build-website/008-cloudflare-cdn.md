@@ -2,10 +2,11 @@
 title: Get Free TLS certificate with Cloudflare
 date: 2023-11-15 20:09:22
 categories:
- - build website
+ - 建站
 tags:
- - build website
-typora-root-url: ../../../static
+ - 建站
+ - Cloudflare
+ - CDN
 ---
 
 ## 1. Hosting your domain on Cloudflare (Enable CDN)

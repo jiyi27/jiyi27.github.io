@@ -4,6 +4,7 @@ date: 2023-04-23 20:30:22
 categories:
  - Bugs
 tags:
+ - Bugs
  - ssh
 ---
 

@@ -2,10 +2,10 @@
 title: Google Cloud Get Started
 date: 2023-12-15 11:28:22
 categories:
- - build website
+ - 建站
 tags:
- - build website
-typora-root-url: ../../../static
+ - 建站
+ - Google Cloud
 ---
 
 Google Cloud Page: https://console.cloud.google.com/welcome/new?organizationId=0

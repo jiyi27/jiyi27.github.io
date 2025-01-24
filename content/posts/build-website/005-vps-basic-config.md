@@ -1,11 +1,11 @@
 ---
-title: Basic Configuration of VPS
+title: 新买的 VPS 方便配置
 date: 2023-09-09 15:53:57
 categories:
- - build website
+ - 建站
 tags:
- - build website
-typora-root-url: ../../../static
+ - 建站
+ - VPS
 ---
 
 ## 1. Login without using keypairs
@@ -92,7 +92,7 @@ Upload: 1013.83 Mbit/s
 [  1] 6.00-9.00 sec   100 MBytes   281 Mbits/sec
 ```
 
-![aa](/005-vps-basic-config/aa.png)
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/c3f0b1e0420d0b98792587fce72c5f2b.png)
 
 ```shell
 # vpn x-ui

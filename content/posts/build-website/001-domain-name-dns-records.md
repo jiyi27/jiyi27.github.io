@@ -2,19 +2,17 @@
 title: DNS 基础概念
 date: 2024-04-07 00:15:30
 categories:
- - build website
- - networking
+ - 建站
 tags:
- - build website
- - networking
-typora-root-url: ../../../static
+ - 建站
+ - DNS
 ---
 
 ## 1. DNS Hierarchy
 
 DNS服务器怎么会知道每个域名的IP地址呢？答案是分级查询, 仔细看下面DNS解析过程，每个域名的尾部都多了一个点`.`
 
-![](/001-domain-name-dns-records/c.png)
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/060ac4f1fb8e9b0fa6d0d81eea60e23c.png)
 
 多出的那个`.`是Root Level Domain, 比如`www.example.com`真正的名字是`www.example.com.root`然后上图就简写为`www.example.com.` 因为根域名`.root`对于所有域名都是一样的，所以平时是省略的。
 

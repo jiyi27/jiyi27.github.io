@@ -2,9 +2,12 @@
 title: ufw vs  AWS Security Group
 date: 2023-10-09 13:53:57
 categories:
- - build website
+ - 建站
 tags:
- - build website
+ - 建站
+ - UFW
+ - AWS
+ - 后端开发
 ---
 
 ## 1. `ufw` command

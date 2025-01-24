@@ -2,10 +2,10 @@
 title: Wget Connecting Timeout Issue
 date: 2024-03-29 20:28:22
 categories:
- - build website
+ - 建站
 tags:
- - build website
-typora-root-url: ../../../static
+ - 建站
+ - Cloudflare
 ---
 
 ## 1. Issue
