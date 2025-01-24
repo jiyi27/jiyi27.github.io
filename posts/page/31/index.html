@@ -172,144 +172,6 @@
     
       <article class="post on-list">
         <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/cs-basics/001-encoding/">编码和乱码 UTF-8 Unicode</a>
-        </h2>
-        <div class="post-meta"><time class="post-date">2023-06-01</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/python/">Python</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/%E7%BC%96%E7%A0%81/">编码</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p>编码问题很常见, 有时候读文件打开是乱码, 有的语言说自己字符串采用unicode表示字符, 可又来utf-8编码, 这都是什么?</p>
-<h2 id="1-编码和乱码-unicode-vs-ascii">1. 编码和乱码 (unicode vs ascii)</h2>
-<p>电脑只能看懂二进制数, 所以得想办法把人类语言用二进制表示, 这就是编码的目的. ASCII 规定数字<code>65</code>代表字符<code>A</code>, <code>66</code>代表字符<code>B</code>依次类推, 所以ASCII表就是一个map, 每个字符对应一个数, <strong>把字符按照预定规则对应到数字的过程就叫编码</strong>.</p>
-<p>到后来计算机普及, 全世界都使用不同语言, 出现了问题, 比如我们用<code>36</code>代表汉字<code>牛</code>, 韩国说用<code>36</code>代表字符<code>&amp;</code>, 当我输入<code>牛</code>, 软件就把<code>0010 0100</code>存入磁盘, 然后我把文件传给韩国的朋友, 他们的程序认为<code>36</code>即<code>0010 0100</code>代表<code>&amp;</code>, 这就产生了乱码: <strong>软件尝试使用与文件编码不同的编码方式来解码文件</strong>,</p>
-<p>所以我们需要一个新的标准, 可以涵盖全世界字符的那种, 然后所有软件都遵守这个标准, 这样才能无差错沟通, 我发送一串二进制在我这代表字符<code>A</code>, 你的软件收到这串二进制后翻译出的也是字符<code>A</code>, 而不是<code>B</code>或<code>C</code>,</p>
-<p>这时候 Unicode 就出来了, 它就是使用<code>0~0x10FFFF</code>的数字来表示世界上所有的字符, 如汉字 <code>在</code> 的Unicode值是 <code>0x5728</code>, 注意<code>0x</code>代表值<code>5728</code>是十六进制, 又如字符 <code>A</code> 的Unicode值是<code>0x41</code>, 这里说一下, Unicode表示的字符里英文字符的值和ASCII表是相同的,</p>
-<blockquote>
-<p>Unicode 和 ASCII 都是字符集, 但是 ASCII 只包含 128 个字符, 而 Unicode 包含很多很多个字符.</p>
-</blockquote>
-<h2 id="2-unicode-vs-utf-8-vs-utf-16">2. Unicode vs UTF-8 vs UTF-16</h2>
-<h3 id="21-unicode">2.1. Unicode</h3>
-<ol>
-<li><strong>定义和目的</strong>：
-<ul>
-<li>Unicode 是一个国际标准，用于不同系统和程序间统一表示文本数据。</li>
-<li>它为世界上几乎所有的字符和文本符号分配了唯一的 code point。</li>
-</ul>
-</li>
-</ol>
-<blockquote>
-<p>Unicode standard describes how characters are represented by <strong>code points</strong>. A code point value is an integer in the range 0 to 0x10FFFF. In the standard and in this document, a code point is written using the notation <code>U+265E</code> to mean the character with value <code>0x265e</code> (9,822 in decimal).</p>
-          
-        </div>
-
-        
-           <div>
-            <a class="read-more button inline" href="/posts/cs-basics/001-encoding/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/python/practice/001-add-space/">用Python脚本给文章中英字符以及符号间加空格</a>
-        </h2>
-        <div class="post-meta"><time class="post-date">2023-06-01</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/python/">python</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p>强迫症, 读博客的时候中英字符或者标点符号后没有空格紧紧的贴在一块看着很不舒服, 于是想着能不能写个脚本来处理一下文章, bash太难用了(是我太菜), 于是用Python简单实现了一下,</p>
-<p>一些芝士在这说一下,</p>
-<h3 id="1-immutable-object-in-python">1. Immutable Object in Python</h3>
-<p>Java虽然string是对象但primitive类型还不是对象, 与Java不同Python里如<em>integers</em>, <em>floats</em>, and <em>strings</em>都是对象, 并且与<em>integers</em>, <em>floats</em>一样, python里string对象也是immutable, 所以直接“修改”string会导致python重新创建新的string对象 销毁旧的:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>a <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;hello&#39;</span>
-</span></span><span style="display:flex;"><span>print(id(a))
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># 4378912048</span>
-</span></span><span style="display:flex;"><span>a <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39; world&#39;</span>
-</span></span><span style="display:flex;"><span>print(id(a))
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># 4380683504</span>
-</span></span></code></pre></div><p>因此每次修改(添加空格)都会重新重建一个新的string, 考虑到文章有的内容也不短, 那开销会不小, 具体做法分析参考: <a href="https://stackoverflow.com/q/1228299/16317008">https://stackoverflow.com/q/1228299/16317008</a></p>
-<h3 id="2-编码">2. 编码</h3>
-<p>另外是关于编码的问题, Unicode和utf-8,</p>
-<p>Python的string使用unicode来表示字符,</p>
-<blockquote>
-<p>Python’s string type uses the Unicode Standard for representing characters, which lets Python programs work with all these different possible characters.</p>
-</blockquote>
-<p>Unicode就是赋予字符一个唯一的value, 如 &lsquo;a&rsquo;的unicode value是 0061, &lsquo;汉&rsquo;的unicode value是6C49,</p>
-<blockquote>
-<p>Unicode (<a href="https://www.unicode.org/">https://www.unicode.org/</a>) is a specification that aims to list every character used by human languages and give each character its own unique code.</p>
-          
-        </div>
-
-        
-           <div>
-            <a class="read-more button inline" href="/posts/python/practice/001-add-space/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/golang/advance/004-go-scheduler-2/">Go Scheduler (2)</a>
-        </h2>
-        <div class="post-meta"><time class="post-date">2023-05-28</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/concurrency/">concurrency</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="0-parrallelism-is-not-concurrency">0. Parrallelism is not concurrency</h2>
-<p><strong>Parallelism</strong> is about multiple tasks or subtasks of the same task that literally run at the same time on a hardware with multiple computing resources like multi-core processor, while <strong>concurrency</strong> is about multiple tasks which start, run, and complete in overlapping time periods, in no specific order.</p>
-<h2 id="1-your-program-starts">1. Your program starts</h2>
-<p>When your Go program starts up, it’s given a <strong>Logical Processor (P)</strong> for every <strong>virtual core</strong> that is identified on the host machine. If you have a processor with multiple <strong>hardware threads</strong> per <strong>physical core</strong> (<strong>Hyper-Threading</strong>), each hardware thread will be presented to your Go program as a virtual core. To better understand this, take a look at the system report for my MacBook Pro.</p>
-          
-        </div>
-
-        
-           <div>
-            <a class="read-more button inline" href="/posts/golang/advance/004-go-scheduler-2/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h2 class="post-title">
           <a href="https://blog.jiyi27.com/posts/golang/advance/003-go-scheduler-1/">Go Scheduler (1)</a>
         </h2>
         <div class="post-meta"><time class="post-date">2023-05-28</time></div>
@@ -418,6 +280,113 @@
         
            <div>
             <a class="read-more button inline" href="/posts/other/001-memory-strucutre-programming-language/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h2 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/cs-basics/006-thread-process/">Thread Stack and CPU Cores</a>
+        </h2>
+        <div class="post-meta"><time class="post-date">2023-05-27</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-thread">1. Thread</h2>
+<p>A thread is a segment or part of a process that executes some tasks of the process. A process can have multiple threads which can <strong>run concurrently</strong> within the process. Each thread has its own thread stack but multiple threads of a process share a common heap area of that process.</p>
+<h3 id="11-thread-stack">1.1. Thread stack</h3>
+<p>Each thread has its own call stack, &ldquo;call stack&rdquo; and &ldquo;thread stack&rdquo; are the same thing. Calling it a &ldquo;thread stack&rdquo; just emphasizes that the call stack is specific to the thread.</p>
+          
+        </div>
+
+        
+           <div>
+            <a class="read-more button inline" href="/posts/cs-basics/006-thread-process/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h2 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/cs-basics/006-context-switching/">Context Switching</a>
+        </h2>
+        <div class="post-meta"><time class="post-date">2023-05-27</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-context-switch">1. Context switch</h2>
+<p>In a CPU, the term &ldquo;context&rdquo; refers to the data in the registers and program counter (PC) at a specific moment in time. A register holds the current CPU instruction. A program counter, also known as an instruction address register, is a small amount of fast memory that holds the address of the instruction to be executed immediately after the current one.</p>
+<p>In computing, a context switch is the process of storing the state of a process or thread, so that it can be restored and resume execution at a later point, and then restoring a different, previously saved, state. Two steps, the first step is to <strong>store the state of the thread and then restore the state of another</strong>.</p>
+          
+        </div>
+
+        
+           <div>
+            <a class="read-more button inline" href="/posts/cs-basics/006-context-switching/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h2 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/other/003-go-runtime-complie-c/">说说C的编译动态静态库及Go的Runtime</a>
+        </h2>
+        <div class="post-meta"><time class="post-date">2023-05-25</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/other/">other</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <p>最近看线程总是看到 goroutine managed by go runtime, &hellip; runtime, 也看到问题 Does Go has a runtime? 刚好Go在官方FAQs有回答, 就在这记录一下,</p>
+<p><strong>Does Go have a runtime?</strong></p>
+<p>Go does have an extensive library, called the <em>runtime</em>, that is part of every Go program. The runtime library implements garbage collection, concurrency, stack management, and other critical features of the Go language. Although it is more central to the language, Go&rsquo;s runtime is analogous to <code>libc</code>, the C library.</p>
+          
+        </div>
+
+        
+           <div>
+            <a class="read-more button inline" href="/posts/other/003-go-runtime-complie-c/">阅读更多</a>
           </div>
         
       </article>
