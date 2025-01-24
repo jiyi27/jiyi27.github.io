@@ -2,9 +2,9 @@
 title: npm install 总是安装到全局目录排查与解决
 date: 2023-06-27 11:24:35
 categories:
- - bugs
+ - Bugs
 tags:
- - npm
+ - NPM
 ---
 
 使用 `npm install xxx`, 然后总是安装到 `~/node_modules/`, 查了好多, 有的说用 `npm config list   `查看 global 的值, 改为 false 什么, 都没有用, 卸载 node 和 npm 重装依旧不能解决, 

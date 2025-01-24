@@ -2,10 +2,10 @@
 title: CGO Compile Error Building Docker Image
 date: 2023-10-21 10:24:22
 categories:
- - bugs
+ - Bugs
 tags:
- - bugs
- - docker
+ - Docker
+ - 交叉编译
 ---
 
 I choose a sqilte3 library which uses cgo, the Dockerfile:

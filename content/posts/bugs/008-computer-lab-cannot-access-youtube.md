@@ -2,11 +2,9 @@
 title: 排查实验室电脑无法访问一些网站
 date: 2023-11-22 21:43:22
 categories:
- - bugs
+ - Bugs
 tags:
- - bugs
- - networking
-typora-root-url: ../../../static
+ - DNS
 ---
 
 首先可以联网, 谷歌和微软邮箱等其他的一些网站都可访问, 但是访问油管的时候总是会超时, 

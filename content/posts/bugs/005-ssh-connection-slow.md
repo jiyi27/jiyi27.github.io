@@ -2,9 +2,8 @@
 title: ssh session vary slow
 date: 2023-09-25 14:30:22
 categories:
- - bugs
+ - Bugs
 tags:
- - bugs
  - ssh
 ---
 
