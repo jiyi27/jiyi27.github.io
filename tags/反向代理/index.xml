@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>反向代理 on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/</link>
+    <description>Recent content in 反向代理 on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Thu, 30 Nov 2023 21:43:22 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Go File Server Cannot Handle Large Files</title>
+      <link>https://blog.jiyi27.com/posts/bugs/009-go-server-handle-large-file/</link>
+      <pubDate>Thu, 30 Nov 2023 21:43:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/009-go-server-handle-large-file/</guid>
+      <description>&lt;h2 id=&#34;1-problem-description&#34;&gt;1. Problem description&lt;/h2&gt;
+&lt;p&gt;I&amp;rsquo;ve discussed how to use Cloudflare as a &lt;a href=&#34;https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/&#34;&gt;reverse proxy&lt;/a&gt; for my web traffic in &lt;a href=&#34;https://blog.yorforger.cc/post/build-website/008-cloudflare-cdn/&#34;&gt;previous post&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I write a &lt;a href=&#34;https://github.com/shwezhu/file-server&#34;&gt;file server&lt;/a&gt; in Go, when attempting to upload a file of approximately 200 MB, it becomes very slow (always uploading) and never succeed. Upon monitoring the server using tools like &lt;code&gt;htop&lt;/code&gt;, it seems that the server might be unaware of the incoming large file upload. I come across a error by chance:  &lt;strong&gt;413 Request Entity Too Large&lt;/strong&gt;.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-problem-description&#34;&gt;1. Problem description&lt;/h2&gt;
+&lt;p&gt;I&amp;rsquo;ve discussed how to use Cloudflare as a &lt;a href=&#34;https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/&#34;&gt;reverse proxy&lt;/a&gt; for my web traffic in &lt;a href=&#34;https://blog.yorforger.cc/post/build-website/008-cloudflare-cdn/&#34;&gt;previous post&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I write a &lt;a href=&#34;https://github.com/shwezhu/file-server&#34;&gt;file server&lt;/a&gt; in Go, when attempting to upload a file of approximately 200 MB, it becomes very slow (always uploading) and never succeed. Upon monitoring the server using tools like &lt;code&gt;htop&lt;/code&gt;, it seems that the server might be unaware of the incoming large file upload. I come across a error by chance:  &lt;strong&gt;413 Request Entity Too Large&lt;/strong&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;2-cloudflare&#34;&gt;2. Cloudflare&lt;/h2&gt;
+&lt;p&gt;Then I found this is because the limitation of Couldflare proxy:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;There’s a &lt;strong&gt;body size&lt;/strong&gt; limit of 100 MB on Free and Pro, 200 MB on Business and &lt;a href=&#34;https://community.cloudflare.com/t/community-tip-fixing-error-500-internal-server-error/44453&#34;&gt;50074&lt;/a&gt; MB on Enterprise. Only Enterprise customers can request to have the body size limit increased.&lt;/p&gt;
+&lt;p&gt;Each user can only upload files with maximum size of 100MB at a time &lt;strong&gt;if your website is proxied by Cloudflare.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://community.cloudflare.com/t/does-the-100-mb-limit-apllies-to-all-users-on-my-website/297261&#34;&gt;Does the 100 Mb limit apllies to all users on my website?&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;So this is the thing, then I try to access my website directly by IP address (bypass the Cloudflare proxy).&lt;/p&gt;
+&lt;h2 id=&#34;3-vps-ram&#34;&gt;3. VPS RAM&lt;/h2&gt;
+&lt;p&gt;Then I can see my file server handling the incoming request whose body larger than 100MB, I use &lt;code&gt;htop&lt;/code&gt; to check the RAM usage status on my VPS, I can see the ram increase from 50MB to 100MB then 200MB, then my file server get killed by the OS.&lt;/p&gt;
+&lt;p&gt;My VPS RAM is 512MB, and there is 460MB left, I don&amp;rsquo;t know why the OS kill my file server program.&lt;/p&gt;
+&lt;h2 id=&#34;4-golang&#34;&gt;4. Golang&lt;/h2&gt;
+&lt;p&gt;Besides, when I tried to upload some files whose size is around 60MB, the RAM usage of my VPS increase from 50MB (total) to around 100MB, this makes sense, because the file server needs load the whole file to the RAM and copy the content to the disk.&lt;/p&gt;
+&lt;p&gt;But after handling this request, the RAM usage is still around 100MB, if I upload another file (60MB), then the RAM usage increases to around 160MB. I thought there is memory leak on my program. But I was wrong. I found a post and share it here:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Go does not release memory it allocated from the OS immediately. The reason is probably that allocating memory is costly (needs system calls) and the chance is high that it will be needed in the near future anyway again. But, if memory gets long enough unused it will be released eventually so that the &lt;strong&gt;RSS&lt;/strong&gt; of the process decreases again.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://stackoverflow.com/a/49843380/16317008&#34;&gt;https://stackoverflow.com/a/49843380/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;RSS indicates the actual physical memory consumed by a process, while VSZ includes not only the physical memory but also the virtual memory.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://stackoverflow.com/a/21049737/16317008&#34;&gt;https://stackoverflow.com/a/21049737/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

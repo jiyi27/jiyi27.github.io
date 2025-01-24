@@ -173,188 +173,6 @@
     
       <article class="post on-list">
         <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/golang/practice/006-gorilla-redis-store-code/">Gorilla Sessions RedisStore Source Code Analysis</a>
-        </h1>
-        <div class="post-meta"><time class="post-date">2023-10-01</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p>To prevent data race, <code>store.Get()</code> always creates a new session (or make a copy) and returns the session to user.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Get a session.</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// A copied one or new session.</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">session</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">store</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#a6e22e">req</span>, <span style="color:#e6db74">&#34;session-key&#34;</span>)
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// Add a value.</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">Values</span>[<span style="color:#e6db74">&#34;foo&#34;</span>] = <span style="color:#e6db74">&#34;bar&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// Save.</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">sessions</span>.<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">rsp</span>)
-</span></span></code></pre></div><p>Let&rsquo;s check the source code, the <code>Get()</code> method of Redistore:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RediStore</span>) <span style="color:#a6e22e">Get</span>(<span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>, <span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">sessions</span>.<span style="color:#a6e22e">Session</span>, <span style="color:#66d9ef">error</span>) {
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">sessions</span>.<span style="color:#a6e22e">GetRegistry</span>(<span style="color:#a6e22e">r</span>).<span style="color:#a6e22e">Get</span>(<span style="color:#a6e22e">s</span>, <span style="color:#a6e22e">name</span>)
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// GetRegistry returns a registry instance for the current request.</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">GetRegistry</span>(<span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Registry</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ctx</span> = <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Context</span>()
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">registry</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">Value</span>(<span style="color:#a6e22e">registryKey</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">registry</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">registry</span>.(<span style="color:#f92672">*</span><span style="color:#a6e22e">Registry</span>)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">newRegistry</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Registry</span>{
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">request</span>:  <span style="color:#a6e22e">r</span>,
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sessions</span>: make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#a6e22e">sessionInfo</span>),
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>	<span style="color:#f92672">*</span><span style="color:#a6e22e">r</span> = <span style="color:#f92672">*</span><span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">WithContext</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">WithValue</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">registryKey</span>, <span style="color:#a6e22e">newRegistry</span>))
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">newRegistry</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>For each request they are different, even that two request from a same client. So for each new request when the server call <code>store.Get()</code> there will be a registry created. Only when you call <code>store.Get()</code> more than once in a handler, the <code>registry := ctx.Value(registryKey)</code> will return a non-nil <code>registry</code>:</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/golang/practice/006-gorilla-redis-store-code/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/golang/advance/009-benchmark-test/">Test &amp; Benchmark - Go</a>
-        </h1>
-        <div class="post-meta"><time class="post-date">2023-09-30</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/unit-test/">unit test</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="1-benchmark">1. Benchmark</h2>
-<h3 id="11-bn-loop">1.1. <code>b.N</code> loop</h3>
-<p>Functions of the form</p>
-<pre tabindex="0"><code>func BenchmarkXxx(*testing.B)
-</code></pre><p>are considered benchmarks, and are executed by the <code>go test</code> command when its <code>-bench</code> flag is provided. Benchmarks are run sequentially.</p>
-<p>A sample benchmark function looks like this:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">BenchmarkRandInt</span>(<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">testing</span>.<span style="color:#a6e22e">B</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">N</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rand</span>.<span style="color:#a6e22e">Int</span>()
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>The benchmark function must run the target code b.N times. During benchmark execution, <strong>b.N is adjusted until the benchmark function lasts long enough to be timed reliably</strong>. The output</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/golang/advance/009-benchmark-test/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/golang/advance/008-do-not-overuse-cahnnel/">Don&rsquo;t Overuse Channel - Go</a>
-        </h1>
-        <div class="post-meta"><time class="post-date">2023-09-29</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p>In <a href="https://davidzhu.xyz/post/golang/advance/006-closures-go/#21-pass-behaviour">previous post</a> we know that <strong>don&rsquo;t mediate the access to shared memory with locks and mutexes</strong> instead share that memory by communicating. However, is this always true? Sometimes you may want mutex and lock not channels, it depends on the situation. Channel is a way help mutiple groutines communicate with each other. I find some posts and share it here:</p>
-<p><a href="https://github.com/golang/go/wiki/MutexOrChannel#use-a-syncmutex-or-a-channel"><strong>Use a sync.Mutex or a channel?</strong></a></p>
-<p>One of Go&rsquo;s mottos is <em>&ldquo;Share memory by communicating, don&rsquo;t communicate by sharing memory.&rdquo;</em></p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/golang/advance/008-do-not-overuse-cahnnel/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/golang/advance/007-io-usages-go/">Useful Types and Packages for IO - Go</a>
-        </h1>
-        <div class="post-meta"><time class="post-date">2023-09-26</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="1-bytes--strings-packages">1. <code>bytes</code> &amp; <code>strings</code> packages</h2>
-<p>Package <code>strings</code> implements simple functions to manipulate UTF-8 encoded strings.</p>
-<p>Package <code>bytes</code> implements functions for the manipulation of byte slices. It is analogous to the facilities of the <a href="https://pkg.go.dev/strings">strings</a> package.</p>
-<h3 id="11-make-http-request">1.1. Make http request</h3>
-<p>When send POST request with json body, you can write code like this:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">jsonBytes</span> <span style="color:#f92672">:=</span> []byte(<span style="color:#e6db74">`{&#34;username&#34;:&#34;coco&#34;, &#34;password&#34;:&#34;778899a&#34;}`</span>)
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">r</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">NewRequest</span>(<span style="color:#e6db74">&#34;POST&#34;</span>, <span style="color:#e6db74">&#34;/login&#34;</span>, <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">NewReader</span>(<span style="color:#a6e22e">jsonBytes</span>))
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Header</span>.<span style="color:#a6e22e">Set</span>(<span style="color:#e6db74">&#34;Content-Type&#34;</span>, <span style="color:#e6db74">&#34;application/json&#34;</span>)
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">w</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">httptest</span>.<span style="color:#a6e22e">NewRecorder</span>()
-</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
-</span></span></code></pre></div><p>And at the server side, decode the request body:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">handleLogin</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">user</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">struct</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Username</span> <span style="color:#66d9ef">string</span> <span style="color:#e6db74">`json:&#34;username&#34;`</span>
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Password</span> <span style="color:#66d9ef">string</span> <span style="color:#e6db74">`json:&#34;password&#34;`</span>
-</span></span><span style="display:flex;"><span>	}{}
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">decoder</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">json</span>.<span style="color:#a6e22e">NewDecoder</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Body</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">decoder</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">user</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">user</span>)
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Because the third parameter of<code>http.NewRequest()</code> required to be an <code>io.Reader</code>,  we use <code>bytes.NewReader()</code> to wrap <code>jsonBytes</code> at client side.</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/golang/advance/007-io-usages-go/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h1 class="post-title">
           <a href="https://blog.jiyi27.com/posts/golang/practice/000-parse-data-go-web/">Parse Data - Go Web</a>
         </h1>
         <div class="post-meta"><time class="post-date">2023-09-23</time></div>
@@ -449,6 +267,189 @@
         
           <div>
             <a class="read-more button inline" href="/posts/golang/advance/006-closures-go/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/basics/003-string-runes-bytes/">string, bytes, runes and characters - Go</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-09-11</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="0-make-it-eassy">0. Make it eassy</h2>
+<p>This is all this post is going to talk, if you know this, you don&rsquo;t need to go through all this post.</p>
+<p><strong>a string literal is a slice of bytes:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">str</span> <span style="color:#f92672">:=</span> <span style="color:#e6db74">&#34;汉&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span><span style="color:#f92672">:=</span><span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span>&lt;len(<span style="color:#a6e22e">str</span>); <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%x &#34;</span>, <span style="color:#a6e22e">str</span>[<span style="color:#a6e22e">i</span>])
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#f92672">---------------------------</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">e6</span> <span style="color:#a6e22e">b1</span> <span style="color:#ae81ff">89</span> 
+</span></span></code></pre></div><p><strong>a string literal consists of one or more <code>rune</code> values:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">str</span> <span style="color:#f92672">:=</span> <span style="color:#e6db74">&#34;abc汉&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">str</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%x &#34;</span>, <span style="color:#a6e22e">s</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">str</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%c &#34;</span>, <span style="color:#a6e22e">s</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#f92672">--------------------------</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">61</span> <span style="color:#ae81ff">62</span> <span style="color:#ae81ff">63</span> <span style="color:#ae81ff">6</span><span style="color:#a6e22e">c49</span> 
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">a</span> <span style="color:#a6e22e">b</span> <span style="color:#a6e22e">c</span> <span style="color:#a6e22e">汉</span> 
+</span></span></code></pre></div><p>Note that the ways of iterating the string literal in the codes above are different.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/basics/003-string-runes-bytes/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/basics/007-error-handling/">Error handling - Go</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-09-08</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="0-use-w-instead-of-v-or-s">0. Use <code>%w</code> instead of <code>%v</code> or <code>%s</code></h2>
+<blockquote>
+<p>Should I use %s or %v to format errors? <code>return fmt.Errorf(&quot;malformed import path %q: %v&quot;, path, err)</code></p>
+<p>Neither. Use <code>%w</code> in 99.99% of cases. In the other 0.001% of cases, <code>%v</code> and <code>%s</code>probably &ldquo;should&rdquo; behave the same, except when the error value is <code>nil</code>, but there are no guarantees. The friendlier output of <code>%v</code> for <code>nil</code> errors may be reason to prefer <code>%v</code> (see below).</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/basics/007-error-handling/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/advance/005-unit-test-commands/">Unit Test Basic Commands - Go</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-09-05</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/unit-test/">unit test</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-useful-commands">1. Useful commands</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ go test -run <span style="color:#e6db74">&#34;ExampleSession|TestSession&#34;</span> -v
+</span></span></code></pre></div><blockquote>
+<p>Note that the <code>-run</code> flag is used for specifying test functions, <strong>not</strong> benchmarks, <strong>not</strong> fuzz test. Because example test is similar to test function, you can specify both example and test function with <code>-run</code> flag. If you want to specify benchmarks, use <code>-bench</code> flag:</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>-bench regexp
+</span></span><span style="display:flex;"><span>	Run benchmarks matching the regular expression.
+</span></span><span style="display:flex;"><span>-run regexp
+</span></span><span style="display:flex;"><span>	Run only tests and examples matching the regular expression.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Flags below can be used with flags above.</span>
+</span></span><span style="display:flex;"><span>-race
+</span></span><span style="display:flex;"><span>	enable data race detection.
+</span></span><span style="display:flex;"><span>-cover
+</span></span><span style="display:flex;"><span>	enable code coverage instrumentation.
+</span></span></code></pre></div><blockquote>
+<p>Note that <code>-bench</code> does not disable the normal <code>test</code> selection. If you want run the benchmark test <strong>only</strong> you should pass <code>-run=xxx</code> to disable the normal test selection.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/advance/005-unit-test-commands/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/basics/004-methods-receivers/">Methods Receivers &amp; Concurrency - Go</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-09-02</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/concurrency/">concurrency</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-different-behaviors---pointer-and-value-receiver">1. Different behaviors - pointer and value receiver</h2>
+<p><strong>修改能力</strong>:</p>
+<p>值接收器：方法内部操作的是结构体的副本，无法修改原始数据</p>
+<p>指针接收器：方法可以直接修改原始结构体的数据</p>
+<p><strong>内存效率</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">BigStruct</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">data</span> [<span style="color:#ae81ff">1024</span>]<span style="color:#66d9ef">int</span>  <span style="color:#75715e">// 很大的数组</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 值接收器：每次调用都会复制整个结构体</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">b</span> <span style="color:#a6e22e">BigStruct</span>) <span style="color:#a6e22e">Process</span>() { }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 指针接收器：只复制指针（8字节）</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">BigStruct</span>) <span style="color:#a6e22e">ProcessEfficient</span>() { }
+</span></span></code></pre></div><blockquote>
+<p><strong>NOTE:</strong> Generally, in practice, we seldom use pointer types whose base types are slice types, map types, channel types, function types, string types and interface types. The costs of copying values of these assumed base types are very small.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/basics/004-methods-receivers/">阅读更多</a>
           </div>
         
       </article>

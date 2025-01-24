@@ -52,37 +52,6 @@
     </item>
     
     <item>
-      <title>grep 不支持 Negative Lookahead 问题</title>
-      <link>https://blog.jiyi27.com/posts/bugs/003-bug-regex-grep-lookahead/</link>
-      <pubDate>Tue, 02 May 2023 22:29:30 +0000</pubDate>
-      
-      <guid>https://blog.jiyi27.com/posts/bugs/003-bug-regex-grep-lookahead/</guid>
-      <description>&lt;p&gt;刚开始使用&lt;code&gt;printf &amp;quot;123\n24567\n8930\n234\n&amp;quot; | egrep &#39;(?&amp;lt;!2)3&#39;&lt;/code&gt;提示&lt;code&gt;egrep: repetition-operator operand invalid&lt;/code&gt;, 然后查到可以使用参数&lt;code&gt;-P&lt;/code&gt;, 如下:&lt;/p&gt;</description>
-      <content>&lt;p&gt;刚开始使用&lt;code&gt;printf &amp;quot;123\n24567\n8930\n234\n&amp;quot; | egrep &#39;(?&amp;lt;!2)3&#39;&lt;/code&gt;提示&lt;code&gt;egrep: repetition-operator operand invalid&lt;/code&gt;, 然后查到可以使用参数&lt;code&gt;-P&lt;/code&gt;, 如下:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;123\n24567\n8930\n234\n&amp;#34;&lt;/span&gt; | grep -P &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;(?&amp;lt;!2)3&amp;#39;&lt;/span&gt; 
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;但是仍然报错和上面报错相同, 然后就考虑是不是版本问题,&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ grep --v
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;grep &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;BSD grep, GNU compatible&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; 2.6.0-FreeBSD
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;尝试更新,&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ brew upgrade grep
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Error: grep not installed
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;然后尝试安装,&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ brew install grep
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;All commands have been installed with the prefix &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;g&amp;#34;&lt;/span&gt;.
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;If you need to use these commands with their normal names, you
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;can add a &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;gnubin&amp;#34;&lt;/span&gt; directory to your PATH from your bashrc like:
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;PATH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/opt/homebrew/opt/grep/libexec/gnubin:&lt;/span&gt;$PATH&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;安装成功, 然后根据提示往&lt;code&gt;.zshrc&lt;/code&gt;添加对应环境变量&lt;code&gt;PATH&lt;/code&gt;, 注意&lt;code&gt;$:PATH&lt;/code&gt;的含义(追加),&lt;/p&gt;
-&lt;p&gt;查看版本,&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;grep --v
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;grep &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;GNU grep&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; 3.10
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Packaged by Homebrew
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Copyright &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;C&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; Free Software Foundation, Inc.
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;现在支持上面语法&lt;code&gt;grep -P &#39;(?&amp;lt;!2)3&#39; &lt;/code&gt;, 问题解决~&lt;/p&gt;</content>
-    </item>
-    
-    <item>
       <title>Regex Basics</title>
       <link>https://blog.jiyi27.com/posts/linux/regex/regex/</link>
       <pubDate>Mon, 01 May 2023 23:14:22 +0000</pubDate>

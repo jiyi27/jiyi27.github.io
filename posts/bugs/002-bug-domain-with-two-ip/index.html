@@ -8,6 +8,8 @@
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="这几天弄服务器, 用ssh通过域名连接的时候总是出现超时(域名只有一个A记录即服务器IP), 问题下面是分析思路,
+I&rsquo;m trying to use ssh to connect my server with my domain name ssh root@www.davidzhu.xyz, but I always get timeout. However I can connect my server when use my server ip directly ssh root@144.202.12.32, so I use dig to check the ip address of my domain on DNS, the output is:
+dig davidzhu.xyz &#43;short 172.67.210.8 104.21.50.195 dig www.davidzhu.xyz &#43;short 172.67.210.8 104.21.50.195 But I only have one A record on my domain, this is the DNS Record of my domain name (the third one is about the google search console):
 " />
 <meta name="keywords" content="" />
 
@@ -81,6 +83,8 @@
 <meta property="og:type" content="article" />
 <meta property="og:title" content="Cloudflare 代理无法通过域名解析出 IP 问题">
 <meta property="og:description" content="这几天弄服务器, 用ssh通过域名连接的时候总是出现超时(域名只有一个A记录即服务器IP), 问题下面是分析思路,
+I&rsquo;m trying to use ssh to connect my server with my domain name ssh root@www.davidzhu.xyz, but I always get timeout. However I can connect my server when use my server ip directly ssh root@144.202.12.32, so I use dig to check the ip address of my domain on DNS, the output is:
+dig davidzhu.xyz &#43;short 172.67.210.8 104.21.50.195 dig www.davidzhu.xyz &#43;short 172.67.210.8 104.21.50.195 But I only have one A record on my domain, this is the DNS Record of my domain name (the third one is about the google search console):
 " />
 <meta property="og:url" content="https://blog.jiyi27.com/posts/bugs/002-bug-domain-with-two-ip/" />
 <meta property="og:site_name" content="为霜的博客" />
@@ -90,7 +94,7 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="627">
 
-  <meta property="article:section" content="bugs" />
+  <meta property="article:section" content="Bugs" />
 
 
   <meta property="article:published_time" content="2023-04-26 17:30:22 &#43;0000 UTC" />
@@ -121,10 +125,12 @@
   <h1 class="post-title">
     <a href="https://blog.jiyi27.com/posts/bugs/002-bug-domain-with-two-ip/">Cloudflare 代理无法通过域名解析出 IP 问题</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2023-04-26</time><span class="post-reading-time">2 分钟阅读 (358 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2023-04-26</time><span class="post-reading-time">2 分钟阅读 (356 字数)</span></div>
 
   
     <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/bugs/">Bugs</a>&nbsp;
       
       #<a href="https://blog.jiyi27.com/tags/%E5%BB%BA%E7%AB%99/">建站</a>&nbsp;
       
@@ -137,7 +143,6 @@
 
   <div class="post-content"><div>
         <p>这几天弄服务器, 用ssh通过域名连接的时候总是出现超时(域名只有一个A记录即服务器IP), 问题下面是分析思路,</p>
-<h3 id="问题描述">问题描述:<a href="#问题描述" class="hanchor" ariaLabel="Anchor">#</a> </h3>
 <p>I&rsquo;m trying to use <code>ssh</code> to connect my server with my domain name <code>ssh root@www.davidzhu.xyz</code>, but I always get timeout. However I can connect my server when use my server ip directly <code>ssh root@144.202.12.32</code>, so I use <code>dig</code> to check the ip address of my domain on DNS, the output is:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dig davidzhu.xyz  +short       
 </span></span><span style="display:flex;"><span>172.67.210.8
@@ -150,7 +155,6 @@
 <p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/f025ec2ddc93a57d7c062cd2f3e590bb.png" alt=""></p>
 <p>惊不惊讶, <strong><code>dig</code>返回的两个IP地址竟然都与我域名的A记录不同</strong>!</p>
 <hr>
-<h3 id="更新"><strong>更新:</strong><a href="#更新" class="hanchor" ariaLabel="Anchor">#</a> </h3>
 <p>原因是我的域名开启了 Cloudfalre 的 <a href="https://developers.cloudflare.com/fundamentals/concepts/how-cloudflare-works/">reverse proxy</a>, 通过域名获取到的是 Clouflare 的IP, 无法访问到我服务器真实IP:</p>
 <blockquote>
 <p>When you add your application to Cloudflare, we use this network to sit in between requests and your origin server.</p>
@@ -175,6 +179,7 @@
 <p>Because of <a href="https://developers.cloudflare.com/fundamentals/concepts/how-cloudflare-works/">how Cloudflare works</a>, all traffic to <a href="https://developers.cloudflare.com/dns/manage-dns-records/reference/proxied-dns-records/">proxied DNS records</a> pass through Cloudflare before reaching your origin server. This means that your origin server will stop receiving traffic from individual visitor IP addresses and instead receive traffic from <a href="https://www.cloudflare.com/ips">Cloudflare IP addresses</a>, which are shared by all proxied hostnames.</p>
 <p><a href="https://developers.cloudflare.com/learning-paths/get-started/concepts/cloudflare-ips/">Cloudflare IPs · Getting started · Learning paths</a></p>
 </blockquote>
+
       </div></div>
 
   

@@ -173,14 +173,16 @@
     
       <article class="post on-list">
         <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/bugs/002-bug-domain-with-two-ip/">Cloudflare 代理无法通过域名解析出 IP 问题</a>
+          <a href="https://blog.jiyi27.com/posts/build-website/001-domain-name-dns-records/">DNS 基础概念</a>
         </h1>
-        <div class="post-meta"><time class="post-date">2023-04-26</time></div>
+        <div class="post-meta"><time class="post-date">2024-04-07</time></div>
 
         
           <span class="post-tags">
             
             #<a href="https://blog.jiyi27.com/tags/%E5%BB%BA%E7%AB%99/">建站</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/dns/">DNS</a>&nbsp;
             
           </span>
         
@@ -190,13 +192,256 @@
 
         <div class="post-content">
           
-            <p>这几天弄服务器, 用ssh通过域名连接的时候总是出现超时(域名只有一个A记录即服务器IP), 问题下面是分析思路,</p>
+            <h2 id="1-dns-hierarchy">1. DNS Hierarchy</h2>
+<p>DNS服务器怎么会知道每个域名的IP地址呢？答案是分级查询, 仔细看下面DNS解析过程，每个域名的尾部都多了一个点<code>.</code></p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/060ac4f1fb8e9b0fa6d0d81eea60e23c.png" alt=""></p>
+<p>多出的那个<code>.</code>是Root Level Domain, 比如<code>www.example.com</code>真正的名字是<code>www.example.com.root</code>然后上图就简写为<code>www.example.com.</code> 因为根域名<code>.root</code>对于所有域名都是一样的，所以平时是省略的。</p>
+<blockquote>
+<p>域名的层级结构: <code>hostname.SLD.TLD.root</code>, <strong>hostname 也叫 subdomain</strong>.</p>
+</blockquote>
+<h2 id="2-hostname-vs-sld">2. HOSTNAME vs SLD</h2>
+<p>HOSTNAME 和二级域名(SLD)是不一样的, 二级域名是指<code>example.com</code>里面的<code>example</code>, 而HOSTNAME是指<code>www.example.com</code>里面的<code>www</code>.</p>
+<p>HOSTNAME 的作用是为了区分同一个域名下的不同服务, 比如<code>www.example.com</code>和<code>blog.example.com</code>是同一个域名下的不同服务, 现在都是采用微服务分布式架构, 即每个服务通常不在一个主机, 这样用户访问<code>www.example.com</code>和<code>blog.example.com</code>时就会访问到不同的服务器, 从而提供不同的服务. 如下图可以看出一个 HOSTNAME 可以对应一个 IP:</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/001-domain-name-dns-records%2F01.jpg" alt=""></p>
+<h2 id="3-dns-records">3. DNS Records</h2>
+<h3 id="31-a-record">3.1. A Record</h3>
+<p>常见的 DNS Records 有 <code>A</code>, <code>CNAME</code>, <code>TXT</code>, 其中 <code>A</code> 记录是最常见的, 用于将域名指向一个 ipv4 IP地址, <code>CNAME</code> 记录用于将域名指向另一个域名.</p>
+<p>当你想给域名添加一个 ip 地址时, 只能添加 <code>A</code> 记录. 添加 A 记录时需要指定 HOSTNAME 和 IP, 其中 <code>HOSTNAME</code> 可以填<code>@</code>或者<code>www</code>或<code>blog</code>等, <code>@</code>代表空即不填,</p>
           
         </div>
 
         
           <div>
-            <a class="read-more button inline" href="/posts/bugs/002-bug-domain-with-two-ip/">阅读更多</a>
+            <a class="read-more button inline" href="/posts/build-website/001-domain-name-dns-records/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/build-website/011-cf-r2/">Cloudflare R2 配合 PicGo 博客图床</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2024-04-06</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%BB%BA%E7%AB%99/">建站</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/cloudflare/">Cloudflare</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="r2-vs-s3">R2 vs S3</h2>
+<p><a href="https://www.cloudflare.com/en-ca/pg-cloudflare-r2-vs-aws-s3/">Cloudflare R2 vs AWS S3 | Review Pricing &amp; Features | Cloudflare</a></p>
+<h2 id="install-mc-minio-client">Install mc (MinIO Client)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e"># just install minio client not minio server</span>
+</span></span><span style="display:flex;"><span>brew install minio/stable/mc
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mc alias set r2 R2-URL AccessKey SecretKey
+</span></span></code></pre></div><blockquote>
+<p>The MinIO client provides identical commands to Unix file management commands, such as cp and ls, but is designed for both local and remote storage systems. It’s fully compatible with AWS S3.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/build-website/011-cf-r2/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/build-website/010-wget-connecting-timeout/">Wget Connecting Timeout Issue</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2024-03-29</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%BB%BA%E7%AB%99/">建站</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/cloudflare/">Cloudflare</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-issue">1. Issue</h2>
+<p>When I use <code>wget</code> to download some files, I got the following error:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$sh -c <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>Connecting to raw.githubusercontent.com <span style="color:#f92672">(</span>raw.githubusercontent.com<span style="color:#f92672">)</span>|2606:50c0:8002::154|:443...
+</span></span></code></pre></div><p>You can use <code>curl</code> to replace <code>wget</code>, or you can get the ip address of the domain and add it to <code>/etc/hosts</code> file.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>185.199.108.133 raw.githubusercontent.com
+</span></span></code></pre></div><p>You can find the ip address with <code>dig/ping</code> command or on the some online tool website. ping probably won&rsquo;t work.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/build-website/010-wget-connecting-timeout/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/build-website/007-nginx/">Nginx</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-12-30</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%BB%BA%E7%AB%99/">建站</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/nginx/">Nginx</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-common-used-commands">1. Common used commands</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$apt install nginx <span style="color:#75715e"># ubuntu</span>
+</span></span><span style="display:flex;"><span>$apk add nginx <span style="color:#75715e"># Alpine Linux</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># start</span>
+</span></span><span style="display:flex;"><span>$sudo systemctl start/stop/restart/status nginx
+</span></span><span style="display:flex;"><span>$sudo service nginx start/stop/restart/status
+</span></span></code></pre></div><h2 id="2-basic-configurations">2. Basic configurations</h2>
+<h3 id="21-configuration-file">2.1. Configuration file</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$vi /etc/nginx/http.d/default.conf <span style="color:#75715e"># Alpine Linux</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>server <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      listen <span style="color:#ae81ff">2087</span> ssl;
+</span></span><span style="display:flex;"><span>      server_name shaowenzhu.top www.shaowenzhu.top;
+</span></span><span style="display:flex;"><span>      ssl_certificate /root/tls/cert.pem;
+</span></span><span style="display:flex;"><span>      ssl_certificate_key /root/tls/cert.key;
+</span></span><span style="display:flex;"><span>      location / <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>          root /var/www/html;
+</span></span><span style="display:flex;"><span>          try_files $uri $uri/ /index.html;
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># You may need this to prevent return 404 recursion.</span>
+</span></span><span style="display:flex;"><span>      location <span style="color:#f92672">=</span> /404.html <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>              internal;
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><blockquote>
+<p>You can get free TLS certificate from Cloudflare but you need get a domain first. Learn more: <a href="https://davidzhu.xyz/post/build-website/008-enable-cloudflare-reverse-proxy/">Coudflare TLS encryption 520 Error Code &amp; too Many Redirections - David&rsquo;s Blog</a></p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/build-website/007-nginx/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/build-website/009-google-cloud/">Google Cloud Get Started</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-12-15</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%BB%BA%E7%AB%99/">建站</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/google-cloud/">Google Cloud</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <p>Google Cloud Page: <a href="https://console.cloud.google.com/welcome/new?organizationId=0">https://console.cloud.google.com/welcome/new?organizationId=0</a></p>
+<p><img src="/009-google-cloud/001.png" alt="001"></p>
+<p>Select your project or create a new one, then enable some APIs &amp; Services for this project:</p>
+<p><img src="/009-google-cloud/002.png" alt="002"></p>
+<p>I selected a already existed project Gemini-Test, now you can see its details as below:</p>
+<p><img src="/009-google-cloud/003.png" alt="003"></p>
+<p><img src="/009-google-cloud/004.png" alt="004"></p>
+<p>Check enabled API &amp; Services, you can click the enabled one then disable it:</p>
+<p><img src="/009-google-cloud/009.png" alt="009"></p>
+<p><img src="/009-google-cloud/010.png" alt="010"></p>
+<p>Or you can search some new APIs &amp; Services and eanble it:</p>
+<p><img src="/009-google-cloud/005.png" alt="005"></p>
+<p><img src="/009-google-cloud/006.png" alt="006"></p>
+<p><img src="/009-google-cloud/007.png" alt="007"></p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/build-website/009-google-cloud/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/build-website/008-cloudflare-cdn/">Get Free TLS certificate with Cloudflare</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-11-15</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%BB%BA%E7%AB%99/">建站</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/cloudflare/">Cloudflare</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/cdn/">CDN</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-hosting-your-domain-on-cloudflare-enable-cdn">1. Hosting your domain on Cloudflare (Enable CDN)</h2>
+<pre tabindex="0"><code>client &lt;----tls-1----&gt; cloudflare &lt;----tls-2----&gt; your server
+</code></pre><blockquote>
+<p><strong>Note:</strong> You cannot login your server with <code>ssh user@your_domain</code> any more after enabling Cloudflare. You need to login with <code>ssh user@your_ip</code>. Cause the Cloudflare acts as a reverse proxy, it only forwards the http/https traffic to your server, and <a href="https://developers.cloudflare.com/fundamentals/reference/network-ports/">only on some specific ports</a>.</p>
+</blockquote>
+<p>There are two steps to add your domain to Cloudflare:</p>
+<ul>
+<li>Add your domain to Cloudflare</li>
+<li>Create and install TLS certificate to your server</li>
+</ul>
+<blockquote>
+<p>Cloudflare does this by serving as a <a href="https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/">reverse proxy</a> for your web traffic. Actually, Clooudflare achieves this by using its CDN service, which caches your website&rsquo;s static content and serves it to your visitors from the nearest Cloudflare data center.
+Refer to our Load Balancing reference architecture to learn more about advanced ways to forward traffic to your origins, as well as our <a href="https://developers.cloudflare.com/reference-architecture/architectures/cdn/">CDN reference architecture</a> to learn more about how Cloudflare processes and optimizes your web traffic.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/build-website/008-cloudflare-cdn/">阅读更多</a>
           </div>
         
       </article>
@@ -205,6 +450,11 @@
     <div class="pagination">
   <div class="pagination__buttons">
     
+    
+      <a href="/tags/%E5%BB%BA%E7%AB%99/page/2/" class="button next">
+        <span class="button__text">下一页</span>
+        <span class="button__icon">→</span>
+      </a>
     
   </div>
 </div>

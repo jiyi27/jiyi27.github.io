@@ -237,14 +237,18 @@
     
       <article class="post on-list">
         <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/cs-basics/007-multithread-singlethread-server/">Is Multithreaded Server Better than a Single Thread Server?</a>
+          <a href="https://blog.jiyi27.com/posts/bugs/011-cloudflare-r2/">Cloudflare R2 Pre-signed URL Cross-Origin Issue</a>
         </h1>
-        <div class="post-meta"><time class="post-date">2023-08-26</time></div>
+        <div class="post-meta"><time class="post-date">2024-10-20</time></div>
 
         
           <span class="post-tags">
             
-            #<a href="https://blog.jiyi27.com/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/bugs/">Bugs</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/cloudflare/">Cloudflare</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/aws/">AWS</a>&nbsp;
             
             #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
             
@@ -256,87 +260,38 @@
 
         <div class="post-content">
           
-            <p><strong>Reference:</strong> <a href="https://qr.ae/pyztor">https://qr.ae/pyztor</a></p>
-<p><em>Why is a multithreaded web server better than a single thread server?</em> <strong>It isn’t.</strong></p>
-<p>There are four basic ways how a web server can handle concurrency:</p>
-<ol>
-<li>forking an OS process per request (like old versions of Apache)</li>
-<li>spawning an OS thread per request (like a new versions of Apache)</li>
-<li>using a single-threaded event loop (like nginx)</li>
-<li>using green threads or lightweight processes scheduled by a VM runtime instead of the OS (like in Erlang)</li>
-</ol>
-<p>Currently the most common approaches are number 2 and 3.</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/cs-basics/007-multithread-singlethread-server/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/cs-basics/005-session-cookie/">Session, JWT &amp; Cookie</a>
-        </h1>
-        <div class="post-meta"><time class="post-date">2023-08-17</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/http/">HTTP</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p>HTTP 是一个无状态协议, 对于每个用户 HTTP 请求, 服务器无法得知上一次请求所包含的状态, 可是在淘宝的某个页面中, 你进行了登陆操作, 当你跳转到商品页时, 服务端怎么记住你登陆的状态？</p>
-<h2 id="1-cookie">1. Cookie</h2>
-<p>首先产生了 cookie 这门技术来解决这个问题, cookie 是 http 协议的一部分, 它的处理分为如下几步:</p>
-<ul>
-<li>服务器主动向客户端发送 cookie, 通常使用 HTTP 协议规定的 <code>set-cookie</code> 头操作</li>
-<li>客户端浏览器自动保存 Cookie</li>
-<li>每次请求浏览器都会自动将 cookie 发向服务器</li>
-</ul>
-<p>这里有个问题, 用户会访问多个网站, 浏览器会保存来自不同网站服务器的 cookie, 浏览器怎么把知道应该把 cookie 发给正确的网站?</p>
-<p>答案是浏览器使用 Cookie 的域名 (Domain) 和路径 (Path) 属性来决定将哪些 Cookie 发送回哪个网站, 其实 Cookie 不仅仅是在一个值, 它是有很多属性的, 在后端服务器可以设置, 比如:</p>
-<ul>
-<li>path：表示 cookie 影响到的路径, 匹配该路径才发送这个 cookie</li>
-<li>expires 和 maxAge：expires 是 UTC 格式时间, maxAge 是 cookie 多久后过期的相对时间, 当不设置这两个选项时, cookie 默认是 transient，即当用户关闭浏览器时，就被清除</li>
-<li>secure: 仅HTTPS 中才有效</li>
-<li>httpOnly：禁止前端 JS 代码读取, 避免被 xss 攻击拿到 cookie</li>
-</ul>
+            <h2 id="1-problem-description">1. Problem description</h2>
+<p>获取到Cloudflare R2的Pre-signed URL后，使用网页上传文件时，总是返回各自各样的错误, 在网页遇到的是跨域问题, 总是报错说 pre flight request failed.</p>
+<p>查了一圈, 说是请求头的问题, 需要在平台设置 <code>Access-Control-Allow-Origin</code> 和 <code>Access-Control-Allow-Headers</code> 等请求头. 后面设置了, 也无济于事. 有的说得包含 Content-type 头, 即若前端通过pre-signed url上传文件, 设置了 Content-Type 头, 则后端请求pre-signed url时, 也必须设置 Content-Type 头. 什么必须要同一个方法 PUT, 都设置 都不行,</p>
+<p>后来使用 SwiftUI 开发, 想着换个环境, 就没有跨域问题了吧, 可是还是报错, 报错信息是 401, 没有权限.</p>
+<h2 id="2-problem-analysis">2. Problem analysis</h2>
+<p>结果问题出现在 Cloudflare R2 和 AWS S3 签名版本兼容问题上:</p>
 <blockquote>
-<p>后端开发小贴士 1 ⚠️: 设置此属性前, 需要先即把格式转为 UTC 格式, 因为客户端和服务器的时区可能不一样, 比如客户端比服务器快几个小时, 若直接设置 expires = Now() + 30, 半小时后过期, 传到客户端立刻过期了, 因为客户端浏览器默认来自服务器的 cookie expires 是 UTC,</p>
+<p>Cloudflare R2 requires presigned URLs to be generated using AWS Signature Version 4. Any other signature version will result in authentication failures.</p>
           
         </div>
 
         
           <div>
-            <a class="read-more button inline" href="/posts/cs-basics/005-session-cookie/">阅读更多</a>
+            <a class="read-more button inline" href="/posts/bugs/011-cloudflare-r2/">阅读更多</a>
           </div>
         
       </article>
     
       <article class="post on-list">
         <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/cs-basics/006-thread-process/">Thread Stack and CPU Cores</a>
+          <a href="https://blog.jiyi27.com/posts/bugs/010-post-large-file/">An Analysis of high CPU and RAM usage caused by Go Program</a>
         </h1>
-        <div class="post-meta"><time class="post-date">2023-05-27</time></div>
+        <div class="post-meta"><time class="post-date">2024-04-12</time></div>
 
         
           <span class="post-tags">
             
-            #<a href="https://blog.jiyi27.com/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/bugs/">Bugs</a>&nbsp;
             
             #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5/">问题排查</a>&nbsp;
             
           </span>
         
@@ -346,16 +301,145 @@
 
         <div class="post-content">
           
-            <h2 id="1-thread">1. Thread</h2>
-<p>A thread is a segment or part of a process that executes some tasks of the process. A process can have multiple threads which can <strong>run concurrently</strong> within the process. Each thread has its own thread stack but multiple threads of a process share a common heap area of that process.</p>
-<h3 id="11-thread-stack">1.1. Thread stack</h3>
-<p>Each thread has its own call stack, &ldquo;call stack&rdquo; and &ldquo;thread stack&rdquo; are the same thing. Calling it a &ldquo;thread stack&rdquo; just emphasizes that the call stack is specific to the thread.</p>
+            <h2 id="1-problem-description">1. Problem description</h2>
+<p>Considering the limitation of the RAM on my VPS, when user attempting to upload a large file, I want to handle the file in chunks, so that I can read the file in small pieces and write them to the disk. And this process is called <strong>streaming</strong>.</p>
+<p>The code snippet is like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">server</span>) <span style="color:#a6e22e">handleUpload</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>, <span style="color:#a6e22e">currentDir</span> <span style="color:#66d9ef">string</span>) (<span style="color:#a6e22e">errs</span> []<span style="color:#a6e22e">uploadError</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// limit the size of incoming request bodies.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Body</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">LimitedReader</span>{<span style="color:#a6e22e">r</span>: <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Body</span>, <span style="color:#a6e22e">n</span>: int64(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">maxFileSize</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">1024</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">1024</span>)}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">reader</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">MultipartReader</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {<span style="color:#f92672">...</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// reader.NextPart() will close the previous part automatically.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">part</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">reader</span>.<span style="color:#a6e22e">NextPart</span>()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {<span style="color:#f92672">...</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// not a file, move to the next part.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">part</span>.<span style="color:#a6e22e">FileName</span>() <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#34;</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">filename</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getAvailableName</span>(<span style="color:#a6e22e">currentDir</span>, <span style="color:#a6e22e">part</span>.<span style="color:#a6e22e">FileName</span>())
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">dstPath</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">filepath</span>.<span style="color:#a6e22e">Join</span>(<span style="color:#a6e22e">currentDir</span>, <span style="color:#a6e22e">filename</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">dst</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Create</span>(<span style="color:#a6e22e">dstPath</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {<span style="color:#f92672">...</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// io.Copy() will stream the file to dst, multipart.Part is an io.Reader.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Copy</span>(<span style="color:#a6e22e">dst</span>, <span style="color:#a6e22e">part</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {<span style="color:#f92672">...</span>}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">dst</span>.<span style="color:#a6e22e">Close</span>(); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#f92672">...</span> }
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>But when I try to upload a file of 1.6GB, it takes a long time to finish (about 2 minutes), I thought it may caused by the CPU speed of my VPS or the I/O speed of the disk or the network speed.</p>
           
         </div>
 
         
           <div>
-            <a class="read-more button inline" href="/posts/cs-basics/006-thread-process/">阅读更多</a>
+            <a class="read-more button inline" href="/posts/bugs/010-post-large-file/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/build-website/007-nginx/">Nginx</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-12-30</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%BB%BA%E7%AB%99/">建站</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/nginx/">Nginx</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-common-used-commands">1. Common used commands</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$apt install nginx <span style="color:#75715e"># ubuntu</span>
+</span></span><span style="display:flex;"><span>$apk add nginx <span style="color:#75715e"># Alpine Linux</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># start</span>
+</span></span><span style="display:flex;"><span>$sudo systemctl start/stop/restart/status nginx
+</span></span><span style="display:flex;"><span>$sudo service nginx start/stop/restart/status
+</span></span></code></pre></div><h2 id="2-basic-configurations">2. Basic configurations</h2>
+<h3 id="21-configuration-file">2.1. Configuration file</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$vi /etc/nginx/http.d/default.conf <span style="color:#75715e"># Alpine Linux</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>server <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>      listen <span style="color:#ae81ff">2087</span> ssl;
+</span></span><span style="display:flex;"><span>      server_name shaowenzhu.top www.shaowenzhu.top;
+</span></span><span style="display:flex;"><span>      ssl_certificate /root/tls/cert.pem;
+</span></span><span style="display:flex;"><span>      ssl_certificate_key /root/tls/cert.key;
+</span></span><span style="display:flex;"><span>      location / <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>          root /var/www/html;
+</span></span><span style="display:flex;"><span>          try_files $uri $uri/ /index.html;
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># You may need this to prevent return 404 recursion.</span>
+</span></span><span style="display:flex;"><span>      location <span style="color:#f92672">=</span> /404.html <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>              internal;
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><blockquote>
+<p>You can get free TLS certificate from Cloudflare but you need get a domain first. Learn more: <a href="https://davidzhu.xyz/post/build-website/008-enable-cloudflare-reverse-proxy/">Coudflare TLS encryption 520 Error Code &amp; too Many Redirections - David&rsquo;s Blog</a></p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/build-website/007-nginx/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/bugs/009-go-server-handle-large-file/">Go File Server Cannot Handle Large Files</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-11-30</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/bugs/">Bugs</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/cloudflare/">Cloudflare</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/">反向代理</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-problem-description">1. Problem description</h2>
+<p>I&rsquo;ve discussed how to use Cloudflare as a <a href="https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/">reverse proxy</a> for my web traffic in <a href="https://blog.yorforger.cc/post/build-website/008-cloudflare-cdn/">previous post</a>.</p>
+<p>I write a <a href="https://github.com/shwezhu/file-server">file server</a> in Go, when attempting to upload a file of approximately 200 MB, it becomes very slow (always uploading) and never succeed. Upon monitoring the server using tools like <code>htop</code>, it seems that the server might be unaware of the incoming large file upload. I come across a error by chance:  <strong>413 Request Entity Too Large</strong>.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/bugs/009-go-server-handle-large-file/">阅读更多</a>
           </div>
         
       </article>
@@ -364,6 +448,11 @@
     <div class="pagination">
   <div class="pagination__buttons">
     
+    
+      <a href="/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/page/2/" class="button next">
+        <span class="button__text">下一页</span>
+        <span class="button__icon">→</span>
+      </a>
     
   </div>
 </div>

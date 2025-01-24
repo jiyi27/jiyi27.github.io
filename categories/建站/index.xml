@@ -1,0 +1,809 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>建站 on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/categories/%E5%BB%BA%E7%AB%99/</link>
+    <description>Recent content in 建站 on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 07 Apr 2024 00:15:30 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/categories/%E5%BB%BA%E7%AB%99/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>DNS 基础概念</title>
+      <link>https://blog.jiyi27.com/posts/build-website/001-domain-name-dns-records/</link>
+      <pubDate>Sun, 07 Apr 2024 00:15:30 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/build-website/001-domain-name-dns-records/</guid>
+      <description>&lt;h2 id=&#34;1-dns-hierarchy&#34;&gt;1. DNS Hierarchy&lt;/h2&gt;
+&lt;p&gt;DNS服务器怎么会知道每个域名的IP地址呢？答案是分级查询, 仔细看下面DNS解析过程，每个域名的尾部都多了一个点&lt;code&gt;.&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/060ac4f1fb8e9b0fa6d0d81eea60e23c.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;多出的那个&lt;code&gt;.&lt;/code&gt;是Root Level Domain, 比如&lt;code&gt;www.example.com&lt;/code&gt;真正的名字是&lt;code&gt;www.example.com.root&lt;/code&gt;然后上图就简写为&lt;code&gt;www.example.com.&lt;/code&gt; 因为根域名&lt;code&gt;.root&lt;/code&gt;对于所有域名都是一样的，所以平时是省略的。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;域名的层级结构: &lt;code&gt;hostname.SLD.TLD.root&lt;/code&gt;, &lt;strong&gt;hostname 也叫 subdomain&lt;/strong&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-hostname-vs-sld&#34;&gt;2. HOSTNAME vs SLD&lt;/h2&gt;
+&lt;p&gt;HOSTNAME 和二级域名(SLD)是不一样的, 二级域名是指&lt;code&gt;example.com&lt;/code&gt;里面的&lt;code&gt;example&lt;/code&gt;, 而HOSTNAME是指&lt;code&gt;www.example.com&lt;/code&gt;里面的&lt;code&gt;www&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;HOSTNAME 的作用是为了区分同一个域名下的不同服务, 比如&lt;code&gt;www.example.com&lt;/code&gt;和&lt;code&gt;blog.example.com&lt;/code&gt;是同一个域名下的不同服务, 现在都是采用微服务分布式架构, 即每个服务通常不在一个主机, 这样用户访问&lt;code&gt;www.example.com&lt;/code&gt;和&lt;code&gt;blog.example.com&lt;/code&gt;时就会访问到不同的服务器, 从而提供不同的服务. 如下图可以看出一个 HOSTNAME 可以对应一个 IP:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/001-domain-name-dns-records%2F01.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-dns-records&#34;&gt;3. DNS Records&lt;/h2&gt;
+&lt;h3 id=&#34;31-a-record&#34;&gt;3.1. A Record&lt;/h3&gt;
+&lt;p&gt;常见的 DNS Records 有 &lt;code&gt;A&lt;/code&gt;, &lt;code&gt;CNAME&lt;/code&gt;, &lt;code&gt;TXT&lt;/code&gt;, 其中 &lt;code&gt;A&lt;/code&gt; 记录是最常见的, 用于将域名指向一个 ipv4 IP地址, &lt;code&gt;CNAME&lt;/code&gt; 记录用于将域名指向另一个域名.&lt;/p&gt;
+&lt;p&gt;当你想给域名添加一个 ip 地址时, 只能添加 &lt;code&gt;A&lt;/code&gt; 记录. 添加 A 记录时需要指定 HOSTNAME 和 IP, 其中 &lt;code&gt;HOSTNAME&lt;/code&gt; 可以填&lt;code&gt;@&lt;/code&gt;或者&lt;code&gt;www&lt;/code&gt;或&lt;code&gt;blog&lt;/code&gt;等, &lt;code&gt;@&lt;/code&gt;代表空即不填,&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-dns-hierarchy&#34;&gt;1. DNS Hierarchy&lt;/h2&gt;
+&lt;p&gt;DNS服务器怎么会知道每个域名的IP地址呢？答案是分级查询, 仔细看下面DNS解析过程，每个域名的尾部都多了一个点&lt;code&gt;.&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/060ac4f1fb8e9b0fa6d0d81eea60e23c.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;多出的那个&lt;code&gt;.&lt;/code&gt;是Root Level Domain, 比如&lt;code&gt;www.example.com&lt;/code&gt;真正的名字是&lt;code&gt;www.example.com.root&lt;/code&gt;然后上图就简写为&lt;code&gt;www.example.com.&lt;/code&gt; 因为根域名&lt;code&gt;.root&lt;/code&gt;对于所有域名都是一样的，所以平时是省略的。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;域名的层级结构: &lt;code&gt;hostname.SLD.TLD.root&lt;/code&gt;, &lt;strong&gt;hostname 也叫 subdomain&lt;/strong&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-hostname-vs-sld&#34;&gt;2. HOSTNAME vs SLD&lt;/h2&gt;
+&lt;p&gt;HOSTNAME 和二级域名(SLD)是不一样的, 二级域名是指&lt;code&gt;example.com&lt;/code&gt;里面的&lt;code&gt;example&lt;/code&gt;, 而HOSTNAME是指&lt;code&gt;www.example.com&lt;/code&gt;里面的&lt;code&gt;www&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;HOSTNAME 的作用是为了区分同一个域名下的不同服务, 比如&lt;code&gt;www.example.com&lt;/code&gt;和&lt;code&gt;blog.example.com&lt;/code&gt;是同一个域名下的不同服务, 现在都是采用微服务分布式架构, 即每个服务通常不在一个主机, 这样用户访问&lt;code&gt;www.example.com&lt;/code&gt;和&lt;code&gt;blog.example.com&lt;/code&gt;时就会访问到不同的服务器, 从而提供不同的服务. 如下图可以看出一个 HOSTNAME 可以对应一个 IP:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/001-domain-name-dns-records%2F01.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-dns-records&#34;&gt;3. DNS Records&lt;/h2&gt;
+&lt;h3 id=&#34;31-a-record&#34;&gt;3.1. A Record&lt;/h3&gt;
+&lt;p&gt;常见的 DNS Records 有 &lt;code&gt;A&lt;/code&gt;, &lt;code&gt;CNAME&lt;/code&gt;, &lt;code&gt;TXT&lt;/code&gt;, 其中 &lt;code&gt;A&lt;/code&gt; 记录是最常见的, 用于将域名指向一个 ipv4 IP地址, &lt;code&gt;CNAME&lt;/code&gt; 记录用于将域名指向另一个域名.&lt;/p&gt;
+&lt;p&gt;当你想给域名添加一个 ip 地址时, 只能添加 &lt;code&gt;A&lt;/code&gt; 记录. 添加 A 记录时需要指定 HOSTNAME 和 IP, 其中 &lt;code&gt;HOSTNAME&lt;/code&gt; 可以填&lt;code&gt;@&lt;/code&gt;或者&lt;code&gt;www&lt;/code&gt;或&lt;code&gt;blog&lt;/code&gt;等, &lt;code&gt;@&lt;/code&gt;代表空即不填,&lt;/p&gt;
+&lt;p&gt;一般域名自带默认的 DNS Records, 所以买了域名之后做的第一件事就应该删除这些默认记录, 不然等你又添加了一个A记录, 这时候你的域名就会被解析到多个IP(默认的和你刚添加的), 那浏览器访问你域名的时候, 选择哪个呢? 我查了一下论坛, 有人说是choose randomly, 所以如果你不删除域名所有的默认DNS Records, 那浏览器访问你域名的时候就有可能选择“错误”的ip,&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Yes you can. It is called round-robin DNS, and &lt;strong&gt;the browser just chooses one of them randomly&lt;/strong&gt;. It is a well used method of getting cheap load balancing, but if one host goes down, users will still try to access it. &lt;a href=&#34;https://serverfault.com/q/528742/761923&#34;&gt;https://serverfault.com/q/528742/761923&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;32-cname-record&#34;&gt;3.2. CNAME Record&lt;/h3&gt;
+&lt;p&gt;Use a CNAME record instead of an A record when one domain or subdomain is just another name for a different domain. &lt;strong&gt;All CNAME records must point to a domain, never to an IP address&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;假设你有个主网站 example.com，它有一个A记录指向IP地址 123.45.67.89。若你还想通过 &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt; 访问这个网站，有两个办法,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;再创建一个A记录 host name 写为 www 指向 123.45.67.89, (注意对于 example.com 的A记录 host name 是空).&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;创建一个 CNAME 记录, Host Name 写为 www, 指向 example.com&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;第二种办法的工作原理：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;example.com A记录 -&amp;gt; 123.45.67.89&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt; CNAME记录 -&amp;gt; example.com&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;当用户尝试访问 &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt; 时，DNS解析流程如下：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;DNS查找 &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt; 的记录。&lt;/li&gt;
+&lt;li&gt;找到CNAME记录，了解到 &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt; 是 example.com 的别名。&lt;/li&gt;
+&lt;li&gt;接着，DNS会解析 example.com 的A记录，获取其IP地址 123.45.67.89。&lt;/li&gt;
+&lt;li&gt;用户的请求最终被定向到IP地址 123.45.67.89，也就是 example.com 所在的服务器。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;添加 CNAME 有什么优点呢? 比如你的服务器IP地址发生变化, 此时只需要更新 example.com 的A记录就行了, 如果全都使用A记录，你需要手动更新 example.com 和 &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt; 的 A 记录,&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Github Pages 的 custom domain 就可以使用 CNAME 记录, 即只需简单给你的域名添加一个 CNAME 记录, 指向 &lt;code&gt;username.github.io&lt;/code&gt; 即可, &lt;strong&gt;不用修改任何 NS 服务器&lt;/strong&gt;. 注意添加 CNAME 记录时, 我的 HOSTNAME 填的是 &lt;code&gt;blog&lt;/code&gt;, 即 &lt;code&gt;blog.example.com&lt;/code&gt; 指向 &lt;code&gt;username.github.io&lt;/code&gt;, 你也可以把 HOSTNAME 设置为空, 若为空则代表你的主域名 &lt;code&gt;example.com&lt;/code&gt; 指向 &lt;code&gt;username.github.io&lt;/code&gt;, 根据个人喜好来设置.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/04/f356b3dd152035f92b0ae20335413ab0.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;33-ttl-field&#34;&gt;3.3. TTL Field&lt;/h3&gt;
+&lt;p&gt;另外 DNS Records 有一个字段叫 TTL, 这里介绍一下: Time to Live (TTL) is a field on DNS records that controls how long each record is valid and — as a result — how long it takes for record updates to reach your end users. Longer TTLs speed up DNS lookups by increasing the chance of cached results, but a longer TTL also means that updates to your records take longer to go into effect.&lt;/p&gt;
+&lt;h2 id=&#34;4-总结&#34;&gt;4. 总结&lt;/h2&gt;
+&lt;p&gt;买过来域名, 根据不同情况可能做的修改如下:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;无托管域名, 则直接去你的域名注册商那里添加 DNS Records, 一般是添加 A 记录, 指向你的服务器 IP 地址 即可.&lt;/li&gt;
+&lt;li&gt;若要将域名托管到其他地方 (如 Cloudflare), 则只需要修改域名的 Nameserver 为 Cloudflare 指定的的 Nameserver 即可. 之后在 Cloudflare 上即添加管理不同类似的 DNS Records.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://developers.cloudflare.com/dns/manage-dns-records/reference/ttl/&#34;&gt;Time to Live (TTL) · Cloudflare DNS docs&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cloudflare.com/zh-cn/learning/dns/dns-records/dns-cname-record/&#34;&gt;什么是 DNS CNAME 记录？ | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.educative.io/answers/what-is-dns-hierarchy&#34;&gt;What is DNS Hierarchy?&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Cloudflare R2 配合 PicGo 博客图床</title>
+      <link>https://blog.jiyi27.com/posts/build-website/011-cf-r2/</link>
+      <pubDate>Sat, 06 Apr 2024 18:28:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/build-website/011-cf-r2/</guid>
+      <description>&lt;h2 id=&#34;r2-vs-s3&#34;&gt;R2 vs S3&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.cloudflare.com/en-ca/pg-cloudflare-r2-vs-aws-s3/&#34;&gt;Cloudflare R2 vs AWS S3 | Review Pricing &amp;amp; Features | Cloudflare&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;install-mc-minio-client&#34;&gt;Install mc (MinIO Client)&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# just install minio client not minio server&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;brew install minio/stable/mc
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mc alias set r2 R2-URL AccessKey SecretKey
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;The MinIO client provides identical commands to Unix file management commands, such as cp and ls, but is designed for both local and remote storage systems. It’s fully compatible with AWS S3.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;r2-vs-s3&#34;&gt;R2 vs S3&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.cloudflare.com/en-ca/pg-cloudflare-r2-vs-aws-s3/&#34;&gt;Cloudflare R2 vs AWS S3 | Review Pricing &amp;amp; Features | Cloudflare&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;install-mc-minio-client&#34;&gt;Install mc (MinIO Client)&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# just install minio client not minio server&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;brew install minio/stable/mc
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mc alias set r2 R2-URL AccessKey SecretKey
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;The MinIO client provides identical commands to Unix file management commands, such as cp and ls, but is designed for both local and remote storage systems. It’s fully compatible with AWS S3.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;common-commands&#34;&gt;Common Commands&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mc ls &amp;lt;ALIAS&amp;gt;/&amp;lt;BucketName&amp;gt;: List all objects in a bucket.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mc cp -r &amp;lt;LOCAL-FOLDER-PATH&amp;gt; &amp;lt;ALIAS&amp;gt;/&amp;lt;BUCKET&amp;gt;/&amp;lt;REMOTE-FOLDER-PATH&amp;gt;: Upload a folder to a bucket.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mc rm &amp;lt;ALIAS&amp;gt;/&amp;lt;BUCKET&amp;gt;/&amp;lt;OBJECT&amp;gt;: Remove an object.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;picgo-with-r2&#34;&gt;PicGo with R2&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/Molunerfinn/PicGo/blob/dev/FAQ.md&#34;&gt;macOS系统安装完PicGo显示文件已损坏&lt;/a&gt;, 因为 PicGo 没有签名，所以会被 macOS 的安全检查所拦下&lt;/p&gt;
+&lt;p&gt;sudo spctl &amp;ndash;master-disable&lt;/p&gt;
+&lt;p&gt;xattr -cr /Applications/PicGo.app&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;You need install a S3 plugin to use R2 as a storage service.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/04/e399e522056aea831f766a9c504e8fbc.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Here is how to configure S3:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/12/b6faab4bf8f103cff2ed78bc49bdf3af.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/12/c794d2642308eec851e89c93c3ab4af8.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/12/da7ee320e2aa8909611a123a40a32f85.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/Molunerfinn/PicGo/releases&#34;&gt;Releases · Molunerfinn/PicGo&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;MacOS cannot open the app because it is from an unidentified developer, check the &lt;a href=&#34;https://github.com/Molunerfinn/PicGo/blob/dev/FAQ.md&#34;&gt;solution&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&#34;https://blog.huacai.one/post/3#%E5%AE%89%E8%A3%85S3%E6%8F%92%E4%BB%B6&#34;&gt;CloudFlare R2搭建个人图床&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;presigned-url&#34;&gt;Presigned URL&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Presigned URLs can only be used with the &lt;code&gt;&amp;lt;accountid&amp;gt;.r2.cloudflarestorage.com&lt;/code&gt; S3 API domain and cannot be used with custom domains. &lt;a href=&#34;https://arc.net/l/quote/wbihytnh&#34;&gt;https://arc.net/l/quote/wbihytnh&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/09/db50e9e969862912f556267f81985439.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Wget Connecting Timeout Issue</title>
+      <link>https://blog.jiyi27.com/posts/build-website/010-wget-connecting-timeout/</link>
+      <pubDate>Fri, 29 Mar 2024 20:28:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/build-website/010-wget-connecting-timeout/</guid>
+      <description>&lt;h2 id=&#34;1-issue&#34;&gt;1. Issue&lt;/h2&gt;
+&lt;p&gt;When I use &lt;code&gt;wget&lt;/code&gt; to download some files, I got the following error:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$sh -c &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;$(&lt;/span&gt;wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -&lt;span style=&#34;color:#66d9ef&#34;&gt;)&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Connecting to raw.githubusercontent.com &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;raw.githubusercontent.com&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;|2606:50c0:8002::154|:443...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You can use &lt;code&gt;curl&lt;/code&gt; to replace &lt;code&gt;wget&lt;/code&gt;, or you can get the ip address of the domain and add it to &lt;code&gt;/etc/hosts&lt;/code&gt; file.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;185.199.108.133 raw.githubusercontent.com
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You can find the ip address with &lt;code&gt;dig/ping&lt;/code&gt; command or on the some online tool website. ping probably won&amp;rsquo;t work.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-issue&#34;&gt;1. Issue&lt;/h2&gt;
+&lt;p&gt;When I use &lt;code&gt;wget&lt;/code&gt; to download some files, I got the following error:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$sh -c &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;$(&lt;/span&gt;wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -&lt;span style=&#34;color:#66d9ef&#34;&gt;)&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Connecting to raw.githubusercontent.com &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;raw.githubusercontent.com&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;|2606:50c0:8002::154|:443...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You can use &lt;code&gt;curl&lt;/code&gt; to replace &lt;code&gt;wget&lt;/code&gt;, or you can get the ip address of the domain and add it to &lt;code&gt;/etc/hosts&lt;/code&gt; file.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;185.199.108.133 raw.githubusercontent.com
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You can find the ip address with &lt;code&gt;dig/ping&lt;/code&gt; command or on the some online tool website. ping probably won&amp;rsquo;t work.&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Nginx</title>
+      <link>https://blog.jiyi27.com/posts/build-website/007-nginx/</link>
+      <pubDate>Sat, 30 Dec 2023 14:01:50 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/build-website/007-nginx/</guid>
+      <description>&lt;h2 id=&#34;1-common-used-commands&#34;&gt;1. Common used commands&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$apt install nginx &lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$apk add nginx &lt;span style=&#34;color:#75715e&#34;&gt;# Alpine Linux&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# start&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$sudo systemctl start/stop/restart/status nginx
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$sudo service nginx start/stop/restart/status
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-basic-configurations&#34;&gt;2. Basic configurations&lt;/h2&gt;
+&lt;h3 id=&#34;21-configuration-file&#34;&gt;2.1. Configuration file&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$vi /etc/nginx/http.d/default.conf &lt;span style=&#34;color:#75715e&#34;&gt;# Alpine Linux&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      listen &lt;span style=&#34;color:#ae81ff&#34;&gt;2087&lt;/span&gt; ssl;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      server_name shaowenzhu.top www.shaowenzhu.top;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      ssl_certificate /root/tls/cert.pem;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      ssl_certificate_key /root/tls/cert.key;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      location / &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          root /var/www/html;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          try_files $uri $uri/ /index.html;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# You may need this to prevent return 404 recursion.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      location &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; /404.html &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              internal;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;You can get free TLS certificate from Cloudflare but you need get a domain first. Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/build-website/008-enable-cloudflare-reverse-proxy/&#34;&gt;Coudflare TLS encryption 520 Error Code &amp;amp; too Many Redirections - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-common-used-commands&#34;&gt;1. Common used commands&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$apt install nginx &lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$apk add nginx &lt;span style=&#34;color:#75715e&#34;&gt;# Alpine Linux&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# start&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$sudo systemctl start/stop/restart/status nginx
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$sudo service nginx start/stop/restart/status
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-basic-configurations&#34;&gt;2. Basic configurations&lt;/h2&gt;
+&lt;h3 id=&#34;21-configuration-file&#34;&gt;2.1. Configuration file&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$vi /etc/nginx/http.d/default.conf &lt;span style=&#34;color:#75715e&#34;&gt;# Alpine Linux&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      listen &lt;span style=&#34;color:#ae81ff&#34;&gt;2087&lt;/span&gt; ssl;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      server_name shaowenzhu.top www.shaowenzhu.top;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      ssl_certificate /root/tls/cert.pem;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      ssl_certificate_key /root/tls/cert.key;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      location / &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          root /var/www/html;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          try_files $uri $uri/ /index.html;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# You may need this to prevent return 404 recursion.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      location &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; /404.html &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              internal;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;You can get free TLS certificate from Cloudflare but you need get a domain first. Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/build-website/008-enable-cloudflare-reverse-proxy/&#34;&gt;Coudflare TLS encryption 520 Error Code &amp;amp; too Many Redirections - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Because the 443 port is used by my file server, so I use 2087 port for my gbtbot server. I &lt;a href=&#34;https://davidzhu.xyz/post/build-website/008-enable-cloudflare-reverse-proxy/&#34;&gt;use Cloudflare for reverse proxy&lt;/a&gt;, Cloudflare only allows the following ports: 443, 2053, 2083, 2087, 2096, 8443. So I choose 2087 port for this app.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Don&amp;rsquo;t forget allow 2087 port on your server firewall with command &lt;code&gt;sudo ufw allow 2087&lt;/code&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;22-static-website&#34;&gt;2.2. Static website&lt;/h3&gt;
+&lt;p&gt;Then access my website by &lt;code&gt;https://shaowenzhu.top:2087/&lt;/code&gt; will get the static html file under &lt;code&gt;/var/www/html&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;With Vite, you can use &lt;code&gt;vite build&lt;/code&gt; to build your project, then copy the &lt;code&gt;dist&lt;/code&gt; folder to &lt;code&gt;/var/www/html&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;➜  /etc tree -L &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; /var/www/html
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/var/www/html
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── assets
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   └── index-r4STm7R-.js
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── index.html
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;└── vite.svg
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+    </item>
+    
+    <item>
+      <title>Google Cloud Get Started</title>
+      <link>https://blog.jiyi27.com/posts/build-website/009-google-cloud/</link>
+      <pubDate>Fri, 15 Dec 2023 11:28:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/build-website/009-google-cloud/</guid>
+      <description>&lt;p&gt;Google Cloud Page: &lt;a href=&#34;https://console.cloud.google.com/welcome/new?organizationId=0&#34;&gt;https://console.cloud.google.com/welcome/new?organizationId=0&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/001.png&#34; alt=&#34;001&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Select your project or create a new one, then enable some APIs &amp;amp; Services for this project:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/002.png&#34; alt=&#34;002&#34;&gt;&lt;/p&gt;
+&lt;p&gt;I selected a already existed project Gemini-Test, now you can see its details as below:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/003.png&#34; alt=&#34;003&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/004.png&#34; alt=&#34;004&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Check enabled API &amp;amp; Services, you can click the enabled one then disable it:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/009.png&#34; alt=&#34;009&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/010.png&#34; alt=&#34;010&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Or you can search some new APIs &amp;amp; Services and eanble it:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/005.png&#34; alt=&#34;005&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/006.png&#34; alt=&#34;006&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/007.png&#34; alt=&#34;007&#34;&gt;&lt;/p&gt;</description>
+      <content>&lt;p&gt;Google Cloud Page: &lt;a href=&#34;https://console.cloud.google.com/welcome/new?organizationId=0&#34;&gt;https://console.cloud.google.com/welcome/new?organizationId=0&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/001.png&#34; alt=&#34;001&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Select your project or create a new one, then enable some APIs &amp;amp; Services for this project:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/002.png&#34; alt=&#34;002&#34;&gt;&lt;/p&gt;
+&lt;p&gt;I selected a already existed project Gemini-Test, now you can see its details as below:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/003.png&#34; alt=&#34;003&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/004.png&#34; alt=&#34;004&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Check enabled API &amp;amp; Services, you can click the enabled one then disable it:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/009.png&#34; alt=&#34;009&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/010.png&#34; alt=&#34;010&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Or you can search some new APIs &amp;amp; Services and eanble it:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/005.png&#34; alt=&#34;005&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/006.png&#34; alt=&#34;006&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/007.png&#34; alt=&#34;007&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/008.png&#34; alt=&#34;008&#34;&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/009-google-cloud/ee.png&#34; alt=&#34;ee&#34;&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Get Free TLS certificate with Cloudflare</title>
+      <link>https://blog.jiyi27.com/posts/build-website/008-cloudflare-cdn/</link>
+      <pubDate>Wed, 15 Nov 2023 20:09:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/build-website/008-cloudflare-cdn/</guid>
+      <description>&lt;h2 id=&#34;1-hosting-your-domain-on-cloudflare-enable-cdn&#34;&gt;1. Hosting your domain on Cloudflare (Enable CDN)&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;client &amp;lt;----tls-1----&amp;gt; cloudflare &amp;lt;----tls-2----&amp;gt; your server
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; You cannot login your server with &lt;code&gt;ssh user@your_domain&lt;/code&gt; any more after enabling Cloudflare. You need to login with &lt;code&gt;ssh user@your_ip&lt;/code&gt;. Cause the Cloudflare acts as a reverse proxy, it only forwards the http/https traffic to your server, and &lt;a href=&#34;https://developers.cloudflare.com/fundamentals/reference/network-ports/&#34;&gt;only on some specific ports&lt;/a&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;There are two steps to add your domain to Cloudflare:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Add your domain to Cloudflare&lt;/li&gt;
+&lt;li&gt;Create and install TLS certificate to your server&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Cloudflare does this by serving as a &lt;a href=&#34;https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/&#34;&gt;reverse proxy&lt;/a&gt; for your web traffic. Actually, Clooudflare achieves this by using its CDN service, which caches your website&amp;rsquo;s static content and serves it to your visitors from the nearest Cloudflare data center.
+Refer to our Load Balancing reference architecture to learn more about advanced ways to forward traffic to your origins, as well as our &lt;a href=&#34;https://developers.cloudflare.com/reference-architecture/architectures/cdn/&#34;&gt;CDN reference architecture&lt;/a&gt; to learn more about how Cloudflare processes and optimizes your web traffic.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-hosting-your-domain-on-cloudflare-enable-cdn&#34;&gt;1. Hosting your domain on Cloudflare (Enable CDN)&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;client &amp;lt;----tls-1----&amp;gt; cloudflare &amp;lt;----tls-2----&amp;gt; your server
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; You cannot login your server with &lt;code&gt;ssh user@your_domain&lt;/code&gt; any more after enabling Cloudflare. You need to login with &lt;code&gt;ssh user@your_ip&lt;/code&gt;. Cause the Cloudflare acts as a reverse proxy, it only forwards the http/https traffic to your server, and &lt;a href=&#34;https://developers.cloudflare.com/fundamentals/reference/network-ports/&#34;&gt;only on some specific ports&lt;/a&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;There are two steps to add your domain to Cloudflare:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Add your domain to Cloudflare&lt;/li&gt;
+&lt;li&gt;Create and install TLS certificate to your server&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Cloudflare does this by serving as a &lt;a href=&#34;https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/&#34;&gt;reverse proxy&lt;/a&gt; for your web traffic. Actually, Clooudflare achieves this by using its CDN service, which caches your website&amp;rsquo;s static content and serves it to your visitors from the nearest Cloudflare data center.
+Refer to our Load Balancing reference architecture to learn more about advanced ways to forward traffic to your origins, as well as our &lt;a href=&#34;https://developers.cloudflare.com/reference-architecture/architectures/cdn/&#34;&gt;CDN reference architecture&lt;/a&gt; to learn more about how Cloudflare processes and optimizes your web traffic.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;11-add-your-domain-to-cloudflare&#34;&gt;1.1. Add your domain to Cloudflare&lt;/h3&gt;
+&lt;p&gt;Go to this website: &lt;a href=&#34;https://dash.cloudflare.com/&#34;&gt;https://dash.cloudflare.com/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/08/5ec8185791f488d73320ceadd0db79dc.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;And you will get instructions for updating your nameserver of your domain. After change your nameserver, waite about one hour, your site will be &lt;strong&gt;active&lt;/strong&gt; on Cloudflare. Then you can choose the TLS encryption mode:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/08/3ff225afee4374761c3943c1c6ed009a.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; choose &lt;code&gt;full mode&lt;/code&gt;, don&amp;rsquo;t use &lt;code&gt;flexbile mode&lt;/code&gt;, otherwise you &lt;strong&gt;probably would&lt;/strong&gt; get &lt;a href=&#34;https://developers.cloudflare.com/ssl/troubleshooting/too-many-redirects/&#34;&gt;ERR_TOO_MANY_REDIRECTS&lt;/a&gt; when access your website.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;12-install-tls-certificate&#34;&gt;1.2. Install TLS certificate&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/08/d3d8aa4e52defcc7961fe8fad4d3eb88.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The generated two files &lt;code&gt;cert.pem&lt;/code&gt; and &lt;code&gt;cert.key&lt;/code&gt; is used for encryption between your server and Cloudflare.&lt;/p&gt;
+&lt;p&gt;You can use these two file like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;HandleFunc&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/hello&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;HelloServer&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;ListenAndServeTLS&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;:443&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./conf/cert.pem&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./conf/cert.key&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatal&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ListenAndServe: &amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note&lt;/strong&gt;: don&amp;rsquo;t add the keep-alive header when handle request on your server, otherwise you may get a 520 error when you access your website on browser: &lt;code&gt;Error 520: Web server is returning an unknown error&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Header&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;Set&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Connection&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Keep-Alive&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Header&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;Set&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Keep-Alive&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;timeout=2, max=1000&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://luyuhuang.tech/2020/06/03/cloudflare-free-https.html&#34;&gt;https://luyuhuang.tech/2020/06/03/cloudflare-free-https.html&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;After config this, the DNS needs time to take effect (you change the nameservers of your domain to Cloudfalre from the defatult nameservers, this needs time to take effect)&lt;/p&gt;
+&lt;p&gt;If there still no HTTPS connection but the cloudflare displays your website &lt;strong&gt;is active&lt;/strong&gt; on their service, you may try to check if your server is listening on 443 port and try to flush the DNS cache of your client computer (chrome + system DNS cache). Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/002-dns-basics/&#34;&gt;DNS Concepts (NameServer(NS), DNS Records and Caching) - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;BTW, you can check if your domain is proxied by the Cloudflare with nslookup command, which will get the &lt;code&gt;A Record&lt;/code&gt; by default (IPv4) address of your domain, but in this case, with Cloudfalre proxy, you should get the ip of Cloudfalre Name Server.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ nslookup shaowenzhu.top
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Name:	shaowenzhu.top
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 172.67.171.207 &lt;span style=&#34;color:#75715e&#34;&gt;# not my domain&amp;#39;s real ip, it&amp;#39;s Cloudfalre&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Name:	shaowenzhu.top
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 104.21.47.185 &lt;span style=&#34;color:#75715e&#34;&gt;# not my domain&amp;#39;s real ip, it&amp;#39;s Cloudfalre&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Learn more: &lt;a href=&#34;https://developers.cloudflare.com/fundamentals/setup/account-setup/add-site/&#34;&gt;Add a site · Cloudflare Fundamentals docs&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-change-a-record&#34;&gt;2. Change A record&lt;/h2&gt;
+&lt;p&gt;If you changed a vps, all you need to do is to change the A record of your domain on Cloudflare, you don&amp;rsquo;t need to change the A record on your domain register website.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Cloudflare serves as a &lt;strong&gt;reverse proxy&lt;/strong&gt;, directing all traffic for the specified proxied domain to the target IP address.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/08/af17da33f67f363301b8d14cf87428ea.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-allow-custom-port&#34;&gt;3. Allow custom port&lt;/h2&gt;
+&lt;p&gt;The default port of https is 443. If you want to use other ports, you need to allow them with firewall first on your server.&lt;/p&gt;
+&lt;p&gt;Cloudflare only allows the following &lt;strong&gt;HTTPS&lt;/strong&gt; ports:&lt;/p&gt;
+&lt;p&gt;443
+2053
+2083
+2087
+2096
+8443&lt;/p&gt;
+&lt;p&gt;Very easy, you don&amp;rsquo;t need to do anything on Cloudflare, just allow the port on your server. Then you can access your website with &lt;code&gt;https://your_domain:port&lt;/code&gt;. And your traffic will be encrypted by Cloudflare.&lt;/p&gt;
+&lt;p&gt;Learn more:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://community.cloudflare.com/t/how-to-allow-custom-port/175855&#34;&gt;How to allow custom port - Website, Application, Performance / Security - Cloudflare Community&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://developers.cloudflare.com/fundamentals/reference/network-ports/&#34;&gt;Network ports · Cloudflare Fundamentals docs&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Learn more about CDN:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/cdn/what-is-a-cdn/&#34;&gt;What is a content delivery network (CDN)? | How do CDNs work? | Cloudflare&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://developers.cloudflare.com/reference-architecture/architectures/cdn/&#34;&gt;Reference Architecture: Cloudflare Content Delivery Network (CDN) · Cloudflare Reference Architecture docs&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>ufw vs  AWS Security Group</title>
+      <link>https://blog.jiyi27.com/posts/build-website/006-ufw-aws-sg/</link>
+      <pubDate>Mon, 09 Oct 2023 13:53:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/build-website/006-ufw-aws-sg/</guid>
+      <description>&lt;h2 id=&#34;1-ufw-command&#34;&gt;1. &lt;code&gt;ufw&lt;/code&gt; command&lt;/h2&gt;
+&lt;h3 id=&#34;11-commonly-used-ufw-commands&#34;&gt;1.1. Commonly used ufw commands&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw status
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Status: inactive
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw enable
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Command may disrupt existing ssh connections. Proceed with operation &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;y|n&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;? n
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Aborted
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; use &lt;code&gt;sudo ufw enable&lt;/code&gt; carefully, because it may disrupt your ssh connection.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw enable: Enables the firewall, which starts enforcing the configured rules.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw disable: Disables the firewall, allowing all network traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw status: Displays the current status of the firewall and the rules that are in effect.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw default allow: Sets the default policy to allow all incoming and outgoing traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw default deny: Sets the default policy to deny all incoming and outgoing traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw allow &amp;lt;port&amp;gt;: Opens a specific port &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; incoming traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw deny &amp;lt;port&amp;gt;: Blocks incoming traffic on a specific port.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw delete &amp;lt;rule&amp;gt;: Deletes a specific rule from the firewall. 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# e.g., sudo ufw delete allow 80&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;12-ufw-app-list&#34;&gt;1.2. &lt;code&gt;ufw app list&lt;/code&gt;&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw app list
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Available applications:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Nginx Full
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Nginx HTTP
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Nginx HTTPS
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  OpenSSH
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The output of &lt;code&gt;sudo ufw app list&lt;/code&gt; only shows the available &lt;strong&gt;application profiles&lt;/strong&gt;, not their actual status or whether they have been allowed or denied by &lt;code&gt;ufw&lt;/code&gt;. It simply provides a list of predefined profiles &lt;strong&gt;so that you can use conveniently&lt;/strong&gt; when configuring firewall rules. You don&amp;rsquo;t need to remember which port for each application, you can simply use like this:&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-ufw-command&#34;&gt;1. &lt;code&gt;ufw&lt;/code&gt; command&lt;/h2&gt;
+&lt;h3 id=&#34;11-commonly-used-ufw-commands&#34;&gt;1.1. Commonly used ufw commands&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw status
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Status: inactive
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw enable
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Command may disrupt existing ssh connections. Proceed with operation &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;y|n&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;? n
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Aborted
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; use &lt;code&gt;sudo ufw enable&lt;/code&gt; carefully, because it may disrupt your ssh connection.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw enable: Enables the firewall, which starts enforcing the configured rules.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw disable: Disables the firewall, allowing all network traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw status: Displays the current status of the firewall and the rules that are in effect.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw default allow: Sets the default policy to allow all incoming and outgoing traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw default deny: Sets the default policy to deny all incoming and outgoing traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw allow &amp;lt;port&amp;gt;: Opens a specific port &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; incoming traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw deny &amp;lt;port&amp;gt;: Blocks incoming traffic on a specific port.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw delete &amp;lt;rule&amp;gt;: Deletes a specific rule from the firewall. 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# e.g., sudo ufw delete allow 80&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;12-ufw-app-list&#34;&gt;1.2. &lt;code&gt;ufw app list&lt;/code&gt;&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw app list
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Available applications:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Nginx Full
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Nginx HTTP
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Nginx HTTPS
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  OpenSSH
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The output of &lt;code&gt;sudo ufw app list&lt;/code&gt; only shows the available &lt;strong&gt;application profiles&lt;/strong&gt;, not their actual status or whether they have been allowed or denied by &lt;code&gt;ufw&lt;/code&gt;. It simply provides a list of predefined profiles &lt;strong&gt;so that you can use conveniently&lt;/strong&gt; when configuring firewall rules. You don&amp;rsquo;t need to remember which port for each application, you can simply use like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sudo ufw allow &amp;#39;Profile Name&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw allow &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;OpenSSH&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Rules updated
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Rules updated &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw allow &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;OpenS&amp;#39;&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ERROR: Could not find a profile matching &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;OpenS&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;rather than&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo ufw allow &lt;span style=&#34;color:#ae81ff&#34;&gt;22&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;So the command below will allow both port &lt;code&gt;80&lt;/code&gt; and &lt;code&gt;443&lt;/code&gt;:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;sudo ufw allow &amp;#39;Nginx Full&amp;#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;To check the status of your firewall rules and verify whether Nginx HTTP, Nginx HTTPS, or OpenSSH have been allowed or denied by &lt;code&gt;ufw&lt;/code&gt;, you can use the &lt;code&gt;sudo ufw status&lt;/code&gt; command. This command will display the current status of the firewall and the active rules.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw allow &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;OpenSSH&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Rules updated
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Rules updated &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw enable
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Command may disrupt existing ssh connections. Proceed with operation &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;y|n&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;? y
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Firewall is active and enabled on system startup
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw status       
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Status: active
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;To                         Action      From
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;--                         ------      ----
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;5060/udp                   ALLOW       Anywhere                  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;OpenSSH                    ALLOW       Anywhere                  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;5060/udp &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;              ALLOW       Anywhere &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;             
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;OpenSSH &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;               ALLOW       Anywhere &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw disable
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Firewall stopped and disabled on system startup
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-ubuntu-firewall-ufw-vs-aws-security-groups&#34;&gt;2. Ubuntu Firewall (ufw) vs AWS Security Groups&lt;/h2&gt;
+&lt;p&gt;A firewall like UFW is running at the OS level, while Amazon Security Groups are running at the instance level. Traffic coming into the EC2 would first pass through the SG, and then be evaluated by UFW.&lt;/p&gt;
+&lt;p&gt;I strongly recommend you to use only &amp;ldquo;SG(Security Group)&amp;rdquo; on EC2 even though we can use both &amp;ldquo;SG&amp;rdquo; and &amp;ldquo;UFW. &amp;ldquo;SG&amp;rdquo; is a firewall same as &amp;ldquo;UFW&amp;rdquo;.&lt;/p&gt;
+&lt;p&gt;When only &amp;ldquo;SG&amp;rdquo; allowed &amp;ldquo;SSH 22&amp;rdquo; and &amp;ldquo;UFW&amp;rdquo; didn&amp;rsquo;t allow &amp;ldquo;SSH 22&amp;rdquo; then I logged out ubuntu, I couldn&amp;rsquo;t log in to ubuntu forever, then I terminated ubuntu.&lt;/p&gt;
+&lt;p&gt;Even though &amp;ldquo;SG&amp;rdquo; allowed &amp;ldquo;SSH 22&amp;rdquo;, I couldn&amp;rsquo;t log in to ubuntu because &amp;ldquo;UFW&amp;rdquo; didn&amp;rsquo;t allow &amp;ldquo;SSH 22&amp;rdquo;. So if either of them doesn&amp;rsquo;t allow &amp;ldquo;SSH 22&amp;rdquo;, &amp;ldquo;SSH 22&amp;rdquo; doesn&amp;rsquo;t work. If both &amp;ldquo;SG&amp;rdquo; and &amp;ldquo;UFW&amp;rdquo; allow &amp;ldquo;SSH 22&amp;rdquo;, &amp;ldquo;SSH 22&amp;rdquo; works, then we can log in to ubuntu.&lt;/p&gt;
+&lt;p&gt;I also experimented with &amp;ldquo;HTTP 80&amp;rdquo;. When only &amp;ldquo;SG&amp;rdquo; allowed &amp;ldquo;HTTP 80&amp;rdquo; and &amp;ldquo;UFW&amp;rdquo; didn&amp;rsquo;t allow &amp;ldquo;HTTP 80&amp;rdquo;, &amp;ldquo;HTTP 80&amp;rdquo; didn&amp;rsquo;t work. When &amp;ldquo;SG&amp;rdquo; and &amp;ldquo;UFW&amp;rdquo; allowed &amp;ldquo;HTTP 80&amp;rdquo;, &amp;ldquo;HTTP 80&amp;rdquo; worked.&lt;/p&gt;
+&lt;p&gt;Just remember like &amp;ldquo;If both allow, it works&amp;rdquo; and &amp;ldquo;If only either of them allow, it doesn&amp;rsquo;t work&amp;rdquo;. Actually, using both of them makes complication and some trobles. So again, I really recommend you to &lt;strong&gt;use only &amp;ldquo;SG&amp;rdquo; on EC2&lt;/strong&gt; which is simpler than using both of them.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://stackoverflow.com/questions/57436758/does-ubuntu-ufw-overrides-amazon-ec2s-security-groups-and-rules&#34;&gt;https://stackoverflow.com/questions/57436758/does-ubuntu-ufw-overrides-amazon-ec2s-security-groups-and-rules&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>新买的 VPS 方便配置</title>
+      <link>https://blog.jiyi27.com/posts/build-website/005-vps-basic-config/</link>
+      <pubDate>Sat, 09 Sep 2023 15:53:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/build-website/005-vps-basic-config/</guid>
+      <description>&lt;h2 id=&#34;1-login-without-using-keypairs&#34;&gt;1. Login without using keypairs&lt;/h2&gt;
+&lt;p&gt;Copy your ssh public key on your computer into the &lt;code&gt;~/.ssh/authorized_keys&lt;/code&gt; file on you EC2 instance.&lt;/p&gt;
+&lt;p&gt;On you local machine:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ cat ~/.ssh/id_rsa.pub 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Copy the content into your EC2 instance:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo vi .ssh/authorized_keys
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you can login directly.&lt;/p&gt;
+&lt;h2 id=&#34;2-oh-my-zsh-shell&#34;&gt;2. oh-my-zsh shell&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo apt install zsh -y
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;chsh -s /bin/zsh
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sh -c &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;$(&lt;/span&gt;wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -&lt;span style=&#34;color:#66d9ef&#34;&gt;)&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# wget 有时候会出现 timeout, 可以用 curl 代替:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sh -c &amp;#34;$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-set-up-ufw&#34;&gt;3. Set up ufw&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;➜  ~ ufw status
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Status: active
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;To                         Action      From
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;--                         ------      ----
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;22/tcp                     ALLOW       Anywhere
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;22/tcp &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;                ALLOW       Anywhere &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# if you need 443, do this:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;➜  ~ ufw allow &lt;span style=&#34;color:#ae81ff&#34;&gt;443&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Rule added
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Rule added &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# or just disable&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;➜  ~ ufw disable
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/build-website/006-ufw-aws-sg/&#34;&gt;ufw vs AWS Security Group - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-login-without-using-keypairs&#34;&gt;1. Login without using keypairs&lt;/h2&gt;
+&lt;p&gt;Copy your ssh public key on your computer into the &lt;code&gt;~/.ssh/authorized_keys&lt;/code&gt; file on you EC2 instance.&lt;/p&gt;
+&lt;p&gt;On you local machine:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ cat ~/.ssh/id_rsa.pub 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Copy the content into your EC2 instance:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo vi .ssh/authorized_keys
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then you can login directly.&lt;/p&gt;
+&lt;h2 id=&#34;2-oh-my-zsh-shell&#34;&gt;2. oh-my-zsh shell&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo apt install zsh -y
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;chsh -s /bin/zsh
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sh -c &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;$(&lt;/span&gt;wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -&lt;span style=&#34;color:#66d9ef&#34;&gt;)&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# wget 有时候会出现 timeout, 可以用 curl 代替:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sh -c &amp;#34;$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-set-up-ufw&#34;&gt;3. Set up ufw&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;➜  ~ ufw status
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Status: active
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;To                         Action      From
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;--                         ------      ----
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;22/tcp                     ALLOW       Anywhere
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;22/tcp &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;                ALLOW       Anywhere &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# if you need 443, do this:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;➜  ~ ufw allow &lt;span style=&#34;color:#ae81ff&#34;&gt;443&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Rule added
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Rule added &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# or just disable&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;➜  ~ ufw disable
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/build-website/006-ufw-aws-sg/&#34;&gt;ufw vs AWS Security Group - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-other-info&#34;&gt;4. Other info&lt;/h2&gt;
+&lt;p&gt;After basic settings, on &lt;strong&gt;Alpine Linux&lt;/strong&gt;: 1 vCPUs, 512 MB RAM, 10G SSD, Vultr VPS:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;➜  ~ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+devtmpfs         10M     0   10M   0% /dev
+shm             231M     0  231M   0% /dev/shm
+/dev/vda2       9.2G  579M  8.2G   7% /
+tmpfs            93M  336K   92M   1% /run
+/dev/vda1       256M  266K  256M   1% /boot/efi
+tmpfs           231M     0  231M   0% /tmp
+
+➜  ~ speedtest-cli
+Testing download speed................................................................................
+Download: 1648.48 Mbit/s
+Testing upload speed......................................................................................................
+Upload: 1013.83 Mbit/s
+
+❯ iperf -c 149.22.12.30 -R
+[ ID] Interval       Transfer     Bandwidth
+[ *1] 0.00-3.00 sec  77.2 MBytes   216 Mbits/sec
+[ *1] 3.00-6.00 sec   105 MBytes   295 Mbits/sec
+[ *1] 6.00-9.00 sec   101 MBytes   282 Mbits/sec
+
+❯ iperf -c 149.22.12.30
+[ ID] Interval       Transfer     Bandwidth
+[  1] 0.00-3.00 sec   102 MBytes   286 Mbits/sec
+[  1] 3.00-6.00 sec   104 MBytes   290 Mbits/sec
+[  1] 6.00-9.00 sec   100 MBytes   281 Mbits/sec
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/c3f0b1e0420d0b98792587fce72c5f2b.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# vpn x-ui&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;bash &amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;curl -Ls https://raw.githubusercontent.com/FranzKafkaYu/x-ui/956bf85bbac978d56c0e319c5fac2d6db7df9564/install.sh&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; 0.3.4.4
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+    </item>
+    
+    <item>
+      <title>部署博客到服务器 Nginx</title>
+      <link>https://blog.jiyi27.com/posts/build-website/002-hexo-to-remote-server/</link>
+      <pubDate>Sun, 23 Apr 2023 19:54:52 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/build-website/002-hexo-to-remote-server/</guid>
+      <description>&lt;h2 id=&#34;1-安装nginx和git-服务器端&#34;&gt;1. 安装Nginx和git (服务器端)&lt;/h2&gt;
+&lt;h3 id=&#34;11-installing-the-nginx-web-server&#34;&gt;1.1. Installing the Nginx Web Server&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo yum install nginx
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo systemctl enable nginx
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo systemctl start nginx
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;12-adjusting-firewall-rules&#34;&gt;1.2. Adjusting Firewall Rules&lt;/h3&gt;
+&lt;p&gt;Run the following command to permanently enable HTTP connections on port 80:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo firewall-cmd --permanent --add-service&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;http
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;To verify that the http firewall service was added correctly, you can run:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo firewall-cmd --permanent --list-all
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You’ll see output like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;public
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  target: default
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  icmp-block-inversion: no
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  interfaces: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  sources: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  services: cockpit dhcpv6-client http ssh
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  ports: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  protocols: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  masquerade: no
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  forward-ports: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  source-ports: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  icmp-blocks: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  rich rules: 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;To apply the changes, you’ll need to reload the firewall service:&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-安装nginx和git-服务器端&#34;&gt;1. 安装Nginx和git (服务器端)&lt;/h2&gt;
+&lt;h3 id=&#34;11-installing-the-nginx-web-server&#34;&gt;1.1. Installing the Nginx Web Server&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo yum install nginx
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo systemctl enable nginx
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo systemctl start nginx
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;12-adjusting-firewall-rules&#34;&gt;1.2. Adjusting Firewall Rules&lt;/h3&gt;
+&lt;p&gt;Run the following command to permanently enable HTTP connections on port 80:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo firewall-cmd --permanent --add-service&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;http
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;To verify that the http firewall service was added correctly, you can run:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo firewall-cmd --permanent --list-all
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You’ll see output like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;public
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  target: default
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  icmp-block-inversion: no
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  interfaces: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  sources: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  services: cockpit dhcpv6-client http ssh
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  ports: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  protocols: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  masquerade: no
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  forward-ports: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  source-ports: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  icmp-blocks: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  rich rules: 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;To apply the changes, you’ll need to reload the firewall service:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo firewall-cmd --reload
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-创建新的用户-git-服务端&#34;&gt;2. 创建新的用户 &lt;code&gt;git&lt;/code&gt; (服务端)&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;useradd git
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;passwd git
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 给git用户配置sudo权限&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;chmod &lt;span style=&#34;color:#ae81ff&#34;&gt;740&lt;/span&gt; /etc/sudoers
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;vim /etc/sudoers
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 找到root ALL=(ALL) ALL，在它下方加入一行&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git ALL&lt;span style=&#34;color:#f92672&#34;&gt;=(&lt;/span&gt;ALL&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; ALL
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;chmod &lt;span style=&#34;color:#ae81ff&#34;&gt;400&lt;/span&gt; /etc/sudoers
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;21-添加公钥认证&#34;&gt;2.1. 添加公钥认证&lt;/h3&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;su git
+cd
+
+mkdir -p ~/.ssh
+touch ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+chmod 700 ~/.ssh
+
+#把本地电脑ssh的公钥加进去  ~/.ssh/id_rsa.pub 
+vim ~/.ssh/authorized_keys    
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;22-git-hooks-自动部署&#34;&gt;2.2. git-hooks 自动部署&lt;/h3&gt;
+&lt;p&gt;注意, 现在服务器有两个用户&lt;code&gt;git&lt;/code&gt;和&lt;code&gt;root&lt;/code&gt;, 然后他们只有自己的home目录是独立的, 而根目录下的比如&lt;code&gt;/etc/&lt;/code&gt;, &lt;code&gt;/usr&lt;/code&gt;这都是他们两个用户共享的, 看下面的输出你就知道什么意思了,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ls -a /home/git/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.  ..  .bash_logout  .bash_profile  .bashrc  .ssh  .viminfo
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 因为我们是在用户git下访问的, 所以得用sudo才能访问root用户的文件&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo ls -a /root/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.   .bash_logout   .bashrc  .cshrc  .ssh     .viminfo
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;..  .bash_profile  .cache   .pki    .tcshrc
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;好了不解释了, 开始设置git-hook以及服务器文件相关配置:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 新建目录，这是git仓库的位置&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo mkdir -p /var/repo
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 这里是我们网站网页的位置 &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo mkdir -p /var/www/hexo
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 创建个bare repository &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cd /var/repo  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo git init --bare blog.git
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo vim /var/repo/blog.git/hooks/post-update
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;post-update&lt;/code&gt;的内容如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/bin/bash
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;git --work-tree&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;/var/www/hexo --git-dir&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;/var/repo/blog.git checkout -f
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;给&lt;code&gt;post-update&lt;/code&gt;授权:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cd /var/repo/blog.git/hooks/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo chown -R git:git /var/repo/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo chown -R git:git /var/www/hexo
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 赋予其可执行权限&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo chmod +x post-update
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-配置nginx&#34;&gt;3. 配置Nginx&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cd /etc/nginx/conf.d/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo vim blog.conf
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;blog.conf&lt;/code&gt;的内容如下(注意因为我为域名添加个A记录然后&lt;code&gt;www&lt;/code&gt;作为HOSTNAME, 如果你的域名只有一个A记录然后HOSTNAME还是空, 那你就填二级域名就好了&lt;code&gt;davidzhu.xyz&lt;/code&gt;这样, 不懂的话请看我的&lt;a href=&#34;https://www.davidzhu.xyz/2023/04/23/Build-Website/Domain-Name-DNS-Records/&#34;&gt;域名分级和DNS记录之何为www&lt;/a&gt;：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    listen    &lt;span style=&#34;color:#ae81ff&#34;&gt;80&lt;/span&gt; default_server;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    listen    &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;::&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; default_server;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    server_name    www.davidzhu.xyz;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    root    /var/www/hexo;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;nginx -t
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;nginx: configuration file /etc/nginx/nginx.conf test is successful
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;nginx -s reload
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;4-在本地安装hexo&#34;&gt;4. 在本地安装Hexo&lt;/h2&gt;
+&lt;p&gt;Installing Hexo is quite easy and only requires the following beforehand:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Node.js (Should be at least Node.js 10.13, recommends 12.0 or higher)&lt;/li&gt;
+&lt;li&gt;Git&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;node -v&lt;/code&gt;查看是否安装了node&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;41-install-nodejs&#34;&gt;4.1 Install Node.js&lt;/h3&gt;
+&lt;h4 id=&#34;411-install-nvm&#34;&gt;4.1.1. Install nvm&lt;/h4&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;source ~/.bashrc
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;source ~/.zshrc
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;bash&lt;/code&gt; is an sh-compatible command language interpreter that executes commands read from the standard input or from a file.&lt;/p&gt;
+&lt;p&gt;We strongly recommend using a Node version manager like nvm to install &lt;code&gt;Node.js&lt;/code&gt; and &lt;code&gt;npm&lt;/code&gt;. We do not recommend using a Node installer, since the Node installation process installs npm in a directory with local permissions and can cause permissions errors when you run npm packages globally.&lt;/p&gt;
+&lt;h4 id=&#34;412-install-node&#34;&gt;4.1.2. Install node&lt;/h4&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;nvm install node # &amp;#34;node&amp;#34; is an alias for the latest version
+
+# uninstall, 19.8.1是node的版本
+nvm uninstall 19.8.1
+
+# 尽量使用16.0.0版本的, 不然会出现问题: node: /lib64/libm.so.6: version `GLIBC_2.27&amp;#39; not found (required by node)
+nvm install 16.0.0
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/nvm-sh/nvm&#34;&gt;install nvm&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.npmjs.com/downloading-and-installing-node-js-and-npm&#34;&gt;Downloading and installing Node.js and npm&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;42-安装hexo&#34;&gt;4.2. 安装Hexo&lt;/h3&gt;
+&lt;p&gt;安装hexo以及相关插件,&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;sudo npm install hexo-cli hexo-server hexo-deployer-git -g
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;5-在本地配置hexo&#34;&gt;5. 在本地配置hexo&lt;/h2&gt;
+&lt;h3 id=&#34;51-初始化hexo&#34;&gt;5.1. 初始化hexo&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hexo init ~/blog
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;52-配置hexo&#34;&gt;5.2. 配置hexo&lt;/h3&gt;
+&lt;h4 id=&#34;521-设置主题和deploy&#34;&gt;5.2.1 设置主题和deploy&lt;/h4&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;cd ~/blog
+
+git clone https://github.com/next-theme/hexo-theme-next themes/next
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;编辑&lt;code&gt;_config.yml&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;vi _config.yml 
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;找到theme, 改为next, 顺便也改一下deploy设置, 找到对应内容改为如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Extensions&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;## Plugins: https://hexo.io/plugins/&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;## Themes: https://hexo.io/themes/&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;theme: next
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Deployment&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;## Docs: https://hexo.io/docs/one-command-deployment&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 必须填ip地址&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;deploy:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  type: git
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  repo: root@144.202.12.32:/var/repo/blog.git
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  branch: master
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在deploy之前需要在服务器的root用户加上本地电脑的公钥(&lt;code&gt;~/.ssh/id_rsa.pub&lt;/code&gt;), 否则你没权限提交git, 和github同理, 我猜的,&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;vi /root/.ssh/authorized_keys
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 清除缓存&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hexo clean
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 生成静态页面&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hexo generate
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 注意要使用这个命令 否则使用hexo deploy的时候会出现找不到git报错&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;npm install hexo-deployer-git --save
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 将本地静态页面目录部署到云服务器&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;hexo deploy
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;6-修改git用户默认shell环境&#34;&gt;6. 修改git用户默认shell环境&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;vim /etc/passwd
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 修改最后一行&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 将/bin/bash修改为/usr/bin/git-shell&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;7-bug总结&#34;&gt;7. bug总结&lt;/h2&gt;
+&lt;p&gt;首先, &lt;code&gt;/Users/shaowen/blog/_config.yml&lt;/code&gt;里的内容, delopy那部分, 不可以填错, master分支是master, 不是main, 也可以是main但是现在没空研究具体怎么操作,&lt;/p&gt;
+&lt;p&gt;其次浏览器出错说403 forbidden, 这种情况就去看看网页目录下有没有文件, 即我们在本地电脑的部署的hexo可能并没有成功的部署到服务器, 因为权限问题或者服务器的那个hooks脚本没有执行权限导致无法自动更新,&lt;/p&gt;
+&lt;p&gt;你可以把hooks也就是&lt;code&gt;/var/repo/blog.git/hooks/post-update&lt;/code&gt;里命令的复制出来在服务器执行一下,看看会不会有效果,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.kisnows.com/2016/03/10/Hexo&#34;&gt;https://blog.kisnows.com/2016/03/10/Hexo&lt;/a&gt;部署到VPS并启用HTTPS/&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

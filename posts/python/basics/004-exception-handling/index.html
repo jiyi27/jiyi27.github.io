@@ -7,12 +7,8 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="两种编程异常处理风格:
-EAFP (Easier to Ask for Forgiveness than Permission):
-这是一种&quot;先做后检查&quot;的方式, 直接执行操作, 在出现异常时再处理 Python 特别推崇这种风格 代码示例: # EAFP风格 try: value = my_dict[&#39;key&#39;] process(value) except KeyError: # 处理键不存在的情况 handle_missing_key() LBYL (Look Before You Leap):
-这是一种&quot;先检查后操作&quot;的方式,在执行操作前先判断条件是否满足 更常见于C或Java等语言 代码示例: # LBYL风格 if &#39;key&#39; in my_dict: value = my_dict[&#39;key&#39;] process(value) else: handle_missing_key() 两种风格的比较:
-EAFP
-优点:代码更简洁,处理异常情况更统一 缺点:可能带来性能开销(异常处理的开销) The reason that Python is EAFP is that unlike other languages (Java for example) - in Python catching exceptions is relatively inexpensive operation, and that&rsquo;s why you&rsquo;re encouraged to use it. https://stackoverflow.com/a/32901991/16317008 LBYL
+<meta name="description" content="3. Exception You should never expose stacktrace to users. Thats a security risk. You should also never expose exception messages to users, only for custom exceptions that you know can not contain sensitive information is ok to expose.
+You should never build your release candidate on a developer machine. You should use a build agent for this. The best solution is to look at using build agents, for example Azure devops support this and is a pollished and well working continuous integration suit. edit: There is also another reason for not building on your machine. On your machine you can have stuff in the GAC that makes the project build just fine on your machine but will not run on the target host.
 " />
 <meta name="keywords" content="" />
 
@@ -85,12 +81,8 @@ EAFP
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
 <meta property="og:title" content="Exception Handling Python">
-<meta property="og:description" content="两种编程异常处理风格:
-EAFP (Easier to Ask for Forgiveness than Permission):
-这是一种&quot;先做后检查&quot;的方式, 直接执行操作, 在出现异常时再处理 Python 特别推崇这种风格 代码示例: # EAFP风格 try: value = my_dict[&#39;key&#39;] process(value) except KeyError: # 处理键不存在的情况 handle_missing_key() LBYL (Look Before You Leap):
-这是一种&quot;先检查后操作&quot;的方式,在执行操作前先判断条件是否满足 更常见于C或Java等语言 代码示例: # LBYL风格 if &#39;key&#39; in my_dict: value = my_dict[&#39;key&#39;] process(value) else: handle_missing_key() 两种风格的比较:
-EAFP
-优点:代码更简洁,处理异常情况更统一 缺点:可能带来性能开销(异常处理的开销) The reason that Python is EAFP is that unlike other languages (Java for example) - in Python catching exceptions is relatively inexpensive operation, and that&rsquo;s why you&rsquo;re encouraged to use it. https://stackoverflow.com/a/32901991/16317008 LBYL
+<meta property="og:description" content="3. Exception You should never expose stacktrace to users. Thats a security risk. You should also never expose exception messages to users, only for custom exceptions that you know can not contain sensitive information is ok to expose.
+You should never build your release candidate on a developer machine. You should use a build agent for this. The best solution is to look at using build agents, for example Azure devops support this and is a pollished and well working continuous integration suit. edit: There is also another reason for not building on your machine. On your machine you can have stuff in the GAC that makes the project build just fine on your machine but will not run on the target host.
 " />
 <meta property="og:url" content="https://blog.jiyi27.com/posts/python/basics/004-exception-handling/" />
 <meta property="og:site_name" content="为霜的博客" />
@@ -131,7 +123,7 @@ EAFP
   <h1 class="post-title">
     <a href="https://blog.jiyi27.com/posts/python/basics/004-exception-handling/">Exception Handling Python</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2023-11-24</time><span class="post-reading-time">7 分钟阅读 (1460 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2023-11-24</time><span class="post-reading-time">8 分钟阅读 (1600 字数)</span></div>
 
   
     <span class="post-tags">
@@ -146,7 +138,12 @@ EAFP
   
 
   <div class="post-content"><div>
-        <p>两种编程异常处理风格:</p>
+        <h2 id="3-exception">3. Exception<a href="#3-exception" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>You should never expose stacktrace to users. Thats a security risk. You should also never expose exception messages to users, only for custom exceptions that you know can not contain sensitive information is ok to expose.</p>
+<p>You should never build your release candidate on a developer machine. You should use a build agent for this. The best solution is to look at using build agents, for example Azure devops support this and is a pollished and well working continuous integration suit. edit: There is also another reason for not building on your machine. On your machine you can have stuff in the GAC that makes the project build just fine on your machine but will not run on the target host.</p>
+<p>Finally you should build the release candidate in release mode. Both for performance reasons and security.</p>
+<p><a href="https://softwareengineering.stackexchange.com/a/402751/435322">https://softwareengineering.stackexchange.com/a/402751/435322</a></p>
+<p>两种编程异常处理风格:</p>
 <p>EAFP (Easier to Ask for Forgiveness than Permission):</p>
 <ul>
 <li>这是一种&quot;先做后检查&quot;的方式, 直接执行操作, 在出现异常时再处理</li>
