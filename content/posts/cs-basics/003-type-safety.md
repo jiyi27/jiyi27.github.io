@@ -4,7 +4,7 @@ date: 2023-08-05 18:32:53
 categories:
   - 计算机基础
 tags:
-  - rust
+  - Rust
   - 类型安全
 ---
 

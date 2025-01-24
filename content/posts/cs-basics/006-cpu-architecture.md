@@ -2,22 +2,21 @@
 title: Hyper-Threading & Physical Threads
 date: 2023-05-28 15:47:18
 categories:
- - cs basics
+ - 计算机基础
 tags:
- - concurrency
- - cs basics
-typora-root-url: ../../../static
+ - 计算机架构
+ - 多线程
 ---
 
 ## 1. CPU structure
 
 Single core CPU:
 
-<img src="/006-cpu-architecture/a.png" alt="a" style="zoom:50%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/838e3b5018958914f986430b086270e2.png)
 
 The CPU core consists of three parts: ALU, CU and Memory (Register + Cache), The multiple cores CPU has more than one core (ALU, CU, Memory (Register + Cache)) to execute instructions:
 
-<img src="/006-cpu-architecture/b.png" alt="b" style="zoom:50%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/8556c886045ef0f880cf279f3724c1ef.png)
 
 ## 2. Hyper-threading
 
@@ -31,7 +30,7 @@ Some apps take better advantage of multiple threads than others. Lightly-threade
 
 The Windows Task Manager shows this fairly well. Here, for example, you can see that this system has one actual CPU (socket) and 8 cores. Simultaneous multithreading makes each core look like two CPUs to the operating system, so it shows 16 logical processors.
 
-<img src="/006-cpu-architecture/c.png" alt="c" style="zoom:50%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/75888124d5efc121b0ad287ac5b197aa.png)
 
 ## Logical core vs OS thread
 

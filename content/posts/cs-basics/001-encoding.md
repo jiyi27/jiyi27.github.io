@@ -1,10 +1,10 @@
 ---
-title: 说说编码 (顺带说说 Python 字符串的编码)
+title: 编码和乱码 UTF-8 Unicode
 date: 2023-06-01 22:13:25 
 categories:
   - 计算机基础
 tags:
-  - python
+  - Python
   - 编码
 ---
 
@@ -24,7 +24,7 @@ tags:
 
 ## 2. Unicode vs UTF-8 vs UTF-16
 
-### Unicode
+### 2.1. Unicode
 1. **定义和目的**：
    - Unicode 是一个国际标准，用于不同系统和程序间统一表示文本数据。
    - 它为世界上几乎所有的字符和文本符号分配了唯一的 code point。
@@ -37,7 +37,7 @@ tags:
 3. **重点**：
    - Unicode 是字符集（character set），定义了字符和 code point 之间的映射，但不规定具体如何在计算机中存储这些code point。
 
-### UTF-8
+### 2.2. UTF-8
 1. **定义和特点**：
    - UTF-8（8-bit Unicode Transformation Format）是一种对 Unicode code point 进行编码的方式。
    - 它是一种可变长度的字符编码方法，使用 1 到 4 个字节来表示一个 Unicode code point。
@@ -46,7 +46,7 @@ tags:
    - 兼容性好，ASCII 编码的字符在 UTF-8 中保持单字节形式，与传统 ASCII 编码兼容。
    - 在存储英文文本时空间效率高。因为英文字符在 UTF-8 中只占用 1 个字节。
 
-### UTF-16
+### 2.3. UTF-16
 1. **定义和特点**：
    - UTF-16（16-bit Unicode Transformation Format）是另一种对 Unicode code point进行编码的格式。
    - 使用 2 个或 4 个字节来表示一个 Unicode code point。
@@ -56,7 +56,7 @@ tags:
    - 在处理某些语言（如中文、日文、韩文）时可能比 UTF-8 更加空间高效。
    - 因为多数汉字在 UTF-16 中只占用 2 个字节。
 
-### 主要区别
+### 2.4. 主要区别
 - **编码长度**：
   - UTF-8 是可变长度的，从 1 到 4 个字节不等。
   - UTF-16 通常使用 2 个或 4 个字节。

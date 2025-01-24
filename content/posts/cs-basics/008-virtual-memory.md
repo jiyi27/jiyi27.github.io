@@ -1,13 +1,11 @@
 ---
-title: 虚拟内存  - 八股文
+title: 虚拟内存
 date: 2025-01-22 14:58:10
 categories:
- - 八股文
+ - 计算机基础
 tags:
  - 操作系统
 ---
-
-<!--more-->
 
 ## 1. Virtual Memory
 

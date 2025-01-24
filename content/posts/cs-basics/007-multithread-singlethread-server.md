@@ -2,13 +2,13 @@
 title: Is Multithreaded Server Better than a Single Thread Server?
 date: 2023-08-26 19:03:59
 categories:
- - cs basics
+ - 计算机基础
 tags:
- - concurrency
- - cs basics
+ - 多线程
+ - 后端开发
 ---
 
-Original: https://qr.ae/pyztor
+**Reference:** https://qr.ae/pyztor
 
 *Why is a multithreaded web server better than a single thread server?* **It isn’t.**
 
@@ -42,3 +42,4 @@ Imagine how much RAM is wasted for 10,000 threads if you could even spawn that m
 Incidentally, this is the reason why Ryan Dahl used a non-blocking I/O and a single-threaded event loop in Node.js and he still uses the same idea in Deno, because that is the way to write high performance network servers (contrary to what you might read in other answers here).
 
 > Note that [nginx “core functionality” doc](https://nginx.org/en/docs/ngx_core_module.html#worker_processes) mentions that on most servers nginx defaults to multiple workers (which will be ran as threads) so it’s not always “single threaded.” [from a comment of this blog](https://www.quora.com/profile/Alex-Sergeyev)
+

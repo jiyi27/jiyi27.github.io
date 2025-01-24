@@ -2,10 +2,10 @@
 title: Context Switching
 date: 2023-05-27 16:29:15
 categories:
- - cs basics
+ - 计算机基础
 tags:
- - concurrency
- - cs basics
+ - 操作系统
+ - 多线程
 ---
 
 ## 1. Context switch

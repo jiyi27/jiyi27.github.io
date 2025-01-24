@@ -2,10 +2,10 @@
 title: Thread Stack and CPU Cores
 date: 2023-05-27 18:05:16
 categories:
- - cs basics
+ - 计算机基础
 tags:
- - concurrency
- - cs basics
+ - 多线程
+ - 后端开发
 ---
 
 ## 1. Thread
