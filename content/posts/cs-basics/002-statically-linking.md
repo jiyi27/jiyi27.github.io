@@ -1,11 +1,12 @@
 ---
-title: Statically Linking in C
+title: Static Linking vs Dynamic Linking
 date: 2023-11-03 10:49:20
 categories:
- - c++
+ - 计算机基础
 tags:
- - c
- - c++
+ - 编译原理
+ - C语言
+ - C++
 ---
 
 ## 1. Compilation process in C
