@@ -135,7 +135,7 @@ Host: www.httpwatch.com
 Authorization: Basic aHR0cHdhdGNoOmY=
 ```
 
-The **Authorization** specifies the authentication mechanism (in this case **Basic**) followed by the username and password. Although, the string **aHR0cHdhdGNoOmY=** may look encrypted it is simply a base64 encoded version of <username>:<password>. In this example, the un-encoded string **"httpwatch:foo"** was used and would be readily available to anyone who could intercept the HTTP request.
+The **Authorization** specifies the authentication mechanism (in this case **Basic**) followed by the username and password. Although, the string **aHR0cHdhdGNoOmY=** may look encrypted it is simply a base64 encoded version of `<username>:<password>` In this example, the un-encoded string **"httpwatch:foo"** was used and would be readily available to anyone who could intercept the HTTP request.
 
 - The HTTP **`Authorization`** **request header** can be used to provide credentials that authenticate a user agent with a server, allowing access to a protected resource.
 

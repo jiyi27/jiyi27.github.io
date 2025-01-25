@@ -25,7 +25,7 @@ Each packet has one or more **labels** attached, and all labels are contained in
 
 Because MPLS-supporting routers only need to see the MPLS labels attached to a given packet, MPLS can work with almost any protocol (hence the name "multiprotocol"). It does not matter how the rest of the packet is formatted, as long as the router can read the MPLS labels at the front of the packet.
 
-<img src="/008-mpls/aa.png" alt="aa" style="zoom:33%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/b32f8d45f569a19f8f8284634b7968d2.png)
 
 - Label value: the name says it all, this is where you will find the value of the label.
 - EXP: these are the three experimental bits. These are used for QoS, normally the IP precedence value of the IP packet will be copied here.

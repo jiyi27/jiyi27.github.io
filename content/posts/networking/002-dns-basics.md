@@ -49,11 +49,11 @@ The authoritative nameserver contains information specific to the domain name it
 
 After buy a domain on a website, the most common operations we use are that **change its nameservers** and **update its DNS records**:
 
-<img src="/002-dns-basics/a.png" alt="a" style="zoom:33%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/c9d1480f89adaf900fcc9d104cb8e921.png)
 
 Here, Change the NameServers option if to change the **authoritative nameserver** of your domain, and update the DNS records is to set ip address (A record) or alias (CNAME record) for your domain. 
 
-![b](/002-dns-basics/b.png)
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/660f9f8211ebaeac8ffea3c050c94d78.png)
 
 ## 2. DNS queries
 
@@ -69,7 +69,7 @@ Modern web browsers are designed by default to cache DNS records for a set amoun
 
 In Chrome, you can see the status of your DNS cache by going to `chrome://net-internals/#dns`.
 
-![c](/002-dns-basics/c.png)
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/6666ce8db7adb7bc4e333d94ae70cb1d.png)
 
 #### 3.2. Operating system (OS) level DNS caching
 

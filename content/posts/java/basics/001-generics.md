@@ -10,11 +10,7 @@ tags:
 
 ## 1. Why Generics?
 
-至于泛型提高类型安全性的话题, 暂不讨论, 这太哲学了, 只举例子, 没有泛型之前, 考虑如何实现一个容器(可以装所有的类型), 提示, 可以用 `Object` 类, 
-
-具体实现可参考: [Java Array | 橘猫小八的鱼](https://davidzhu.xyz/2023/08/05/Java/Basics/000-array/), 
-
-可以看出, 在 retrieve 数据的时候, 每次都需要 type cast, 这很麻烦也很容易出错, 也不优雅, 
+至于泛型提高类型安全性的话题, 暂不讨论, 这太哲学了, 只举例子, 没有泛型之前, 考虑如何实现一个容器(可以装所有的类型), 提示, 可以用 `Object` 类, 可以看出, 在 retrieve 数据的时候, 每次都需要 type cast, 这很麻烦也很容易出错, 也不优雅, 
 
 使用泛型实现一个简单的容器, 如下:
 
@@ -123,7 +119,7 @@ element: " + obj);
 
 ### 3.1. Wildcards vs Object
 
-Now, since *Object* is the inherent super-type of all types in Java, we would be tempted to think that it can also represent an unknown type. In other words, *List<?>* and *List<Object>* could serve the same purpose. But they don't.
+Now, since *Object* is the inherent super-type of all types in Java, we would be tempted to think that it can also represent an unknown type. In other words, `List<?>` and `List<Object>` could serve the same purpose. But they don't.
 
 ```java
 public static void printListObject(List<Object> list) {    

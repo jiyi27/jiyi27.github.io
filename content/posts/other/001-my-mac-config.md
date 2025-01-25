@@ -1,13 +1,13 @@
 ---
-title: My Mac Configuration
+title: 我的 Mac 常用配置
 date: 2023-11-08 22:50:37
 categories:
- - other
+ - 其它
 tags:
- - other
+ - 其它
 ---
 
-- 设置 git 邮箱, 需要与 GitHub 上的邮箱一样, 不然 提交 不会显示在主页的 overview, 
+设置 git 邮箱, 需要与 GitHub 上的邮箱一样, 不然 提交 不会显示在主页的 overview, 
 
 ---
 
