@@ -5,10 +5,10 @@ categories:
  - http
 tags:
  - http
-typora-root-url: ../../../static
+ - 请求头
 ---
 
-### 1. Strict-Transport-Security
+## 1. Strict-Transport-Security
 
 Q: Disable HTTP access to the domain, don’t even redirect or link it to SSL. Just inform the users this website is not accessible over HTTP and they have to access it over SSL. 
 
@@ -20,7 +20,7 @@ Source: [security - Is redirecting http to https a bad idea? - Stack Overflow](h
 
 Learn more: [Common Network Attacks - David's Blog](https://davidzhu.xyz/post/networking/004-common-attacks/)
 
-### 2. keep-alive
+## 2. keep-alive
 
 HTTP keep-alive, a.k.a., HTTP persistent connection, is an instruction that allows a single TCP connection to remain open for multiple HTTP requests/responses.
 
@@ -30,6 +30,6 @@ Enabling the keep-alive header allows you to serve all web page resources **over
 
 Learn more: [What is HTTP Keep Alive | Benefits of Connection Keep Alive | Imperva](https://www.imperva.com/learn/performance/http-keep-alive/)
 
-### 3. user-agent
+## 3. user-agent
 
 The **User-Agent** [request header](https://developer.mozilla.org/en-US/docs/Glossary/Request_header) is a characteristic string that lets servers and network peers identify the application, operating system, vendor, and/or version of the requesting [user agent](https://developer.mozilla.org/en-US/docs/Glossary/User_agent).

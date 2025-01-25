@@ -5,7 +5,6 @@ categories:
  - http
 tags:
  - http
-typora-root-url: ../../../static
 ---
 
 ## 1. HTTP/1.1
@@ -24,7 +23,7 @@ HTTP/1.1 clarified ambiguities and introduced numerous improvements:
 
 > The persistent-connection model keeps connections opened between successive requests, reducing the time needed to open new connections. The HTTP pipelining model goes one step further, by sending several successive requests without even waiting for an answer, reducing much of the latency in the network. [Connection management in HTTP/1.x | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Connection_management_in_HTTP_1.x)
 
-<img src="/004-http-versions/bb.png" alt="bb" style="zoom:50%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/ea4563884e1da91416bbfeb477547963.png)
 
 ## 2. HTTP/2.0
 

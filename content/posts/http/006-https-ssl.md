@@ -1,11 +1,13 @@
 ---
-title: HTTPS SSL TLS 
+title: HTTPS 连接建立过程 (TLS 握手)
 date: 2023-10-07 08:30:26
 categories:
   - http
 tags:
-  - https
   - http
+  - https
+  - ssl
+  - 网络安全
 ---
 
 ## 1. HTTP vs HTTPS
@@ -42,21 +44,26 @@ During the TLS handshake, the client generates a session key and encrypts it wit
 >
 > **TLS/SSL is stateful.** The web server and the client (browser) cache the session including the cryptographic keys to improve performance and do **not** perform key exchange for every request. [Source](https://stackoverflow.com/a/33681674/16317008)
 
-## 4. Details in TLS handshake - avoid man-in-middle attack
+## 4. Details in TLS handshake
 
 I have talked man-in-middle attack in other [post](https://davidzhu.xyz/post/cs-basics/002-ssh/), when a ssh connection is being established at the first time, it will notify us the fingerprint of the server which enables us can make sure to we are connecting the right server. But it's a little diffenent in SSL/TLS (HTTPS). The authenciation happens in the TLS handshake, the authenciation here means to prevent man-in-the-middle attack by verifying the identity of the remote server. 
 
-Once the client and server have agreed to use TLS, they negotiate a [stateful](https://en.wikipedia.org/wiki/State_(computer_science)) connection by using a handshaking procedure (see [TLS handshake](https://en.wikipedia.org/wiki/Transport_Layer_Security#TLS_handshake)). The protocols use a handshake with an [asymmetric cipher](https://en.wikipedia.org/wiki/Asymmetric_cipher) to establish not only cipher settings but also a session-specific shared key with which further communication is encrypted using a [symmetric cipher](https://en.wikipedia.org/wiki/Symmetric_cipher). During this handshake, the client and server agree on various parameters used to establish the connection's security:
+The protocols use a handshake with an [asymmetric cipher](https://en.wikipedia.org/wiki/Asymmetric_cipher) to establish not only cipher settings but also a session-specific shared key with which further communication is encrypted using a [symmetric cipher](https://en.wikipedia.org/wiki/Symmetric_cipher). During this handshake, the client and server agree on various parameters used to establish the connection's security:
 
-- The handshake begins when a client connects to a TLS-enabled server requesting a secure connection and the client presents a list of supported [cipher suites](https://en.wikipedia.org/wiki/Cipher_suite) ([ciphers](https://en.wikipedia.org/wiki/Encryption) and [hash functions](https://en.wikipedia.org/wiki/Hash_function)).
-- From this list, the server picks a cipher and hash function that it also supports and notifies the client of the decision.
-- The server usually then provides identification in the form of a [digital certificate](https://en.wikipedia.org/wiki/Public_key_certificate). The certificate contains the [server name](https://en.wikipedia.org/wiki/Hostname), the trusted [certificate authority](https://en.wikipedia.org/wiki/Certificate_authority) (CA) that vouches for the authenticity of the certificate, and the server's public encryption key. (**The digital certificate here is know as SSL/TLS certificate**)
-- The client confirms the validity of the certificate before proceeding. (**The client verifies the identity of the remote server by check the digital certificate which is called SSL/TLS certificate here**)
-- To generate the session keys used for the secure connection, the client either:
-  - encrypts a [random number](https://en.wikipedia.org/wiki/Random_number_generation) (*PreMasterSecret*) with the server's public key and sends the result to the server (which only the server should be able to decrypt with its private key); both parties then use the random number to generate a unique session key for subsequent encryption and decryption of data during the session, or
-  - uses [Diffie–Hellman key exchange](https://en.wikipedia.org/wiki/Diffie–Hellman_key_exchange) (or its variant [elliptic-curve DH](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie–Hellman)) to securely generate a random and unique session key for encryption and decryption that has the additional property of [forward secrecy](https://en.wikipedia.org/wiki/Forward_secrecy): if the server's private key is disclosed in future, it cannot be used to decrypt the current session, even if the session is intercepted and recorded by a third party.
+- 客户端跟对方说："你好，我想安全地聊天，我可以用这些加密方式..."
 
-This concludes(ends) the handshake and begins the secured connection, which is encrypted and decrypted with the session key until the connection closes. If any one of the above steps fails, then the TLS handshake fails and the connection is not created.
+- 对方回应："好的，那我们就用这种加密方式吧"
+
+- 对方给你看他的 TLS 数字证书, 这个身份证上有：他的名字、公开的联系方式（公钥）、以及一个权威机构（CA）的盖章. 
+
+- 浏览器验证证书是不是真的
+- 建立专属密码阶段 客户端随机生成一个随机数, 
+
+- 方式一：客户端随机生成一个随机数, 用对方的公开联系方式（公钥）加密后发给他
+- 方式二：你们俩一起用一个特殊的数学方法（Diffie-Hellman）, 各自算出一个相同的暗号
+- 你们用刚才约定的暗号加密之后的所有对话
+
+> 最开始 (握手阶段) 用的是不对称加密, 之后实际传输数据是对称加密
 
 Source: https://en.wikipedia.org/wiki/Transport_Layer_Security
 

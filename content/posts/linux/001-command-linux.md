@@ -5,8 +5,10 @@ categories:
  - linux
 tags:
  - linux
+ - 正则表达式
 ---
 
+## 1. 常用命令 
 
 ```bash
 $ scp -rp tls/* root@86.150.206.117:/root/tls/
@@ -26,7 +28,7 @@ $ grep -nr 'ul$' themes/source/css  # n: line number, r: recursive
 $ git log --all --decorate --oneline --graph # "A Dog" 
 ```
 
-## 1. File System
+## 2. File System
 
 ```bash
 $ ls -lh folder_name
@@ -76,10 +78,7 @@ $ du  -sh  *
 > ```
 > 
 
----
-
-
-## 2. Monitor Commands
+## 3. Monitor Commands
 
 ```bash
 $ netstat -anp
@@ -145,7 +144,7 @@ $ brew services start mongodb-community
 > - Mounting filesystems
 > - Logging system events
 
-## 3. Network Tools
+## 4. Network Tools
 
 ```shell
 # -O write documents to FILE: download the file and save it into install.sh

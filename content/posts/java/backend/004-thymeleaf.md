@@ -1,15 +1,14 @@
 ---
-title: Thymeleaf, Spring学习(四)
+title: Thymeleaf, Spring 学习(四)
 date: 2023-08-01 13:55:48
 categories:
- - Java
- - Backend
+ - java
 tags:
- - Java
- - Spring Boot
+ - java
+ - spring
 ---
 
-## 实现功能
+## 1. 实现功能
 
 - 访问 http://localhost:8080/ 的时候主页列出所有的猫猫信息(name+age), 
 
@@ -27,7 +26,7 @@ tags:
 
 源码: https://github.com/shwezhu/springboot-learning/tree/master/thymeleaf-example
 
-## 项目结构
+## 2. 项目结构
 
 ```
 src
@@ -48,7 +47,7 @@ src
         └── index.html
 ```
 
-## 添加依赖
+## 3. 添加依赖
 
 在`pom.xml`中加入并reload
 
@@ -61,7 +60,7 @@ src
 
 注意, 从上面代码可以看出本例子用的是spring boot, 用spring配置起来会很麻烦, 
 
-## 代码解释
+## 4. 代码解释
 
 理解了Thymeleaf的逻辑, 之后看着文档自己就能写了, 这里只讲一个, 对于下面代码, 当访问 http://localhost:8080/ 的时候, 得到页面如下:
 
@@ -127,7 +126,7 @@ public class MainController {
 
 其他内容可参考: [Introduction to Using Thymeleaf in Spring | Baeldung](https://www.baeldung.com/thymeleaf-in-spring-mvc#evaluation)
 
-## 总结
+## 5. 总结
 
 总结下, Spring MVC, 到现在学了V和C, C即我们常写的Controller, V即是View, 就是每次 Controller 的method返回的那个view, 在Spring Boot目录结构一般如下, 
 

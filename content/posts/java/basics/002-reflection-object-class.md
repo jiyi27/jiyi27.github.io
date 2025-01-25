@@ -2,10 +2,10 @@
 title: java.lang.Object & java.lang.Class
 date: 2023-08-05 19:47:51
 categories:
- - Java
- - Basics
+ - java
 tags:
- - Java
+ - java
+ - 反射
 ---
 
 ## 1. `java.lang.Object`
@@ -42,7 +42,7 @@ implements Serializable, GenericDeclaration, Type, AnnotatedElement
 
 - 注意 `java.lang.Class`  是泛型类, 因此我们经常可以见到类似 `Class<?> xxx = cat.getClass()`  的声明, 
 
-## 2.1. ` java.lang.Class` 为何存在
+### 2.1. ` java.lang.Class` 为何存在
 
 其实刚开始一直想不明白类 `java.lang.Class` 到底是什么, 为什么存在?
 
@@ -83,7 +83,7 @@ public final Class<?> getClass()
 
 When a class (say, `Cat`) is accessed for the very first time (e.g., say an instance of it is created ~ new Hello()), then **class loader** (a component of JVM) loads it (the bytecodes) and creates an instance of `java.lang.Class` that represents the class in context, i.e., `Cat`. Thereafter, when you are creating an object of that same class (`Cat`), this `java.lang.Class` instance would be used by JVM to create the object. This `java.lang.Class` object is also the entry point to use reflection and it can also be used to get meta-information about the class like the class name, super-class name, etc. 
 
-## 2.2. 为什么需要反射
+### 2.2. 为什么需要反射
 
 We need java.lang.Class.forName() and java.lang.Class.newInstance() because many times it happens that we don't know the name of the class to instantiate while writing code , we may get it from config files , database , network or from any Java application . This is the reflective way of creating an object which is one of the most powerful feature of Java and which makes way for many frameworks e.g. Spring , Struts which uses Java reflection .
 
@@ -111,7 +111,7 @@ public class Main {
 }
 ```
 
-## 3.2. Myclass.class
+### 3.2. Myclass.class
 
 Please note that this method is used with class name, not with class instances. 
 

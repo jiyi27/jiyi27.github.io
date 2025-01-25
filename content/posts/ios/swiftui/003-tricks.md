@@ -3,6 +3,10 @@ title: SwiftUI 踩坑记
 date: 2024-05-31 16:17:30
 categories:
  - ios
+tags:
+ - ios
+ - swiftui
+ - 编程小技巧
 ---
 
 ### 1. 使用 HStack 水平排列

@@ -3,6 +3,9 @@ title: Bugs
 date: 2024-06-26 21:55:30
 categories:
  - ios
+tags:
+ - ios
+ - swiftui
 ---
 
 ### 1. TextField on Long-Press

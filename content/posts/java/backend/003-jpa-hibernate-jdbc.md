@@ -2,11 +2,11 @@
 title: ORM vs JPA vs Hibernate & JDBC vs MySQL Driver, Spring学习(三)
 date: 2023-07-30 16:55:47
 categories:
- - Java
- - Backend
+ - java
 tags:
- - Java
- - Database
+ - java
+ - spring
+ - orm
 ---
 
 ## 1. ORM
@@ -145,6 +145,4 @@ JPA is a standard for Object Relational Mapping (ORM). This is a technology whic
 
 > Under the hood, Hibernate and most other providers for JPA write SQL and use JDBC API to read and write from and to the DB. Simply think, JPA is a Java ORM, and Hibernate implements JPA using JDBC API, 
 
-参考:
-
-- [java - JPA or JDBC, how are they different? - Stack Overflow](https://stackoverflow.com/questions/11881548/jpa-or-jdbc-how-are-they-different)
+参考: [java - JPA or JDBC, how are they different? - Stack Overflow](https://stackoverflow.com/questions/11881548/jpa-or-jdbc-how-are-they-different)

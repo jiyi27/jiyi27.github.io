@@ -3,6 +3,9 @@ title: Struct & Class - Swift
 date: 2024-05-26 16:03:35
 categories:
  - ios
+tags:
+ - ios
+ - swift
 ---
 
 ## 1. Struct vs Class

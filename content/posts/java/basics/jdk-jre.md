@@ -2,10 +2,9 @@
 title: JDK & JRE
 date: 2023-07-26 21:49:41
 categories:
- - Java 
- - Basics
+ - java
 tags:
- - Java
+ - java
 ---
 
 我的电脑有两个jdk, 一个是我自己下载的jdk17, 一个是电脑预安装的jdk19:

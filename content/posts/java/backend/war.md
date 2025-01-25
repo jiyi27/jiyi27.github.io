@@ -1,16 +1,17 @@
 ---
-title: 手动部署War包到Tomcat之何为War
+title: 手动部署 War 包到 Tomcat 之何为 War
 date: 2023-04-27 21:30:48
 categories:
- - Java
- - Backend
+ - java
 tags:
- - Java
+ - java
+ - spring
+ - tomcat
 ---
 
 Web application resources or web application archives are commonly called WAR files. A WAR file is used to deploy a Java EE web application in an application server. Inside a WAR file, all the web components are packed into one single unit. These include JAR files, JavaServer Pages, Java servlets, Java class files, XML files, HTML files, and other resource files that we need for web applications. We can use the Maven WAR plugin to build our project as a [WAR](https://www.baeldung.com/java-jar-war-packaging#war) file. 
 
-## Step 1: Add a new user with deployment rights to Tomcat
+## 1. Add a new user with deployment rights to Tomcat**
 
 To perform a Maven Tomcat deploy of a `WAR` file you must first set up a **user** in Tomcat with the appropriate rights. You can do this with an edit of the `tomcat-users.xml` file, which can be found in Tomcat's `conf` sub-directory. Add the following entry **inside** the `tomcat-users` tag:
 
@@ -28,7 +29,7 @@ Save the tomcat-users.xml file and restart the server to have the changes take e
 
 ![](/war/e.png)
 
-### 无法访问 tomcat 主页问题
+**无法访问 tomcat 主页问题**
 
 我在访问Tomcat主页出现了问题, 访问的总是我以前的JSP应用, 我用IDEA开发的, 但我都没打开IDEA, 仍然可以访问到, 真是奇了怪了, 如下:
 
@@ -57,7 +58,7 @@ kill -9 PID
 
 说了那么多终于要进行下一步了, 
 
-## Step 2: Tell Maven about the Tomcat deploy user
+## 2. Tell Maven about the Tomcat deploy user
 
 After you add the `war-deployer` user to Tomcat, register that `username` and `password` in Maven, along with a named reference to the server. The Maven-Tomcat plugin will use this information when it tries to [connect to the application server](https://www.theserverside.com/feature/Is-Apache-Tomcat-the-right-Java-application-server-for-you). Edit the `settings.xml` file and add the following entry **within** the `<server>` tag to create the named reference to the server:
 
@@ -74,7 +75,7 @@ After you add the `war-deployer` user to Tomcat, register that `username` and `p
 >
 > 另外这里加的账号密码就是上面在Tomcat添加用户时候的账号密码, 这是因为你进入Tomcat管理页面的时候需要,如果你不提供(下面配置`pom.xml`也会说到), 那生成war文件的时候maven就会报错, 
 
-## Step 3: Register the tomcat7-maven-plugin in the POM
+## 3. Register the tomcat7-maven-plugin in the POM
 
 把打包格式改成`war`, 即在`pom.xml`中找到`<packaging>`标签, 没有的话添加一个, 与`<dependencies>`标签并列:
 
@@ -213,13 +214,13 @@ Now that Maven and Tomcat are configured, the next step is to edit the Java web 
 </web-app>
 ```
 
-## FInal Step: Verify
+## 4. Verify
 
 确保你已经开启Tomcat服务(即使你关闭了IDEA, IDEA和Tomcat是两个东西, IDEA是个IDE会用到Tomcat作为web服务器来部署web app), 然后访问通过`http://localhost:8080/`访问到Tomcat主页, 这时候你可以在链接🔗后加上`/rps`即`http://localhost:8080/rps/`就可以进入到你的那个web网页, 如下:
 
 ![](/war/h.png)
 
-## 思考总结
+## 5. 思考总结
 
 这时候其实我们也就知道了什么是根目录和url中神秘的路径问题, 你看我们若想访问`manager`页面, 这个页面的url是`http://localhost:8080/manager/`, 我们访问我们刚部署的页面是`http://localhost:8080/rps/`, 你看最后的这个路径及`/manager`, `/rps`都是tomcat的`webapps`目录下的文件, 如下:
 

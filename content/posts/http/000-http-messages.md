@@ -5,7 +5,6 @@ categories:
  - http
 tags:
  - http
-typora-root-url: ../../../static
 ---
 
 ## 1. Intro of HTTP messages

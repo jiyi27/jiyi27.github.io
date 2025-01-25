@@ -3,9 +3,13 @@ title: UIKit in SwiftUI
 date: 2024-06-08 21:55:30
 categories:
  - ios
+tags:
+ - ios
+ - swiftui
+ - uikit
 ---
 
-### 1. UIViewControllerRepresentable
+## 1. UIViewControllerRepresentable
 
 `UIViewControllerRepresentable` is a view that represents a UIKit view controller. Use a [`UIViewControllerRepresentable`](https://developer.apple.com/documentation/swiftui/uiviewcontrollerrepresentable) instance to create and manage a [`UIViewController`](https://developer.apple.com/documentation/uikit/uiviewcontroller) object in your SwiftUI interface. 
 
@@ -31,7 +35,7 @@ struct SafariView: UIViewControllerRepresentable {
 
 ![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/06/09bfd9ae3e90671f9516329428798591.jpg)
 
-### 2. Delegate Pattern
+## 2. Delegate Pattern
 
 The Delegate Pattern, a common design pattern in traditional iOS development with UIKit, involves defining a protocol that outlines the responsibilities that can be delegated to another class or structure. This pattern allows for the separation of responsibilities, enhancing modularity and reusability of code. 
 
@@ -41,6 +45,6 @@ The Delegate Pattern, a common design pattern in traditional iOS development wit
 
 ![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/06/9da1df8146b465d5381307c38da4f103.jpg)
 
-### 3. Do not Pass Reference of a View
+## 3. Do not Pass Reference of a View
 
 I would definitely *not* recommend using references to SwiftUI views via `self`, passing them to other views. SwiftUI views are transient and you shouldn't rely on a reference like this. You can, however, pass closures back and forth or bindings like you suggested. Check original: [ios - Is delegate pattern a good approach in SwiftUI? - Stack Overflow](https://stackoverflow.com/questions/70219779/is-delegate-pattern-a-good-approach-in-swiftui)

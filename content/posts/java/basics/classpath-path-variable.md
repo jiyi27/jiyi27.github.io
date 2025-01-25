@@ -2,13 +2,12 @@
 title: CLASSPATH & PATH
 date: 2023-04-25 14:53:30
 categories:
- - Java
- - Basics
+ - java
 tags:
- - Java
+ - java
 ---
 
-## PATH
+## 1. PATH
 You should set the `PATH` variable if you want to be able to run the executables (javac, java, javadoc, and so on) from any directory without having to type the full path of the command. If you do not set the PATH variable, you need to specify the full path to the executable every time you run it, such as:
 
 ```bash
@@ -32,7 +31,7 @@ On most systems (Linux, Mac OS, UNIX, etc) the colon character (`:`) is the clas
 
 > 其实PATH就是告诉terminal可执行指令的位置信息, 而CLASSPATH是用来告诉JRE相关程序 用户自定义类 的位置信息 
 
-## CLASSPATH
+## 2. CLASSPATH
 
 阅读此节前, 可先参考: [手动编译运行Java程序之JVM加载类的顺序](https://davidzhu.xyz/2023/07/26/Java/Basics/how-jvm-find-class/)
 
@@ -104,7 +103,7 @@ You can check value of classpath in java inside your application by looking at f
 System.getProperty("java.class.path")
 ```
 
-## Set Classpath
+## 3. Set Classpath
 
 ```shell
 export CLASSPATH=$PATH:/home/myaccount/myproject/lib/CoolFramework.jar:/home/myaccount/myproject/output/
@@ -116,7 +115,5 @@ export CLASSPATH=$PATH:/home/myaccount/myproject/lib/CoolFramework.jar:/home/mya
 C:\work> java -cp . com.example.Hello
 ```
 
-参考:
 
-- [classpath和jar - 廖雪峰的官方网站](https://www.liaoxuefeng.com/wiki/1252599548343744/1260466914339296)
 

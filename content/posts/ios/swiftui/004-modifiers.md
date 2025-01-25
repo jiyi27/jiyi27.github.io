@@ -3,6 +3,9 @@ title: SwiftUI Modifiers
 date: 2024-06-07 16:22:30
 categories:
  - ios
+tags:
+ - ios
+ - swiftui
 ---
 
 ## 1. `.foregroundStyle()` and `.tint()`

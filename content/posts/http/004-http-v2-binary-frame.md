@@ -5,10 +5,7 @@ categories:
  - http
 tags:
  - http
-typora-root-url: ../../../static
 ---
-
-Source: [Introduction to HTTP/2  |  Google Developers](https://web.archive.org/web/20220126192113/https://developers.google.com/web/fundamentals/performance/http2)
 
 ## 1. Binary Framing
 
@@ -29,7 +26,7 @@ The relation of these terms can be summarized as follows:
 - Each message is a logical HTTP message, such as a request, or response, which consists of one or more frames.
 - The frame is the smallest unit of communication that carries a specific type of data—e.g., HTTP headers, message payload, and so on. Frames from different streams may be interleaved and then reassembled via the embedded stream identifier in the header of each frame.
 
-<img src="/004-http-v2-binary-frame/cc.png" alt="cc" style="zoom:33%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/f51bbc76a10e9b60593ceeb72d6628b2.png)
 
 In short, HTTP/2 breaks down the HTTP protocol communication into an exchange of binary-encoded frames, which are then mapped to messages that belong to a particular stream, all of which are **multiplexed** within a single TCP connection. This is the foundation that enables all other features and performance optimizations provided by the HTTP/2 protocol.
 
@@ -47,13 +44,10 @@ Learn more: [Introduction to HTTP/2  |  Web Fundamentals  |  Google Developers](
 
 Another powerful new feature of HTTP/2 is the ability of the server to send multiple responses for a single client request. That is, in addition to the response to the original request, the server can push additional resources to the client, without the client having to request each one explicitly.
 
-<img src="/004-http-v2-binary-frame/aa.png" alt="aa" style="zoom:50%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/ce16770137373aab93c57e042a7fb7db.png)
 
 > **Note:** HTTP/2 breaks away from the strict request-response semantics and enables one-to-many and server-initiated push workflows that open up a world of new interaction possibilities both within and outside the browser. This is an enabling feature that will have important long-term consequences both for how we think about the protocol, and where and how it is used.
 
 ## 3. Header compression
 
 ...
-
-
-

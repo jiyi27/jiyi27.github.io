@@ -5,7 +5,6 @@ categories:
  - http
 tags:
  - http
-typora-root-url: ../../../static
 ---
 
 URLs can only be sent over the Internet using the [ASCII character-set](https://www.w3schools.com/charsets/ref_html_ascii.asp). Since URLs often contain characters outside the ASCII set, the URL has to be converted into a valid ASCII format.

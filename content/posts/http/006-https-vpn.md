@@ -4,16 +4,17 @@ date: 2023-09-10 10:54:30
 categories:
  - http
 tags:
- - cryptography
  - http
- - cybersecurity
+ - 网络安全
 ---
 
 HTTPS is used for encryption, VPN is too. What's difference?
 
 In previou post we talked about [Is HTTPS Secure Enough?](), and we concluded that https is secure itself which means no one can decrypt the data without the session key. However there still are some security issues in HTTPS, the man-in-the-middle attack, for example. 
 
-## Why do I need a VPN if https connections are secure?
+-----
+
+**Why do I need a VPN if https connections are secure?**
 
 A VPN will secure all of the traffic between point A and point B in a tunnel. This helps ensure that you are not having your traffic intercepted by anyone at, say, the coffee shop. 
 
@@ -27,7 +28,9 @@ However, HTTPS will only help with traffic over port 443, which mean it only pro
 
 A VPN stops that because everything is connected securely through that pipe. The primary thing that a VPN helps with is what is know as a man in the middle attack: [Man-in-the-middle attack - Wikipedia](https://en.wikipedia.org/wiki/Man-in-the-middle_attack)
 
-## VPN vs Proxy
+----
+
+**VPN vs Proxy**
 
 > In computer networks, a proxy server is a server (a computer system or an application) that acts **as an intermediary** for requests from clients seeking resources from other servers. [Proxy server](https://en.wikipedia.org/wiki/Proxy_server)
 

@@ -2,8 +2,10 @@
 title: Swift Functions
 date: 2024-05-26 16:03:35
 categories:
- - swift
  - ios
+tags:
+ - ios
+ - swift
 ---
 
 

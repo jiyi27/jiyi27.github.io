@@ -5,21 +5,24 @@ categories:
  - http
 tags:
  - http
+ - cookie
+ - 请求头
 typora-root-url: ../../../static
 ---
 
-### 0. Header types
+## 0. Header types
 
 Headers can be grouped according to their contexts:
 
-- [Request headers](https://developer.mozilla.org/en-US/docs/Glossary/Request_header) contain more information about the resource to be fetched, or about the client requesting the resource.
-- [Response headers](https://developer.mozilla.org/en-US/docs/Glossary/Response_header) hold additional information about the response, like its location or about the server providing it.
-- [Representation headers](https://developer.mozilla.org/en-US/docs/Glossary/Representation_header) contain information about the body of the resource, like its [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types), or encoding/compression applied.
-- [Payload headers](https://developer.mozilla.org/en-US/docs/Glossary/Payload_header) contain representation-independent information about payload data, including content length and the encoding used for transport.
+[Request headers](https://developer.mozilla.org/en-US/docs/Glossary/Request_header) contain more information about the resource to be fetched, or about the client requesting the resource.
 
-Learn more: [HTTP headers - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers)
+[Response headers](https://developer.mozilla.org/en-US/docs/Glossary/Response_header) hold additional information about the response, like its location or about the server providing it.
 
-### 1. `Content-Type` 
+[Representation headers](https://developer.mozilla.org/en-US/docs/Glossary/Representation_header) contain information about the body of the resource, like its [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types), or encoding/compression applied.
+
+[Payload headers](https://developer.mozilla.org/en-US/docs/Glossary/Payload_header) contain representation-independent information about payload data, including content length and the encoding used for transport.
+
+## 1. `Content-Type` 
 
 Common values of `Content-Type` header can be `application/json`, `application/x-www-form-urlencoded`, `multipart/form-data`, the first two is usually used with posting form data to server, the third is used to upload file to the server.
 
@@ -37,13 +40,13 @@ Common values of `Content-Type` header can be `application/json`, `application/x
 >
 > `application/x-www-form-urlencoded`: Sent in the request body
 
-### 2. `Access-Control-Allow-Origin`
+## 2. `Access-Control-Allow-Origin`
 
 > `Access-Control-Allow-Origin` header allows servers to specify which origins **are allowed to access their resources**, even if they are from different origins. 
 
 Learn more: [Cross-origin Request HTTP - David's Blog](https://davidzhu.xyz/post/http/003-cors-sop/)
 
-### 3. `Location`
+## 3. `Location`
 
 The **`Location`** response header indicates the URL to redirect a page to. It only provides a meaning when served with a `3xx` (redirection) or `201` (created) status response.
 
@@ -71,7 +74,7 @@ func (s *server) handleMkdir(w http.ResponseWriter, r *http.Request, currentPath
 
 Status code 303: [HTTP Status Codes - David's Blog](https://davidzhu.xyz/post/http/002-http-status-codes/)
 
-### 4. `Cache-Control`
+## 4. `Cache-Control`
 
 `cache-control: no-cache`: This directive means that cached versions of **the requested resource** cannot be used without first checking to see if there is an updated version. `max-age=0` is *a workaround for no-cache* , because many old (HTTP/1.0) cache implementations don't support no-cache. 
 
@@ -103,7 +106,7 @@ func RenderAsset(w http.ResponseWriter, r *http.Request, assetPath string) {
 
 Learn more: [What is cache-control? | Cache explained | Cloudflare](https://www.cloudflare.com/learning/cdn/glossary/what-is-cache-control/)
 
-### 5. `Authorization ` & `WWW-Authenticate`
+## 5. `Authorization ` & `WWW-Authenticate`
 
 HTTP supports the use of several authentication mechanisms to control access to pages and other resources. These mechanisms are all based around the use of the `401` status code and the `WWW-Authenticate` response header.
 
@@ -175,7 +178,7 @@ HTTP authentication framework: [HTTP authentication - HTTP | MDN](https://develo
 
 Learn more: [Authorization - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization)
 
-### 6. cookie
+## 6. cookie
 
 There are two headers related to cookie, one is `Set-Cookie` header another is `Cookie` header. 
 

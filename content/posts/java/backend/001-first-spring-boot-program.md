@@ -1,12 +1,11 @@
 ---
-title: 创建Spring Boot项目及踩坑总结 Spring学习(一)
+title: 创建 Spring Boot 项目及踩坑总结 Spring 学习(一)
 date: 2023-07-29 16:47:46
 categories:
- - Java
- - Backend
+ - java
 tags:
- - Java
- - Spring Boot
+ - java
+ - spring
 ---
 
 ## 错误总结

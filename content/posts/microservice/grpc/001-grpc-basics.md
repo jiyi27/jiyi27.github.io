@@ -2,8 +2,9 @@
 title: Intro to gRPC 
 date: 2023-11-05 16:01:06
 categories:
- - grpc
+ - 微服务
 tags:
+ - 微服务
  - grpc
 ---
 
@@ -30,7 +31,6 @@ Source: [Go gRPC Beginners Tutorial | TutorialEdge.net](https://tutorialedge.net
 ### 2.3. HelloWorld example
 
 [Go gRPC Beginners Tutorial | TutorialEdge.net](https://tutorialedge.net/golang/go-grpc-beginners-tutorial/)
-
 
 
 

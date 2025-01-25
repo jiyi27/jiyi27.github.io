@@ -1,14 +1,13 @@
 ---
-title: Java内存结构
+title: Java 内存结构
 date: 2023-05-14 21:50:26
 categories:
- - Java
- - Basics
+ - java
 tags:
- - Java
+ - java
+ - 内存管理
+ - 垃圾回收器
 ---
-
-请先阅读(若链接无效可以搜索站内文章): [Java中变量(Variables)和引用(References)的区别 - David's Blog](https://davidzhu.xyz/post/java/basics/006-variables-vs-references/)
 
 ## 1. JVM Run-Time Data Areas
 

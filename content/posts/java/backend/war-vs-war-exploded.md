@@ -1,14 +1,15 @@
 ---
-title: IDEA项目中的War和War Exploded的区别
+title: IDEA 项目中的 War 和 War Exploded 的区别
 date: 2023-04-25 14:27:35
 categories:
- - Java
- - Backend
+ - java
 tags:
- - Java
+ - java
+ - spring
+ - tomcat
 ---
 
-在IDEA把webapp deploy到tomcat上的时候会看到以下设置:
+在 IDEA 把 webapp deploy 到 tomcat上的时候会看到以下设置:
 
 ![](/war-vs-war-exploded/a.png)
 
@@ -20,7 +21,7 @@ tags:
 
 有很多疑问比如war和war exploded是什么, update resources和update classes and resources的区别是什么, 这都是干啥的?
 
-## War & War exploded
+----
 
 在使用 IDEA 开发Java Web项目部署 Tomcat 的时候通常会出现下面的情况:
 
@@ -37,7 +38,7 @@ tags:
 
 所以现在知道上面为啥选择war的话, 在on frame deactivation diaglog就不会有update resources选项了吧. 
 
-## Update Resources & Update Classes and Resources
+---
 
 ![](/war-vs-war-exploded/e.png)
 
@@ -56,9 +57,7 @@ tags:
 
 这样每次修改了servlet之后我点击更新按钮, 修改了jsp之后我就不用点击了, 直接进入浏览器刷新页面就可以了.
 
-参考: 
-
-- https://blog.csdn.net/u013626215/article/details/103685304
+参考: https://blog.csdn.net/u013626215/article/details/103685304
 
 
 

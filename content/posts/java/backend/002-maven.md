@@ -1,12 +1,12 @@
 ---
-title: Maven的相关概念与常用指令 Spring学习(二)
+title: Maven 的相关概念与常用指令 Spring 学习(二)
 date: 2023-07-30 14:11:30
 categories:
- - Java
- - Backend
+ - java
 tags:
- - Java
- - Spring Boot
+ - java
+ - spring
+ - maven
 ---
 
 ## 1. Install Maven

@@ -3,9 +3,13 @@ title: SwiftUI UNUserNotificationCenterDelegate, UIApplicationDelegate, UISceneD
 date: 2024-07-03 10:37:20
 categories:
  - ios
+tags:
+ - ios
+ - swiftui
+ - uikit
 ---
 
-### 1. UNUserNotificationCenterDelegate & UIApplicationDelegate
+## 1. UNUserNotificationCenterDelegate & UIApplicationDelegate
 
 使用 `UNUserNotificationCenterDelegate` 时, 要记得初始化, 因为其方法都是在特定条件下被系统自动调用的, 如果你不告诉系统谁是你的 通知代表, 系统只会调用默认 通知代表的方法, 即什么都不做. 
 
@@ -112,7 +116,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 > @UIApplicationDelegateAdaptor(AppDelegate.self) var appDeleagte
 > ```
 
-### 2. UIApplicationDelegate 不起作用?
+## 2. UIApplicationDelegate 不起作用?
 
 我们的类实现了  `application(...)` 和 `applicationWillEnterForeground(...)`, 每次重启应用时, `application(...)` 确实被调用了, 但是每次切入进软件 (background -> foreground) 时,  applicationWillEnterForeground() 并没有按预期被调用, 
 
@@ -156,7 +160,7 @@ var body: some Scene {
 }
 ```
 
-### 3. APP 三个状态的区别
+## 3. APP 三个状态的区别
 
 再看一下 applicationWillEnterForeground 文档:
 
@@ -172,7 +176,7 @@ var body: some Scene {
 
 注意, launch 和 简单的从后台切入到app页面不一样, 
 
-### 4. UISceneDelegate
+## 4. UISceneDelegate
 
 Before iOS 13, the main entry point for your app was the AppDelegate, and it was in charge of many logic and state handling. Now the work of the AppDelegate has been split, between the AppDelegate and the SceneDelegate [1 Dev].
 
@@ -208,7 +212,7 @@ struct MyApp: App {
 }
 ```
 
-### 5. Conclusion
+## 5. Conclusion
 
 After iOS 13, the management responsibilities for app states were subdivided. Previously, all tasks were handled by the AppDelegate, but now they are divided between the AppDelegate and the SceneDelegate. The AppDelegate primarily handles initial setup, such as startup initialization, while the SceneDelegate manages the logic for scene transitions, such as moving the app from the foreground to the background, or from an active state to an inactive state. 
 

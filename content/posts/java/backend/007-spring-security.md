@@ -1,12 +1,12 @@
 ---
-title: CSRF Filter & ProviderManager & AuthenticationProviders, Spring学习(七)
+title: CSRF Filter & ProviderManager & AuthenticationProviders, Spring 学习(七)
 date: 2023-08-08 20:58:54
 categories:
- - Java
- - Backend
+ - java
 tags:
- - Java
- - Spring Boot
+ - java
+ - spring
+ - springsecurity
 ---
 
 {% youtube iJ2muJniikY %}

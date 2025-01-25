@@ -5,6 +5,7 @@ categories:
  - http
 tags:
  - http
+ - cors
 ---
 
 ## 0. CORS Issue 1

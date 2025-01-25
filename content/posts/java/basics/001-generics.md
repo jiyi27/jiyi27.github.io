@@ -1,11 +1,11 @@
 ---
-title: Java Generics
+title: Java 中的泛型
 date: 2023-08-05 18:44:52
 categories:
- - Java
- - Basics
+ - java
 tags:
- - Java
+ - java
+ - 泛型
 ---
 
 ## 1. Why Generics?
@@ -153,7 +153,7 @@ The method printListObject() is not applicable for the arguments (List<Integer>)
 
 Whereas *`printListWildCard(li)`* will compile and will output *1 2 3* to the console.
 
-## 3.2. Wildcards vs `T`
+### 3.2. Wildcards vs `T`
 
 ```java
 // 指定集合元素只能是T 类型

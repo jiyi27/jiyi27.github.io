@@ -7,15 +7,16 @@ tags:
  - http
 ---
 
-## 2xx
+## 1. Success
 
-- **200 OK**: Request is okay, entity body contains requested resource.
-- **201 Created**: For requests that create server objects (e.g., PUT). The entity body of the response should contain the various URLs for referencing the created resource, with the *Location header* containing the most specific reference. The server must have created the object prior to sending this status code.
+200 OK: Request is okay, entity body contains requested resource.
+
+201 Created: For requests that create server objects (e.g., PUT). The entity body of the response should contain the various URLs for referencing the created resource, with the *Location header* containing the most specific reference. The server must have created the object prior to sending this status code.
 
 
-## Redirect
+## 2. Redirect
 
-### 301: permanent redirect: 可能会修改请求方法
+**301: permanent redirect: 可能会修改请求方法**:
 
 The HyperText Transfer Protocol (HTTP) 301 Moved Permanently redirect status response code indicates that the requested resource has been definitively moved to the URL given by the Location headers. A browser redirects to the new URL and search engines update their links to the resource. 根据描述可以看出, 301 是用来回复 GET 请求的, 与下面 303 刚好相反
 
@@ -31,30 +32,28 @@ The HyperText Transfer Protocol (HTTP) 301 Moved Permanently redirect status res
 
 更安全的做法: 使用 308 Permanent Redirect。这个状态码明确禁止在重定向过程中改变请求方法。因此，如果原始请求是 POST，重定向后的请求也必须是 POST。这样可以确保重定向行为的一致性和预期性，不管用户代理是什么。
 
-### 303: temporary redirect: 修改请求方法为 GET
-  - 303: Seee Other, 看名字就可以知道是 303 是告诉浏览器去另一个页面, 注意是一个页面, 所以浏览器收到 303 请求后, 会用 GET 请求来访问重定向的 URL, 即使之前的请求是 POST 请求. 这个状态码经常是用来做表单提交后的重定向, 即用来回复 POST 和 PUT 请求.
-  - The HyperText Transfer Protocol (HTTP) 303 See Other redirect status response code indicates that the redirects don't link to the requested resource itself, **but to another page** (such as a confirmation page, a representation of a real-world object). This response code is often sent back as a result of PUT or POST. The method used to display this redirected page is always GET. 
-  - [303 See Other - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/303)
+**303: temporary redirect: 修改请求方法为 GET**:
 
+303: Seee Other, 看名字就可以知道是 303 是告诉浏览器去另一个页面, 注意是一个页面, 所以浏览器收到 303 请求后, 会用 GET 请求来访问重定向的 URL, 即使之前的请求是 POST 请求. 这个状态码经常是用来做表单提交后的重定向, 即用来回复 POST 和 PUT 请求.
 
-### 307: temporary redirect: 不会修改请求方法和请求体
+The HyperText Transfer Protocol (HTTP) 303 See Other redirect status response code indicates that the redirects don't link to the requested resource itself, but to another page (such as a confirmation page, a representation of a real-world object). This response code is often sent back as a result of PUT or POST. The method used to display this redirected page is always GET. 
 
-The method and the body of the original request are **reused** to perform the redirected request.
+**307: temporary redirect: 不会修改请求方法和请求体**:
 
-In the cases where you want the method used to **be changed to GET**, use 303 See Other instead. This is useful when you want to give an answer to a PUT method that is not the uploaded resources, but a confirmation message (like "You successfully uploaded XYZ"). 
+The method and the body of the original request are reused to perform the redirected request.
 
-The only difference between 307 and 302 is that 307 guarantees that **the method and the body** will not be changed when the redirected request is made. With 302, some old clients were incorrectly changing the method to GET: the behavior with non-GET methods and 302 is then unpredictable on the Web, whereas the behavior with 307 is predictable. For GET requests, their behavior is identical.
+In the cases where you want the method used to be changed to GET, use 303 See Other instead. This is useful when you want to give an answer to a PUT method that is not the uploaded resources, but a confirmation message (like "You successfully uploaded XYZ"). 
+
+The only difference between 307 and 302 is that 307 guarantees that the method and the body** will not be changed when the redirected request is made. With 302, some old clients were incorrectly changing the method to GET: the behavior with non-GET methods and 302 is then unpredictable on the Web, whereas the behavior with 307 is predictable. For GET requests, their behavior is identical.
 
 Learn more: [307 Temporary Redirect - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/307)
 
-### 308: permanent redirect, 不修改请求方法和请求体
+**308: permanent redirect, 不修改请求方法和请求体**:
 
-The r**equest method and the body** will not be altered, whereas 301 may incorrectly sometimes be changed to a GET method. 
+The request method and the body will not be altered, whereas 301 may incorrectly sometimes be changed to a GET method. 
 
 Learn more: [308 Permanent Redirect - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/308)
 
-### Redirect Code mistakes
+**Redirect Code mistakes**:
 
-Different redirect status code can **cause browser behave differently**. 
-
-An unauthorized user make a request to `/home ` which needs authorized state to access, he will be redirect to `/login`, if server respond 308, then the unauthorized user will be redirect to `/login`, this woks fine. But 308 tell the brower all following http requests for `/home` need be redirected to `/login` even the user login successfully, you can clear the browser cache to reset, make sure don't repond a wrong status code. 
+Different redirect status code can cause browser behave differently. An unauthorized user make a request to `/home ` which needs authorized state to access, he will be redirect to `/login`, if server respond 308, then the unauthorized user will be redirect to `/login`, this woks fine. But 308 tell the brower all following http requests for `/home` need be redirected to `/login` even the user login successfully, you can clear the browser cache to reset, make sure don't repond a wrong status code. 

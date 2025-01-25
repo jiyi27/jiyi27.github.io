@@ -1,15 +1,14 @@
 ---
-title: Spring Boot与Spring框架的对比-阅读笔记
+title: Spring Boot 与 Spring 框架的对比-阅读笔记
 date: 2023-04-25 12:30:22
 categories:
- - Java
- - Backend
+ - java
 tags:
- - Java
- - Spring Boot
+ - java
+ - spring
 ---
 
-## 什么是Spring Boot
+## 1. 什么是Spring Boot
 
 > Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications that you can "just run". [Spring Boot](https://spring.io/projects/spring-boot)
 
@@ -74,7 +73,7 @@ tags:
 </project>
 ```
 
-## 基于 Spring Framework 的 Spring MVC 项目搭建
+## 2. 基于 Spring Framework 的 Spring MVC 项目搭建
 
 由于 Spring 主要应用于 Web 开发，下面看下 Spring Boot 出现前是如何搭建 Spring MVC 项目的。
 
@@ -204,11 +203,9 @@ Hello,Spring MVC
                 └── hello.jsp
 ```
 
-原文: 
+原文: https://blog.csdn.net/zzuhkp/article/details/123518033
 
-- https://blog.csdn.net/zzuhkp/article/details/123518033
-
-## 基于 Spring Boot 的 Spring MVC 项目搭建
+## 3. 基于 Spring Boot 的 Spring MVC 项目搭建
 
 总结基于 Spring Framework 的 Spring MVC 项目搭建有哪些问题呢？
 
@@ -322,7 +319,7 @@ spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
 总结 Spring Boot 简化应用创建的方式为：使用 `spring-boot-starter-parent` 管理依赖版本、使用 `spring-boot-starter` 自动化配置、支持用户自定义配置覆盖默认配置。
 
-## Spring Boot 是如何简化应用运行的？
+## 4. Spring Boot 是如何简化应用运行的？
 
 对于应用运行的简化，主要提现在内嵌 Servlet 容器，能够将我们的应用自动打成 jar 包启动。上面的示例是我们在 IDE 中运行的，为了打成 jar 包，我们需要引入一个 Spring Boot 专有的插件。
 
@@ -339,7 +336,7 @@ spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
 这个插件可以将 Spring Boot 项目依赖的所有 jar 包打包到一个 jar 包中，这个 jar 也被称为 `fat jar`。
 
-## 总结
+## 5. 总结
 
 Spring 官网将 Spring Boot 的核心特性总结为 6 点，在我们上述的例子中也基本有体现：
 

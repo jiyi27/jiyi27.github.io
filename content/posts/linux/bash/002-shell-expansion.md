@@ -5,6 +5,7 @@ categories:
  - linux
 tags:
  - linux
+ - shell
 ---
 
 ## 1. Shell expansion

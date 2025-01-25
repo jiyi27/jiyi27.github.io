@@ -1,12 +1,12 @@
 ---
-title: Spring Security Authentication, Spring学习(五)
+title: Spring Security Authentication, Spring 学习(五)
 date: 2023-08-04 19:16:49
 categories:
- - Java
- - Backend
+ - java
 tags:
- - Java
- - Spring Boot
+ - java
+ - spring
+ - springsecurity
 ---
 
 ## 0. 项目结构

@@ -3,6 +3,10 @@ title: Swift Basic Syntax and Data types
 date: 2024-05-15 22:03:35
 categories:
  - ios
+tags:
+ - ios
+ - swift
+ - 闭包
 ---
 
 # 1. Implicit returns SE-0255

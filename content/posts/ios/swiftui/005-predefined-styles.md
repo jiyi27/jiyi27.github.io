@@ -3,11 +3,14 @@ title: Predefined Styles SwiftUI
 date: 2024-06-07 22:02:30
 categories:
  - ios
+tags:
+ - ios
+ - swiftui
 ---
 
-### 1. Color
+## 1. Color
 
-#### 1.1 `Color.red` vs `.red`
+### 1.1 `Color.red` vs `.red`
 
 `background()` 应该传入 `Color.red` 而不是直接 `.red`, 否则显示可能会不符合预期, 这和 [Implicit Member Expression](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/expressions/#Implicit-Member-Expression) 有关系.  
 
@@ -25,7 +28,7 @@ func background<S>(
 ) -> some View where S : ShapeStyle
 ```
 
-#### 1.2. Auto Color
+### 1.2. Auto Color
 
 If you **want the `foregroundStyle` color to adapt automatically** **to the system theme** (such as light mode and dark mode), you can use some predefined colors like `.primary`, `.secondary`, `.label`, etc. These colors will automatically adjust according to different themes. However, it's important to note that using system colors like `.label` directly in `foregroundStyle` might encounter issues because `foregroundStyle` is more commonly used to define composite styles or gradients, rather than just a single color.
 
