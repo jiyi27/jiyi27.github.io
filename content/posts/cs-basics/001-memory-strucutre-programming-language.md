@@ -2,11 +2,13 @@
 title: C Go Java Python内存结构及对比
 date: 2023-05-27 19:59:17
 categories:
- - other
+ - 计算机基础
 tags:
+ - 计算机基础
+ - 内存管理
  - golang
  - java
- - c
+ - c语言
  - python
  - other
 ---

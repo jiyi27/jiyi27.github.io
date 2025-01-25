@@ -2,10 +2,12 @@
 title: 说说C的编译动态静态库及Go的Runtime
 date: 2023-05-25 18:50:14
 categories:
- - other
+ - 计算机基础
 tags:
+ - 计算机基础
+ - 编译原理
+ - c语言
  - golang
- - other
 ---
 
 最近看线程总是看到 goroutine managed by go runtime, ... runtime, 也看到问题 Does Go has a runtime? 刚好Go在官方FAQs有回答, 就在这记录一下, 

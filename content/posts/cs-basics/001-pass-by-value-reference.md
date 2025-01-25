@@ -2,14 +2,15 @@
 title: Pass by Value or Reference
 date: 2023-11-28 23:02:06
 categories:
- - other
+ - 计算机基础
 tags:
- - c
+ - 计算机基础
+ - 内存管理
+ - c语言
  - java
  - golang
  - python
  - javascript
-typora-root-url: ../../../static
 ---
 
 ## 1. Python

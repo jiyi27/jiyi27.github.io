@@ -2,10 +2,11 @@
 title: DNS Spoofing - GFW
 date: 2023-10-31 15:29:25
 categories:
- - networking
+ - 计算机网络
 tags:
- - cybersecurity
- - networking
+ - 计算机网络
+ - 网络安全
+ - dns
 typora-root-url: ../../../static
 ---
 
@@ -25,11 +26,11 @@ Attackers can poison DNS caches by impersonating [DNS nameservers](https://www.c
 
 DNS Cache Poisoning Process:
 
-<img src="/005-gfw-dns/c.png" alt="c" style="zoom: 33%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/9bac53ae4cf010ddec6d34a15ca5bf7a.png)
 
 Poisoned DNS Cache:
 
-<img src="/005-gfw-dns/d.png" alt="d" style="zoom: 33%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/5160e98a37841a2eac514a21f56224c9.png)
 
 If a DNS resolver receives a forged response, it accepts and caches the data uncritically because there is no way to verify if the information is accurate and comes from a legitimate source. 
 

@@ -2,10 +2,9 @@
 title: MPLS
 date: 2023-11-17 08:27:59
 categories:
- - networking
+ - 计算机网络
 tags:
- - networking
-typora-root-url: ../../../static
+ - 计算机网络
 ---
 
 ## 1. OSPF, BGP and MPLS

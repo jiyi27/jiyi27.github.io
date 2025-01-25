@@ -5,6 +5,7 @@ categories:
   - python
 tags:
   - python
+  - 编程小技巧 
 ---
 
 ## 1. Slicing makes shallow copy of a list

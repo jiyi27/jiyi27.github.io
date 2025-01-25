@@ -2,9 +2,10 @@
 title: Tools Commonly Used in Networking
 date: 2023-10-31 15:23:08
 categories:
- - networking
+ - 计算机网络
 tags:
- - networking
+ - 计算机网络
+ - dns
 ---
 
 ## 1. `nslookup`

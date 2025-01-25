@@ -2,9 +2,9 @@
 title: DHCP Basics
 date: 2023-10-30 23:43:06
 categories:
- - networking
+ - 计算机网络
 tags:
- - networking
+ - 计算机网络
 ---
 
 ## 1. Concepts

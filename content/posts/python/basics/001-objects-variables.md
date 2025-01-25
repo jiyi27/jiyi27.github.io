@@ -28,7 +28,7 @@ When the above code is executed, CPython creates an object of type `integer` and
 
 The `type` indicates the type of the object in CPython, and the `value` field, as the name suggests, stores the value of the object (`100` in this case). We will discuss the `ref_count` field later in the article.
 
-<img src="/001-objects-variables/a.png" alt="a" style="zoom:33%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/ee71bdf402c267bd6ef6cf97312cb33c.png)
 
 > **CPython** is the default and most widely used implementation of the Python language. When we say Python, it essentially means we're referring to CPython. When you download Python from [python.org](https://www.python.org/), you basically download the CPython code. Thus, CPython is a program written in C language that implements all the rules and specifications defined by the Python language. CPython can be defined as both an interpreter and a compiler as it compiles Python code into bytecode before interpreting it.
 
@@ -44,7 +44,7 @@ a = 100
 
 As discussed earlier, when the above code is executed, CPython internally creates an object of type *integer*. The variable `a` points to this integer object as shown below:
 
-<img src="/001-objects-variables/b.png" alt="b" style="zoom:33%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/10128c7f854b2d7f6719fe9be3dc81a1.png)
 
 We can access the integer object in the Python program using the variable `a`.
 

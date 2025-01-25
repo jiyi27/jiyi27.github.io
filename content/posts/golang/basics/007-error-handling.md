@@ -5,7 +5,7 @@ categories:
  - golang
 tags:
  - golang
- - 错误处理
+ - 错误异常处理
 ---
 
 ## 0. Use `%w` instead of `%v` or `%s`

@@ -2,9 +2,10 @@
 title: Wireshark Basics 
 date: 2023-09-13 16:52:30
 categories:
- - networking
+ - 计算机网络
 tags:
- - networking
+ - 计算机网络
+ - wireshark
 typora-root-url: ../../../static
 ---
 

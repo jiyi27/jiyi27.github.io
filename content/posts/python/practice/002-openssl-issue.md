@@ -2,11 +2,10 @@
 title: urllib3 not compatible with openssl issue - python
 date: 2023-10-07 12:01:25
 categories:
-  - python
+  - bugs
 tags:
+  - bugs
   - python
-
-typora-root-url: ../../../../static
 ---
 
 > OpenSSL is an all-around cryptography library that offers an open-source application of the TLS protocol. It allows users to perform various SSL-related tasks, including CSR (Certificate Signing Request) and private keys generation, and SSL certificate installation. You can use OpenSSL's commands to generate, install and manage SSL certificates on various servers.  [What Is OpenSSL and How Does It Work?](https://www.ssldragon.com/blog/what-is-openssl/) 

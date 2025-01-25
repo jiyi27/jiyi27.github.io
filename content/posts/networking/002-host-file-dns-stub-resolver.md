@@ -2,9 +2,10 @@
 title: DNS Stub and Recursive Resolver - Config Files
 date: 2023-10-13 14:03:57
 categories:
- - networking
+ - 计算机网络
 tags:
- - networking
+ - 计算机网络
+ - dns
 ---
 
 ## 1. `/etc/hosts` and `/etc/resolv.conf`

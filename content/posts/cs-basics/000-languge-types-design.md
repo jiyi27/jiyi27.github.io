@@ -2,9 +2,12 @@
 title: Typing in Programming Language
 date: 2023-11-28 20:30:17
 categories:
- - other
+ - 计算机基础
 tags:
- - c
+ - 计算机基础
+ - 编译原理
+ - 类型安全
+ - c语言
  - java
  - golang
  - python

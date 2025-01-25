@@ -5,10 +5,10 @@ categories:
   - python
 tags:
   - python
-typora-root-url: ../../../../static
+  - 错误异常处理
 ---
 
-## 3. Exception
+## 1. Exception
 
 You should never expose stacktrace to users. Thats a security risk. You should also never expose exception messages to users, only for custom exceptions that you know can not contain sensitive information is ok to expose.
 
@@ -17,12 +17,6 @@ You should never build your release candidate on a developer machine. You should
 Finally you should build the release candidate in release mode. Both for performance reasons and security.
 
 https://softwareengineering.stackexchange.com/a/402751/435322
-
-
-
-
-
-
 
 两种编程异常处理风格:
 
@@ -111,7 +105,7 @@ for(int i = 0; i < 10000; i++) {
 
 比如应该结束程序的异常, 一直往上抛出到最外层终止程序还是输出log后立即终止呢?
 
-## 1. Basics concepts
+## 2. Basics concepts
 
 Try to understand the exception information (*Traceback (most recent call last)*) :
 
@@ -139,13 +133,13 @@ As you can see The last line of the error message indicates what happened: `prin
 
 > Errors detected during execution are called *exceptions*. [Errors and Exceptions — Python 3.12.0](https://docs.python.org/3/tutorial/errors.html)
 
-## 2. Types of Exceptions
+## 3. Types of Exceptions
 
 `BaseException` is the common base class of all exceptions. One of its subclasses, `Exception`, is the base class of all the **non-fatal** exceptions. Exceptions which are not subclasses of `Exception` are not typically handled, because they are used to indicate that the program should terminate. They include `SystemExit`which is raised by `sys.exit()` and `KeyboardInterrupt`which is raised when a user wishes to interrupt the program.
 
 `Exception`can be used as a wildcard that catches (almost) everything. However, it is good practice to be as specific as possible with the types of exceptions that we intend to handle, and to allow any unexpected exceptions to propagate on.
 
-## 3. Handle Exceptions
+## 4. Handle Exceptions
 
 The most common pattern for handling `Exception` is to **print or log the exception and then re-raise it** (allowing a caller to handle the exception as well):
 
@@ -183,7 +177,7 @@ with open("myfile.txt") as f:
 
 After the statement is executed, the file *f* is always closed, **even if a problem was encountered while processing the lines**. Objects which, like files, provide predefined clean-up actions will indicate this in their documentation.
 
-## 4. Performance
+## 5. Performance
 
 [performance - How is exception handling implemented in Python? - Stack Overflow](https://stackoverflow.com/questions/66536614/how-is-exception-handling-implemented-in-python):
 
@@ -207,9 +201,9 @@ Another post: [What are the effects of exceptions on performance in Java? - Stac
 >
 > https://stackoverflow.com/a/8024032/16317008
 
-## 5. When to catch
+## 6. When to catch
 
-### 5.1. At the lowest possible level
+### 6.1. At the lowest possible level
 
 This is the level at which you are integrating with third party code, such as an ORM tool or any library performing IO operations (accessing resources over HTTP, reading a file, saving to the database, you name it). That is, **the level at which you leave your application’s native code** to interact with other components.
 
@@ -220,7 +214,7 @@ The guidelines in this scenario are:
 - **Do not perform logging here**
 - **Let all other exceptions bubble up** as they will be handled by the second case
 
-### 5.2. At the highest possible level
+### 6.2. At the highest possible level
 
 This would be the last place where you can handle the exception before it is thrown directly to the user.
 
@@ -236,7 +230,7 @@ The guidelines in this second scenario are:
 
 Learn more, very good explanation: https://stackoverflow.com/a/59511485
 
-## 6. When to throw exceptions - Library
+## 7. When to throw exceptions - Library
 
 Easier to explain in the context of developing a library. **You should throw when you reached an error and there's nothing more you can do** besides letting the consumer of your APIs know about it, and letting them decide.
 

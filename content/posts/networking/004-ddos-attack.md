@@ -2,10 +2,10 @@
 title: DDoS Attack
 date: 2023-09-09 09:29:57
 categories:
-  - networking
+ - 计算机网络
 tags:
-  - networking
-  - cybersecurity
+ - 计算机网络
+ - 网络安全
 ---
 
 ## 1. DDoS attack

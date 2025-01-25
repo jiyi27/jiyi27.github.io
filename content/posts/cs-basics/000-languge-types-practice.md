@@ -2,16 +2,15 @@
 title: Typing in Programming Language - Example
 date: 2023-11-28 19:20:17
 categories:
- - other
+ - 计算机基础
 tags:
- - c
+ - 计算机基础
+ - c语言
  - java
  - golang
  - python
  - javascript
 ---
-
-Previous post: [Typing in Programming Language - David's Blog](https://davidzhu.xyz/post/other/000-languge-types-design/)
 
 ## 1. Javascript
 

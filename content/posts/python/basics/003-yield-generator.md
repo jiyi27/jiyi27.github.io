@@ -5,7 +5,7 @@ categories:
   - python
 tags:
   - python
-typora-root-url: ../../../../static
+  - io
 ---
 
 ## 1. Definition

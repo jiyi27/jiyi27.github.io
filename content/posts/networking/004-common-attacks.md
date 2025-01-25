@@ -2,12 +2,11 @@
 title: Common Network Attacks
 date: 2023-10-30 22:44:57
 categories:
- - networking
+ - 计算机网络
 tags:
- - cybersecurity
- - http
- - networking
-typora-root-url: ../../../static
+ - 计算机网络
+ - 网络安全
+ - dns
 ---
 
 ## 1. Man-in-the-middle attack
@@ -32,7 +31,7 @@ SSL stripping attacks, also known as SSL strip, SSL downgrade, or HTTP downgrade
 
 In order to [“strip” the SSL](https://avicoder.me/2016/02/22/SSLstrip-for-newbies/), an attacker intervenes in the redirection of the HTTP to the secure HTTPS protocol and intercepts a request from the user to the server. The attacker will then continue to establish an HTTPS connection between himself and the server, and an unsecured HTTP connection with the user, acting as a “bridge” between them.
 
-<img src="/004-common-attacks/a.png" alt="a" style="zoom:50%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/b0158611a93323eae52c342681549a60.png)
 
 How can the SSL strip trick both the browser and the website’s server? The SSL strip takes advantage of the way most users come to SSL websites. The majority of visitors connect to a website’s page that redirects through a 302 redirect, or they arrive on an SSL page via a link from a non-SSL site. If the victim wants, for instance, to buy a product and types the URL www.buyme.com in the address bar, the browser connects to the attacker's machine and waits for a response from the server. In an SSL strip, the attacker, in turn, forwards the victim’s request to the online shop’s server and receives the secure HTTPS payment page. For example https://www.buyme.com. At this point, the attacker has complete control over the secure payment page. He downgrades it from HTTPS to HTTP and sends it back to the victim’s browser. The browser is now redirected to http://www.buyme.com. From now onward, all the victim’s data will be transferred in plain text format, and the attacker will be able to intercept it. Meanwhile, the website’s server will think that it has successfully established the secure connection, which indeed it has—but with the attacker’s machine, not the victim’s.
 

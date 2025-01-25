@@ -2,9 +2,10 @@
 title: DNS Concepts (NameServer(NS), DNS Records and Caching)
 date: 2023-10-31 09:50:20
 categories:
- - networking
+ - 计算机网络
 tags:
- - networking
+ - 计算机网络
+ - dns
 typora-root-url: ../../../static
 ---
 

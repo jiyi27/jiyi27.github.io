@@ -2,19 +2,16 @@
 title: Data Types in Programming Languages
 date: 2023-11-28 20:50:06
 categories:
- - other
+ - 计算机基础
 tags:
- - c
+ - 计算机基础
+ - 内存管理
+ - c语言
  - java
  - golang
  - python
  - javascript
-typora-root-url: ../../../static
 ---
-
-# Data Types in Programming Languages
-
-> Programs are collections of instructions that manipulate data to produce a desired result. 
 
 ## 1. Javascript
 
@@ -88,7 +85,7 @@ Find [a good explanation](https://stackoverflow.com/a/62177555/16317008):
 
 Types of variables in Java are divided into two categories—**primitive types** and **reference types**. 
 
-<img src="/001-data-types-programming-language/b.png" alt="b" style="zoom:33%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/abfa9bf89da62c46a77ca56b5f3cd477.png)
 
 ### 3.1. Primitive types
 
@@ -115,7 +112,7 @@ int age = 77;
 Person person = new Person();
 ```
 
-<img src="/001-data-types-programming-language/a.png" alt="a" style="zoom: 33%;" />
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/1f7623bcd0db262e0068e1a64d9699ec.png)
 
 Just as men and women are fundamentally different (according to John Gray, author of Men Are from Mars, Women Are from Venus), **primitive variables** and **object reference variables** differ from each other in multiple ways. The basic difference is that **primitive variables store the actual values**, whereas reference variables store the addresses of the objects they refer to. Let’s assume that a class Person is already defined. If you create an int variable a, and an object reference variable person, they will store their values in memory as shown in figure 2.13. https://stackoverflow.com/a/32049775/16317008
 
