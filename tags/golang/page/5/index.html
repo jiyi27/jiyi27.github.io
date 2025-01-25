@@ -173,92 +173,6 @@
     
       <article class="post on-list">
         <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/golang/basics/009-gob-json-encoding/">encoding/gob &amp; encoding/json in Go</a>
-        </h1>
-        <div class="post-meta"><time class="post-date">2023-08-31</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="1-why-do-we-need-encoding">1. Why do we need encoding</h2>
-<blockquote>
-<p>To transmit a data structure across a network or to store it in a file, it must be encoded and then decoded again. Cause computer just know binary.</p>
-</blockquote>
-<p>There are many encodings available, of course: <a href="http://www.json.org/">JSON</a>, <a href="http://www.w3.org/XML/">XML</a>, Google’s <a href="http://code.google.com/p/protobuf">protocol buffers</a>, and more. And now there’s another, provided by Go’s <a href="https://go.dev/pkg/encoding/gob/">gob</a> package.</p>
-<h2 id="2-encodinggob">2. encoding/gob</h2>
-<h3 id="21-why-gob">2.1. Why gob</h3>
-<p>Why define a new encoding? It’s a lot of work and redundant at that. Why not just use one of the existing formats? Well, for one thing, we do! Go has <a href="https://go.dev/pkg/">packages</a> supporting all the encodings just mentioned (the <a href="http://github.com/golang/protobuf">protocol buffer package</a> is in a separate repository but it’s one of the most frequently downloaded). And for many purposes, including communicating with tools and systems written in other languages, they’re the right choice.</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/golang/basics/009-gob-json-encoding/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/golang/practice/004-tricks-and-common-mistakes/">Tricks and Common Mistakes - Go</a>
-        </h1>
-        <div class="post-meta"><time class="post-date">2023-08-27</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="tricks">Tricks</h2>
-<h3 id="remove-an-element-from-a-slice">remove an element from a slice</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// remove the element at index i from a</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">a</span> = append(<span style="color:#a6e22e">a</span>[:<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>:]<span style="color:#f92672">...</span>)
-</span></span></code></pre></div><h3 id="handle-close">handle <code>close()</code></h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// credit to: https://gist.github.com/benbjohnson/9eebd201ec096ab6430e1f33411e6427</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">doSomething</span>() <span style="color:#66d9ef">error</span> {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">f</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Create</span>(<span style="color:#e6db74">&#34;foo&#34;</span>)
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ensure that it&#39;s definitely closed by the end</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Close</span>()
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Write</span>([]byte(<span style="color:#e6db74">&#34;bar&#34;</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Close</span>()
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>Why we bother to care about getting error from <code>f.Close()</code>? We have got error from  <code>f.Write()</code>. Well, there are a lot to say, learn more: <a href="https://davidzhu.xyz/post/golang/advance/010-defer-close/">Don&rsquo;t Defer Close() on Writable Files - Go Notes</a></p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/golang/practice/004-tricks-and-common-mistakes/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h1 class="post-title">
           <a href="https://blog.jiyi27.com/posts/golang/advance/002-concurrency-with-shared-variables/">Concurrency with Shared Variables</a>
         </h1>
         <div class="post-meta"><time class="post-date">2023-08-24</time></div>
@@ -268,7 +182,7 @@
             
             #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
             
-            #<a href="https://blog.jiyi27.com/tags/concurrency/">concurrency</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
             
           </span>
         
@@ -301,7 +215,7 @@
             
             #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
             
-            #<a href="https://blog.jiyi27.com/tags/concurrency/">concurrency</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
             
           </span>
         
@@ -374,7 +288,7 @@
             
             #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
             
-            #<a href="https://blog.jiyi27.com/tags/concurrency/">concurrency</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
             
           </span>
         
@@ -410,6 +324,8 @@
             
             #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
             
+            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+            
           </span>
         
 
@@ -440,6 +356,86 @@
         
           <div>
             <a class="read-more button inline" href="/posts/golang/practice/003-gptbot/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/advance/003-go-scheduler/">Go Scheduler (1)</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-05-28</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%9E%B6%E6%9E%84/">计算机架构</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <p>Source: <a href="https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html">Scheduling In Go : Part I - OS Scheduler</a></p>
+<h2 id="1-os-scheduler">1. OS scheduler</h2>
+<p>Your program is just a series of machine instructions that need to be executed one after the other sequentially. To make that happen, the operating system uses the concept of a Thread. It’s the job of the Thread to account for and sequentially execute the set of instructions it’s assigned. Execution continues until there are no more instructions for the Thread to execute. <strong>This is why I call a Thread, “a path of execution”.</strong></p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/advance/003-go-scheduler/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/cs-basics/001-memory-strucutre-programming-language/">C Go Java Python内存结构及对比</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-05-27</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">内存管理</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/java/">java</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/c%E8%AF%AD%E8%A8%80/">c语言</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/python/">python</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/other/">other</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-javascript">1. Javascript</h2>
+<p>Taken from <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_management">JavaScript | MDN</a> but <strong>this applies for all language with GC</strong>:</p>
+<p>Low-level languages like C, have manual memory management primitives such as <a href="https://pubs.opengroup.org/onlinepubs/009695399/functions/malloc.html"><code>malloc()</code></a> and <a href="https://en.wikipedia.org/wiki/C_dynamic_memory_allocation#Overview_of_functions"><code>free()</code></a>. In contrast, JavaScript automatically allocates memory when objects are created and frees it when they are not used anymore (<em>garbage collection</em>). This automaticity is a potential source of confusion: it can give developers the false impression that they don&rsquo;t need to worry about memory management.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/cs-basics/001-memory-strucutre-programming-language/">阅读更多</a>
           </div>
         
       </article>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>垃圾回收器 on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8/</link>
+    <description>Recent content in 垃圾回收器 on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 14 May 2023 21:50:26 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Java 内存结构</title>
+      <link>https://blog.jiyi27.com/posts/java/basics/005-memory-structure/</link>
+      <pubDate>Sun, 14 May 2023 21:50:26 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/java/basics/005-memory-structure/</guid>
+      <description>&lt;h2 id=&#34;1-jvm-run-time-data-areas&#34;&gt;1. JVM Run-Time Data Areas&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;JVN内存结构说的就是Run-Time Data Areas. The Run-Time Data Areas of JVM is vary from different JVM specifications. 不同版本的JVM介绍: &lt;a href=&#34;https://docs.oracle.com/javase/specs/index.html&#34;&gt;https://docs.oracle.com/javase/specs/index.html&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;说这个之前缕清JVM的内存结构: JVM memory is divided into multiple parts: Heap Memory, Non-Heap Memory.&lt;/p&gt;
+&lt;h3 id=&#34;11-heap&#34;&gt;1.1. Heap&lt;/h3&gt;
+&lt;p&gt;The Java Virtual Machine has a heap that is shared among &lt;strong&gt;all Java Virtual Machine threads&lt;/strong&gt;. The heap is the run-time data area from which memory for &lt;strong&gt;all class instances and arrays&lt;/strong&gt; is allocated.&lt;/p&gt;
+&lt;h3 id=&#34;12-method-area&#34;&gt;1.2. Method Area&lt;/h3&gt;
+&lt;p&gt;The Java Virtual Machine has a method area that is shared among all Java Virtual Machine threads. The method area is analogous to the storage area for compiled code of a conventional language or analogous to the &amp;ldquo;text&amp;rdquo; segment in an operating system process. It stores per-class structures such as the &lt;strong&gt;run-time constant pool&lt;/strong&gt;, field and method data, and the code for methods and constructors.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-jvm-run-time-data-areas&#34;&gt;1. JVM Run-Time Data Areas&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;JVN内存结构说的就是Run-Time Data Areas. The Run-Time Data Areas of JVM is vary from different JVM specifications. 不同版本的JVM介绍: &lt;a href=&#34;https://docs.oracle.com/javase/specs/index.html&#34;&gt;https://docs.oracle.com/javase/specs/index.html&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;说这个之前缕清JVM的内存结构: JVM memory is divided into multiple parts: Heap Memory, Non-Heap Memory.&lt;/p&gt;
+&lt;h3 id=&#34;11-heap&#34;&gt;1.1. Heap&lt;/h3&gt;
+&lt;p&gt;The Java Virtual Machine has a heap that is shared among &lt;strong&gt;all Java Virtual Machine threads&lt;/strong&gt;. The heap is the run-time data area from which memory for &lt;strong&gt;all class instances and arrays&lt;/strong&gt; is allocated.&lt;/p&gt;
+&lt;h3 id=&#34;12-method-area&#34;&gt;1.2. Method Area&lt;/h3&gt;
+&lt;p&gt;The Java Virtual Machine has a method area that is shared among all Java Virtual Machine threads. The method area is analogous to the storage area for compiled code of a conventional language or analogous to the &amp;ldquo;text&amp;rdquo; segment in an operating system process. It stores per-class structures such as the &lt;strong&gt;run-time constant pool&lt;/strong&gt;, field and method data, and the code for methods and constructors.&lt;/p&gt;
+&lt;p&gt;Although the &lt;strong&gt;method area is logically part of the heap&lt;/strong&gt;, simple implementations may choose not to either garbage collect or compact it. Method Area属于heap, 但有的JVM实现可能并不会用gc清理这块区域.&lt;/p&gt;
+&lt;p&gt;三点:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Methos Area 属于heap, 当然是线程共享&lt;/li&gt;
+&lt;li&gt;run-time constant pool属于Method Area&lt;/li&gt;
+&lt;li&gt;run-time constant pool -&amp;gt; Method Area -&amp;gt; Heap&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;13-run-time-constant-pool&#34;&gt;1.3. Run-Time Constant Pool&lt;/h3&gt;
+&lt;p&gt;A run-time constant pool is a &lt;strong&gt;per-class&lt;/strong&gt; or per-interface run-time representation of the constant_pool table in a class file. Run-time constant pool就是class file里的constant_pool table.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;总结: run-time constant pool -&amp;gt; Method Area -&amp;gt; Heap, Each instance of the Java virtual machine has one method area and one heap. These areas are shared by all threads running inside the virtual machine. When the virtual machine loads a class file, it parses information about a type from the binary data contained in the class file. It places this type information into the method area. As the program runs, the virtual machine places all objects the program instantiates onto the heap. 下图描述了一个class file有一个constant pool, 然后被存放在Method Area, 但该图并不准确, 因为Method Area其实是属于Heap的.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;14-java-virtual-machine-stacks&#34;&gt;1.4. Java Virtual Machine Stacks&lt;/h3&gt;
+&lt;p&gt;以上三个都是heap里面的东西, 现在是stack&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Each Java Virtual Machine thread&lt;/strong&gt; has a private Java Virtual Machine stack, created at the same time as the thread. A Java Virtual Machine stack stores &lt;strong&gt;frames&lt;/strong&gt;. A Java Virtual Machine stack is analogous to the stack of a conventional language such as C: it holds local variables and partial results, and plays a part in method invocation and return.&lt;/p&gt;
+&lt;h3 id=&#34;15-the-pc-register&#34;&gt;1.5. The pc Register&lt;/h3&gt;
+&lt;p&gt;Each Java Virtual Machine thread has its own pc (program counter) register. At any point, each Java Virtual Machine thread is executing the code of a single method, namely the current method for that thread.&lt;/p&gt;
+&lt;p&gt;以上内容参考自: &lt;a href=&#34;https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-2.html#jvms-2.5&#34;&gt;The Java Virtual Machine Specification, Java SE 19 Edition&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Keep in mind that the Java virtual machine contains a separate runtime constant pool for each class and interface it loads&lt;/strong&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/005-memory-structure/a.png&#34; alt=&#34;a&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;16-补充&#34;&gt;1.6. 补充&lt;/h3&gt;
+&lt;p&gt;上面提到了frame和dynamic linking, 下面做个补充:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Frame&lt;/strong&gt;: A frame is used to store data and partial results, as well as to &lt;strong&gt;perform dynamic linking&lt;/strong&gt;, return values for methods, and dispatch exceptions. A new frame is created each time a method is invoked. A frame is destroyed when its method invocation completes, whether that completion is normal or abrupt (it throws an uncaught exception). Frames are allocated from the Java Virtual Machine stack of the thread creating the frame. Each frame has its own &lt;strong&gt;array of local variables&lt;/strong&gt;, its own &lt;strong&gt;operand stack&lt;/strong&gt;, and &lt;strong&gt;a reference to the run-time constant pool&lt;/strong&gt; of the class of the current method.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Dynamic Linking&lt;/strong&gt;: When you compile a Java program, you get a separate class file for each class or interface in your program. Although the individual class files may appear to be independent, they actually harbor symbolic connections to one another and to the class files of the Java API. When you run your program, the Java virtual machine loads your program&amp;rsquo;s classes and interfaces and hooks them together in a &lt;strong&gt;process of dynamic linking&lt;/strong&gt;. As your program runs, the Java virtual machine builds an internal web of interconnected classes and interfaces.&lt;/p&gt;
+&lt;p&gt;A &lt;code&gt;class&lt;/code&gt; file keeps all its symbolic references in one place, the constant pool. Each &lt;code&gt;class&lt;/code&gt; file has a constant pool, and each class or interface loaded by the Java virtual machine has an internal version of its constant pool called the runtime constant pool(可以看出runtime constant pool和class file里的constant pool table是对应的). The runtime constant pool is an implementation-specific data structure that maps to the constant pool in the class file. Thus, after a type is initially loaded, all the symbolic references from the type reside in the type&amp;rsquo;s runtime constant pool.&lt;/p&gt;
+&lt;p&gt;以上内容参考自: &lt;a href=&#34;https://www.artima.com/insidejvm/ed2/linkmod.html&#34;&gt;https://www.artima.com/insidejvm/ed2/linkmod.html&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-string-pool-在哪-到底存不存在string-pool&#34;&gt;2. String Pool 在哪? 到底存不存在String Pool?&lt;/h2&gt;
+&lt;p&gt;看了一下Java SE 18的JVM实现标准里的Runtime Data Area, 里面并没有提到String Pool这个名词, 但是提到了Method Area中的Runtime Constant Pool, 感觉String应该在这里. 至于String在哪, 毫无因为在heap上, 我们要探究的是string的对象具体在heap的哪个部分(貌似探究这个没什么意义 ummmm) 况且, 所有对象都在heap上,这句话是不变的真理.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Whenever we declare a variable or create an object, it is stored in the memory. At a high level, Java divides the memory into two blocks: &lt;strong&gt;stack and heap&lt;/strong&gt;. &lt;a href=&#34;https://www.baeldung.com/java-string-constant-pool-heap-stack&#34;&gt;https://www.baeldung.com/java-string-constant-pool-heap-stack&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Runtime Constant Pool(runtime constant pool)在Method Area, 然后Method Area在heap上, 那么Runtime Constant Pool的内容是什么呢? 上面我们提到Runtime Constant Pool就是class file里的constant pool table, 想知道runtime constant pool里有什么, 就要知道class file里constant pool table的格式内容, 去&lt;a href=&#34;https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-4.html#jvms-4.4&#34;&gt;Java SE 18&lt;/a&gt;标准看看:&lt;/p&gt;
+&lt;p&gt;找到了, 这句话不知道说的啥意思, 但感觉constant pool挺重要,
+Java Virtual Machine instructions do not rely on the run-time layout of classes, interfaces, class instances, or arrays. Instead, instructions refer to symbolic information in the &lt;code&gt;constant_pool&lt;/code&gt; table:&lt;/p&gt;
+&lt;p&gt;Each entry in the constant_pool table must begin with a 1-byte tag indicating the kind of constant denoted by the entry, 如下图, 我们去4.4.3看看哪个CONSTANT_String是什么:&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;CONSTANT_String_info&lt;/code&gt; structure is used to represent &lt;strong&gt;constant objects of the type String&lt;/strong&gt;:&lt;/p&gt;
+&lt;p&gt;所以, String对象就在这——runtime constant pool.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/005-memory-structure/b.png&#34; alt=&#34;b&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-gc-and-string&#34;&gt;3. GC and String&lt;/h2&gt;
+&lt;p&gt;Before Java 7, the JVM placed the Java String Pool in the PermGen space, which has a fixed size — it can&amp;rsquo;t be expanded at runtime and is not eligible for garbage collection.&lt;/p&gt;
+&lt;p&gt;The risk of interning Strings in the PermGen (instead of the Heap) is that we can get an OutOfMemory error from the JVM if we intern too many Strings.&lt;/p&gt;
+&lt;p&gt;From Java 7 onwards, the &lt;strong&gt;Java String Pool is stored in the Heap space&lt;/strong&gt;, which is garbage collected by the JVM. The advantage of this approach is the reduced risk of OutOfMemory error because unreferenced Strings will be removed from the pool, thereby releasing memory.&lt;/p&gt;
+&lt;p&gt;所以String对象会被GC清理, 却String存储在heap上, 可能说的有点区别, 比如string存储在string pool, 不会直接说存储在heap上.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/005-memory-structure/c.png&#34; alt=&#34;c&#34;&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

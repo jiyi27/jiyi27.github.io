@@ -8,7 +8,7 @@
     <language>en</language>
     <lastBuildDate>Sat, 07 Oct 2023 08:30:26 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/https/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>HTTPS SSL TLS</title>
+      <title>HTTPS 连接建立过程 (TLS 握手)</title>
       <link>https://blog.jiyi27.com/posts/http/006-https-ssl/</link>
       <pubDate>Sat, 07 Oct 2023 08:30:26 +0000</pubDate>
       
@@ -52,22 +52,38 @@
 &lt;p&gt;Note that SSL/TLS is a stateful protocol, whereas HTTP/HTTPS is a stateless protocol.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;TLS/SSL is stateful.&lt;/strong&gt; The web server and the client (browser) cache the session including the cryptographic keys to improve performance and do &lt;strong&gt;not&lt;/strong&gt; perform key exchange for every request. &lt;a href=&#34;https://stackoverflow.com/a/33681674/16317008&#34;&gt;Source&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&#34;4-details-in-tls-handshake---avoid-man-in-middle-attack&#34;&gt;4. Details in TLS handshake - avoid man-in-middle attack&lt;/h2&gt;
+&lt;h2 id=&#34;4-details-in-tls-handshake&#34;&gt;4. Details in TLS handshake&lt;/h2&gt;
 &lt;p&gt;I have talked man-in-middle attack in other &lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/002-ssh/&#34;&gt;post&lt;/a&gt;, when a ssh connection is being established at the first time, it will notify us the fingerprint of the server which enables us can make sure to we are connecting the right server. But it&amp;rsquo;s a little diffenent in SSL/TLS (HTTPS). The authenciation happens in the TLS handshake, the authenciation here means to prevent man-in-the-middle attack by verifying the identity of the remote server.&lt;/p&gt;
-&lt;p&gt;Once the client and server have agreed to use TLS, they negotiate a &lt;a href=&#34;https://en.wikipedia.org/wiki/State_%28computer_science%29&#34;&gt;stateful&lt;/a&gt; connection by using a handshaking procedure (see &lt;a href=&#34;https://en.wikipedia.org/wiki/Transport_Layer_Security#TLS_handshake&#34;&gt;TLS handshake&lt;/a&gt;). The protocols use a handshake with an &lt;a href=&#34;https://en.wikipedia.org/wiki/Asymmetric_cipher&#34;&gt;asymmetric cipher&lt;/a&gt; to establish not only cipher settings but also a session-specific shared key with which further communication is encrypted using a &lt;a href=&#34;https://en.wikipedia.org/wiki/Symmetric_cipher&#34;&gt;symmetric cipher&lt;/a&gt;. During this handshake, the client and server agree on various parameters used to establish the connection&amp;rsquo;s security:&lt;/p&gt;
+&lt;p&gt;The protocols use a handshake with an &lt;a href=&#34;https://en.wikipedia.org/wiki/Asymmetric_cipher&#34;&gt;asymmetric cipher&lt;/a&gt; to establish not only cipher settings but also a session-specific shared key with which further communication is encrypted using a &lt;a href=&#34;https://en.wikipedia.org/wiki/Symmetric_cipher&#34;&gt;symmetric cipher&lt;/a&gt;. During this handshake, the client and server agree on various parameters used to establish the connection&amp;rsquo;s security:&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;The handshake begins when a client connects to a TLS-enabled server requesting a secure connection and the client presents a list of supported &lt;a href=&#34;https://en.wikipedia.org/wiki/Cipher_suite&#34;&gt;cipher suites&lt;/a&gt; (&lt;a href=&#34;https://en.wikipedia.org/wiki/Encryption&#34;&gt;ciphers&lt;/a&gt; and &lt;a href=&#34;https://en.wikipedia.org/wiki/Hash_function&#34;&gt;hash functions&lt;/a&gt;).&lt;/li&gt;
-&lt;li&gt;From this list, the server picks a cipher and hash function that it also supports and notifies the client of the decision.&lt;/li&gt;
-&lt;li&gt;The server usually then provides identification in the form of a &lt;a href=&#34;https://en.wikipedia.org/wiki/Public_key_certificate&#34;&gt;digital certificate&lt;/a&gt;. The certificate contains the &lt;a href=&#34;https://en.wikipedia.org/wiki/Hostname&#34;&gt;server name&lt;/a&gt;, the trusted &lt;a href=&#34;https://en.wikipedia.org/wiki/Certificate_authority&#34;&gt;certificate authority&lt;/a&gt; (CA) that vouches for the authenticity of the certificate, and the server&amp;rsquo;s public encryption key. (&lt;strong&gt;The digital certificate here is know as SSL/TLS certificate&lt;/strong&gt;)&lt;/li&gt;
-&lt;li&gt;The client confirms the validity of the certificate before proceeding. (&lt;strong&gt;The client verifies the identity of the remote server by check the digital certificate which is called SSL/TLS certificate here&lt;/strong&gt;)&lt;/li&gt;
-&lt;li&gt;To generate the session keys used for the secure connection, the client either:
-&lt;ul&gt;
-&lt;li&gt;encrypts a &lt;a href=&#34;https://en.wikipedia.org/wiki/Random_number_generation&#34;&gt;random number&lt;/a&gt; (&lt;em&gt;PreMasterSecret&lt;/em&gt;) with the server&amp;rsquo;s public key and sends the result to the server (which only the server should be able to decrypt with its private key); both parties then use the random number to generate a unique session key for subsequent encryption and decryption of data during the session, or&lt;/li&gt;
-&lt;li&gt;uses &lt;a href=&#34;https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange&#34;&gt;Diffie–Hellman key exchange&lt;/a&gt; (or its variant &lt;a href=&#34;https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman&#34;&gt;elliptic-curve DH&lt;/a&gt;) to securely generate a random and unique session key for encryption and decryption that has the additional property of &lt;a href=&#34;https://en.wikipedia.org/wiki/Forward_secrecy&#34;&gt;forward secrecy&lt;/a&gt;: if the server&amp;rsquo;s private key is disclosed in future, it cannot be used to decrypt the current session, even if the session is intercepted and recorded by a third party.&lt;/li&gt;
-&lt;/ul&gt;
+&lt;li&gt;
+&lt;p&gt;客户端跟对方说：&amp;ldquo;你好，我想安全地聊天，我可以用这些加密方式&amp;hellip;&amp;rdquo;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;对方回应：&amp;ldquo;好的，那我们就用这种加密方式吧&amp;rdquo;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;对方给你看他的 TLS 数字证书, 这个身份证上有：他的名字、公开的联系方式（公钥）、以及一个权威机构（CA）的盖章.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;浏览器验证证书是不是真的&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;建立专属密码阶段 客户端随机生成一个随机数,&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;方式一：客户端随机生成一个随机数, 用对方的公开联系方式（公钥）加密后发给他&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;方式二：你们俩一起用一个特殊的数学方法（Diffie-Hellman）, 各自算出一个相同的暗号&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;你们用刚才约定的暗号加密之后的所有对话&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;This concludes(ends) the handshake and begins the secured connection, which is encrypted and decrypted with the session key until the connection closes. If any one of the above steps fails, then the TLS handshake fails and the connection is not created.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;最开始 (握手阶段) 用的是不对称加密, 之后实际传输数据是对称加密&lt;/p&gt;
+&lt;/blockquote&gt;
 &lt;p&gt;Source: &lt;a href=&#34;https://en.wikipedia.org/wiki/Transport_Layer_Security&#34;&gt;https://en.wikipedia.org/wiki/Transport_Layer_Security&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Learn more: &lt;a href=&#34;https://www.cloudflare.com/learning/ssl/what-happens-in-a-tls-handshake/&#34;&gt;https://www.cloudflare.com/learning/ssl/what-happens-in-a-tls-handshake/&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&#34;5-two-ways-to-get-ssltls-certificate&#34;&gt;5. Two ways to get SSL/TLS certificate&lt;/h2&gt;

@@ -173,106 +173,6 @@
     
       <article class="post on-list">
         <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/golang/practice/000-parse-data-go-web/">Parse Data - Go Web</a>
-        </h1>
-        <div class="post-meta"><time class="post-date">2023-09-23</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/http/">http</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="1-parse-query-string-and-x-www-form-urlencoded-format-body">1. Parse Query String and <code>x-www-form-urlencoded</code> Format Body</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">e</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">ParseForm</span>(); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;failed to parse username and password: %v&#34;</span>, <span style="color:#a6e22e">e</span>)
-</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">username</span> = <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Form</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#e6db74">&#34;username&#34;</span>)
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">password</span> = <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Form</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#e6db74">&#34;password&#34;</span>)
-</span></span></code></pre></div><p>According to  <a href="https://pkg.go.dev/net/http#Request.ParseForm">Golang docs</a>, <code>r.ParseForm()</code> will try to parse both query string and request body in Go, but there is a condition: the <code>Content-Type</code> header of the reuqest must be <code>application/x-www-form-urlencoded</code>. Otherwise, the request body will be ignored by <code>r.ParseForm()</code>, it just tries to parse query string resides in the URL.</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/golang/practice/000-parse-data-go-web/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/golang/advance/006-closures-go/">Function Closures - Go</a>
-        </h1>
-        <div class="post-meta"><time class="post-date">2023-09-18</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p>Previous post: <a href="https://davidzhu.xyz/post/golang/basics/012-first-class-functions/">First-Class Functions - Go - David&rsquo;s Blog</a></p>
-<h2 id="1-what-is-closure">1. What is closure</h2>
-<blockquote>
-<p>Go functions may be closures. A closure is a function value that references variables from outside its body. The function may access and assign to the referenced variables; in this sense the function is &ldquo;bound&rdquo; to the variables.</p>
-<p><a href="https://go.dev/tour/moretypes/25">Closures - A Tour of Go</a></p>
-</blockquote>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">adder</span>() <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">int</span>) (<span style="color:#66d9ef">int</span>, <span style="color:#f92672">*</span><span style="color:#66d9ef">int</span>) {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">sum</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">x</span> <span style="color:#66d9ef">int</span>) (<span style="color:#66d9ef">int</span>, <span style="color:#f92672">*</span><span style="color:#66d9ef">int</span>) {
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sum</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">x</span>
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">sum</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">sum</span>
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">pos</span>, <span style="color:#a6e22e">neg</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">adder</span>(), <span style="color:#a6e22e">adder</span>()
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">3</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sum</span>, <span style="color:#a6e22e">addr</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">pos</span>(<span style="color:#a6e22e">i</span>)
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;pos:  &#34;</span>, <span style="color:#a6e22e">sum</span>, <span style="color:#e6db74">&#34; &#34;</span>, <span style="color:#a6e22e">addr</span>)
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sum</span>, <span style="color:#a6e22e">addr</span> = <span style="color:#a6e22e">neg</span>(<span style="color:#f92672">-</span><span style="color:#a6e22e">i</span>)
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;neg: &#34;</span>, <span style="color:#a6e22e">sum</span>, <span style="color:#e6db74">&#34; &#34;</span>, <span style="color:#a6e22e">addr</span>)
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">//--------------------------</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pos</span>:   <span style="color:#ae81ff">1</span>   <span style="color:#ae81ff">0x140000b0018</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">neg</span>:  <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>   <span style="color:#ae81ff">0x140000b0020</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pos</span>:   <span style="color:#ae81ff">3</span>   <span style="color:#ae81ff">0x140000b0018</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">neg</span>:  <span style="color:#f92672">-</span><span style="color:#ae81ff">3</span>   <span style="color:#ae81ff">0x140000b0020</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pos</span>:   <span style="color:#ae81ff">6</span>   <span style="color:#ae81ff">0x140000b0018</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">neg</span>:  <span style="color:#f92672">-</span><span style="color:#ae81ff">6</span>   <span style="color:#ae81ff">0x140000b0020</span>
-</span></span></code></pre></div><p>As we see above,  when the anonymous function defined in the <code>adder()</code> access <code>sum</code>, it looks like accessing a global variable, even the function <code>adder()</code> has returned we still can access variable <code>sum</code>. However, there are &ldquo;two&rdquo; <code>sum</code> actually, they are isolated and each has its own address.</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/golang/advance/006-closures-go/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h1 class="post-title">
           <a href="https://blog.jiyi27.com/posts/golang/basics/003-string-runes-bytes/">string, bytes, runes and characters - Go</a>
         </h1>
         <div class="post-meta"><time class="post-date">2023-09-11</time></div>
@@ -337,6 +237,8 @@
             
             #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
             
+            #<a href="https://blog.jiyi27.com/tags/%E9%94%99%E8%AF%AF%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/">错误异常处理</a>&nbsp;
+            
           </span>
         
 
@@ -370,7 +272,7 @@
             
             #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
             
-            #<a href="https://blog.jiyi27.com/tags/unit-test/">unit test</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95/">单元测试</a>&nbsp;
             
           </span>
         
@@ -418,7 +320,7 @@
             
             #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
             
-            #<a href="https://blog.jiyi27.com/tags/concurrency/">concurrency</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
             
           </span>
         
@@ -450,6 +352,96 @@
         
           <div>
             <a class="read-more button inline" href="/posts/golang/basics/004-methods-receivers/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/basics/009-gob-json-encoding/">encoding/gob &amp; encoding/json in Go</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-08-31</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E7%BC%96%E7%A0%81/">编码</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-why-do-we-need-encoding">1. Why do we need encoding</h2>
+<blockquote>
+<p>To transmit a data structure across a network or to store it in a file, it must be encoded and then decoded again. Cause computer just know binary.</p>
+</blockquote>
+<p>There are many encodings available, of course: <a href="http://www.json.org/">JSON</a>, <a href="http://www.w3.org/XML/">XML</a>, Google’s <a href="http://code.google.com/p/protobuf">protocol buffers</a>, and more. And now there’s another, provided by Go’s <a href="https://go.dev/pkg/encoding/gob/">gob</a> package.</p>
+<h2 id="2-encodinggob">2. encoding/gob</h2>
+<h3 id="21-why-gob">2.1. Why gob</h3>
+<p>Why define a new encoding? It’s a lot of work and redundant at that. Why not just use one of the existing formats? Well, for one thing, we do! Go has <a href="https://go.dev/pkg/">packages</a> supporting all the encodings just mentioned (the <a href="http://github.com/golang/protobuf">protocol buffer package</a> is in a separate repository but it’s one of the most frequently downloaded). And for many purposes, including communicating with tools and systems written in other languages, they’re the right choice.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/basics/009-gob-json-encoding/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/practice/004-tricks-and-common-mistakes/">Tricks and Common Mistakes - Go</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-08-27</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E7%BC%96%E7%A8%8B%E5%B0%8F%E6%8A%80%E5%B7%A7/">编程小技巧</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="tricks">Tricks</h2>
+<h3 id="remove-an-element-from-a-slice">remove an element from a slice</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// remove the element at index i from a</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">a</span> = append(<span style="color:#a6e22e">a</span>[:<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>:]<span style="color:#f92672">...</span>)
+</span></span></code></pre></div><h3 id="handle-close">handle <code>close()</code></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// credit to: https://gist.github.com/benbjohnson/9eebd201ec096ab6430e1f33411e6427</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">doSomething</span>() <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">f</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Create</span>(<span style="color:#e6db74">&#34;foo&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ensure that it&#39;s definitely closed by the end</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Write</span>([]byte(<span style="color:#e6db74">&#34;bar&#34;</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Why we bother to care about getting error from <code>f.Close()</code>? We have got error from  <code>f.Write()</code>. Well, there are a lot to say, learn more: <a href="https://davidzhu.xyz/post/golang/advance/010-defer-close/">Don&rsquo;t Defer Close() on Writable Files - Go Notes</a></p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/practice/004-tricks-and-common-mistakes/">阅读更多</a>
           </div>
         
       </article>

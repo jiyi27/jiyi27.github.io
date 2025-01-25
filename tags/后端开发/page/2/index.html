@@ -173,6 +173,101 @@
     
       <article class="post on-list">
         <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/http/008-form-post-query-string/">Form Data &amp; Query String</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-11-04</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/http/">http</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-form-data-vs-query-string">1. Form data vs query string</h2>
+<h3 id="11-client-side">1.1. Client side</h3>
+<p>Query string resides in the url:</p>
+<pre tabindex="0"><code>http://www.blabla.com?a=1&amp;b=2
+</code></pre><p>Form data is sent with the request body. Therefore, when there is sensitive data, we usually put data in the form not the query string. Because the requested URL might show up in <strong>Web server logs</strong> and <strong>browser history/bookmarks</strong> which is not a good thing. <a href="https://stackoverflow.com/a/830092/16317008">source</a></p>
+<h3 id="12-server-side">1.2. Server side</h3>
+<h4 id="121-go-web">1.2.1. Go web</h4>
+<p>For all requests, <code>ParseForm()</code> parses the <strong>raw query</strong> from the URL and updates r.Form. For POST, PUT, and PATCH requests, <strong>it also reads the request body</strong>, parses it as a form and puts the results into both r.PostForm and r.Form. When the <code>Content-Type</code> is not application/x-www-form-urlencoded, the request Body is not read.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/http/008-form-post-query-string/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/practice/000-http-go-web/">Some HTTP Issues with Go</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-10-29</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/http/">http</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-rurlpath-vs-rurlrawpath">1. <code>r.URL.Path</code> vs <code>r.URL.RawPath</code></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">u</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">url</span>.<span style="color:#a6e22e">Parse</span>(<span style="color:#e6db74">&#34;http://example.com/x/xx%20a&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Path:&#34;</span>, <span style="color:#a6e22e">u</span>.<span style="color:#a6e22e">Path</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;RawPath:&#34;</span>, <span style="color:#a6e22e">u</span>.<span style="color:#a6e22e">RawPath</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;EscapedPath:&#34;</span>, <span style="color:#a6e22e">u</span>.<span style="color:#a6e22e">EscapedPath</span>())
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">Path</span>: <span style="color:#f92672">/</span><span style="color:#a6e22e">x</span><span style="color:#f92672">/</span><span style="color:#a6e22e">xx</span> <span style="color:#a6e22e">a</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">RawPath</span>: 
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">EscapedPath</span>: <span style="color:#f92672">/</span><span style="color:#a6e22e">x</span><span style="color:#f92672">/</span><span style="color:#a6e22e">xx</span><span style="color:#f92672">%</span><span style="color:#ae81ff">20</span><span style="color:#a6e22e">a</span>
+</span></span></code></pre></div><p>If url changes to &ldquo;<a href="http://example.com/x/xx/a%22">http://example.com/x/xx%2Fa"</a>, then will print:</p>
+<pre tabindex="0"><code>Path: /x/xx/a
+RawPath: /x/xx%2Fa
+EscapedPath: /x/xx%2Fa
+</code></pre><p>In general, code should call <code>EscapedPath()</code> instead of reading <code>u.RawPath</code> directly.</p>
+<p>Learn more:</p>
+<p><a href="https://pkg.go.dev/net/url#URL.EscapedPath">https://pkg.go.dev/net/url#URL.EscapedPath</a></p>
+<p><a href="https://davidzhu.xyz/post/http/009-url-encoding/">URL Encoding (Percent Encoding) - David&rsquo;s Blog</a></p>
+<h2 id="2-relative-path">2. Relative path</h2>
+<p>You can write relative path directly for the endpoint, because the browser know the <strong>Origin</strong>, when you make HTTP request, it knows where should go.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/practice/000-http-go-web/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
           <a href="https://blog.jiyi27.com/posts/build-website/006-ufw-aws-sg/">ufw vs  AWS Security Group</a>
         </h1>
         <div class="post-meta"><time class="post-date">2023-10-09</time></div>
@@ -239,6 +334,47 @@
     
       <article class="post on-list">
         <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/practice/000-parse-data-go-web/">Parse Data - Go Web</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-09-23</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/http/">http</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-parse-query-string-and-x-www-form-urlencoded-format-body">1. Parse Query String and <code>x-www-form-urlencoded</code> Format Body</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">e</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">ParseForm</span>(); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;failed to parse username and password: %v&#34;</span>, <span style="color:#a6e22e">e</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">username</span> = <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Form</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#e6db74">&#34;username&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">password</span> = <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Form</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#e6db74">&#34;password&#34;</span>)
+</span></span></code></pre></div><p>According to  <a href="https://pkg.go.dev/net/http#Request.ParseForm">Golang docs</a>, <code>r.ParseForm()</code> will try to parse both query string and request body in Go, but there is a condition: the <code>Content-Type</code> header of the reuqest must be <code>application/x-www-form-urlencoded</code>. Otherwise, the request body will be ignored by <code>r.ParseForm()</code>, it just tries to parse query string resides in the URL.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/practice/000-parse-data-go-web/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
           <a href="https://blog.jiyi27.com/posts/cs-basics/007-multithread-singlethread-server/">Is Multithreaded Server Better than a Single Thread Server?</a>
         </h1>
         <div class="post-meta"><time class="post-date">2023-08-26</time></div>
@@ -282,16 +418,14 @@
     
       <article class="post on-list">
         <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/cs-basics/005-session-cookie/">Session, JWT &amp; Cookie</a>
+          <a href="https://blog.jiyi27.com/posts/golang/practice/003-gptbot/">Golang Web - A Simple gptbot with Openai API</a>
         </h1>
-        <div class="post-meta"><time class="post-date">2023-08-17</time></div>
+        <div class="post-meta"><time class="post-date">2023-08-18</time></div>
 
         
           <span class="post-tags">
             
-            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/http/">http</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
             
             #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
             
@@ -303,67 +437,28 @@
 
         <div class="post-content">
           
-            <p>HTTP 是一个无状态协议, 对于每个用户 HTTP 请求, 服务器无法得知上一次请求所包含的状态, 可是在淘宝的某个页面中, 你进行了登陆操作, 当你跳转到商品页时, 服务端怎么记住你登陆的状态？</p>
-<h2 id="1-cookie">1. Cookie</h2>
-<p>首先产生了 cookie 这门技术来解决这个问题, cookie 是 http 协议的一部分, 它的处理分为如下几步:</p>
-<ul>
-<li>服务器主动向客户端发送 cookie, 通常使用 HTTP 协议规定的 <code>set-cookie</code> 头操作</li>
-<li>客户端浏览器自动保存 Cookie</li>
-<li>每次请求浏览器都会自动将 cookie 发向服务器</li>
-</ul>
-<p>这里有个问题, 用户会访问多个网站, 浏览器会保存来自不同网站服务器的 cookie, 浏览器怎么把知道应该把 cookie 发给正确的网站?</p>
-<p>答案是浏览器使用 Cookie 的域名 (Domain) 和路径 (Path) 属性来决定将哪些 Cookie 发送回哪个网站, 其实 Cookie 不仅仅是在一个值, 它是有很多属性的, 在后端服务器可以设置, 比如:</p>
-<ul>
-<li>path：表示 cookie 影响到的路径, 匹配该路径才发送这个 cookie</li>
-<li>expires 和 maxAge：expires 是 UTC 格式时间, maxAge 是 cookie 多久后过期的相对时间, 当不设置这两个选项时, cookie 默认是 transient，即当用户关闭浏览器时，就被清除</li>
-<li>secure: 仅HTTPS 中才有效</li>
-<li>httpOnly：禁止前端 JS 代码读取, 避免被 xss 攻击拿到 cookie</li>
-</ul>
+            <h2 id="1-introduction">1. Introduction</h2>
+<p>Source Code: <a href="https://github.com/shwezhu/gptbot">gptbot</a></p>
+<h2 id="2-database---gorm">2. Database - gorm</h2>
 <blockquote>
-<p>后端开发小贴士 1 ⚠️: 设置此属性前, 需要先即把格式转为 UTC 格式, 因为客户端和服务器的时区可能不一样, 比如客户端比服务器快几个小时, 若直接设置 expires = Now() + 30, 半小时后过期, 传到客户端立刻过期了, 因为客户端浏览器默认来自服务器的 cookie expires 是 UTC,</p>
+<p>Don&rsquo;t <code>Open</code> db connection for each request, initialize a global DB and use it for all requests.</p>
+<p><code>Close</code> is one of the most misused methods, most application don&rsquo;t need it, be sure you really need it.</p>
+<p>it is not necessary to close when crash, and you can still <code>Close</code> DB connection in V2.</p>
+<p><a href="https://github.com/go-gorm/gorm/issues/3145">jinzhu - creator of gorm</a></p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">db</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gorm</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#a6e22e">sqlite</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#e6db74">&#34;gpt_bot.db&#34;</span>), <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">gorm</span>.<span style="color:#a6e22e">Config</span>{})
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">store</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">redistore</span>.<span style="color:#a6e22e">NewRediStore</span>(<span style="color:#ae81ff">10</span>, <span style="color:#e6db74">&#34;tcp&#34;</span>, <span style="color:#e6db74">&#34;:6379&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>, []byte(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Getenv</span>(<span style="color:#e6db74">&#34;SESSION_KEY&#34;</span>)))
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handle</span>(<span style="color:#e6db74">&#34;/login&#34;</span>, <span style="color:#a6e22e">LoginHandler</span>(<span style="color:#a6e22e">db</span>, <span style="color:#a6e22e">store</span>))
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>As you can see, we use a global database connection here accross all handler, and it&rsquo;s worth noticing that <strong>every HTTP request that comes in to the server gets its own goroutine</strong>. Therefore, you have to consider data race in the handers.</p>
           
         </div>
 
         
           <div>
-            <a class="read-more button inline" href="/posts/cs-basics/005-session-cookie/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h1 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/cs-basics/006-thread-process/">Thread Stack and CPU Cores</a>
-        </h1>
-        <div class="post-meta"><time class="post-date">2023-05-27</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="1-thread">1. Thread</h2>
-<p>A thread is a segment or part of a process that executes some tasks of the process. A process can have multiple threads which can <strong>run concurrently</strong> within the process. Each thread has its own thread stack but multiple threads of a process share a common heap area of that process.</p>
-<h3 id="11-thread-stack">1.1. Thread stack</h3>
-<p>Each thread has its own call stack, &ldquo;call stack&rdquo; and &ldquo;thread stack&rdquo; are the same thing. Calling it a &ldquo;thread stack&rdquo; just emphasizes that the call stack is specific to the thread.</p>
-          
-        </div>
-
-        
-          <div>
-            <a class="read-more button inline" href="/posts/cs-basics/006-thread-process/">阅读更多</a>
+            <a class="read-more button inline" href="/posts/golang/practice/003-gptbot/">阅读更多</a>
           </div>
         
       </article>
@@ -377,6 +472,11 @@
         <span class="button__text">上一页</span>
       </a>
     
+    
+      <a href="/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/page/3/" class="button next">
+        <span class="button__text">下一页</span>
+        <span class="button__icon">→</span>
+      </a>
     
   </div>
 </div>

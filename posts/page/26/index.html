@@ -172,192 +172,18 @@
     
       <article class="post on-list">
         <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/git/practice/002-pushed-wrong-files/">Pushed a Wrong File to Github - Solved</a>
-        </h2>
-        <div class="post-meta"><time class="post-date">2023-08-20</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/git/">git</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="问题描述">问题描述</h2>
-<p>写完博客把内容 push 到了 GitHub, 发现有个文件 <code>a.txt</code>  不应该被追踪, <code>a.txt</code> 已经被追踪了,</p>
-<h2 id="原因分析">原因分析</h2>
-<p>首先你可能会想到 直接在本地删除  <code>a.txt</code>  commit, 然后 push 就行了, 可是即使这样 GitHub依然会有  <code>a.txt</code>  , 况且  <code>a.txt</code>  不能删除, 就是留在本地有用但是因为隐私不想放到GitHub, 而且这么做岂不是太粗鲁了,</p>
-<h2 id="解决办法">解决办法</h2>
-<p>解决方法不唯一, 这里介绍两个,</p>
-<p>其中一个可行的是在 GitHub 手动删除 <code>a.txt</code>  , 然后在本地进行 fetch, 再merge, ummm, 貌似比前面还粗鲁,</p>
-<p>比较优雅的做法是在本地仓库使用 <code> git rm --cached &lt;filename&gt;</code> 让 <code>a.txt</code> 从 tracked -&gt; untracked,</p>
-<p>然后把 <code>a.txt</code> 加入到 <code>.gitignore</code>, 再进行 commit 和 push, 此时 github 上的 <code>a.txt</code> 会消失</p>
-          
-        </div>
-
-        
-           <div>
-            <a class="read-more button inline" href="/posts/git/practice/002-pushed-wrong-files/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/golang/practice/003-gptbot/">Golang Web - A Simple gptbot with Openai API</a>
-        </h2>
-        <div class="post-meta"><time class="post-date">2023-08-18</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="1-introduction">1. Introduction</h2>
-<p>Source Code: <a href="https://github.com/shwezhu/gptbot">gptbot</a></p>
-<h2 id="2-database---gorm">2. Database - gorm</h2>
-<blockquote>
-<p>Don&rsquo;t <code>Open</code> db connection for each request, initialize a global DB and use it for all requests.</p>
-<p><code>Close</code> is one of the most misused methods, most application don&rsquo;t need it, be sure you really need it.</p>
-<p>it is not necessary to close when crash, and you can still <code>Close</code> DB connection in V2.</p>
-<p><a href="https://github.com/go-gorm/gorm/issues/3145">jinzhu - creator of gorm</a></p>
-</blockquote>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">db</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gorm</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#a6e22e">sqlite</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#e6db74">&#34;gpt_bot.db&#34;</span>), <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">gorm</span>.<span style="color:#a6e22e">Config</span>{})
-</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">store</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">redistore</span>.<span style="color:#a6e22e">NewRediStore</span>(<span style="color:#ae81ff">10</span>, <span style="color:#e6db74">&#34;tcp&#34;</span>, <span style="color:#e6db74">&#34;:6379&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>, []byte(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Getenv</span>(<span style="color:#e6db74">&#34;SESSION_KEY&#34;</span>)))
-</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
-</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handle</span>(<span style="color:#e6db74">&#34;/login&#34;</span>, <span style="color:#a6e22e">LoginHandler</span>(<span style="color:#a6e22e">db</span>, <span style="color:#a6e22e">store</span>))
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>As you can see, we use a global database connection here accross all handler, and it&rsquo;s worth noticing that <strong>every HTTP request that comes in to the server gets its own goroutine</strong>. Therefore, you have to consider data race in the handers.</p>
-          
-        </div>
-
-        
-           <div>
-            <a class="read-more button inline" href="/posts/golang/practice/003-gptbot/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/cs-basics/005-session-cookie/">Session, JWT &amp; Cookie</a>
-        </h2>
-        <div class="post-meta"><time class="post-date">2023-08-17</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/http/">http</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p>HTTP 是一个无状态协议, 对于每个用户 HTTP 请求, 服务器无法得知上一次请求所包含的状态, 可是在淘宝的某个页面中, 你进行了登陆操作, 当你跳转到商品页时, 服务端怎么记住你登陆的状态？</p>
-<h2 id="1-cookie">1. Cookie</h2>
-<p>首先产生了 cookie 这门技术来解决这个问题, cookie 是 http 协议的一部分, 它的处理分为如下几步:</p>
-<ul>
-<li>服务器主动向客户端发送 cookie, 通常使用 HTTP 协议规定的 <code>set-cookie</code> 头操作</li>
-<li>客户端浏览器自动保存 Cookie</li>
-<li>每次请求浏览器都会自动将 cookie 发向服务器</li>
-</ul>
-<p>这里有个问题, 用户会访问多个网站, 浏览器会保存来自不同网站服务器的 cookie, 浏览器怎么把知道应该把 cookie 发给正确的网站?</p>
-<p>答案是浏览器使用 Cookie 的域名 (Domain) 和路径 (Path) 属性来决定将哪些 Cookie 发送回哪个网站, 其实 Cookie 不仅仅是在一个值, 它是有很多属性的, 在后端服务器可以设置, 比如:</p>
-<ul>
-<li>path：表示 cookie 影响到的路径, 匹配该路径才发送这个 cookie</li>
-<li>expires 和 maxAge：expires 是 UTC 格式时间, maxAge 是 cookie 多久后过期的相对时间, 当不设置这两个选项时, cookie 默认是 transient，即当用户关闭浏览器时，就被清除</li>
-<li>secure: 仅HTTPS 中才有效</li>
-<li>httpOnly：禁止前端 JS 代码读取, 避免被 xss 攻击拿到 cookie</li>
-</ul>
-<blockquote>
-<p>后端开发小贴士 1 ⚠️: 设置此属性前, 需要先即把格式转为 UTC 格式, 因为客户端和服务器的时区可能不一样, 比如客户端比服务器快几个小时, 若直接设置 expires = Now() + 30, 半小时后过期, 传到客户端立刻过期了, 因为客户端浏览器默认来自服务器的 cookie expires 是 UTC,</p>
-          
-        </div>
-
-        
-           <div>
-            <a class="read-more button inline" href="/posts/cs-basics/005-session-cookie/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/git/practice/001-rejected-push-fix-conflicts/">Push on Github get Rejected - Solved</a>
-        </h2>
-        <div class="post-meta"><time class="post-date">2023-08-15</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/git/">git</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="problem">Problem</h2>
-<p>GitHub 新建一个 repository, 并选择了自动创建 <code>README.md</code>, 在本地初始化项目后进行push, 报错:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ git push -u origin master
-</span></span><span style="display:flex;"><span>To github.com:shwezhu/gptbot.git
-</span></span><span style="display:flex;"><span> ! <span style="color:#f92672">[</span>rejected<span style="color:#f92672">]</span>        master -&gt; master <span style="color:#f92672">(</span>fetch first<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>error: failed to push some refs to <span style="color:#e6db74">&#39;github.com:shwezhu/gptbot.git&#39;</span>
-</span></span><span style="display:flex;"><span>hint: Updates were rejected because the remote contains work that you <span style="color:#66d9ef">do</span>
-</span></span><span style="display:flex;"><span>hint: not have locally. This is usually caused by another repository pushing
-</span></span><span style="display:flex;"><span>hint: to the same ref. You may want to first integrate the remote changes
-</span></span><span style="display:flex;"><span>hint: <span style="color:#f92672">(</span>e.g., <span style="color:#e6db74">&#39;git pull ...&#39;</span><span style="color:#f92672">)</span> before pushing again.
-</span></span><span style="display:flex;"><span>hint: See the <span style="color:#e6db74">&#39;Note about fast-forwards&#39;</span> in <span style="color:#e6db74">&#39;git push --help&#39;</span> <span style="color:#66d9ef">for</span> details.
-</span></span></code></pre></div><h2 id="原因分析">原因分析</h2>
-<p>远程仓库存在本地仓库没有的 commit, 导致 push 被拒绝,</p>
-          
-        </div>
-
-        
-           <div>
-            <a class="read-more button inline" href="/posts/git/practice/001-rejected-push-fix-conflicts/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/java/backend/007-spring-security/">CSRF Filter &amp; ProviderManager &amp; AuthenticationProviders, Spring学习(七)</a>
+          <a href="https://blog.jiyi27.com/posts/java/backend/007-spring-security/">CSRF Filter &amp; ProviderManager &amp; AuthenticationProviders, Spring 学习(七)</a>
         </h2>
         <div class="post-meta"><time class="post-date">2023-08-08</time></div>
 
         
           <span class="post-tags">
             
-            #<a href="https://blog.jiyi27.com/tags/java/">Java</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/java/">java</a>&nbsp;
             
-            #<a href="https://blog.jiyi27.com/tags/spring-boot/">Spring Boot</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/spring/">spring</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/springsecurity/">springsecurity</a>&nbsp;
             
           </span>
         
@@ -408,9 +234,11 @@
         
           <span class="post-tags">
             
-            #<a href="https://blog.jiyi27.com/tags/java/">Java</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/java/">java</a>&nbsp;
             
-            #<a href="https://blog.jiyi27.com/tags/spring-boot/">Spring Boot</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/spring/">spring</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/springsecurity/">springsecurity</a>&nbsp;
             
           </span>
         
@@ -452,6 +280,212 @@
         
            <div>
             <a class="read-more button inline" href="/posts/java/backend/006-spring-security/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h2 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/java/basics/002-reflection-object-class/">java.lang.Object &amp; java.lang.Class</a>
+        </h2>
+        <div class="post-meta"><time class="post-date">2023-08-05</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/java/">java</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%8F%8D%E5%B0%84/">反射</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-javalangobject">1. <code>java.lang.Object</code></h2>
+<p>定义:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Object</span> {...}
+</span></span></code></pre></div><p>The <code>java.lang.Object</code> class is the root of the class hierarchy. Every class has <code>Object</code> as a superclass. 所有的类(包括自定义类)都自动继承了类 <code>java.lang.Object</code>, 你可以自己创建个类, 然后查看其对象可调用的方法, 如下:</p>
+<p><img src="/002-reflection-object-class/1.png" alt="1"></p>
+<p>可以看到一些方法如 <code>equals()</code>, <code>getClass()</code>, 这都是 <code>Cat</code> 继承自类 <code>Object</code> 所得,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">final</span> Class<span style="color:#f92672">&lt;?&gt;</span> getClass()
+</span></span></code></pre></div><p>了解更多: <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html">Object (Java Platform SE 8 )</a>,</p>
+<h2 id="2--javalangclass">2. <code> java.lang.Class</code></h2>
+<p><code>Class</code> 定义如下 (注意区分 <code>Class</code> 和 <code>class</code>, 前者是类, 后者是关键字):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Class</span><span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">extends</span> Object
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">implements</span> Serializable, GenericDeclaration, Type, AnnotatedElement
+</span></span></code></pre></div><ul>
+<li>
+<p>与 <code>java.lang.Objetc</code> 不同, <code>java.lang.Class</code> 是 <code>final </code>的, 所以没有类可以继承它, 而且它唯一的构造函数是私有的, 这意味着我们不能通过正常的方式来创建 <code>Class</code> 的对象.</p>
+          
+        </div>
+
+        
+           <div>
+            <a class="read-more button inline" href="/posts/java/basics/002-reflection-object-class/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h2 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/java/basics/001-generics/">Java 中的泛型</a>
+        </h2>
+        <div class="post-meta"><time class="post-date">2023-08-05</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/java/">java</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E6%B3%9B%E5%9E%8B/">泛型</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-why-generics">1. Why Generics?</h2>
+<p>至于泛型提高类型安全性的话题, 暂不讨论, 这太哲学了, 只举例子, 没有泛型之前, 考虑如何实现一个容器(可以装所有的类型), 提示, 可以用 <code>Object</code> 类,</p>
+<p>具体实现可参考: <a href="https://davidzhu.xyz/2023/08/05/Java/Basics/000-array/">Java Array | 橘猫小八的鱼</a>,</p>
+<p>可以看出, 在 retrieve 数据的时候, 每次都需要 type cast, 这很麻烦也很容易出错, 也不优雅,</p>
+<p>使用泛型实现一个简单的容器, 如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MyContainer</span><span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">int</span> DEFAULT_CAPACITY <span style="color:#f92672">=</span> 10;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> size;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> Object<span style="color:#f92672">[]</span> elements;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">MyContainer</span>() {
+</span></span><span style="display:flex;"><span>        elements <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Object<span style="color:#f92672">[</span>DEFAULT_CAPACITY<span style="color:#f92672">]</span>;
+</span></span><span style="display:flex;"><span>        size <span style="color:#f92672">=</span> 0;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">addItem</span>(T element) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (size <span style="color:#f92672">&lt;</span> elements.<span style="color:#a6e22e">length</span>) {
+</span></span><span style="display:flex;"><span>            elements<span style="color:#f92672">[</span>size<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> element;
+</span></span><span style="display:flex;"><span>            size<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// Handle array resizing or throw an exception</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@SuppressWarnings</span>(<span style="color:#e6db74">&#34;unchecked&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> T <span style="color:#a6e22e">get</span>(<span style="color:#66d9ef">int</span> index) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (index <span style="color:#f92672">&lt;</span> 0 <span style="color:#f92672">||</span> index <span style="color:#f92672">&gt;=</span> size) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// handle exception</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> (T) elements<span style="color:#f92672">[</span>index<span style="color:#f92672">]</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Main</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String <span style="color:#f92672">[]</span>args){
+</span></span><span style="display:flex;"><span>        MyContainer<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">&gt;</span> container <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> MyContainer<span style="color:#f92672">&lt;&gt;</span>();
+</span></span><span style="display:flex;"><span>        container.<span style="color:#a6e22e">addItem</span>(<span style="color:#e6db74">&#34;Hello&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// container.addItem(2); // this will cause error</span>
+</span></span><span style="display:flex;"><span>        String str_1 <span style="color:#f92672">=</span> container.<span style="color:#a6e22e">get</span>(0); <span style="color:#75715e">// no need to explicit cast</span>
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(str_1);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>此次学泛型主要是为了阅读源码, 常见符号:</p>
+          
+        </div>
+
+        
+           <div>
+            <a class="read-more button inline" href="/posts/java/basics/001-generics/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h2 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/cs-basics/003-type-safety/">Rust 引发的类型安全的思考</a>
+        </h2>
+        <div class="post-meta"><time class="post-date">2023-08-05</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/rust/">rust</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E7%B1%BB%E5%9E%8B%E5%AE%89%E5%85%A8/">类型安全</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <p>关于 type safety, 一直没有一个确切的定义, 每个语言的作者对 type safety 可能有不同的理解, 我比较喜欢的是维基百科对 type safety 的定义, 即 type safety 阻止或者使 type errors 不容易发生, 而什么是 type errors 在下面这段话里也给出了定义:</p>
+<blockquote>
+<p>In computer science, <strong>type safety</strong> is the extent to which a programming language discourages or prevents <strong>type errors</strong>. The behaviors classified as type errors are usually that result from attempts to perform operations on values that are not of the appropriate data type, e.g., <strong>adding a string to an integer when there&rsquo;s no definition on how to handle this case</strong>. This classification is partly based on opinion. <a href="https://en.wikipedia.org/wiki/Type_safety">https://en.wikipedia.org/wiki/Type_safety</a></p>
+          
+        </div>
+
+        
+           <div>
+            <a class="read-more button inline" href="/posts/cs-basics/003-type-safety/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h2 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/java/backend/005-spring-security/">Spring Security Authentication, Spring 学习(五)</a>
+        </h2>
+        <div class="post-meta"><time class="post-date">2023-08-04</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/java/">java</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/spring/">spring</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/springsecurity/">springsecurity</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="0-项目结构">0. 项目结构</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>└── src
+</span></span><span style="display:flex;"><span>    ├── main
+</span></span><span style="display:flex;"><span>    │   ├── java
+</span></span><span style="display:flex;"><span>    │   │   └── david
+</span></span><span style="display:flex;"><span>    │   │       └── zhu
+</span></span><span style="display:flex;"><span>    │   │           ├── SpringSecurityDemoApplication.java
+</span></span><span style="display:flex;"><span>    │   │           ├── WebController.java
+</span></span><span style="display:flex;"><span>    │   │           └── WebSecurityConfig.java
+</span></span><span style="display:flex;"><span>    │   └── resources
+</span></span><span style="display:flex;"><span>    │       ├── application.yaml
+</span></span><span style="display:flex;"><span>    │       ├── static
+</span></span><span style="display:flex;"><span>    │       └── templates
+</span></span></code></pre></div><p>例子地址: <a href="https://github.com/shwezhu/springboot-learning/tree/master/spring-security-get-started-demo">https://github.com/shwezhu/springboot-learning/tree/master/spring-security-get-started-demo</a></p>
+<h2 id="1-创建一个简单的-spring-boot-项目---controller-类">1. 创建一个简单的 spring boot 项目 - <code>Controller</code> 类</h2>
+<p>创建一个 spring 项目思路, 首先要想到创建的一个类是 Controller, 因为我们要处理不同的 endpoints, 比如叫 <code>WebController.java</code>, 名子无所谓, 只要加上 <code>@Controller/@RestController</code> 的类都是 Controller, 然后考虑你的这个 Controller 是要返回简单的 json 对象还是 web 页面, 前者的话就选择 <code>@RestController</code> 修饰你的 Controller, 至于这两个注解的区别, 可以参考: <a href="https://davidzhu.xyz/2023/07/29/Java/Backend/001-first-spring-boot-program/">Spring Boot项目及踩坑总结 Spring学习(一)</a></p>
+          
+        </div>
+
+        
+           <div>
+            <a class="read-more button inline" href="/posts/java/backend/005-spring-security/">阅读更多</a>
           </div>
         
       </article>

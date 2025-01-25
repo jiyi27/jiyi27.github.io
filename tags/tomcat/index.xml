@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tomcat on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/tomcat/</link>
+    <description>Recent content in Tomcat on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 28 Apr 2023 15:02:55 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/tomcat/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Spring Boot 之何为内嵌 Tomcat</title>
+      <link>https://blog.jiyi27.com/posts/java/backend/spring-boot-embedded-tomcat/</link>
+      <pubDate>Fri, 28 Apr 2023 15:02:55 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/java/backend/spring-boot-embedded-tomcat/</guid>
+      <description>&lt;p&gt;一直听说Spring Boot内嵌了Tomcat, 然后Spring Boot默认把应用打包为Jar, 这到底意味着什么呢, 为啥不直接用War包部署到外部服务器呢(外部的Tomcat)?  不了解War可以看看我的其它&lt;a href=&#34;https://davidzhu.xyz/2023/04/27/Java/Backend/War/&#34;&gt;War相关的文章&lt;/a&gt;或者站内搜War等关键字. 在StackOverflow上看到一个&lt;a href=&#34;https://stackoverflow.com/a/23176765/16317008&#34;&gt;关于什么是内嵌Tomcat回答&lt;/a&gt;, 看看咋说的&lt;/p&gt;
+&lt;p&gt;&amp;ldquo;Embedded&amp;rdquo; means that you program &lt;strong&gt;ships with&lt;/strong&gt; the server within it as opposed to a web application being deployed to external server. With embedded server your application is packaged with the server of choice and responsible for server start-up and management.&lt;/p&gt;
+&lt;p&gt;From the user standpoint the difference is:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Application with embedded server looks like a regular java program. You just launch it and that&amp;rsquo;s it.&lt;/li&gt;
+&lt;li&gt;Regular web application is usually a &lt;code&gt;war&lt;/code&gt; archive which needs to be deployed to some server&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Embedding a server is very useful for testing purposes where you can start or stop server at will during the test.&lt;/p&gt;</description>
+      <content>&lt;p&gt;一直听说Spring Boot内嵌了Tomcat, 然后Spring Boot默认把应用打包为Jar, 这到底意味着什么呢, 为啥不直接用War包部署到外部服务器呢(外部的Tomcat)?  不了解War可以看看我的其它&lt;a href=&#34;https://davidzhu.xyz/2023/04/27/Java/Backend/War/&#34;&gt;War相关的文章&lt;/a&gt;或者站内搜War等关键字. 在StackOverflow上看到一个&lt;a href=&#34;https://stackoverflow.com/a/23176765/16317008&#34;&gt;关于什么是内嵌Tomcat回答&lt;/a&gt;, 看看咋说的&lt;/p&gt;
+&lt;p&gt;&amp;ldquo;Embedded&amp;rdquo; means that you program &lt;strong&gt;ships with&lt;/strong&gt; the server within it as opposed to a web application being deployed to external server. With embedded server your application is packaged with the server of choice and responsible for server start-up and management.&lt;/p&gt;
+&lt;p&gt;From the user standpoint the difference is:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Application with embedded server looks like a regular java program. You just launch it and that&amp;rsquo;s it.&lt;/li&gt;
+&lt;li&gt;Regular web application is usually a &lt;code&gt;war&lt;/code&gt; archive which needs to be deployed to some server&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Embedding a server is very useful for testing purposes where you can start or stop server at will during the test.&lt;/p&gt;
+&lt;p&gt;现在貌似懂点了, 就是Tomcat被被集成到了我们的项目里呗(Tomcat本质也就是个实现了Servlet和JSP标准的程序), 那我们去看看我们打包好的Spring Boot项目(一个Jar文件)里是不是有Tomcat,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ pwd
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Downloads/SpringDemo-0.0.1-SNAPSHOT/BOOT-INF/lib/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ls | grep tomcat
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;tomcat-embed-core-10.1.7.jar
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;tomcat-embed-el-10.1.7.jar
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;tomcat-embed-websocket-10.1.7.jar
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;好家伙, 果然在里面,&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;然后又看到一篇文章, 说的很清晰, 这里粘贴部分, 分享一下,&lt;/p&gt;
+&lt;p&gt;Think about what you would need to be able to deploy your application (typically) on a virtual machine.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Step 1 : Install Java&lt;/li&gt;
+&lt;li&gt;Step 2 : Install the Web/Application Server (Tomcat/Websphere/Weblogic etc)&lt;/li&gt;
+&lt;li&gt;Step 3 : Deploy the application war&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;What if we want to simplify this?&lt;/p&gt;
+&lt;p&gt;How about making the server a part of the application?&lt;/p&gt;
+&lt;p&gt;You would just need a virtual machine with Java installed and you would be able to directly deploy the application on the virtual machine. Isn’t it cool?&lt;/p&gt;
+&lt;p&gt;This idea is the genesis for Embedded Servers. When we create an application deployable, we would embed the server (for example, tomcat) inside the deployable.&lt;/p&gt;
+&lt;p&gt;For example, for a Spring Boot Application, you can generate an application jar which contains Embedded Tomcat. &lt;strong&gt;You can run a web application as a normal Java application&lt;/strong&gt;!&lt;/p&gt;
+&lt;p&gt;Embedded server implies that our deployable unit contains the binaries for the server (example, tomcat.jar). 这也就是我们上面看到的那几个文件&lt;code&gt;tomcat-embed-core-10.1.7.jar&lt;/code&gt;等, 了解更多&lt;a href=&#34;https://www.springboottutorial.com/spring-boot-with-embedded-servers-tomcat-jetty&#34;&gt;Spring Boot and Embedded Servers - Tomcat&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;打开项目&lt;code&gt;pom.xml&lt;/code&gt;可以看到依赖里并没tomcat相关的东西, 但是我们项目里却有tomcat那几个jar包, 这是为啥哩, 其实是因为下面的&lt;code&gt;spring-boot-starter-web&lt;/code&gt;依赖tomcat, 自动为我们添加类似&lt;code&gt;spring-boot-starter-tomcat&lt;/code&gt;这种了,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;			  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-data-jpa&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-web&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-test&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;test&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;看一下别人怎么说,&lt;/p&gt;
+&lt;p&gt;The single spring-boot-starter-web dependency can pull in all dependencies related to web development. It also reduces the count of build dependency. The spring-boot-starter-web mainly depends on the following:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;- org.springframework.boot:spring-boot-starter
+- org.springframework.boot:spring-boot-starter-tomcat
+- org.springframework.boot:spring-boot-starter-validation
+- com.fasterxml.jackson.core:jackson-databind
+- org.springframework:spring-web
+- org.springframework:spring-webmvc
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;By default, the &lt;code&gt;spring-boot-starter-web&lt;/code&gt; contains the below tomcat server dependency given:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-tomcat&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;2.0.0.RELEASE&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;compile&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &lt;code&gt;spring-boot-starter-web&lt;/code&gt; auto-configures the below things required for the web development:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Dispatcher Servlet&lt;/li&gt;
+&lt;li&gt;Error Page&lt;/li&gt;
+&lt;li&gt;Embedded servlet container&lt;/li&gt;
+&lt;li&gt;Web JARs for managing the static dependencies&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/difference-between-spring-boot-starter-web-and-spring-boot-starter-tomcat/&#34;&gt;Difference Between Spring Boot Starter Web and Spring Boot Starter Tomcat - GeeksforGeeks&lt;/a&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;说了那么多, 既然是生成的项目jar包内嵌服务器, 也就是说我们只要安装了Java(比如Java8以上), 那我们就可以运行我们的Spring Boot项目了, 不用额外安装Tomcat了,&lt;/p&gt;
+&lt;p&gt;首先得先打包我们的项目吧, 在Spring Boot根目录运行&lt;code&gt;mvn clean install&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;然后报错 (不出一点岔子就不正常了, 写代码嘛),&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:2.3.5.RELEASE:repackage (repackage) on project SpringDemo: Execution repackage of goal org.springframework.boot:spring-boot-maven-plugin:2.3.5.RELEASE:repackage failed: Unsupported class file major version 61 -&amp;gt; [Help 1]
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;然后仔细看了一下发现上面说&lt;code&gt;org.springframework.boot:spring-boot-maven-plugin:2.3.5.RELEASE:repackage failed&lt;/code&gt;, 好熟悉, 好像是之前刚开始初始化Spring Boot项目的时候IDEA提示&lt;code&gt;pom.xml&lt;/code&gt;有错误(出现曲线下划线那种错, 不是运行报错), 出去强迫症想解决它,然后在StackOverflow在哪查到添加上版本信息就不会提示错误了, 于是我加了一行&lt;code&gt;&amp;lt;version&amp;gt;2.3.5.RELEASE&amp;lt;/version&amp;gt;&lt;/code&gt;,  如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;build&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;plugins&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-maven-plugin&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;2.3.5.RELEASE&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/plugins&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/build&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;加了版本信息后确实那个红色曲线消失, 也没影响我程序的正常运行(即在IDEA点击运行按钮那个斜三角按钮), 但是使用命令行&lt;code&gt;mvn clean install&lt;/code&gt;就出现了刚刚的错误, 所以我把版本信息去掉了然后更新&lt;code&gt;pom.xml&lt;/code&gt;, 然后&lt;code&gt;mvn clean install&lt;/code&gt;正常运行,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.....
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;[INFO] Installing /Users/David/Codes/IDEA/SpringDemo/target/SpringDemo-0.0.1-SNAPSHOT.jar to /Users/David/.m2/repository/com/choo/SpringDemo/0.0.1-SNAPSHOT/SpringDemo-0.0.1-SNAPSHOT.jar
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;[INFO] ------------------------------------------------------------------------
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;[INFO] BUILD SUCCESS
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;[INFO] ------------------------------------------------------------------------
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;[INFO] Total time:  4.091 s
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;[INFO] Finished at: 2023-04-29T16:22:17-03:00
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;[INFO] ------------------------------------------------------------------------
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;注意上面jar包输出路径, 然后进入到生成的jar包的路径里, 运行jar包(运行之前确保你的数据库服务已经正确开启, 可以正常连接, 如你使用了MySQL服务),&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;java -jar SpringDemo-0.0.1-SNAPSHOT.jar
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;取决于你项目的REST API怎么设计的, 然后去浏览器访问&lt;code&gt;http://localhost:8080/find/temperature?from=2023-04-01&amp;amp;to=2023-04-02&lt;/code&gt;, 得到如下数据, 访问成功:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;[{&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;value&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;27.5&lt;/span&gt;,&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;createdDate&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2023-04-01T14:54:26&amp;#34;&lt;/span&gt;},{&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;value&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;28.5&lt;/span&gt;,&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;createdDate&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2023-04-01T20:42:50&amp;#34;&lt;/span&gt;},{&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;,&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;value&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;20.6&lt;/span&gt;,&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;createdDate&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2023-04-02T11:09:26&amp;#34;&lt;/span&gt;},{&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;,&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;value&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;30.6&lt;/span&gt;,&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;createdDate&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2023-04-02T15:32:39&amp;#34;&lt;/span&gt;}]
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;你也可以使用&lt;code&gt;wget&lt;/code&gt;发送&lt;code&gt;GET&lt;/code&gt;请求,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;wget &amp;#34;http://localhost:8080/find/temperature?from=2023-04-01&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;amp;&lt;/span&gt;to=2023-04-02&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;总结下, 这次讨论我们理解了Jar是什么, 也知道了什么是所谓的内嵌Tomcat, 可以看到运行Jar包并不是像&lt;a href=&#34;https://davidzhu.xyz/2023/04/27/Java/Backend/War/&#34;&gt;之前讨论War&lt;/a&gt;那样, 还得把War部署到Tomcat的&lt;code&gt;webapps&lt;/code&gt;目录下, 然后启动Tomcat, 再去访问对应url, 我们直接一个&lt;code&gt;java -jar&lt;/code&gt;便可以运行我们的Java Web项目, 可谓是很方便, 但是需要注意如果你的应用用到了数据库, 那你仍需要在你执行该应用的机器上开启对应的数据库服务以及创建对应的表, 这跟tomcat没关系, SpringBoot只是内嵌了Tomcat并不是内嵌了你的数据库啥的,&lt;/p&gt;
+&lt;p&gt;然后我们也就知道别人所说的那种, Spring Boot内嵌Tomcat, 然后默认项目打包成Jar而不是War到底是个什么玩意, 即就是把所有依赖和所有我们编写的源代码的字节码&lt;code&gt;.class&lt;/code&gt;文件通过约定好的目录结构放到一起, 然后打包成一个jar, 上面说到的依赖比如&lt;code&gt;pom.xml&lt;/code&gt;中的各种依赖以jar文件格式放到&lt;code&gt;SpringDemo-0.0.1-SNAPSHOT/BOOT-INF/lib&lt;/code&gt;目录下, 然后&lt;code&gt;.class&lt;/code&gt;文件都在&lt;code&gt;SpringDemo-0.0.1-SNAPSHOT/BOOT-INF/classes&lt;/code&gt;下, 当然可能还包含其他的文件, 这你自己去探索吧,&lt;/p&gt;
+&lt;p&gt;最后看一下项目生成的Jar的结构(依赖太多了, 删除了一部分):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; BOOT&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;INF
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; classes
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; application.&lt;span style=&#34;color:#a6e22e&#34;&gt;properties&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;└──&lt;/span&gt; choo
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;└──&lt;/span&gt; springdemo
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;           &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; SpringDemoApplication.&lt;span style=&#34;color:#a6e22e&#34;&gt;class&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;           &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; Temperature.&lt;span style=&#34;color:#a6e22e&#34;&gt;class&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;           &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;└──&lt;/span&gt; TemperatureRepository.&lt;span style=&#34;color:#a6e22e&#34;&gt;class&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;└──&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;└──&lt;/span&gt; index.&lt;span style=&#34;color:#a6e22e&#34;&gt;html&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; classpath.&lt;span style=&#34;color:#a6e22e&#34;&gt;idx&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; layers.&lt;span style=&#34;color:#a6e22e&#34;&gt;idx&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;   &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;└──&lt;/span&gt; lib
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; HikariCP&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;5.&lt;span style=&#34;color:#a6e22e&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;1&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;jar&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; angus&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;activation&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;2.&lt;span style=&#34;color:#a6e22e&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;jar&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; antlr4&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;runtime&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;4.&lt;span style=&#34;color:#a6e22e&#34;&gt;10&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;1&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;jar&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; spring&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;jcl&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;6.&lt;span style=&#34;color:#a6e22e&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;7&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;jar&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; spring&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;jdbc&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;6.&lt;span style=&#34;color:#a6e22e&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;7&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;jar&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; spring&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;orm&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;6.&lt;span style=&#34;color:#a6e22e&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;7&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;jar&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; spring&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;tx&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;6.&lt;span style=&#34;color:#a6e22e&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;7&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;jar&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; spring&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;web&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;6.&lt;span style=&#34;color:#a6e22e&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;7&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;jar&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; spring&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;webmvc&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;6.&lt;span style=&#34;color:#a6e22e&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;7&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;jar&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; tomcat&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;embed&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;core&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;10.&lt;span style=&#34;color:#a6e22e&#34;&gt;1&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;7&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;jar&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; tomcat&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;embed&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;el&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;10.&lt;span style=&#34;color:#a6e22e&#34;&gt;1&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;7&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;jar&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;│&lt;/span&gt;       &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;├──&lt;/span&gt; tomcat&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;embed&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;websocket&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;10.&lt;span style=&#34;color:#a6e22e&#34;&gt;1&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;7&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;jar&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;其实有时候对于一些概念区别, 读很多文章博客不如去自己实操一遍, 读多了可能觉得自己会了理解了, 但还是会云里雾里, 因为有的说的很泛, 总之别嫌麻烦, 多动手,&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>手动部署 War 包到 Tomcat 之何为 War</title>
+      <link>https://blog.jiyi27.com/posts/java/backend/war/</link>
+      <pubDate>Thu, 27 Apr 2023 21:30:48 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/java/backend/war/</guid>
+      <description>&lt;p&gt;Web application resources or web application archives are commonly called WAR files. A WAR file is used to deploy a Java EE web application in an application server. Inside a WAR file, all the web components are packed into one single unit. These include JAR files, JavaServer Pages, Java servlets, Java class files, XML files, HTML files, and other resource files that we need for web applications. We can use the Maven WAR plugin to build our project as a &lt;a href=&#34;https://www.baeldung.com/java-jar-war-packaging#war&#34;&gt;WAR&lt;/a&gt; file.&lt;/p&gt;</description>
+      <content>&lt;p&gt;Web application resources or web application archives are commonly called WAR files. A WAR file is used to deploy a Java EE web application in an application server. Inside a WAR file, all the web components are packed into one single unit. These include JAR files, JavaServer Pages, Java servlets, Java class files, XML files, HTML files, and other resource files that we need for web applications. We can use the Maven WAR plugin to build our project as a &lt;a href=&#34;https://www.baeldung.com/java-jar-war-packaging#war&#34;&gt;WAR&lt;/a&gt; file.&lt;/p&gt;
+&lt;h2 id=&#34;1-add-a-new-user-with-deployment-rights-to-tomcat&#34;&gt;1. Add a new user with deployment rights to Tomcat**&lt;/h2&gt;
+&lt;p&gt;To perform a Maven Tomcat deploy of a &lt;code&gt;WAR&lt;/code&gt; file you must first set up a &lt;strong&gt;user&lt;/strong&gt; in Tomcat with the appropriate rights. You can do this with an edit of the &lt;code&gt;tomcat-users.xml&lt;/code&gt; file, which can be found in Tomcat&amp;rsquo;s &lt;code&gt;conf&lt;/code&gt; sub-directory. Add the following entry &lt;strong&gt;inside&lt;/strong&gt; the &lt;code&gt;tomcat-users&lt;/code&gt; tag:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;user&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;username=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;war-deployer&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;password=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;maven-tomcat-plugin&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;roles=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;manager-gui, manager-script, manager-jmx&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Save the tomcat-users.xml file and restart the server to have the changes take effect.&lt;/p&gt;
+&lt;p&gt;重启Tomcat就是进到Tomcat的&lt;code&gt;bin&lt;/code&gt;目录下, 执行&lt;code&gt;startup.sh&lt;/code&gt;, &lt;code&gt;./shutdown.sh&lt;/code&gt;, 其实你直接使用&lt;code&gt;startup.sh&lt;/code&gt;命令开启Tomcat服务就会加载配置文件了, 上面说的重启是默认你的Tomcat一直处于运行状态. 现在你也应该启动Tomcat服务了, 启动后尝试访问&lt;code&gt;http://localhost:8080/&lt;/code&gt;,&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war/d.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;点击后输入上面的&lt;code&gt;username&lt;/code&gt;和对应的&lt;code&gt;password&lt;/code&gt;, 即可进入管理页面如下:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war/e.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;无法访问 tomcat 主页问题&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;我在访问Tomcat主页出现了问题, 访问的总是我以前的JSP应用, 我用IDEA开发的, 但我都没打开IDEA, 仍然可以访问到, 真是奇了怪了, 如下:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war/a.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;然后我就&lt;a href=&#34;https://www.cnblogs.com/yayazi/p/7920257.html&#34;&gt;查到了一个博客&lt;/a&gt;说需要将Tomcat的首页的工程部署到Tomcat服务器上，我们通过IDEA来操作, 部署步骤如下：&lt;/p&gt;
+&lt;p&gt;选择菜单栏“Run&amp;ndash;&amp;gt;Edit Configuration&amp;hellip;&amp;ndash;&amp;gt;Deployment”, 选择右上角绿色“+”，选择“External Source&amp;hellip;”，将Apache-tomcat的&lt;code&gt;webapps&lt;/code&gt;目录下的ROOT文件夹添加进来, 下面的Application Context 空着, 删除 &lt;code&gt;ROOT&lt;/code&gt; 下面的那个&lt;code&gt;ServletDemo:war exploded&lt;/code&gt;, 如下图:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war/b.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;然后我IDEA上选择的Tomcat服务器不是我现在用的, 我有个旧的Tomcat服务器, 我不知道, 然后IDEA用的一直是那个旧的(但我在上面部署位置的&lt;code&gt;ROOT&lt;/code&gt;文件夹选择的是新的Tomcat下的文件), 所以就导致就算部署项目后, 我依然无法访问Tomcat的主页. 所以检查一下你是否选择了正确的Tomcat服务器,&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war/c.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;这样配置好后再在IDEA点击运行, 就可以通过&lt;code&gt;http://localhost:8080/&lt;/code&gt;访问 Tomcat 主页了, 之后你关闭IDEA, 直接进入Tomcat根目录的&lt;code&gt;bin&lt;/code&gt;下通过执行&lt;code&gt;startup.sh&lt;/code&gt;来启动Tomcat.&lt;/p&gt;
+&lt;p&gt;有时候你会遇到其他情况, 比如8080端口被占用, 这时候解决办法也很简单&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 查看PID&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;lsof -n -i4TCP:8080 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 删除8080端口对应的PID&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;kill -9 PID
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;说了那么多终于要进行下一步了,&lt;/p&gt;
+&lt;h2 id=&#34;2-tell-maven-about-the-tomcat-deploy-user&#34;&gt;2. Tell Maven about the Tomcat deploy user&lt;/h2&gt;
+&lt;p&gt;After you add the &lt;code&gt;war-deployer&lt;/code&gt; user to Tomcat, register that &lt;code&gt;username&lt;/code&gt; and &lt;code&gt;password&lt;/code&gt; in Maven, along with a named reference to the server. The Maven-Tomcat plugin will use this information when it tries to &lt;a href=&#34;https://www.theserverside.com/feature/Is-Apache-Tomcat-the-right-Java-application-server-for-you&#34;&gt;connect to the application server&lt;/a&gt;. Edit the &lt;code&gt;settings.xml&lt;/code&gt; file and add the following entry &lt;strong&gt;within&lt;/strong&gt; the &lt;code&gt;&amp;lt;server&amp;gt;&lt;/code&gt; tag to create the named reference to the server:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- Configure the Tomcat Maven plugin user --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;server&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;id&amp;gt;&lt;/span&gt;maven-tomcat-war-deployment-server&amp;gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;username&amp;gt;&lt;/span&gt;war-deployer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/username&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;password&amp;gt;&lt;/span&gt;maven-tomcat-plugin&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/password&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/server&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;注意, 上面提到的&lt;code&gt;settings.xml&lt;/code&gt;文件在&lt;code&gt;Downloads/apache-maven-3.9.1/conf&lt;/code&gt;下, 根据你的maven安装目录查找,&lt;/p&gt;
+&lt;p&gt;另外这里加的账号密码就是上面在Tomcat添加用户时候的账号密码, 这是因为你进入Tomcat管理页面的时候需要,如果你不提供(下面配置&lt;code&gt;pom.xml&lt;/code&gt;也会说到), 那生成war文件的时候maven就会报错,&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;3-register-the-tomcat7-maven-plugin-in-the-pom&#34;&gt;3. Register the tomcat7-maven-plugin in the POM&lt;/h2&gt;
+&lt;p&gt;把打包格式改成&lt;code&gt;war&lt;/code&gt;, 即在&lt;code&gt;pom.xml&lt;/code&gt;中找到&lt;code&gt;&amp;lt;packaging&amp;gt;&lt;/code&gt;标签, 没有的话添加一个, 与&lt;code&gt;&amp;lt;dependencies&amp;gt;&lt;/code&gt;标签并列:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.example&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;ServletDemo&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;1.0-SNAPSHOT&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;name&amp;gt;&lt;/span&gt;ServletDemo&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/name&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;packaging&amp;gt;&lt;/span&gt;war&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/packaging&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Now that Maven and Tomcat are configured, the next step is to edit the Java web application&amp;rsquo;s POM file to reference the Tomcat Maven plugin.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.tomcat.maven&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;tomcat7-maven-plugin&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;2.0&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;configuration&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;url&amp;gt;&lt;/span&gt;http://localhost:8080/manager/text&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/url&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;path&amp;gt;&lt;/span&gt;/rps&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/path&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/configuration&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;运行&lt;code&gt;mvn install tomcat7:deploy&lt;/code&gt;生成war的时候总是报错(如果你之前已经生成了War文件, 请记得去Tomcat根目录下的&lt;code&gt;webapp&lt;/code&gt;目录下删除一生成的war文件, 否则也会报错, 和下面一样):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;ERROR&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; Failed to execute goal org.apache.tomcat.maven:tomcat7-maven-plugin:2.0:deploy &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;default-cli&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; on project ServletDemo: Cannot invoke Tomcat manager: Broken pipe -&amp;gt; &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;Help 1&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;ERROR&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;ERROR&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; To see the full stack trace of the errors, re-run Maven with the -e switch.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;ERROR&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; Re-run Maven using the -X switch to enable full debug logging.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;ERROR&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;ERROR&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; For more information about the errors and possible solutions, please read the following articles:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;ERROR&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;Help 1&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;加入我们在Tomcat Users里配置的账号密码:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;plugin&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.tomcat.maven&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;tomcat7-maven-plugin&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;2.0&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;configuration&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;url&amp;gt;&lt;/span&gt;http://localhost:8080/manager/text&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/url&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;path&amp;gt;&lt;/span&gt;/rps&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/path&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;username&amp;gt;&lt;/span&gt;war-deployer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/username&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;password&amp;gt;&lt;/span&gt;maven-tomcat-plugin&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/password&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/configuration&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;注意: 修改&lt;code&gt;pom.xml&lt;/code&gt;后需要更新&lt;code&gt;pom.xml&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;提示: 点击IDEA软件的右上角有个浮动的更新小按钮即更新, 或者你可以查查命令行maven怎么更新&lt;code&gt;pom.xml&lt;/code&gt;文件.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;然后重新运行&lt;code&gt;mvn install tomcat7:deploy&lt;/code&gt;, 成功:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war/f.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;然后去Tomcat根目录的&lt;code&gt;webapps&lt;/code&gt;下查看生成的War, 可以看到生成了名为&lt;code&gt;rps&lt;/code&gt;的web应用, 即这个名字取决于上面&lt;code&gt;pom.xml&lt;/code&gt;填的内容,&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war/g.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;然后我们对比一下生成的war与我们的源代码文件结构:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#源代码&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── pom.xml
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── src
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   └── main
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── java
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       │   ├── database
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       │   └── servlet
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── resources
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       │   └── log4j.properties
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       └── webapp
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           ├── WEB-INF
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           ├── hello.jsp
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           └── index.jsp
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# War&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── META-INF
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   ├── MANIFEST.MF
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   ├── maven
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   └── com.example
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │       └── ServletDemo
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   └── war-tracker
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── WEB-INF
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   ├── classes
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   ├── database
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   │   ├── Controller.class
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   │   ├── DataEntity.class
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   │   ├── Database.class
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   │   └── MysqlDatabase.class
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   ├── log4j.properties
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   ├── servlet
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   │   ├── GetDataServlet$1.class
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   │   └── GetDataServlet.class
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   └── test
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   ├── lib
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   ├── gson-2.9.0.jar
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   ├── log4j-1.2.17.jar
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   ├── mysql-connector-j-8.0.32.jar
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   │   └── protobuf-java-3.21.9.jar
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   └── web.xml
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── hello.jsp
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;└── index.jsp
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;对于生成的War文件可以发现所有Java相关的文件都在&lt;code&gt;WEB-INF&lt;/code&gt;下, 比如我们编写的Servlet字节码文件和和我们用到的依赖(gson, mysql connector, log4j). 然后仔细看源代码文件结构, 在&lt;code&gt;webapp&lt;/code&gt;下也有个&lt;code&gt;WEB-INF&lt;/code&gt;, 这下面放的就是我们项目的&lt;code&gt;web.xml&lt;/code&gt;, 内容如下(所以这有什么联系呢),&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;?xml version=&amp;#34;1.0&amp;#34; encoding=&amp;#34;UTF-8&amp;#34;?&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;web-app&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://xmlns.jcp.org/xml/ns/javaee&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns:xsi=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://www.w3.org/2001/XMLSchema-instance&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         &lt;span style=&#34;color:#a6e22e&#34;&gt;xsi:schemaLocation=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         &lt;span style=&#34;color:#a6e22e&#34;&gt;version=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;4.0&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;welcome-file-list&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;welcome-file&amp;gt;&lt;/span&gt;/index.jsp&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/welcome-file&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/welcome-file-list&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;servlet&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;servlet-name&amp;gt;&lt;/span&gt;get-data&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/servlet-name&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;servlet-class&amp;gt;&lt;/span&gt;servlet.GetDataServlet&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/servlet-class&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/servlet&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;servlet-mapping&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;servlet-name&amp;gt;&lt;/span&gt;get-data&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/servlet-name&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;url-pattern&amp;gt;&lt;/span&gt;/temperature/*&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/url-pattern&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;url-pattern&amp;gt;&lt;/span&gt;/humidity/*&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/url-pattern&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/servlet-mapping&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/web-app&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;4-verify&#34;&gt;4. Verify&lt;/h2&gt;
+&lt;p&gt;确保你已经开启Tomcat服务(即使你关闭了IDEA, IDEA和Tomcat是两个东西, IDEA是个IDE会用到Tomcat作为web服务器来部署web app), 然后访问通过&lt;code&gt;http://localhost:8080/&lt;/code&gt;访问到Tomcat主页, 这时候你可以在链接🔗后加上&lt;code&gt;/rps&lt;/code&gt;即&lt;code&gt;http://localhost:8080/rps/&lt;/code&gt;就可以进入到你的那个web网页, 如下:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war/h.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;5-思考总结&#34;&gt;5. 思考总结&lt;/h2&gt;
+&lt;p&gt;这时候其实我们也就知道了什么是根目录和url中神秘的路径问题, 你看我们若想访问&lt;code&gt;manager&lt;/code&gt;页面, 这个页面的url是&lt;code&gt;http://localhost:8080/manager/&lt;/code&gt;, 我们访问我们刚部署的页面是&lt;code&gt;http://localhost:8080/rps/&lt;/code&gt;, 你看最后的这个路径及&lt;code&gt;/manager&lt;/code&gt;, &lt;code&gt;/rps&lt;/code&gt;都是tomcat的&lt;code&gt;webapps&lt;/code&gt;目录下的文件, 如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# David @ tc0db in ~/Downloads/Programs/apache-tomcat-9.0.73/webapps&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ls
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ROOT         examples     manager      rps.war
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;docs         host-manager rps
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;所以&lt;code&gt;webapp&lt;/code&gt;就是所谓的根目录, 我们访问什么都是根据它来的, 可以看到, &lt;code&gt;webapps&lt;/code&gt;目录下还有&lt;code&gt;examples&lt;/code&gt;等文件夹, 所以我们可以直接通过&lt;code&gt;http://localhost:8080/example/&lt;/code&gt;访问. 但是又有个问题, Tomcat的主页也就是是&lt;code&gt;http://localhost:8080/&lt;/code&gt;具体在哪呢? 按理说&lt;code&gt;webapps&lt;/code&gt;下应该有个&lt;code&gt;index.html&lt;/code&gt;文件呀, 可是却空空, 这是怎么回事, 怎么没有按我们上面推导的路径来呢?&lt;/p&gt;
+&lt;p&gt;还记不记得当时学习servlet的时候有个&lt;code&gt;web.xml&lt;/code&gt;文件, 我们在这个文件里可以配置个welcome标签, 通过这个标签我们就可以直接指定一个html文件作为我们的主页而不是根目录下的&lt;code&gt;index.tml&lt;/code&gt;文件, 同样, Tomcat当然也有这个文件 &lt;code&gt;TOMCAT_HOME/conf/web.xml&lt;/code&gt;, 搜索&lt;code&gt;welcome&lt;/code&gt;找到啦(在&lt;code&gt;tomcat/webapps/ROOT/index.jsp&lt;/code&gt;):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- ==================== Default Welcome File List ===================== --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- When a request URI refers to a directory, the default servlet looks  --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- for a &amp;#34;welcome file&amp;#34; within that directory and, if present, to the   --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- corresponding resource URI for display.                              --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- If no welcome files are present, the default servlet either serves a --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- directory listing (see default servlet configuration on how to       --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- customize) or returns a 404 status, depending on the value of the    --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- listings setting.                                                    --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!--                                                                      --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- If you define welcome files in your own application&amp;#39;s web.xml        --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- deployment descriptor, that list *replaces* the list configured      --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- here, so be sure to include any of the default values that you wish  --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- to use within your application.                                       --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;welcome-file-list&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;welcome-file&amp;gt;&lt;/span&gt;index.html&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/welcome-file&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;welcome-file&amp;gt;&lt;/span&gt;index.htm&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/welcome-file&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;welcome-file&amp;gt;&lt;/span&gt;index.jsp&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/welcome-file&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/welcome-file-list&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;然后怎么覆盖这个home page呢? 刚好看到了下面这个回答, 看来和我们猜想的一样, 如下:&lt;/p&gt;
+&lt;p&gt;In any web application, there will be a &lt;code&gt;web.xml&lt;/code&gt; in the &lt;code&gt;WEB-INF/&lt;/code&gt; folder. (别忘了我们之前学习JSP的时候可没少在这个文件夹花时间去配置servlet name和对应的jsp, 每创建一个新的servlet就要在这创建个新的servlet pattern)&lt;/p&gt;
+&lt;p&gt;If you dont have one in your web app, as it seems to be the case in your folder structure, the default &lt;strong&gt;Tomcat&lt;/strong&gt; &lt;code&gt;web.xml&lt;/code&gt; is under &lt;code&gt;TOMCAT_HOME/conf/web.xml&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Either way, the relevant lines of the web.xml are&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;welcome-file-list&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;welcome-file&amp;gt;&lt;/span&gt;index.html&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/welcome-file&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;welcome-file&amp;gt;&lt;/span&gt;index.htm&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/welcome-file&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;welcome-file&amp;gt;&lt;/span&gt;index.jsp&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/welcome-file&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/welcome-file-list&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;so any file matching this pattern when found will be shown as the home page.&lt;/p&gt;
+&lt;p&gt;In Tomcat, a web.xml setting within your web app will override the default, if present.&lt;/p&gt;
+&lt;p&gt;Further Reading: &lt;a href=&#34;http://wiki.apache.org/tomcat/HowTo#How_do_I_override_the_default_home_page_loaded_by_Tomcat.3F&#34;&gt;How do I override the default home page loaded by Tomcat?&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;参考:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.theserverside.com/video/Step-by-step-Maven-Tomcat-WAR-file-deploy-example&#34;&gt;Step-by-step Maven Tomcat WAR file deploy example | TheServerSide&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://juejin.cn/post/7133755807253921829&#34;&gt;tomcat启动成功浏览器却无法访问 - 掘金&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://stackoverflow.com/a/3976385/16317008&#34;&gt;web applications - How does Tomcat find the HOME PAGE of my Web App? - Stack Overflow&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/maven-generate-war-file&#34;&gt;Generate a WAR File in Maven | Baeldung&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>IDEA 项目中的 War 和 War Exploded 的区别</title>
+      <link>https://blog.jiyi27.com/posts/java/backend/war-vs-war-exploded/</link>
+      <pubDate>Tue, 25 Apr 2023 14:27:35 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/java/backend/war-vs-war-exploded/</guid>
+      <description>&lt;p&gt;在 IDEA 把 webapp deploy 到 tomcat上的时候会看到以下设置:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war-vs-war-exploded/a.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war-vs-war-exploded/b.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;上图中选择war或者war exploded的时候, 如果选择前者, on frame deactivation diaglog就不会有update resources选项:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war-vs-war-exploded/c.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;有很多疑问比如war和war exploded是什么, update resources和update classes and resources的区别是什么, 这都是干啥的?&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;在使用 IDEA 开发Java Web项目部署 Tomcat 的时候通常会出现下面的情况:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war-vs-war-exploded/d.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;是选择 &lt;code&gt;war&lt;/code&gt; 还是 &lt;code&gt;war exploded&lt;/code&gt;呢?&lt;/p&gt;
+&lt;p&gt;看一下他们两个的区别:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;war：将Web Application以包的形式上传到服务器&lt;/li&gt;
+&lt;li&gt;war exploded：将Web Application以当前文件夹的位置关系上传到服务器, 因此这种方式支持&lt;strong&gt;hot deployment&lt;/strong&gt;，一般在开发的时候也是用这种方式.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Hot deployment&lt;/strong&gt; is the process of adding new components (such as WAR files, EJB Jar files, enterprise Java beans, servlets, and JSP files) to a running server without having to stop the application server process and start it again.&lt;/p&gt;</description>
+      <content>&lt;p&gt;在 IDEA 把 webapp deploy 到 tomcat上的时候会看到以下设置:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war-vs-war-exploded/a.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war-vs-war-exploded/b.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;上图中选择war或者war exploded的时候, 如果选择前者, on frame deactivation diaglog就不会有update resources选项:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war-vs-war-exploded/c.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;有很多疑问比如war和war exploded是什么, update resources和update classes and resources的区别是什么, 这都是干啥的?&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;在使用 IDEA 开发Java Web项目部署 Tomcat 的时候通常会出现下面的情况:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war-vs-war-exploded/d.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;是选择 &lt;code&gt;war&lt;/code&gt; 还是 &lt;code&gt;war exploded&lt;/code&gt;呢?&lt;/p&gt;
+&lt;p&gt;看一下他们两个的区别:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;war：将Web Application以包的形式上传到服务器&lt;/li&gt;
+&lt;li&gt;war exploded：将Web Application以当前文件夹的位置关系上传到服务器, 因此这种方式支持&lt;strong&gt;hot deployment&lt;/strong&gt;，一般在开发的时候也是用这种方式.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Hot deployment&lt;/strong&gt; is the process of adding new components (such as WAR files, EJB Jar files, enterprise Java beans, servlets, and JSP files) to a running server without having to stop the application server process and start it again.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;所以现在知道上面为啥选择war的话, 在on frame deactivation diaglog就不会有update resources选项了吧.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war-vs-war-exploded/e.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;On Upate Action : update classes and resources 更新代码和资源&lt;/li&gt;
+&lt;li&gt;On Frame Deactivation : update classes and resources在IDE失去焦点时(你点开浏览器离开IDE的时候)更新并发布代码&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;如果On Upate Action选择了update classes and resources，然后On Frame Deactivation 选择了do nothing, 那你无论是修改了servlet, doGet等动态代码还是jsp，h5等静态资源代码，需要手动更新, 就是你得自己点击那个更新按钮, 然后再刷新浏览器页面, 你的修改才能生效:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war-vs-war-exploded/f.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war-vs-war-exploded/g.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;如果On Upate Action和On Frame Deactivation都选择了update classes and resources，那就是每次修改了servlet代码或者jsp等静态代码后你都不用点击那个更新按钮了, 直接进入浏览器刷新页面就行,这样显然会浪费电脑资源,如果你不心疼cpu, 那就这样最好, 我是心疼, 所以我选择的如下:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/war-vs-war-exploded/h.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;这样每次修改了servlet之后我点击更新按钮, 修改了jsp之后我就不用点击了, 直接进入浏览器刷新页面就可以了.&lt;/p&gt;
+&lt;p&gt;参考: &lt;a href=&#34;https://blog.csdn.net/u013626215/article/details/103685304&#34;&gt;https://blog.csdn.net/u013626215/article/details/103685304&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

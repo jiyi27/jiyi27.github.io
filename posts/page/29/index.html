@@ -172,14 +172,18 @@
     
       <article class="post on-list">
         <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/java/basics/jdk-jre/">JDK &amp; JRE</a>
+          <a href="https://blog.jiyi27.com/posts/cs-basics/004-ssh/">ssh 免密登陆 中间人攻击 网络安全</a>
         </h2>
-        <div class="post-meta"><time class="post-date">2023-07-26</time></div>
+        <div class="post-meta"><time class="post-date">2023-06-03</time></div>
 
         
           <span class="post-tags">
             
-            #<a href="https://blog.jiyi27.com/tags/java/">Java</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/ssh/">ssh</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/">网络攻击</a>&nbsp;
             
           </span>
         
@@ -189,38 +193,50 @@
 
         <div class="post-content">
           
-            <p>我的电脑有两个jdk, 一个是我自己下载的jdk17, 一个是电脑预安装的jdk19:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>ls /Library/Java/JavaVirtualMachines/jdk-19.jdk/Contents/Home/
-</span></span><span style="display:flex;"><span>LICENSE bin     include legal   man README  conf    jmods   lib     release
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>ls ~/Downloads/Programs/jdk-17-0-3-1/Home/
-</span></span><span style="display:flex;"><span>LICENSE README  bin     conf    include jmods   legal   lib     release
-</span></span></code></pre></div><p>都说JDK包括JRE, 然后JRE里面有JVM, 但是现在新版本的JDK里没有JRE文件夹了, JRE被单独安装了, 那么现在对于新版本的JDK来说, JRE是不是仍然属于JDK呢? 知道这个问题和现实就行了, 至于属不属于无所谓, 想怎么说就怎么说呗, 关键是我们得知道, 什么是JVM, 什么是JDK才是重要的.</p>
+            <h3 id="1-ssh-应对中间人攻击的方法">1. SSH 应对中间人攻击的方法</h3>
+<p>SSH 采用了公钥加密, 过程如下：</p>
+<p>（1）Remote Host 收到用户的登录请求, 把自己的公钥发给用户</p>
+<p>（2）用户使用这个公钥, 将登录密码加密后, 发送过去</p>
+<p>（3）Remote Host 用自己的私钥, 解密信息, 验证密码是否正确</p>
+<p>这个过程存在一个漏洞：如果有人截获了用户的登录请求，然后冒充 Remote Host，将伪造的公钥发给用户，那么用户很难辨别真伪。这就是 Man-in-the-middle attack, 应对方法有两种:</p>
 <ul>
-<li>In macOS, the JDK installation path is <code>/Library/Java/JavaVirtualMachines/jdk-10.jdk/Contents/Home/</code>.</li>
-<li>In macOS, the JRE installation path is <code>/Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home/</code>.</li>
+<li>利用公钥指纹人工进行对比验证,</li>
+<li>上传公钥实现免密登录</li>
 </ul>
-<p>但是我去找jre却没找到, 官方说 When you install JDK 10, the public JRE (Release 10) also gets installed automatically. 他说的这种安装是下载dmg文件, 而我下的是免安装版本的zip包, 解压出来就用了, 所以ummmm, 具体也不清楚以后再想吧&hellip;</p>
+<p>接下来我们一一介绍这两种方法,</p>
+<h2 id="2-利用公钥指纹人工进行对比验证">2. 利用公钥指纹人工进行对比验证</h2>
+<p>看来面的例子, 在Mac上通过ssh连接远程的服务器, 第一次连接的时候会问下面提示:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>ssh root@144.202.16.29        
+</span></span><span style="display:flex;"><span>The authenticity of host <span style="color:#e6db74">&#39;144.202.16.29 (144.202.16.29)&#39;</span> can<span style="color:#960050;background-color:#1e0010">&#39;</span>t be established.
+</span></span><span style="display:flex;"><span>ED25519 key fingerprint is SHA256:sa5vDYS0yhdMRXO6CgMrp9AcQoVQRiDw6TnzTKesnzQ.
+</span></span><span style="display:flex;"><span>This key is not known by any other names
+</span></span><span style="display:flex;"><span>Are you sure you want to <span style="color:#66d9ef">continue</span> connecting <span style="color:#f92672">(</span>yes/no/<span style="color:#f92672">[</span>fingerprint<span style="color:#f92672">])</span>? yes
+</span></span><span style="display:flex;"><span>....
+</span></span></code></pre></div><p>这是 ssh 在提醒它无法确认 remost host 是不是就是你要连接的那个主机, 因为可能会发生中间人攻击嘛, 但知道它的公钥指纹是<code>sa5vDYS0...</code>, 问我们还要继续连接吗 (注意单词 establish 在这是 “认证确认” 的意思),</p>
           
         </div>
 
         
            <div>
-            <a class="read-more button inline" href="/posts/java/basics/jdk-jre/">阅读更多</a>
+            <a class="read-more button inline" href="/posts/cs-basics/004-ssh/">阅读更多</a>
           </div>
         
       </article>
     
       <article class="post on-list">
         <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/java/basics/how-jvm-find-class/">手动编译运行Java程序之JVM加载类的顺序</a>
+          <a href="https://blog.jiyi27.com/posts/cs-basics/001-encoding/">编码和乱码 UTF-8 Unicode</a>
         </h2>
-        <div class="post-meta"><time class="post-date">2023-07-26</time></div>
+        <div class="post-meta"><time class="post-date">2023-06-01</time></div>
 
         
           <span class="post-tags">
             
-            #<a href="https://blog.jiyi27.com/tags/java/">Java</a>&nbsp;
+            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/python/">python</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E7%BC%96%E7%A0%81/">编码</a>&nbsp;
             
           </span>
         
@@ -230,185 +246,202 @@
 
         <div class="post-content">
           
-            <h2 id="java--javac">java &amp; javac</h2>
-<p>两个指令</p>
-<ul>
-<li>
-<p>Technically, <code>javac</code> is the program that translates Java code into bytecode (.class file) - an intermediate format which is understandable by the Java Virtual Machine (JVM).</p>
-</li>
-<li>
-<p>And <code>java</code> is the program that starts the <strong>JVM</strong>, which in turn, loads the <code>.class</code> file, verifies the bytecode and executes it.</p>
-<ul>
-<li>
-<p><code>-classpath</code> <em>classpath</em>, or <code>-cp</code> <em>classpath</em>, specifies a list of directories, JAR files, and ZIP archives to search for <strong>class files</strong>.</p>
-          
-        </div>
-
-        
-           <div>
-            <a class="read-more button inline" href="/posts/java/basics/how-jvm-find-class/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/other/006-english-reading-1/">英语阅读(一)</a>
-        </h2>
-        <div class="post-meta"><time class="post-date">2023-07-14</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/other/">other</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p>These problems were at <strong>the forefront of the minds</strong> of HTTP/2 developers,</p>
-<p>That said, unless you are implementing a web server (or a custom client) by working with raw TCP sockets, then you won’t see any difference: all the new, low-level framing is performed by the client and server <strong>on your behalf</strong>.</p>
+            <p>编码问题很常见, 有时候读文件打开是乱码, 有的语言说自己字符串采用unicode表示字符, 可又来utf-8编码, 这都是什么?</p>
+<h2 id="1-编码和乱码-unicode-vs-ascii">1. 编码和乱码 (unicode vs ascii)</h2>
+<p>电脑只能看懂二进制数, 所以得想办法把人类语言用二进制表示, 这就是编码的目的. ASCII 规定数字<code>65</code>代表字符<code>A</code>, <code>66</code>代表字符<code>B</code>依次类推, 所以ASCII表就是一个map, 每个字符对应一个数, <strong>把字符按照预定规则对应到数字的过程就叫编码</strong>.</p>
+<p>到后来计算机普及, 全世界都使用不同语言, 出现了问题, 比如我们用<code>36</code>代表汉字<code>牛</code>, 韩国说用<code>36</code>代表字符<code>&amp;</code>, 当我输入<code>牛</code>, 软件就把<code>0010 0100</code>存入磁盘, 然后我把文件传给韩国的朋友, 他们的程序认为<code>36</code>即<code>0010 0100</code>代表<code>&amp;</code>, 这就产生了乱码: <strong>软件尝试使用与文件编码不同的编码方式来解码文件</strong>,</p>
+<p>所以我们需要一个新的标准, 可以涵盖全世界字符的那种, 然后所有软件都遵守这个标准, 这样才能无差错沟通, 我发送一串二进制在我这代表字符<code>A</code>, 你的软件收到这串二进制后翻译出的也是字符<code>A</code>, 而不是<code>B</code>或<code>C</code>,</p>
+<p>这时候 Unicode 就出来了, 它就是使用<code>0~0x10FFFF</code>的数字来表示世界上所有的字符, 如汉字 <code>在</code> 的Unicode值是 <code>0x5728</code>, 注意<code>0x</code>代表值<code>5728</code>是十六进制, 又如字符 <code>A</code> 的Unicode值是<code>0x41</code>, 这里说一下, Unicode表示的字符里英文字符的值和ASCII表是相同的,</p>
 <blockquote>
-<p>If you are unable to attend a meeting, you might ask someone to attend &ldquo;<strong>on your behalf</strong>,&rdquo; meaning that they will participate in the meeting and represent your interests and opinions in <strong>your absence</strong>.</p>
-          
-        </div>
-
-        
-           <div>
-            <a class="read-more button inline" href="/posts/other/006-english-reading-1/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/other/005-ielts/">备考雅思</a>
-        </h2>
-        <div class="post-meta"><time class="post-date">2023-07-02</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/other/">other</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p>写在前面, 每个人的学习方法都不一样, 我的并不一定适合你, 你要自己通过刷题总结出来适合自己的高效方法, 知乎, 谷歌上有很多相关的文章, 要学会自己查资料, 不懂得要学会自己查, 这也是最重要的能力, 比如雅思备考方法, 雅思听力技巧, 然后网上也有很多论坛讨论怎么学习雅思, 比如微博上, 有雅思话题, 下面的评论就会有相关的讨论, 你通过自己的查找慢慢的去丰富自己的知识提高自己这才是最重要的</p>
-<p>不止是雅思, 其它问题也是一样, 刚高中毕业的时候遇到事情我也不知道具体怎么做, 第一件事想的是问别人, 那别人怎么知道的呢? 都是通过自己在网上查资料 查百度 查知乎 逛论坛 百度贴吧 这种 慢慢的知道的, 要学会利用互联网, 手机不止是用来打游戏和聊天看小视频的工具,</p>
-<h2 id="听力">听力</h2>
-<p>备考</p>
-<ul>
-<li>默写雅思王上的单词</li>
-</ul>
-<p>练习</p>
-<ul>
-<li>雅思真题上的听力题 前两个月可 一天听1~2篇 根据自己情况
-<ul>
-<li>听力可以在 每日英语听力 软件上找到对应的录音</li>
-<li>先不看 script 直接听 做一遍 然后若听不懂 再听一遍(根据自己情况)</li>
-<li>然后进行精听 即 看着 script 一句一句的听 听不懂的 看看script 看看哪个单词没听懂, 是因为连读没听懂还是因为不认识那个单词? 这个过程就要吧不认识的单词发音 以及 特殊的连读 给记下来, 这也是最重要的一步</li>
-<li>然后再不看 script 听一遍 直到不看 script 也可以完全听懂</li>
-</ul>
-</li>
-<li>可以在油管上找雅思(IELTS) 相关的英语主播 看他们的视频  练习听力</li>
-</ul>
-<p>上面提到了连读, 轻听英语 软件上 有个节目叫 瞬间秒杀英语听力 可以每天听一节 然后记下来 慢慢的练习, 很好的一个节目</p>
-          
-        </div>
-
-        
-           <div>
-            <a class="read-more button inline" href="/posts/other/005-ielts/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/bugs/001-npm-install-locally/">npm install 总是安装到全局目录排查与解决</a>
-        </h2>
-        <div class="post-meta"><time class="post-date">2023-06-27</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/bugs/">bugs</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/npm/">npm</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <p>使用 <code>npm install xxx</code>, 然后总是安装到 <code>~/node_modules/</code>, 查了好多, 有的说用 <code>npm config list   </code>查看 global 的值, 改为 false 什么, 都没有用, 卸载 node 和 npm 重装依旧不能解决,</p>
-          
-        </div>
-
-        
-           <div>
-            <a class="read-more button inline" href="/posts/bugs/001-npm-install-locally/">阅读更多</a>
-          </div>
-        
-      </article>
-    
-      <article class="post on-list">
-        <h2 class="post-title">
-          <a href="https://blog.jiyi27.com/posts/frontend/js/004-prototypal-inheritance/">JS 继承之 Prototype Chain 的意义</a>
-        </h2>
-        <div class="post-meta"><time class="post-date">2023-06-21</time></div>
-
-        
-          <span class="post-tags">
-            
-            #<a href="https://blog.jiyi27.com/tags/javascript/">javascript</a>&nbsp;
-            
-            #<a href="https://blog.jiyi27.com/tags/%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91/">前端开发</a>&nbsp;
-            
-          </span>
-        
-
-        
-
-
-        <div class="post-content">
-          
-            <h2 id="1-objects-are-values-in-javascript">1. Objects are values in Javascript</h2>
-<blockquote>
-<p><code>{}</code> 就是个空对象, <code>{}</code> 在 Python 里是个 dictionary, 当然 dictionary 也是个对象,</p>
+<p>Unicode 和 ASCII 都是字符集, 但是 ASCII 只包含 128 个字符, 而 Unicode 包含很多很多个字符.</p>
 </blockquote>
-<p>在说继承之前还要提一下 JS 对象与其它语言不同的地方, 举个例子,</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">student</span> <span style="color:#f92672">=</span> {
-</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;John&#39;</span>,
-</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">study</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span> () {
-</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;study&#39;</span>
-</span></span><span style="display:flex;"><span>  }
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">student</span>)  <span style="color:#75715e">// { name: &#39;John&#39;, study: [Function: study] }
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">student</span>.<span style="color:#a6e22e">age</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">99</span> <span style="color:#75715e">// 这里没有出错竟然!
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">student</span>)  <span style="color:#75715e">// { name: &#39;John&#39;, study: [Function: study], age: 99 }
-</span></span></span></code></pre></div><p>在其它面向对象语言里, 如果我们尝试赋值或者访问对象不存在的 field就会报错, 在 JS 里并不会, 当你尝试读取不存在的 feild 的时候 (包括 prototype chain, 下面会讨论) 才会报错,</p>
-<p>原因是, JS 的对象与其它语言如 Java, Python不同, Java里对象的 fields 是有类决定的, 类似所有对象的蓝图, JS并不是,  JS里的对象不是由类创建的, 更像一个 map,</p>
+<h2 id="2-unicode-vs-utf-8-vs-utf-16">2. Unicode vs UTF-8 vs UTF-16</h2>
+<h3 id="21-unicode">2.1. Unicode</h3>
+<ol>
+<li><strong>定义和目的</strong>：
+<ul>
+<li>Unicode 是一个国际标准，用于不同系统和程序间统一表示文本数据。</li>
+<li>它为世界上几乎所有的字符和文本符号分配了唯一的 code point。</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>Unicode standard describes how characters are represented by <strong>code points</strong>. A code point value is an integer in the range 0 to 0x10FFFF. In the standard and in this document, a code point is written using the notation <code>U+265E</code> to mean the character with value <code>0x265e</code> (9,822 in decimal).</p>
           
         </div>
 
         
            <div>
-            <a class="read-more button inline" href="/posts/frontend/js/004-prototypal-inheritance/">阅读更多</a>
+            <a class="read-more button inline" href="/posts/cs-basics/001-encoding/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h2 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/python/practice/001-add-space/">Python 脚本给文章中英字符以及符号间加空格</a>
+        </h2>
+        <div class="post-meta"><time class="post-date">2023-06-01</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/python/">python</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <p>强迫症, 读博客的时候中英字符或者标点符号后没有空格紧紧的贴在一块看着很不舒服, 于是想着能不能写个脚本来处理一下文章, bash太难用了(是我太菜), 于是用Python简单实现了一下,</p>
+<p>一些芝士在这说一下,</p>
+<h3 id="1-immutable-object-in-python">1. Immutable Object in Python</h3>
+<p>Java虽然string是对象但primitive类型还不是对象, 与Java不同Python里如<em>integers</em>, <em>floats</em>, and <em>strings</em>都是对象, 并且与<em>integers</em>, <em>floats</em>一样, python里string对象也是immutable, 所以直接“修改”string会导致python重新创建新的string对象 销毁旧的:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>a <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;hello&#39;</span>
+</span></span><span style="display:flex;"><span>print(id(a))
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 4378912048</span>
+</span></span><span style="display:flex;"><span>a <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39; world&#39;</span>
+</span></span><span style="display:flex;"><span>print(id(a))
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 4380683504</span>
+</span></span></code></pre></div><p>因此每次修改(添加空格)都会重新重建一个新的string, 考虑到文章有的内容也不短, 那开销会不小, 具体做法分析参考: <a href="https://stackoverflow.com/q/1228299/16317008">https://stackoverflow.com/q/1228299/16317008</a></p>
+<h3 id="2-编码">2. 编码</h3>
+<p>另外是关于编码的问题, Unicode和utf-8,</p>
+<p>Python的string使用unicode来表示字符,</p>
+<blockquote>
+<p>Python’s string type uses the Unicode Standard for representing characters, which lets Python programs work with all these different possible characters.</p>
+</blockquote>
+<p>Unicode就是赋予字符一个唯一的value, 如 &lsquo;a&rsquo;的unicode value是 0061, &lsquo;汉&rsquo;的unicode value是6C49,</p>
+<blockquote>
+<p>Unicode (<a href="https://www.unicode.org/">https://www.unicode.org/</a>) is a specification that aims to list every character used by human languages and give each character its own unique code.</p>
+          
+        </div>
+
+        
+           <div>
+            <a class="read-more button inline" href="/posts/python/practice/001-add-space/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h2 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/advance/003-go-scheduler/">Go Scheduler (1)</a>
+        </h2>
+        <div class="post-meta"><time class="post-date">2023-05-28</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%9E%B6%E6%9E%84/">计算机架构</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <p>Source: <a href="https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html">Scheduling In Go : Part I - OS Scheduler</a></p>
+<h2 id="1-os-scheduler">1. OS scheduler</h2>
+<p>Your program is just a series of machine instructions that need to be executed one after the other sequentially. To make that happen, the operating system uses the concept of a Thread. It’s the job of the Thread to account for and sequentially execute the set of instructions it’s assigned. Execution continues until there are no more instructions for the Thread to execute. <strong>This is why I call a Thread, “a path of execution”.</strong></p>
+          
+        </div>
+
+        
+           <div>
+            <a class="read-more button inline" href="/posts/golang/advance/003-go-scheduler/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h2 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/cs-basics/006-cpu-architecture/">Hyper-Threading &amp; Physical Threads</a>
+        </h2>
+        <div class="post-meta"><time class="post-date">2023-05-28</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%9E%B6%E6%9E%84/">计算机架构</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-cpu-structure">1. CPU structure</h2>
+<p>Single core CPU:</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/838e3b5018958914f986430b086270e2.png" alt=""></p>
+<p>The CPU core consists of three parts: ALU, CU and Memory (Register + Cache), The multiple cores CPU has more than one core (ALU, CU, Memory (Register + Cache)) to execute instructions:</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/8556c886045ef0f880cf279f3724c1ef.png" alt=""></p>
+<h2 id="2-hyper-threading">2. Hyper-threading</h2>
+<p>A single physical core with hyper-threading or simultaneous multithreading technology appears as two logical cores to an operating system. The CPU is still a single CPU, so it’s a little bit of a cheat. This can speed things up somewhat — if one virtual CPU is stalled and waiting, the other virtual CPU can borrow its execution resources.</p>
+          
+        </div>
+
+        
+           <div>
+            <a class="read-more button inline" href="/posts/cs-basics/006-cpu-architecture/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h2 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/cs-basics/001-memory-strucutre-programming-language/">C Go Java Python内存结构及对比</a>
+        </h2>
+        <div class="post-meta"><time class="post-date">2023-05-27</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">内存管理</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/java/">java</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/c%E8%AF%AD%E8%A8%80/">c语言</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/python/">python</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/other/">other</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-javascript">1. Javascript</h2>
+<p>Taken from <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_management">JavaScript | MDN</a> but <strong>this applies for all language with GC</strong>:</p>
+<p>Low-level languages like C, have manual memory management primitives such as <a href="https://pubs.opengroup.org/onlinepubs/009695399/functions/malloc.html"><code>malloc()</code></a> and <a href="https://en.wikipedia.org/wiki/C_dynamic_memory_allocation#Overview_of_functions"><code>free()</code></a>. In contrast, JavaScript automatically allocates memory when objects are created and frees it when they are not used anymore (<em>garbage collection</em>). This automaticity is a potential source of confusion: it can give developers the false impression that they don&rsquo;t need to worry about memory management.</p>
+          
+        </div>
+
+        
+           <div>
+            <a class="read-more button inline" href="/posts/cs-basics/001-memory-strucutre-programming-language/">阅读更多</a>
           </div>
         
       </article>

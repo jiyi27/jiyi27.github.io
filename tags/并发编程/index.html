@@ -231,10 +231,266 @@
         
       </article>
     
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/advance/008-do-not-overuse-cahnnel/">Don&rsquo;t Overuse Channel - Go</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-09-29</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <p>In <a href="https://davidzhu.xyz/post/golang/advance/006-closures-go/#21-pass-behaviour">previous post</a> we know that <strong>don&rsquo;t mediate the access to shared memory with locks and mutexes</strong> instead share that memory by communicating. However, is this always true? Sometimes you may want mutex and lock not channels, it depends on the situation. Channel is a way help mutiple groutines communicate with each other. I find some posts and share it here:</p>
+<p><a href="https://github.com/golang/go/wiki/MutexOrChannel#use-a-syncmutex-or-a-channel"><strong>Use a sync.Mutex or a channel?</strong></a></p>
+<p>One of Go&rsquo;s mottos is <em>&ldquo;Share memory by communicating, don&rsquo;t communicate by sharing memory.&rdquo;</em></p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/advance/008-do-not-overuse-cahnnel/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/advance/006-closures-go/">Function Closures - Go</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-09-18</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E9%97%AD%E5%8C%85/">闭包</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-what-is-closure">1. What is closure</h2>
+<blockquote>
+<p>Go functions may be closures. A closure is a function value that references variables from outside its body. The function may access and assign to the referenced variables; in this sense the function is &ldquo;bound&rdquo; to the variables.</p>
+<p><a href="https://go.dev/tour/moretypes/25">Closures - A Tour of Go</a></p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">adder</span>() <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">int</span>) (<span style="color:#66d9ef">int</span>, <span style="color:#f92672">*</span><span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">sum</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">x</span> <span style="color:#66d9ef">int</span>) (<span style="color:#66d9ef">int</span>, <span style="color:#f92672">*</span><span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sum</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">x</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">sum</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">sum</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">pos</span>, <span style="color:#a6e22e">neg</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">adder</span>(), <span style="color:#a6e22e">adder</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">3</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sum</span>, <span style="color:#a6e22e">addr</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">pos</span>(<span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;pos:  &#34;</span>, <span style="color:#a6e22e">sum</span>, <span style="color:#e6db74">&#34; &#34;</span>, <span style="color:#a6e22e">addr</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sum</span>, <span style="color:#a6e22e">addr</span> = <span style="color:#a6e22e">neg</span>(<span style="color:#f92672">-</span><span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;neg: &#34;</span>, <span style="color:#a6e22e">sum</span>, <span style="color:#e6db74">&#34; &#34;</span>, <span style="color:#a6e22e">addr</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//--------------------------</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pos</span>:   <span style="color:#ae81ff">1</span>   <span style="color:#ae81ff">0x140000b0018</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">neg</span>:  <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>   <span style="color:#ae81ff">0x140000b0020</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pos</span>:   <span style="color:#ae81ff">3</span>   <span style="color:#ae81ff">0x140000b0018</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">neg</span>:  <span style="color:#f92672">-</span><span style="color:#ae81ff">3</span>   <span style="color:#ae81ff">0x140000b0020</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pos</span>:   <span style="color:#ae81ff">6</span>   <span style="color:#ae81ff">0x140000b0018</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">neg</span>:  <span style="color:#f92672">-</span><span style="color:#ae81ff">6</span>   <span style="color:#ae81ff">0x140000b0020</span>
+</span></span></code></pre></div><p>As we see above,  when the anonymous function defined in the <code>adder()</code> access <code>sum</code>, it looks like accessing a global variable, even the function <code>adder()</code> has returned we still can access variable <code>sum</code>. However, there are &ldquo;two&rdquo; <code>sum</code> actually, they are isolated and each has its own address.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/advance/006-closures-go/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/basics/004-methods-receivers/">Methods Receivers &amp; Concurrency - Go</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-09-02</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-different-behaviors---pointer-and-value-receiver">1. Different behaviors - pointer and value receiver</h2>
+<p><strong>修改能力</strong>:</p>
+<p>值接收器：方法内部操作的是结构体的副本，无法修改原始数据</p>
+<p>指针接收器：方法可以直接修改原始结构体的数据</p>
+<p><strong>内存效率</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">BigStruct</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">data</span> [<span style="color:#ae81ff">1024</span>]<span style="color:#66d9ef">int</span>  <span style="color:#75715e">// 很大的数组</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 值接收器：每次调用都会复制整个结构体</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">b</span> <span style="color:#a6e22e">BigStruct</span>) <span style="color:#a6e22e">Process</span>() { }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 指针接收器：只复制指针（8字节）</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">BigStruct</span>) <span style="color:#a6e22e">ProcessEfficient</span>() { }
+</span></span></code></pre></div><blockquote>
+<p><strong>NOTE:</strong> Generally, in practice, we seldom use pointer types whose base types are slice types, map types, channel types, function types, string types and interface types. The costs of copying values of these assumed base types are very small.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/basics/004-methods-receivers/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/advance/002-concurrency-with-shared-variables/">Concurrency with Shared Variables</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-08-24</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1-concurrency-safe">1. Concurrency Safe</h2>
+<p>In a program with two or more goroutines, the steps within each goroutine happen in the familiar order, but in general we don’t know whether an event <em>x</em> in one goroutine happens before an event <em>y</em> in another goroutine, or happens after it, or is simultaneous with it. When we cannot confidently say that one event <em>happens before</em> the other, then the events <em>x</em> and <em>y</em> are <em><strong>concurrent</strong></em>.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/advance/002-concurrency-with-shared-variables/">阅读更多</a>
+          </div>
+        
+      </article>
+    
+      <article class="post on-list">
+        <h1 class="post-title">
+          <a href="https://blog.jiyi27.com/posts/golang/advance/001-why-goroutines/">Goroutines Model</a>
+        </h1>
+        <div class="post-meta"><time class="post-date">2023-08-24</time></div>
+
+        
+          <span class="post-tags">
+            
+            #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+            
+            #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
+            
+          </span>
+        
+
+        
+
+
+        <div class="post-content">
+          
+            <h2 id="1--two-styles-of-concurrent-programming">1.  Two Styles of Concurrent Programming</h2>
+<p>Go enables two styles of concurrent programming.</p>
+<ul>
+<li><em>communicating sequential processes</em> or <em>CSP</em>
+<ul>
+<li>goroutines and channels</li>
+</ul>
+</li>
+<li><em>shared memory multithreading</em>
+<ul>
+<li>traditional model</li>
+<li>multiple threads</li>
+</ul>
+</li>
+</ul>
+<h2 id="2-goroutines-vs-os-threads">2. Goroutines vs OS Threads</h2>
+<ul>
+<li>Creation and Destruction
+<ul>
+<li>Creating and destroying OS threads requires interacting with the operating system, involving system calls.</li>
+<li>Go routines managed by Go scheduler, in user space, no system calls.</li>
+</ul>
+</li>
+<li>Context Switching
+<ul>
+<li>needs a full context switch in os thread</li>
+</ul>
+</li>
+<li>Level of Operation
+<ul>
+<li>User Space Level vs Kernel Space Level</li>
+<li>Goroutines are multiplexed onto a smaller number of OS threads.</li>
+</ul>
+</li>
+<li>Stack Size
+<ul>
+<li>growable stack vs fixed-size stack</li>
+</ul>
+</li>
+</ul>
+<h3 id="21-growable-stacks">2.1. Growable Stacks</h3>
+<p>Each <strong>OS thread</strong> has a fixed-size block of memory (often as large as 2MB) for its <em>stack</em>. This fixed-size stack is simultaneously too much and too little. Yet despite their size, fixed-size stacks are not always big enough for the most complex and deeply recursive of functions. Changing the fixed size can improve space efficiency and allow more threads to be created, or it can enable more deeply recursive functions, but it cannot do both.</p>
+          
+        </div>
+
+        
+          <div>
+            <a class="read-more button inline" href="/posts/golang/advance/001-why-goroutines/">阅读更多</a>
+          </div>
+        
+      </article>
+    
 
     <div class="pagination">
   <div class="pagination__buttons">
     
+    
+      <a href="/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/page/2/" class="button next">
+        <span class="button__text">下一页</span>
+        <span class="button__icon">→</span>
+      </a>
     
   </div>
 </div>

@@ -3,7 +3,7 @@
 <head>
   
     
-    <title>HTTPS SSL TLS :: 为霜的博客</title>
+    <title>HTTPS 连接建立过程 (TLS 握手) :: 为霜的博客</title>
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -83,7 +83,7 @@ Source: https://en.wikipedia.org/wiki/HTTPS#Network_layers
 
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
-<meta property="og:title" content="HTTPS SSL TLS">
+<meta property="og:title" content="HTTPS 连接建立过程 (TLS 握手)">
 <meta property="og:description" content="1. HTTP vs HTTPS Strictly speaking, HTTPS is not a separate protocol, but refers to use of ordinary HTTP over an encrypted SSL/TLS connection.
 Port 80 is typically used for unencrypted HTTP traffic while port 443 is the common port used for encrypted HTTP traffic which is called HTTPS.
 Note that TLS is the successor of SSL, you can simply think they are same thing.
@@ -127,16 +127,20 @@ Source: https://en.wikipedia.org/wiki/HTTPS#Network_layers
     
 <article class="post">
   <h1 class="post-title">
-    <a href="https://blog.jiyi27.com/posts/http/006-https-ssl/">HTTPS SSL TLS</a>
+    <a href="https://blog.jiyi27.com/posts/http/006-https-ssl/">HTTPS 连接建立过程 (TLS 握手)</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2023-10-07</time><span class="post-reading-time">7 分钟阅读 (1440 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2023-10-07</time><span class="post-reading-time">6 分钟阅读 (1135 字数)</span></div>
 
   
     <span class="post-tags">
       
+      #<a href="https://blog.jiyi27.com/tags/http/">http</a>&nbsp;
+      
       #<a href="https://blog.jiyi27.com/tags/https/">https</a>&nbsp;
       
-      #<a href="https://blog.jiyi27.com/tags/http/">http</a>&nbsp;
+      #<a href="https://blog.jiyi27.com/tags/ssl/">ssl</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/">网络安全</a>&nbsp;
       
     </span>
   
@@ -176,22 +180,38 @@ Source: https://en.wikipedia.org/wiki/HTTPS#Network_layers
 <p>Note that SSL/TLS is a stateful protocol, whereas HTTP/HTTPS is a stateless protocol.</p>
 <p><strong>TLS/SSL is stateful.</strong> The web server and the client (browser) cache the session including the cryptographic keys to improve performance and do <strong>not</strong> perform key exchange for every request. <a href="https://stackoverflow.com/a/33681674/16317008">Source</a></p>
 </blockquote>
-<h2 id="4-details-in-tls-handshake---avoid-man-in-middle-attack">4. Details in TLS handshake - avoid man-in-middle attack<a href="#4-details-in-tls-handshake---avoid-man-in-middle-attack" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h2 id="4-details-in-tls-handshake">4. Details in TLS handshake<a href="#4-details-in-tls-handshake" class="hanchor" ariaLabel="Anchor">#</a> </h2>
 <p>I have talked man-in-middle attack in other <a href="https://davidzhu.xyz/post/cs-basics/002-ssh/">post</a>, when a ssh connection is being established at the first time, it will notify us the fingerprint of the server which enables us can make sure to we are connecting the right server. But it&rsquo;s a little diffenent in SSL/TLS (HTTPS). The authenciation happens in the TLS handshake, the authenciation here means to prevent man-in-the-middle attack by verifying the identity of the remote server.</p>
-<p>Once the client and server have agreed to use TLS, they negotiate a <a href="https://en.wikipedia.org/wiki/State_%28computer_science%29">stateful</a> connection by using a handshaking procedure (see <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security#TLS_handshake">TLS handshake</a>). The protocols use a handshake with an <a href="https://en.wikipedia.org/wiki/Asymmetric_cipher">asymmetric cipher</a> to establish not only cipher settings but also a session-specific shared key with which further communication is encrypted using a <a href="https://en.wikipedia.org/wiki/Symmetric_cipher">symmetric cipher</a>. During this handshake, the client and server agree on various parameters used to establish the connection&rsquo;s security:</p>
+<p>The protocols use a handshake with an <a href="https://en.wikipedia.org/wiki/Asymmetric_cipher">asymmetric cipher</a> to establish not only cipher settings but also a session-specific shared key with which further communication is encrypted using a <a href="https://en.wikipedia.org/wiki/Symmetric_cipher">symmetric cipher</a>. During this handshake, the client and server agree on various parameters used to establish the connection&rsquo;s security:</p>
 <ul>
-<li>The handshake begins when a client connects to a TLS-enabled server requesting a secure connection and the client presents a list of supported <a href="https://en.wikipedia.org/wiki/Cipher_suite">cipher suites</a> (<a href="https://en.wikipedia.org/wiki/Encryption">ciphers</a> and <a href="https://en.wikipedia.org/wiki/Hash_function">hash functions</a>).</li>
-<li>From this list, the server picks a cipher and hash function that it also supports and notifies the client of the decision.</li>
-<li>The server usually then provides identification in the form of a <a href="https://en.wikipedia.org/wiki/Public_key_certificate">digital certificate</a>. The certificate contains the <a href="https://en.wikipedia.org/wiki/Hostname">server name</a>, the trusted <a href="https://en.wikipedia.org/wiki/Certificate_authority">certificate authority</a> (CA) that vouches for the authenticity of the certificate, and the server&rsquo;s public encryption key. (<strong>The digital certificate here is know as SSL/TLS certificate</strong>)</li>
-<li>The client confirms the validity of the certificate before proceeding. (<strong>The client verifies the identity of the remote server by check the digital certificate which is called SSL/TLS certificate here</strong>)</li>
-<li>To generate the session keys used for the secure connection, the client either:
-<ul>
-<li>encrypts a <a href="https://en.wikipedia.org/wiki/Random_number_generation">random number</a> (<em>PreMasterSecret</em>) with the server&rsquo;s public key and sends the result to the server (which only the server should be able to decrypt with its private key); both parties then use the random number to generate a unique session key for subsequent encryption and decryption of data during the session, or</li>
-<li>uses <a href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange">Diffie–Hellman key exchange</a> (or its variant <a href="https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman">elliptic-curve DH</a>) to securely generate a random and unique session key for encryption and decryption that has the additional property of <a href="https://en.wikipedia.org/wiki/Forward_secrecy">forward secrecy</a>: if the server&rsquo;s private key is disclosed in future, it cannot be used to decrypt the current session, even if the session is intercepted and recorded by a third party.</li>
-</ul>
+<li>
+<p>客户端跟对方说：&ldquo;你好，我想安全地聊天，我可以用这些加密方式&hellip;&rdquo;</p>
+</li>
+<li>
+<p>对方回应：&ldquo;好的，那我们就用这种加密方式吧&rdquo;</p>
+</li>
+<li>
+<p>对方给你看他的 TLS 数字证书, 这个身份证上有：他的名字、公开的联系方式（公钥）、以及一个权威机构（CA）的盖章.</p>
+</li>
+<li>
+<p>浏览器验证证书是不是真的</p>
+</li>
+<li>
+<p>建立专属密码阶段 客户端随机生成一个随机数,</p>
+</li>
+<li>
+<p>方式一：客户端随机生成一个随机数, 用对方的公开联系方式（公钥）加密后发给他</p>
+</li>
+<li>
+<p>方式二：你们俩一起用一个特殊的数学方法（Diffie-Hellman）, 各自算出一个相同的暗号</p>
+</li>
+<li>
+<p>你们用刚才约定的暗号加密之后的所有对话</p>
 </li>
 </ul>
-<p>This concludes(ends) the handshake and begins the secured connection, which is encrypted and decrypted with the session key until the connection closes. If any one of the above steps fails, then the TLS handshake fails and the connection is not created.</p>
+<blockquote>
+<p>最开始 (握手阶段) 用的是不对称加密, 之后实际传输数据是对称加密</p>
+</blockquote>
 <p>Source: <a href="https://en.wikipedia.org/wiki/Transport_Layer_Security">https://en.wikipedia.org/wiki/Transport_Layer_Security</a></p>
 <p>Learn more: <a href="https://www.cloudflare.com/learning/ssl/what-happens-in-a-tls-handshake/">https://www.cloudflare.com/learning/ssl/what-happens-in-a-tls-handshake/</a></p>
 <h2 id="5-two-ways-to-get-ssltls-certificate">5. Two ways to get SSL/TLS certificate<a href="#5-two-ways-to-get-ssltls-certificate" class="hanchor" ariaLabel="Anchor">#</a> </h2>
@@ -229,7 +249,7 @@ Source: https://en.wikipedia.org/wiki/HTTPS#Network_layers
   </div>
   <div class="pagination__buttons">
     
-      <a href="https://blog.jiyi27.com/posts/python/practice/003-openssl-issue/" class="button inline prev">
+      <a href="https://blog.jiyi27.com/posts/python/practice/002-openssl-issue/" class="button inline prev">
         urllib3 not compatible with openssl issue - python
       </a>
     

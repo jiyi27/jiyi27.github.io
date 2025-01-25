@@ -487,6 +487,57 @@ timeout was 2 seconds.
     </item>
     
     <item>
+      <title>urllib3 not compatible with openssl issue - python</title>
+      <link>https://blog.jiyi27.com/posts/python/practice/002-openssl-issue/</link>
+      <pubDate>Sat, 07 Oct 2023 12:01:25 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/python/practice/002-openssl-issue/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;OpenSSL is an all-around cryptography library that offers an open-source application of the TLS protocol. It allows users to perform various SSL-related tasks, including CSR (Certificate Signing Request) and private keys generation, and SSL certificate installation. You can use OpenSSL&amp;rsquo;s commands to generate, install and manage SSL certificates on various servers.  &lt;a href=&#34;https://www.ssldragon.com/blog/what-is-openssl/&#34;&gt;What Is OpenSSL and How Does It Work?&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;OpenSSL is a library, so there should be API interfaces. However, the more common use of OpenSSL is as a command-line tool, which can be entered on a computer&lt;/p&gt;</description>
+      <content>&lt;blockquote&gt;
+&lt;p&gt;OpenSSL is an all-around cryptography library that offers an open-source application of the TLS protocol. It allows users to perform various SSL-related tasks, including CSR (Certificate Signing Request) and private keys generation, and SSL certificate installation. You can use OpenSSL&amp;rsquo;s commands to generate, install and manage SSL certificates on various servers.  &lt;a href=&#34;https://www.ssldragon.com/blog/what-is-openssl/&#34;&gt;What Is OpenSSL and How Does It Work?&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;OpenSSL is a library, so there should be API interfaces. However, the more common use of OpenSSL is as a command-line tool, which can be entered on a computer&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ openssl version   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;LibreSSL 3.3.6
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Why the output is LibreSSL? LibreSSL is another version of SSL implementation, which exists alongside OpenSSL. Learn more: &lt;a href=&#34;https://www.youtube.com/watch?v=n1uaoJyBwHk&#34;&gt;Why You Should Use LibreSSL Instead of OpenSSL&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;OpenSSL is indeed a library, and HTTPS is based on SSL. When establishing a secure connection using SSL, operations such as SSL handshake and identity verification are required. For example, we write a program to make an HTTPS request to a server, do TLS handshake and verifying digital signatures on our own would be challenging. This is where OpenSSL comes in—it handles these complex operations.&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s possible that some people may have noticed that when sending HTTP requests using Python, OpenSSL was not explicitly used. There are two reasons for this:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;It could be because you were sending an HTTP request instead of an HTTPS request. You can check if the destination port is set to 80, which is the default port for HTTP.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The HTTP library you used in Python may have called the OpenSSL library at its lower levels to handle the complex operations on your behalf. However, you might not have noticed this because it happens behind the scenes. For example, the OpenAI package you mentioned that you recently used internally utilizes OpenSSL, but you wouldn&amp;rsquo;t be able to detect it without examining the source code:&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; openai
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;openai&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;api_key &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Your Key&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# make https request here&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; openai&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;ChatCompletion&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;create(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    model&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;gpt-3.5-turbo&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    messages&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;[
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        {&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;role&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;user&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Who won the 2018 FIFA world cup?&amp;#34;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(response[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;choices&amp;#39;&lt;/span&gt;][&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;][&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;message&amp;#39;&lt;/span&gt;][&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;content&amp;#39;&lt;/span&gt;])
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When I run the code above, there is an error:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ImportError: urllib3 v2.0 only supports OpenSSL 1.1.1+, currently the &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ssl&amp;#39;&lt;/span&gt; module is compiled with LibreSSL 2.8.3. See: https://github.com/urllib3/urllib3/issues/2168
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;openai&lt;/code&gt; package utilizes a Python package called urllib3, which is used for sending HTTP requests. urllib3 relies on a built-in Python library called ssl, which internally calls OpenSSL&amp;rsquo;s related interfaces for tasks such as session creation and certificate verification.&lt;/p&gt;
+&lt;p&gt;However, from your Python code&amp;rsquo;s perspective, you&amp;rsquo;re just using the ssl module&amp;rsquo;s high-level API. You don&amp;rsquo;t have to interact directly with OpenSSL - it&amp;rsquo;s an implementation detail hidden by the SSLContext and socket wrapping methods. So in short, the Python SSL library uses the OpenSSL library under the hood to actually perform SSL handshakes, key generation, encryption, etc. But from a Python programmer&amp;rsquo;s point of view, you just import ssl and call its APIs to establish encrypted SSL connections.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/003-openssl-issue/b.png&#34; alt=&#34;b&#34;&gt;&lt;/p&gt;
+&lt;p&gt;So, the error message above is stating that urllib3 version 2.0 only supports OpenSSL 1.1.1+ but the SSL library used on my computer is LibreSSL 2.8.3. (Remember,  &lt;code&gt;openssl version&lt;/code&gt; earlier, the output is LibreSSL) Since urllib3 version 2.0 does not support the LibreSSL on your computer, the solution would be to switch to a different version of urllib3.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;pip3 uninstall urllib3 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;pip3 install &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;urllib3&amp;lt;2.0&amp;#39;&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Alternatively, I could consider upgrading or changing the version of LibreSSL on my computer to a version that is compatible with urllib3 2.0:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;brew install openssl@1.1
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+    </item>
+    
+    <item>
       <title>ssh session vary slow</title>
       <link>https://blog.jiyi27.com/posts/bugs/005-ssh-connection-slow/</link>
       <pubDate>Mon, 25 Sep 2023 14:30:22 +0000</pubDate>

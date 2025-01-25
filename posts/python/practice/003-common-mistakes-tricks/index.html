@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Common Mistakes and Tricks Python :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Slicing makes shallow copy of a list I have talked this nature of slicing in previous post, currently I came across a weird behavior when improt a variable from another package.
+messag.py:
+messages = [] def with_user(msg: str) -&gt; None: messages.append(msg) def trim_last_two_messages() -&gt; None: global messages print(&#34;in trim func, before trim, len of messages:&#34; &#43; str(len(messages))) if len(messages) &gt; 2: messages = messages[:-2] print(&#34;in trim func, after trim, len of messages:&#34; &#43; str(len(messages))) if __name__ == &#34;__main__&#34;: pass main.py:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/python/practice/003-common-mistakes-tricks/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.2461b8586cf39d5dbf06cebf2dc78b98fe24217bfdca140ba21d3b459c02ef78.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.b68b6d72e5312a73c94b12b42148af778ac0a0cefce7e60be226f5dc6cb4030e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.565ecf2bf47ac6fed1df9e821ed184b0b9c58ce92a01ce45b6bf2e2134ffa669.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.f78e2a5ae363c739475c7f411aaa6a30cb4b6ed1331c969fc1f2d9145659b050.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Common Mistakes and Tricks Python">
+<meta property="og:description" content="1. Slicing makes shallow copy of a list I have talked this nature of slicing in previous post, currently I came across a weird behavior when improt a variable from another package.
+messag.py:
+messages = [] def with_user(msg: str) -&gt; None: messages.append(msg) def trim_last_two_messages() -&gt; None: global messages print(&#34;in trim func, before trim, len of messages:&#34; &#43; str(len(messages))) if len(messages) &gt; 2: messages = messages[:-2] print(&#34;in trim func, after trim, len of messages:&#34; &#43; str(len(messages))) if __name__ == &#34;__main__&#34;: pass main.py:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/python/practice/003-common-mistakes-tricks/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="python" />
+
+
+  <meta property="article:published_time" content="2023-12-03 09:01:25 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/python/practice/003-common-mistakes-tricks/">Common Mistakes and Tricks Python</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-12-03</time><span class="post-reading-time">3 分钟阅读 (434 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/python/">python</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E7%BC%96%E7%A8%8B%E5%B0%8F%E6%8A%80%E5%B7%A7/">编程小技巧</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-slicing-makes-shallow-copy-of-a-list">1. Slicing makes shallow copy of a list<a href="#1-slicing-makes-shallow-copy-of-a-list" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>I have talked this nature of slicing in <a href="https://davidzhu.xyz/post/python/basics/001-collections/">previous post</a>, currently I came across a weird behavior when improt a variable from another package.</p>
+<p><code>messag.py</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>messages <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">with_user</span>(msg: str) <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">None</span>:
+</span></span><span style="display:flex;"><span>    messages<span style="color:#f92672">.</span>append(msg)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">trim_last_two_messages</span>() <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">None</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">global</span> messages
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;in trim func, before trim, len of messages:&#34;</span> <span style="color:#f92672">+</span> str(len(messages)))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> len(messages) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">2</span>:
+</span></span><span style="display:flex;"><span>        messages <span style="color:#f92672">=</span> messages[:<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>]
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;in trim func, after trim, len of messages:&#34;</span> <span style="color:#f92672">+</span> str(len(messages)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">pass</span>
+</span></span></code></pre></div><p><code>main.py</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> message <span style="color:#f92672">import</span> messages
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> message <span style="color:#f92672">import</span> with_user
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> message <span style="color:#f92672">import</span> trim_last_two_messages
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>with_user(<span style="color:#e6db74">&#39;hello&#39;</span>)
+</span></span><span style="display:flex;"><span>with_user(<span style="color:#e6db74">&#39;world&#39;</span>)
+</span></span><span style="display:flex;"><span>with_user(<span style="color:#e6db74">&#39;foo&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;main func, before trim:&#34;</span>, messages)
+</span></span><span style="display:flex;"><span>trim_last_two_messages()
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;main func, after trim:&#34;</span>, messages)
+</span></span></code></pre></div><p>The output is:</p>
+<pre tabindex="0"><code>main func, before trim: [&#39;hello&#39;, &#39;world&#39;, &#39;foo&#39;]
+in trim func, before trim, len of messages:3
+in trim func, after trim, len of messages:1
+main func, after trim: [&#39;hello&#39;, &#39;world&#39;, &#39;foo&#39;]
+</code></pre><p>But what I expected is:</p>
+<pre tabindex="0"><code>main func, before trim: [&#39;hello&#39;, &#39;world&#39;, &#39;foo&#39;]
+in trim func, before trim, len of messages:3
+in trim func, after trim, len of messages:1
+main func, after trim: [&#39;hello&#39;]
+</code></pre><ol>
+<li><strong>Importing <code>messages</code>:</strong> When you import <code>messages</code> from <code>message.py</code> into <code>main.py</code>, you are importing a reference to the same list object that exists in <code>message.py</code>.</li>
+<li><strong>Appending Messages:</strong> When you call <code>with_user</code>, it appends new messages to the <code>messages</code> list. Both <code>main.py</code> and <code>message.py</code> are still referring to the same list object.</li>
+<li><strong>Trimming Messages:</strong> In <code>trim_last_two_messages</code>, you are slicing the <code>messages</code> list (<code>messages = messages[:-2]</code>). This is where the key behavior occurs. Slicing a list in Python creates a new list object. So after this slicing operation, <code>message.py</code>&rsquo;s <code>messages</code> now points to a new list object, but <code>main.py</code>&rsquo;s <code>messages</code> still points to the original list object.</li>
+</ol>
+<p>Because of this, changes made to the list in <code>message.py</code> (after the slicing operation) are not reflected in <code>main.py</code>, as they are now two different list objects.</p>
+<p>Correct way (change the function in message.py):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">trim_last_two_messages</span>() <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">None</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">global</span> messages
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;in trim func, before trim, len of messages:&#34;</span> <span style="color:#f92672">+</span> str(len(messages)))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> len(messages) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">2</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">del</span> messages[<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>:]
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;in trim func, after trim, len of messages:&#34;</span> <span style="color:#f92672">+</span> str(len(messages)))
+</span></span></code></pre></div><p><strong>or</strong></p>
+<p>Change the code in <code>main.py</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-py" data-lang="py"><span style="display:flex;"><span><span style="color:#f92672">import</span> message
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># use messages as this:</span>
+</span></span><span style="display:flex;"><span>print(message<span style="color:#f92672">.</span>messages)
+</span></span></code></pre></div><h2 id="2-performance-of-del-vs-relicing">2. Performance of <code>del</code> vs <code>relicing</code><a href="#2-performance-of-del-vs-relicing" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> timeit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Test with a large list</span>
+</span></span><span style="display:flex;"><span>large_list <span style="color:#f92672">=</span> list(range(<span style="color:#ae81ff">1000000</span>))  <span style="color:#75715e"># a list with one million elements</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">test_del_method</span>():
+</span></span><span style="display:flex;"><span>    temp_list <span style="color:#f92672">=</span> large_list<span style="color:#f92672">.</span>copy()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">del</span> temp_list[<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>:]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">test_slice_method</span>():
+</span></span><span style="display:flex;"><span>    temp_list <span style="color:#f92672">=</span> large_list<span style="color:#f92672">.</span>copy()
+</span></span><span style="display:flex;"><span>    temp_list <span style="color:#f92672">=</span> temp_list[:<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>time_del <span style="color:#f92672">=</span> timeit<span style="color:#f92672">.</span>timeit(test_del_method, number<span style="color:#f92672">=</span><span style="color:#ae81ff">100</span>)
+</span></span><span style="display:flex;"><span>time_slice <span style="color:#f92672">=</span> timeit<span style="color:#f92672">.</span>timeit(test_slice_method, number<span style="color:#f92672">=</span><span style="color:#ae81ff">100</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Time taken by del method: </span><span style="color:#e6db74">{</span>time_del<span style="color:#e6db74">}</span><span style="color:#e6db74"> seconds&#34;</span>)
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Time taken by slice method: </span><span style="color:#e6db74">{</span>time_slice<span style="color:#e6db74">}</span><span style="color:#e6db74"> seconds&#34;</span>)
+</span></span></code></pre></div><p>The output:</p>
+<pre tabindex="0"><code>Time taken by del method: 0.312709417 seconds
+Time taken by slice method: 0.683257708 seconds
+</code></pre>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/golang/basics/006-io/" class="button inline prev">
+        IO in Golang
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/bugs/009-go-server-handle-large-file/" class="button inline next">
+        Go File Server Cannot Handle Large Files
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
