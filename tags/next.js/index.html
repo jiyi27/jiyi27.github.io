@@ -55,6 +55,9 @@
   <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
 
   
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
   <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
 
 
@@ -110,64 +113,11 @@
 
   
   
-    <header class="header">
-  <div class="header__inner">
-    <div class="header__logo">
-      <a href="/">
-  <div class="logo">
-    为霜的博客
-  </div>
-</a>
-
-    </div>
-    
-      <ul class="menu menu--mobile">
-  <li class="menu__trigger">Menu&nbsp;▾</li>
-  <li>
-    <ul class="menu__dropdown">
-      
-        
-          <li><a href="/about">关于</a></li>
-        
-      
-        
-          <li><a href="/categories">文章分类</a></li>
-        
-      
-      
-    </ul>
-  </li>
-</ul>
-
-    
-    
-  </div>
-  
-    <nav class="navigation-menu">
-  <ul class="navigation-menu__inner menu--desktop">
-    
-      
-        
-          <li><a href="/about" >关于</a></li>
-        
-      
-        
-          <li><a href="/categories" >文章分类</a></li>
-        
-      
-      
-    
-  </ul>
-</nav>
-
-  
-</header>
-
   
 
   <div class="content">
     
-  <h1>Posts for: #Next.js</h1>
+  <h1 class="tags-page-title">相关文章: #Next.js</h1>
   
   <div class="posts">
     
@@ -189,28 +139,6 @@
 
         
 
-
-        <div class="post-content">
-          
-            <p><a href="https://eliav2.github.io/how-react-hooks-work/">一篇文章</a>总结的比较好, 渲染的两个阶段: Render, Commit:</p>
-<p><strong>Render</strong></p>
-<ul>
-<li>construction of sub React-tree by recursively calling the React component function body (or the render method on class components)- in this article we call this <strong>update phase</strong>.</li>
-<li>passing this React-tree to the renderer that will figure out what’s sections of the DOM needs to be updated.</li>
-</ul>
-<p><strong>Commit</strong></p>
-<ul>
-<li>the renderer updates the DOM using <a href="https://reactjs.org/docs/reconciliation.html#the-diffing-algorithm">React’s “diffing” algorithm</a>.</li>
-<li>now the browser DOM is fully updated in memory but the browser has not painted it to the UI(the event loop has not yet ended). means that any access to the DOM here will get the updated DOM properties(such location and dimensions), but changes has not flushed to the UI just yet.</li>
-<li><em>useLayoutEffect cleanup from previous render</em></li>
-<li><strong><a href="https://reactjs.org/docs/hooks-reference.html#uselayouteffect">useLayoutEffect</a></strong> is now called.</li>
-<li>javascript event loop has ended, and the browser paints the updated DOM (the UI is fully updated).</li>
-<li><em>useEffect cleanup from previous render</em></li>
-<li><strong><a href="https://reactjs.org/docs/hooks-reference.html#useeffect">useEffect</a></strong> is now called (asynchronously).</li>
-</ul>
-<p>注意这里的 <code>useEffect cleanup from previous render</code>, 清理实际上指的是 执行 useEffect 返回的函数,  即 useEffect 函数体会在 commit 阶段执行然后返回一个清理函数(可选), 在下次 commit 阶段时, React 会先调用上次 useEffect 返回的清理函数, 然后再执行 useEffect,</p>
-          
-        </div>
 
         
           <div>
@@ -237,28 +165,6 @@
 
         
 
-
-        <div class="post-content">
-          
-            <p>NextAuth v5 配置通常分为两个文件(在根目录)：<code>auth.config.ts</code> 和 <code>auth.ts</code></p>
-<p>当有新的请求进来时，Next.js 首先会检查 middleware.ts 中的 config 配置：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#75715e">// middleware.ts
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#a6e22e">NextAuth</span>(<span style="color:#a6e22e">authConfig</span>).<span style="color:#a6e22e">auth</span>;
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// 不匹配 /api 路径, 不匹配 /_next/static 路径...
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">config</span> <span style="color:#f92672">=</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">matcher</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#39;/((?!api|_next/static|_next/image|.*\\.png$).*)&#39;</span>],
-</span></span><span style="display:flex;"><span>};
-</span></span></code></pre></div><p>如果请求路径匹配上述规则，Next.js 就会执行 <code>middleware.ts</code> 中默认导出的函数, 也就是上面的 <code>export default NextAuth(authConfig).auth</code></p>
-<p>注意, 这里的 <code>NextAuth(authConfig).auth</code> 函数和 <code>auth.ts</code> 导出的那个 auth 函数是一样的, 但他们并不是同一个函数, 可以看到 <code>auth.ts</code> 和 <code>middleware.ts</code> 都用到了 <code>auth.config.ts</code>, 就是通过 <code>NextAuth(authConfig)</code> 来导出 auth 函数.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#75715e">// auth.ts
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">auth</span>, <span style="color:#a6e22e">signIn</span>, <span style="color:#a6e22e">signOut</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">NextAuth</span>({
-</span></span><span style="display:flex;"><span>  ...<span style="color:#a6e22e">authConfig</span>,
-</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">providers</span><span style="color:#f92672">:</span> [...]
-</span></span><span style="display:flex;"><span>})
-</span></span></code></pre></div><p>这个 auth 函数主要就是会执行 <code>authConfig</code> 中的 authorized 回调, 也就是<code>auth.config.ts</code> 中的 authorized callback, 根据 authorized 的返回值决定是否允许访问:</p>
-          
-        </div>
 
         
           <div>
@@ -288,36 +194,6 @@
         
 
 
-        <div class="post-content">
-          
-            <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ npx create-next-app@latest learn-by-example --use-pnpm
-</span></span><span style="display:flex;"><span>✔ Would you like to use TypeScript? … No / Yes
-</span></span><span style="display:flex;"><span>✔ Would you like to use ESLint? … No / Yes
-</span></span><span style="display:flex;"><span>✔ Would you like to use Tailwind CSS? … No / Yes
-</span></span><span style="display:flex;"><span>✔ Would you like your code inside a <span style="color:#e6db74">`</span>src/<span style="color:#e6db74">`</span> directory? … No / Yes
-</span></span><span style="display:flex;"><span>✔ Would you like to use App Router? <span style="color:#f92672">(</span>recommended<span style="color:#f92672">)</span> … No / Yes
-</span></span><span style="display:flex;"><span>✔ Would you like to use Turbopack <span style="color:#66d9ef">for</span> <span style="color:#e6db74">`</span>next dev<span style="color:#e6db74">`</span>? … No / Yes
-</span></span><span style="display:flex;"><span>✔ Would you like to customize the import alias <span style="color:#f92672">(</span><span style="color:#e6db74">`</span>@/*<span style="color:#e6db74">`</span> by default<span style="color:#f92672">)</span>? … No / Yes
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>$ pnpm add date-fns lucide-react
-</span></span><span style="display:flex;"><span> 
-</span></span><span style="display:flex;"><span>$ pnpm dlx shadcn@latest init
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>$ pnpm dlx shadcn@latest add textarea
-</span></span></code></pre></div><h2 id="npm-vs-npx-vs-pnmp">npm vs npx vs pnmp</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># download and install Node.js</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># https://nodejs.org/en/download/package-manager</span>
-</span></span><span style="display:flex;"><span>brew install node@22
-</span></span><span style="display:flex;"><span>node -v <span style="color:#75715e"># should print `v22.12.0`</span>
-</span></span><span style="display:flex;"><span>npm -v <span style="color:#75715e"># should print `10.9.0`</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># install pnpm</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># https://pnpm.io/installation</span>
-</span></span><span style="display:flex;"><span>curl -fsSL https://get.pnpm.io/install.sh | sh -
-</span></span></code></pre></div><p><code>npm</code> comes with <code>Node.js</code>, and <code>npx</code> comes with <code>npm</code>. <strong>In order to use <code>npm</code> or <code>npx</code>, you need install <code>node.js</code>.</strong></p>
-          
-        </div>
-
         
           <div>
             <a class="read-more button inline" href="/posts/frontend/next-js/001-npm-npx-pnpm/">阅读更多</a>
@@ -343,45 +219,6 @@
 
         
 
-
-        <div class="post-content">
-          
-            <h2 id="csr-client-side-rendering">CSR (Client Side Rendering)</h2>
-<pre tabindex="0"><code>1. 浏览器请求页面
-用户在浏览器输入 URL，向前端服务器(比如 Nginx)发起请求
-
-2. 服务器返回 HTML
-Nginx 返回一个基础的 HTML 文件，包含：
-- 基本的 HTML 结构
-- 一个根节点 `&lt;div id=&#34;root&#34;&gt;&lt;/div&gt;`
-- 打包后的 JS 文件引用（包含了 React 库代码、您的应用代码等所有 JS 代码）
-
-3. 浏览器下载 JS
-浏览器解析 HTML 时发现 JS 文件引用，会下载这些文件，包括：
-- React 库代码
-- React DOM 库代码
-- 其他依赖库代码
-- 您的应用代码
-（这些在生产环境通常会被打包成一个或多个文件）
-
-4. 执行 JS 代码
-浏览器按顺序执行下载的 JS 代码：
-- 先执行 React 库代码，使浏览器具备运行 React 的能力
-- 然后执行您的应用代码，这些代码会使用 React API 来创建和渲染组件
-
-5. React 开始工作
-React 代码执行后：
-- 创建虚拟 DOM
-- 将组件渲染到 `#root` 节点中
-- 如果组件中有数据请求，会发起 API 请求
-- 等待数据返回后更新组件显示
-
-6. 最终渲染完成
-- 页面展示完整内容
-- 用户可以与页面交互
-</code></pre><p>在这个过程中，用户可能会经历：1 完全空白阶段（等待 HTML 下载）, 2 只有空 root div 的阶段（等待 JS 下载）, 3 Loading 状态（JS 执行后，等待数据）, 4 完整页面（数据获取完成） 这也就解释了为什么:</p>
-          
-        </div>
 
         
           <div>
@@ -409,35 +246,6 @@ React 代码执行后：
         
 
 
-        <div class="post-content">
-          
-            <p><strong>UUIDs vs. Auto-incrementing Keys</strong></p>
-<blockquote>
-<p>We use UUIDs instead of incrementing keys (e.g., 1, 2, 3, etc.). This makes the URL longer; however, UUIDs eliminate the risk of ID collision, are globally unique, and reduce the risk of enumeration attacks - making them ideal for large databases.</p>
-<p>However, if you prefer cleaner URLs, you might prefer to use auto-incrementing keys.</p>
-<p><a href="https://nextjs.org/learn/dashboard-app/mutating-data">source</a></p>
-</blockquote>
-<hr>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">SortOption</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;latest&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;hot&#39;</span> <span style="color:#f92672">|</span> <span style="color:#e6db74">&#39;mostLiked&#39;</span>;
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// 不推荐, 若代码没有使用所有选项, 编译器会警告未使用变量, 其实是使用了, 只不过在运行时才能确定, 但编译器不知道, 不利于多人维护, 比如人家看没有使用的变量, 直接就删除了, 但用户通过点击选项来选择排序, 这是运行时才能确定的
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">sortFunctions</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">useMemo</span>(() <span style="color:#f92672">=&gt;</span> ({
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">latest</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">a</span>: <span style="color:#66d9ef">Post</span>, <span style="color:#a6e22e">b</span>: <span style="color:#66d9ef">Post</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">new</span> Date(<span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">createdAt</span>).<span style="color:#a6e22e">getTime</span>() <span style="color:#f92672">-</span> <span style="color:#66d9ef">new</span> Date(<span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">createdAt</span>).<span style="color:#a6e22e">getTime</span>(),
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">hot</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">a</span>: <span style="color:#66d9ef">Post</span>, <span style="color:#a6e22e">b</span>: <span style="color:#66d9ef">Post</span>) <span style="color:#f92672">=&gt;</span> (<span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">likesCount</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">commentsCount</span>) <span style="color:#f92672">-</span> (<span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">likesCount</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">commentsCount</span>),
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mostLiked</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">a</span>: <span style="color:#66d9ef">Post</span>, <span style="color:#a6e22e">b</span>: <span style="color:#66d9ef">Post</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">likesCount</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">likesCount</span>
-</span></span><span style="display:flex;"><span>}), []);
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// 解决办法, 指定 key 的类型
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">sortFunctions</span>: <span style="color:#66d9ef">Record</span>&lt;<span style="color:#f92672">SortOption</span>, <span style="color:#960050;background-color:#1e0010">(</span><span style="color:#a6e22e">a</span><span style="color:#960050;background-color:#1e0010">:</span> <span style="color:#a6e22e">Post</span>, <span style="color:#a6e22e">b</span><span style="color:#960050;background-color:#1e0010">:</span> <span style="color:#a6e22e">Post</span><span style="color:#960050;background-color:#1e0010">)</span> <span style="color:#960050;background-color:#1e0010">=</span>&gt; <span style="color:#66d9ef">number</span><span style="color:#f92672">&gt;</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">useMemo</span>(() <span style="color:#f92672">=&gt;</span> ({
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">latest</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">a</span>: <span style="color:#66d9ef">Post</span>, <span style="color:#a6e22e">b</span>: <span style="color:#66d9ef">Post</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">new</span> Date(<span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">createdAt</span>).<span style="color:#a6e22e">getTime</span>() <span style="color:#f92672">-</span> <span style="color:#66d9ef">new</span> Date(<span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">createdAt</span>).<span style="color:#a6e22e">getTime</span>(),
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">hot</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">a</span>: <span style="color:#66d9ef">Post</span>, <span style="color:#a6e22e">b</span>: <span style="color:#66d9ef">Post</span>) <span style="color:#f92672">=&gt;</span> (<span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">likesCount</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">commentsCount</span>) <span style="color:#f92672">-</span> (<span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">likesCount</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">commentsCount</span>),
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mostLiked</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">a</span>: <span style="color:#66d9ef">Post</span>, <span style="color:#a6e22e">b</span>: <span style="color:#66d9ef">Post</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">likesCount</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">likesCount</span>
-</span></span><span style="display:flex;"><span>}), []);
-</span></span></code></pre></div><blockquote>
-<p><code>Record&lt;K, V&gt;</code> 是 TypeScript 的一个工具类型, K 是键的类型, V 是值的类型</p>
-          
-        </div>
-
         
           <div>
             <a class="read-more button inline" href="/posts/frontend/next-js/000-nuggets/">阅读更多</a>
@@ -463,15 +271,6 @@ React 代码执行后：
 
         
 
-
-        <div class="post-content">
-          
-            <h2 id="can-i-use-react-without-a-framework"><strong>Can I use React without a framework?</strong></h2>
-<p>You can definitely use React without a framework—that’s how you’d <a href="https://react.dev/learn/add-react-to-an-existing-project#using-react-for-a-part-of-your-existing-page">use React for a part of your page.</a> <strong>However, if you’re building a new app or a site fully with React, we recommend using a framework.</strong></p>
-<p>Here’s why.</p>
-<p>Even if you don’t need routing or data fetching at first, you’ll likely want to add some libraries for them. As your JavaScript bundle grows with every new feature, you might have to figure out how to split code for every route individually. As your data fetching needs get more complex, you are likely to encounter server-client network waterfalls that make your app feel very slow. As your audience includes more users with poor network conditions and low-end devices, you might need to generate HTML from your components to display content early—either on the server, or during the build time. Changing your setup to run some of your code on the server or during the build can be very tricky.</p>
-          
-        </div>
 
         
           <div>
