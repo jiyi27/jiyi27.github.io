@@ -49,7 +49,7 @@
   <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
 
   
-  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.f78e2a5ae363c739475c7f411aaa6a30cb4b6ed1331c969fc1f2d9145659b050.css">
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
 
   
   <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
@@ -192,26 +192,17 @@
         
 
 
-        <div class="post-content">
-          
-            <h2 id="1-bson--marshalling--unmarshalling">1. Bson &amp; Marshalling &amp; Unmarshalling</h2>
-<p>The process of converting a Go type to BSON is called <strong>marshalling</strong>, while the reverse process is called <strong>unmarshalling</strong>.</p>
-<p><strong>Why need convert Go type to BSON?</strong> MongoDB stores documents in <a href="https://www.mongodb.com/docs/manual/reference/bson-types/">BSON</a>, when we store data (our struct) into MongoDB,  MongoDB Go-driver convert our struct value into bson automatically.</p>
-<p>The Go driver provides four main types for working with BSON data:</p>
-<ul>
-<li><code>D</code>: An ordered representation of a BSON document (slice)</li>
-<li><code>M</code>: An unordered representation of a BSON document (map)</li>
-<li>&hellip;</li>
-</ul>
-<p>D is an ordered representation of a BSON document. This type should be used when the order of the elements matters, such as MongoDB command documents. If the order of the elements does not matter, an M should be used instead. This usually used as filter in a query operation.</p>
-          
-        </div>
 
-        
-           <div>
-            <a class="read-more button inline" href="/posts/database/mongodb/000-basics-golang/">阅读更多</a>
-          </div>
-        
+
+
+
+
+
+
+
+
+
+
       </article>
     
       <article class="post on-list">
@@ -235,51 +226,17 @@
         
 
 
-        <div class="post-content">
-          
-            <h2 id="1-problem-description">1. Problem description</h2>
-<p>Considering the limitation of the RAM on my VPS, when user attempting to upload a large file, I want to handle the file in chunks, so that I can read the file in small pieces and write them to the disk. And this process is called <strong>streaming</strong>.</p>
-<p>The code snippet is like this:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">server</span>) <span style="color:#a6e22e">handleUpload</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>, <span style="color:#a6e22e">currentDir</span> <span style="color:#66d9ef">string</span>) (<span style="color:#a6e22e">errs</span> []<span style="color:#a6e22e">uploadError</span>) {
-</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// limit the size of incoming request bodies.</span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Body</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">LimitedReader</span>{<span style="color:#a6e22e">r</span>: <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Body</span>, <span style="color:#a6e22e">n</span>: int64(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">maxFileSize</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">1024</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">1024</span>)}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">reader</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">MultipartReader</span>()
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {<span style="color:#f92672">...</span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> {
-</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// reader.NextPart() will close the previous part automatically.</span>
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">part</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">reader</span>.<span style="color:#a6e22e">NextPart</span>()
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {<span style="color:#f92672">...</span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// not a file, move to the next part.</span>
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">part</span>.<span style="color:#a6e22e">FileName</span>() <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#34;</span> {
-</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">continue</span>
-</span></span><span style="display:flex;"><span>		}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">filename</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getAvailableName</span>(<span style="color:#a6e22e">currentDir</span>, <span style="color:#a6e22e">part</span>.<span style="color:#a6e22e">FileName</span>())
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">dstPath</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">filepath</span>.<span style="color:#a6e22e">Join</span>(<span style="color:#a6e22e">currentDir</span>, <span style="color:#a6e22e">filename</span>)
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">dst</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Create</span>(<span style="color:#a6e22e">dstPath</span>)
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {<span style="color:#f92672">...</span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// io.Copy() will stream the file to dst, multipart.Part is an io.Reader.</span>
-</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Copy</span>(<span style="color:#a6e22e">dst</span>, <span style="color:#a6e22e">part</span>)
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {<span style="color:#f92672">...</span>}
-</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">dst</span>.<span style="color:#a6e22e">Close</span>(); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#f92672">...</span> }
-</span></span><span style="display:flex;"><span>	}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p>But when I try to upload a file of 1.6GB, it takes a long time to finish (about 2 minutes), I thought it may caused by the CPU speed of my VPS or the I/O speed of the disk or the network speed.</p>
-          
-        </div>
 
-        
-           <div>
-            <a class="read-more button inline" href="/posts/bugs/010-post-large-file/">阅读更多</a>
-          </div>
-        
+
+
+
+
+
+
+
+
+
+
       </article>
     
       <article class="post on-list">
@@ -301,31 +258,17 @@
         
 
 
-        <div class="post-content">
-          
-            <h2 id="1-dns-hierarchy">1. DNS Hierarchy</h2>
-<p>DNS服务器怎么会知道每个域名的IP地址呢？答案是分级查询, 仔细看下面DNS解析过程，每个域名的尾部都多了一个点<code>.</code></p>
-<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/060ac4f1fb8e9b0fa6d0d81eea60e23c.png" alt=""></p>
-<p>多出的那个<code>.</code>是Root Level Domain, 比如<code>www.example.com</code>真正的名字是<code>www.example.com.root</code>然后上图就简写为<code>www.example.com.</code> 因为根域名<code>.root</code>对于所有域名都是一样的，所以平时是省略的。</p>
-<blockquote>
-<p>域名的层级结构: <code>hostname.SLD.TLD.root</code>, <strong>hostname 也叫 subdomain</strong>.</p>
-</blockquote>
-<h2 id="2-hostname-vs-sld">2. HOSTNAME vs SLD</h2>
-<p>HOSTNAME 和二级域名(SLD)是不一样的, 二级域名是指<code>example.com</code>里面的<code>example</code>, 而HOSTNAME是指<code>www.example.com</code>里面的<code>www</code>.</p>
-<p>HOSTNAME 的作用是为了区分同一个域名下的不同服务, 比如<code>www.example.com</code>和<code>blog.example.com</code>是同一个域名下的不同服务, 现在都是采用微服务分布式架构, 即每个服务通常不在一个主机, 这样用户访问<code>www.example.com</code>和<code>blog.example.com</code>时就会访问到不同的服务器, 从而提供不同的服务. 如下图可以看出一个 HOSTNAME 可以对应一个 IP:</p>
-<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/001-domain-name-dns-records%2F01.jpg" alt=""></p>
-<h2 id="3-dns-records">3. DNS Records</h2>
-<h3 id="31-a-record">3.1. A Record</h3>
-<p>常见的 DNS Records 有 <code>A</code>, <code>CNAME</code>, <code>TXT</code>, 其中 <code>A</code> 记录是最常见的, 用于将域名指向一个 ipv4 IP地址, <code>CNAME</code> 记录用于将域名指向另一个域名.</p>
-<p>当你想给域名添加一个 ip 地址时, 只能添加 <code>A</code> 记录. 添加 A 记录时需要指定 HOSTNAME 和 IP, 其中 <code>HOSTNAME</code> 可以填<code>@</code>或者<code>www</code>或<code>blog</code>等, <code>@</code>代表空即不填,</p>
-          
-        </div>
 
-        
-           <div>
-            <a class="read-more button inline" href="/posts/build-website/001-domain-name-dns-records/">阅读更多</a>
-          </div>
-        
+
+
+
+
+
+
+
+
+
+
       </article>
     
       <article class="post on-list">
@@ -347,25 +290,17 @@
         
 
 
-        <div class="post-content">
-          
-            <h2 id="r2-vs-s3">R2 vs S3</h2>
-<p><a href="https://www.cloudflare.com/en-ca/pg-cloudflare-r2-vs-aws-s3/">Cloudflare R2 vs AWS S3 | Review Pricing &amp; Features | Cloudflare</a></p>
-<h2 id="install-mc-minio-client">Install mc (MinIO Client)</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e"># just install minio client not minio server</span>
-</span></span><span style="display:flex;"><span>brew install minio/stable/mc
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>mc alias set r2 R2-URL AccessKey SecretKey
-</span></span></code></pre></div><blockquote>
-<p>The MinIO client provides identical commands to Unix file management commands, such as cp and ls, but is designed for both local and remote storage systems. It’s fully compatible with AWS S3.</p>
-          
-        </div>
 
-        
-           <div>
-            <a class="read-more button inline" href="/posts/build-website/011-cf-r2/">阅读更多</a>
-          </div>
-        
+
+
+
+
+
+
+
+
+
+
       </article>
     
       <article class="post on-list">
@@ -387,23 +322,17 @@
         
 
 
-        <div class="post-content">
-          
-            <h2 id="1-issue">1. Issue</h2>
-<p>When I use <code>wget</code> to download some files, I got the following error:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$sh -c <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>Connecting to raw.githubusercontent.com <span style="color:#f92672">(</span>raw.githubusercontent.com<span style="color:#f92672">)</span>|2606:50c0:8002::154|:443...
-</span></span></code></pre></div><p>You can use <code>curl</code> to replace <code>wget</code>, or you can get the ip address of the domain and add it to <code>/etc/hosts</code> file.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>185.199.108.133 raw.githubusercontent.com
-</span></span></code></pre></div><p>You can find the ip address with <code>dig/ping</code> command or on the some online tool website. ping probably won&rsquo;t work.</p>
-          
-        </div>
 
-        
-           <div>
-            <a class="read-more button inline" href="/posts/build-website/010-wget-connecting-timeout/">阅读更多</a>
-          </div>
-        
+
+
+
+
+
+
+
+
+
+
       </article>
     
       <article class="post on-list">
@@ -427,58 +356,17 @@
         
 
 
-        <div class="post-content">
-          
-            <h2 id="1-minor-tricks">1. Minor tricks</h2>
-<h3 id="11-array">1.1. array</h3>
-<blockquote>
-<p>It is useful to remember which operations on arrays mutate them, and which don’t. For example, <code>push</code>, <code>pop</code>, <code>reverse</code>, and sort will mutate the original array, but <code>slice</code>, <code>filter</code>, and <code>map</code> will create a new one.</p>
-<p><code>filter()</code> creates a <strong>shallow copy</strong> of a portion of a given array.</p>
-</blockquote>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">isEmpty</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">postList</span> <span style="color:#f92672">=</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">h1</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">No</span> <span style="color:#a6e22e">posts</span> <span style="color:#a6e22e">found</span>.<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/h1&gt;</span>
-</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// return a new array
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">postList</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">posts</span>.<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">post</span> =&gt; (
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">SimplePostCard</span> <span style="color:#a6e22e">post</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">post</span>} <span style="color:#a6e22e">key</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">post</span>.<span style="color:#a6e22e">_id</span>} <span style="color:#a6e22e">onDelete</span><span style="color:#f92672">=</span>{() =&gt; <span style="color:#a6e22e">handleDeletePost</span>(<span style="color:#a6e22e">post</span>.<span style="color:#a6e22e">_id</span>)}<span style="color:#f92672">/&gt;</span>
-</span></span><span style="display:flex;"><span>    ));
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// state 后期可以用数据库代替
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">UsersState</span> <span style="color:#f92672">=</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">users</span><span style="color:#f92672">:</span> [],
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setUsers</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">newUsersArray</span>) {
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">users</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">newUsersArray</span>
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// 从UsersState中删除指定的用户
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">userLeavesApp</span>(<span style="color:#a6e22e">id</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">UsersState</span>.<span style="color:#a6e22e">setUsers</span>(
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// filter 返回一个新数组 浅拷贝 shallow copy
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#75715e">// filter() creates a shallow copy of a portion of a given array
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">UsersState</span>.<span style="color:#a6e22e">users</span>.<span style="color:#a6e22e">filter</span>(<span style="color:#a6e22e">user</span> =&gt; <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">id</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">id</span>)
-</span></span><span style="display:flex;"><span>    )
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">// 在用户加入聊天室时激活用户，并确保 UsersState 中没有重复的用户
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">activateUser</span>(<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">room</span>) {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">user</span> <span style="color:#f92672">=</span> { <span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">room</span> }
-</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">UsersState</span>.<span style="color:#a6e22e">setUsers</span>([
-</span></span><span style="display:flex;"><span>        ...<span style="color:#a6e22e">UsersState</span>.<span style="color:#a6e22e">users</span>.<span style="color:#a6e22e">filter</span>(<span style="color:#a6e22e">user</span> =&gt; <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">id</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">id</span>),
-</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">user</span>
-</span></span><span style="display:flex;"><span>    ])
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">user</span>
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><h3 id="12-string-length">1.2. string length</h3>
-<p>The <code>length</code> of a String value is the length of the string in <strong>UTF-16 code units</strong> not the number of characters. learn more: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length">String: length - JavaScript | MDN</a></p>
-          
-        </div>
 
-        
-           <div>
-            <a class="read-more button inline" href="/posts/frontend/js/001-tricks-mistakes/">阅读更多</a>
-          </div>
-        
+
+
+
+
+
+
+
+
+
+
       </article>
     
 
