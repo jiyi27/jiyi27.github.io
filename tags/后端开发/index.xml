@@ -6,7 +6,36 @@
     <description>Recent content in 后端开发 on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 22 Jan 2025 15:30:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 26 Jan 2025 10:36:22 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>记录 CORS Preflight Request 错误前后端排查过程</title>
+      <link>https://blog.jiyi27.com/posts/bugs/012-cors-options/</link>
+      <pubDate>Sun, 26 Jan 2025 10:36:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/012-cors-options/</guid>
+      <description>&lt;p&gt;遇到的问题是, 一会有跨域请求错误, 一会没有, 真的是莫名其妙,&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Access to fetch at &amp;#39;http://localhost:8080/api/terms/suggestions?query=aaa&amp;#39; from origin &amp;#39;http://localhost:3000&amp;#39; has been blocked by CORS policy: Response to preflight request doesn&amp;#39;t pass access control check: No &amp;#39;Access-Control-Allow-Origin&amp;#39; header is present on the requested resource. If an opaque response serves your needs, set the request&amp;#39;s mode to &amp;#39;no-cors&amp;#39; to fetch the resource with CORS disabled.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当 query 字符串为长度大于 2 的时候, 浏览器就会发送 preflight request 请求, 如下图:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/3a41d4bb6799ca575c2a60f333806d83.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;先不说为什么出现跨域错误, 这个肯定是我后端没处理好, 后面再分析, 我们来看为什么因为 query 不同, 导致了浏览器发送 preflight request, 首先我的所有请求都加上了 &lt;code&gt;&#39;Content-Type&#39;: &#39;application/json&#39;,&lt;/code&gt;, 也就是是说, 我的所有请求都不是简单请求, 因此触发 preflight request 很正常, 可是, 为什么 &lt;code&gt;/suggestions?query = x&lt;/code&gt;, &lt;code&gt;/suggestions?query = xx&lt;/code&gt; 没有触发呢?&lt;/p&gt;</description>
+      <content>&lt;p&gt;遇到的问题是, 一会有跨域请求错误, 一会没有, 真的是莫名其妙,&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Access to fetch at &amp;#39;http://localhost:8080/api/terms/suggestions?query=aaa&amp;#39; from origin &amp;#39;http://localhost:3000&amp;#39; has been blocked by CORS policy: Response to preflight request doesn&amp;#39;t pass access control check: No &amp;#39;Access-Control-Allow-Origin&amp;#39; header is present on the requested resource. If an opaque response serves your needs, set the request&amp;#39;s mode to &amp;#39;no-cors&amp;#39; to fetch the resource with CORS disabled.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当 query 字符串为长度大于 2 的时候, 浏览器就会发送 preflight request 请求, 如下图:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/3a41d4bb6799ca575c2a60f333806d83.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;先不说为什么出现跨域错误, 这个肯定是我后端没处理好, 后面再分析, 我们来看为什么因为 query 不同, 导致了浏览器发送 preflight request, 首先我的所有请求都加上了 &lt;code&gt;&#39;Content-Type&#39;: &#39;application/json&#39;,&lt;/code&gt;, 也就是是说, 我的所有请求都不是简单请求, 因此触发 preflight request 很正常, 可是, 为什么 &lt;code&gt;/suggestions?query = x&lt;/code&gt;, &lt;code&gt;/suggestions?query = xx&lt;/code&gt; 没有触发呢?&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;至于跨域错误是因为我后端没处理好, 原本代码如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-golang&#34; data-lang=&#34;golang&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mux&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;HandleFunc&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;GET /api/terms/suggestions&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;middleware&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Use&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;h&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;GetTermSuggestions&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;middleware&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Logger&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;middleware&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;CORS&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt;)))
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以看出, 我只处理了 GET 请求, 忽略了 OPTION 请求, 这也是为什么明明使用了 CORS 中间件, 却总是不会被触发, 原来是下面这个请求根本没有对应的后端路径:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;OPTIONS http://localhost:8080/api/terms/suggestions?query=xxx
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;另外还有个容易出错的地方:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-golang&#34; data-lang=&#34;golang&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mux&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;HandleFunc&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;GET /api/terms/{id}&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mux&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;HandleFunc&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;GET /api/terms/suggestions&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;第一个动态路由 API 会覆盖第二个 API, 因为 &lt;code&gt;{id}&lt;/code&gt; 也是字符串, 所以不可以这么写,&lt;/p&gt;
+&lt;p&gt;这么看来, 对每个 API 单独加中间件并不是一个明智的选择, 比如因为我忽略了 OPTION 请求, 导致 CORS 错误, 一直找不到原因, 所以中间件, 应该放到最开始处理的地方,&lt;/p&gt;
+</content>
+    </item>
+    
     <item>
       <title>后端开发琐碎概念 - 八股文</title>
       <link>https://blog.jiyi27.com/posts/interview/002-backend-nuggets/</link>
