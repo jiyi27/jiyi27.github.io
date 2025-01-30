@@ -98,3 +98,4 @@ for(int i = 0; i < weight.size(); i++) { // 遍历物品
 
 比如对于容量为 4 来说,  0, 1, 2, 3, 就是前面的状态, 所以对于同一个物品, 当我们从背包容量 4 遍历到背包容量 0 使用我们的递推公式来分别计算背包容量为 4, 3, 2, 1, 0 时的价值, `dp[j] = max(dp[j], dp[j - weight[i]] + value[i]);`, 肯定不会遇到, 已经放了当前物品已经被放过的状态, 因为 `dp[j] = dp[j - weight[i]] + value[i])` 中, `j - weight[i]` 一定比 `j` 小, 
 
+了解更多: https://www.zhihu.com/question/23995189/answer/613096905
