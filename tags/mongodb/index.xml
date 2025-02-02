@@ -320,6 +320,132 @@
     </item>
     
     <item>
+      <title>一对多, 多对多建表 MySQL MongoDB</title>
+      <link>https://blog.jiyi27.com/posts/database/mysql/002-normalization-join/</link>
+      <pubDate>Wed, 10 Jan 2024 11:51:35 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/database/mysql/002-normalization-join/</guid>
+      <description>&lt;h2 id=&#34;1-规范化&#34;&gt;1. 规范化&lt;/h2&gt;
+&lt;h3 id=&#34;11-normalization&#34;&gt;1.1. Normalization&lt;/h3&gt;
+&lt;p&gt;规范化是一种将数据库表结构分解为更小的、更符合范式的表，以减少数据冗余，提高数据一致性的方法。它涉及将数据分解成多个相互关联的表。这种设计减少了数据的重复，但&lt;strong&gt;通常会导致更复杂的查询，因为需要多个JOIN操作来重建原始信息&lt;/strong&gt;。&lt;/p&gt;
+&lt;h3 id=&#34;12-denormalization&#34;&gt;1.2. Denormalization&lt;/h3&gt;
+&lt;p&gt;Denormalization 是 Normalization 的对立面。它涉及将数据从多个表合并到一个表中，有时通过添加冗余数据来实现。在非关系型数据库，如MongoDB中，Denormalization 通常表现为：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;嵌入子文档&lt;/strong&gt;：将相关的数据直接嵌入到一个文档中，而不是将它们分散到多个集合（表）中。例如，而不是在单独的集合中维护用户地址，可以将地址作为子文档直接嵌入到用户文档中&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;使用数组&lt;/strong&gt;：在文档中使用数组来存储相关项的列表。例如，一个产品文档可能包含一个评论的数组，而不是将评论存储在一个单独的集合中&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;13-结论&#34;&gt;1.3. 结论&lt;/h3&gt;
+&lt;p&gt;在MongoDB这样的非关系型数据库中，反规范化是一种常见的数据建模技术，特别&lt;strong&gt;适用于读取操作远多于写入操作的场景&lt;/strong&gt;。它通过牺牲一定程度的数据冗余来换取读取性能的提升和查询逻辑的简化。然而，设计时需要平衡冗余带来的管理复杂性和性能优势。&lt;/p&gt;
+&lt;h2 id=&#34;2-join--foreign-key&#34;&gt;2. Join &amp;amp; Foreign Key&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Join: &lt;a href=&#34;https://www.youtube.com/watch?v=G3lJAxg1cy8&#34;&gt;MySQL: JOINS are easy (INNER, LEFT, RIGHT)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Foreign Key is used to ensure the consistency and integrity of data.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;MongoDB 没有 join 和 foreign key 的的概念, 但是可以通过嵌套文档来实现类似 Join 的功能, 以及使用 Reference 来实现类似 Foreign Key 的功能.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;JOIN操作经常利用外键来连接两个表, 虽然 JOIN 操作不一定要求存在外键约束, 但外键为 JOIN 提供了自然的连接点, 如下例子:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Users表&lt;/strong&gt; 存储用户信息：UserID (用户ID，主键), UserName (用户名)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Orders表&lt;/strong&gt; 存储订单信息：OrderID (订单ID，主键) OrderDate (订单日期) UserID (用户ID，外键)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在这个情况下，&lt;code&gt;Orders.UserID&lt;/code&gt; 是一个外键，它指向&lt;code&gt;Users.UserID&lt;/code&gt;。这意味着每个订单都与一个特定的用户相关联，外键保证了每个订单中的UserID都对应于一个有效的用户。假设我们想获取订单信息以及下单的用户的名称。我们可以使用以下SQL查询：&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-规范化&#34;&gt;1. 规范化&lt;/h2&gt;
+&lt;h3 id=&#34;11-normalization&#34;&gt;1.1. Normalization&lt;/h3&gt;
+&lt;p&gt;规范化是一种将数据库表结构分解为更小的、更符合范式的表，以减少数据冗余，提高数据一致性的方法。它涉及将数据分解成多个相互关联的表。这种设计减少了数据的重复，但&lt;strong&gt;通常会导致更复杂的查询，因为需要多个JOIN操作来重建原始信息&lt;/strong&gt;。&lt;/p&gt;
+&lt;h3 id=&#34;12-denormalization&#34;&gt;1.2. Denormalization&lt;/h3&gt;
+&lt;p&gt;Denormalization 是 Normalization 的对立面。它涉及将数据从多个表合并到一个表中，有时通过添加冗余数据来实现。在非关系型数据库，如MongoDB中，Denormalization 通常表现为：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;嵌入子文档&lt;/strong&gt;：将相关的数据直接嵌入到一个文档中，而不是将它们分散到多个集合（表）中。例如，而不是在单独的集合中维护用户地址，可以将地址作为子文档直接嵌入到用户文档中&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;使用数组&lt;/strong&gt;：在文档中使用数组来存储相关项的列表。例如，一个产品文档可能包含一个评论的数组，而不是将评论存储在一个单独的集合中&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;13-结论&#34;&gt;1.3. 结论&lt;/h3&gt;
+&lt;p&gt;在MongoDB这样的非关系型数据库中，反规范化是一种常见的数据建模技术，特别&lt;strong&gt;适用于读取操作远多于写入操作的场景&lt;/strong&gt;。它通过牺牲一定程度的数据冗余来换取读取性能的提升和查询逻辑的简化。然而，设计时需要平衡冗余带来的管理复杂性和性能优势。&lt;/p&gt;
+&lt;h2 id=&#34;2-join--foreign-key&#34;&gt;2. Join &amp;amp; Foreign Key&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Join: &lt;a href=&#34;https://www.youtube.com/watch?v=G3lJAxg1cy8&#34;&gt;MySQL: JOINS are easy (INNER, LEFT, RIGHT)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Foreign Key is used to ensure the consistency and integrity of data.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;MongoDB 没有 join 和 foreign key 的的概念, 但是可以通过嵌套文档来实现类似 Join 的功能, 以及使用 Reference 来实现类似 Foreign Key 的功能.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;JOIN操作经常利用外键来连接两个表, 虽然 JOIN 操作不一定要求存在外键约束, 但外键为 JOIN 提供了自然的连接点, 如下例子:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Users表&lt;/strong&gt; 存储用户信息：UserID (用户ID，主键), UserName (用户名)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Orders表&lt;/strong&gt; 存储订单信息：OrderID (订单ID，主键) OrderDate (订单日期) UserID (用户ID，外键)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在这个情况下，&lt;code&gt;Orders.UserID&lt;/code&gt; 是一个外键，它指向&lt;code&gt;Users.UserID&lt;/code&gt;。这意味着每个订单都与一个特定的用户相关联，外键保证了每个订单中的UserID都对应于一个有效的用户。假设我们想获取订单信息以及下单的用户的名称。我们可以使用以下SQL查询：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; Users.UserName, Orders.OrderID, Orders.OrderDate
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; Orders
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;JOIN&lt;/span&gt; Users &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; Orders.UserID &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Users.UserID;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这个查询中：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;JOIN Users ON Orders.UserID = Users.UserID&lt;/code&gt;这一句是JOIN的核心，它说明了如何连接这两个表。我们通过&lt;code&gt;Orders&lt;/code&gt;表中的&lt;code&gt;UserID&lt;/code&gt;（外键）与&lt;code&gt;Users&lt;/code&gt;表中的&lt;code&gt;UserID&lt;/code&gt;（主键）进行匹配。&lt;/li&gt;
+&lt;li&gt;由于使用了JOIN，我们可以同时从&lt;code&gt;Orders&lt;/code&gt;表和&lt;code&gt;Users&lt;/code&gt;表中选择数据。因此，我们能够在同一个查询结果中同时看到用户的名字和他们的订单信息。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;3-one-to-many--many-to-many&#34;&gt;3. One to Many &amp;amp; Many to Many&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;一对多关系&lt;/strong&gt;：如订单和用户表, 通过在订单表中设置外键用户ID指向用户表的主键ID来实现&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;多对多关系&lt;/strong&gt;：通过创建一个额外的关联表，其中包含指向两个相关表主键的外键来实现, 如术语和分类表, 每个术语可以有多个分类, 每个分类下可以有多个术语, 这时候需要一个单独的术语分类关系表, 来表示术语和分类的关系&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;多对多关系中, 可以在单独的那个关系表中建立一个复合索引, 比如术语和分类, 我们建立 (分类, 术语) 索引, 这样呢, 我们就可以很快的找到某个分类下的所有术语, 因为但我们建立了这个索引, 表中的存储结构就会变为: 同一分类下的术语都会在一块, 且 分类也是排序过的,&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;4-one-to-many-and-many-to-many-in-nosql-mongodb&#34;&gt;4. One-to-Many and Many-to-Many in NoSQL MongoDB&lt;/h2&gt;
+&lt;p&gt;一对多关系在MongoDB中通常有两种表示方式：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;嵌入文档&lt;/strong&gt;: 如果一个用户有多个地址，那么地址可以直接嵌入到用户文档中&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;userId123&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;John Doe&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;addresses&amp;#34;&lt;/span&gt;: [
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;street&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;123 Apple St&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;city&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;New York&amp;#34;&lt;/span&gt;},
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;street&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;456 Orange Ave&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;city&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Boston&amp;#34;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  ]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;引用&lt;/strong&gt;: 类似关系型数据库中的外键&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// User document
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;userId123&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;John Doe&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Address documents
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;[
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  {&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;addressId1&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;userId&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;ObjectID(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;userId123&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;)&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;street&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;123 Apple St&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;city&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;New York&amp;#34;&lt;/span&gt;},
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  {&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;addressId2&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;userId&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;ObjectID(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;userId123&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;)&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;street&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;456 Orange Ave&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;city&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Boston&amp;#34;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;多对多关系在MongoDB中通常通过引用来表示, 每个文档存储与之相关联的其他文档的ID, &lt;strong&gt;an array of object IDs&lt;/strong&gt;. 假设有学生和课程，每个学生可以选修多门课程，每门课程也可以由多个学生选修&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;学生文档&lt;/strong&gt;可能包含它们所选课程的ID列表:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;studentId1&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;courses&amp;#34;&lt;/span&gt;: [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;courseId1&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;courseId2&amp;#34;&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;课程文档&lt;/strong&gt;可能包含选修该课程的学生ID列表:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;courseId1&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;courseName&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Mathematics&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;students&amp;#34;&lt;/span&gt;: [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;studentId1&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;studentId3&amp;#34;&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;嵌入文档可以提高读取性能，因为所有相关数据都在一个文档内；而引用更灵活，可以更容易地维护大量动态关联数据, 了解更多: MongoDB in Action: 4.2.1 Many-to-many relationships&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
       <title>MongoDB Aggregate</title>
       <link>https://blog.jiyi27.com/posts/database/mongodb/003-aggregate-mongodb/</link>
       <pubDate>Thu, 04 Jan 2024 17:51:35 +0000</pubDate>
