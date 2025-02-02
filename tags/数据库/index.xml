@@ -645,11 +645,87 @@ CREATE TRIGGER handle_users_update
       <pubDate>Wed, 10 Jan 2024 23:06:36 +0000</pubDate>
       
       <guid>https://blog.jiyi27.com/posts/database/mysql/001-nuggets-mysql/</guid>
-      <description>&lt;h2 id=&#34;1-存储字符串&#34;&gt;1. 存储字符串&lt;/h2&gt;
-&lt;p&gt;The most commonly used string data types in the context of databases are CHAR and VARCHAR. TEXT and LONGTEXT are also commonly used string data types.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;&lt;code&gt;char(10)&lt;/code&gt; vs &lt;code&gt;varchar(10)&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;When you define a column as CHAR(10), it will always occupy 10 characters of storage, regardless of the actual data length. If you store a string shorter than 10 characters, it will be padded with spaces to fill up the remaining space.&lt;/p&gt;</description>
-      <content>&lt;h2 id=&#34;1-存储字符串&#34;&gt;1. 存储字符串&lt;/h2&gt;
+      <description>&lt;h2 id=&#34;1-uuids-vs-auto-incrementing-keys&#34;&gt;1. UUIDs vs. Auto-incrementing Keys&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;特性&lt;/th&gt;
+          &lt;th&gt;自增 ID (BIGINT)&lt;/th&gt;
+          &lt;th&gt;UUID&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;存储空间&lt;/td&gt;
+          &lt;td&gt;8 字节&lt;/td&gt;
+          &lt;td&gt;16 字节 (BINARY) 或 36 字节 (CHAR)&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;索引性能&lt;/td&gt;
+          &lt;td&gt;优 - 顺序插入，页分裂少&lt;/td&gt;
+          &lt;td&gt;差 - 随机插入，频繁页分裂&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;分布式友好度&lt;/td&gt;
+          &lt;td&gt;差 - 需要额外设计（雪花算法）, 容易冲突&lt;/td&gt;
+          &lt;td&gt;优 - 天然分布式友好&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;插入性能&lt;/td&gt;
+          &lt;td&gt;优 - 顺序写入&lt;/td&gt;
+          &lt;td&gt;差 - 随机写入&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;缓存友好度&lt;/td&gt;
+          &lt;td&gt;高 - 连续存储&lt;/td&gt;
+          &lt;td&gt;低 - 分散存储&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;如果主键是 UUID，数据插入时是随机的，会导致 B+ 树频繁分裂，影响索引性能。&lt;/p&gt;
+&lt;p&gt;✅ &lt;strong&gt;优化方法&lt;/strong&gt;：使用 &lt;strong&gt;自增 ID&lt;/strong&gt; 作为主键。如果必须用 UUID，可以使用 &lt;strong&gt;UUIDv7&lt;/strong&gt;（时间戳递增的 UUID）。&lt;/p&gt;
+&lt;h2 id=&#34;2-存储字符串&#34;&gt;2. 存储字符串&lt;/h2&gt;
+&lt;p&gt;The most commonly used string data types in the context of databases are CHAR and VARCHAR. TEXT and LONGTEXT are also commonly used string data types.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-uuids-vs-auto-incrementing-keys&#34;&gt;1. UUIDs vs. Auto-incrementing Keys&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;特性&lt;/th&gt;
+          &lt;th&gt;自增 ID (BIGINT)&lt;/th&gt;
+          &lt;th&gt;UUID&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;存储空间&lt;/td&gt;
+          &lt;td&gt;8 字节&lt;/td&gt;
+          &lt;td&gt;16 字节 (BINARY) 或 36 字节 (CHAR)&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;索引性能&lt;/td&gt;
+          &lt;td&gt;优 - 顺序插入，页分裂少&lt;/td&gt;
+          &lt;td&gt;差 - 随机插入，频繁页分裂&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;分布式友好度&lt;/td&gt;
+          &lt;td&gt;差 - 需要额外设计（雪花算法）, 容易冲突&lt;/td&gt;
+          &lt;td&gt;优 - 天然分布式友好&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;插入性能&lt;/td&gt;
+          &lt;td&gt;优 - 顺序写入&lt;/td&gt;
+          &lt;td&gt;差 - 随机写入&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;缓存友好度&lt;/td&gt;
+          &lt;td&gt;高 - 连续存储&lt;/td&gt;
+          &lt;td&gt;低 - 分散存储&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;如果主键是 UUID，数据插入时是随机的，会导致 B+ 树频繁分裂，影响索引性能。&lt;/p&gt;
+&lt;p&gt;✅ &lt;strong&gt;优化方法&lt;/strong&gt;：使用 &lt;strong&gt;自增 ID&lt;/strong&gt; 作为主键。如果必须用 UUID，可以使用 &lt;strong&gt;UUIDv7&lt;/strong&gt;（时间戳递增的 UUID）。&lt;/p&gt;
+&lt;h2 id=&#34;2-存储字符串&#34;&gt;2. 存储字符串&lt;/h2&gt;
 &lt;p&gt;The most commonly used string data types in the context of databases are CHAR and VARCHAR. TEXT and LONGTEXT are also commonly used string data types.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;&lt;code&gt;char(10)&lt;/code&gt; vs &lt;code&gt;varchar(10)&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;When you define a column as CHAR(10), it will always occupy 10 characters of storage, regardless of the actual data length. If you store a string shorter than 10 characters, it will be padded with spaces to fill up the remaining space.&lt;/p&gt;
@@ -658,13 +734,13 @@ CREATE TRIGGER handle_users_update
 &lt;blockquote&gt;
 &lt;p&gt;When the length of strings to be written to the field is explicitly specified choose CHAR as the data type. When the number of strings that users will input is not fixed, but there is a limit based on the number of characters, use VARCHAR as the data type. For example, for a username that can vary in length, VARCHAR is used as the data type.&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&#34;2-存储时间&#34;&gt;2. 存储时间&lt;/h2&gt;
-&lt;h3 id=&#34;21-不要用字符串存储日期&#34;&gt;2.1. 不要用字符串存储日期&lt;/h3&gt;
+&lt;h2 id=&#34;3-存储时间&#34;&gt;3. 存储时间&lt;/h2&gt;
+&lt;h3 id=&#34;31-不要用字符串存储日期&#34;&gt;3.1. 不要用字符串存储日期&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;字符串占用的空间更大&lt;/li&gt;
 &lt;li&gt;字符串存储的日期比较效率比较低（逐个字符进行比对），无法用日期相关的 API 进行计算和比较&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3 id=&#34;22-datetime-and-timestamp&#34;&gt;2.2. Datetime and Timestamp&lt;/h3&gt;
+&lt;h3 id=&#34;32-datetime-and-timestamp&#34;&gt;3.2. Datetime and Timestamp&lt;/h3&gt;
 &lt;p&gt;&lt;code&gt;Datetime&lt;/code&gt; 和 &lt;code&gt;Timestamp&lt;/code&gt; 是 MySQL 提供的两种比较相似的保存时间的数据类型, 通常我们都会首选 &lt;code&gt;Timestamp&lt;/code&gt;. 因为DateTime类型没有时区信息的, 而Timestamp可以存储time zone信息, 并且做转换.&lt;/p&gt;
 &lt;p&gt;Timestamp 只需要使用 4 个字节的存储空间，但是 DateTime 需要耗费 8 个字节的存储空间。但是，这样同样造成了一个问题，Timestamp 表示的时间范围更小。&lt;/p&gt;
 &lt;ul&gt;
@@ -697,10 +773,10 @@ CREATE TRIGGER handle_users_update
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;----+---------------------+---------------------+
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;  &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;04&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;01&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;45&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;04&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;04&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;01&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;45&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;04&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;----+---------------------+---------------------+
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-default-vs-not-null&#34;&gt;3. Default vs NOT NULL&lt;/h2&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;4-default-vs-not-null&#34;&gt;4. Default vs NOT NULL&lt;/h2&gt;
 &lt;p&gt;有没有想过, 建表的时候default 和 not null一起使用, 是不是有点redundant? 因为比如你不插入值的时候mysql会帮你插入默认值,&lt;/p&gt;
 &lt;p&gt;其实这么想你就错了, 你想的是我不插入, mysql就会帮我插入个默认值, 所以似乎not null没起作用, 但是你有没有想过如果你只设置了default而没有设置not null限制, 那这时候我插入null个呢, 显然可以插入成功, 但有时候为null, 比如一个日期, 当我们在写Java或者其他代码的时候查询数据然后把date转为string, 如果数据为null可能就会发生异常~&lt;/p&gt;
-&lt;h2 id=&#34;4-查看-mysql-warning&#34;&gt;4. 查看 MySQL Warning&lt;/h2&gt;
+&lt;h2 id=&#34;5-查看-mysql-warning&#34;&gt;5. 查看 MySQL Warning&lt;/h2&gt;
 &lt;p&gt;有时候我们创建表的时候或者执行SQL语句, 虽然执行成功了但是会显示有警告,但是还不告诉你警告内容, 这时候你需要立刻执行&lt;code&gt;SHOW WARNINGS;&lt;/code&gt;语句, 否则你执行了其他语句再执行这个show, 那现实的就不是上一个语句的warnings了, 如下图:&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/ae56e684a1d7b2c0c6aab58d2064fdc0.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
 &lt;p&gt;参考:&lt;/p&gt;
@@ -952,118 +1028,6 @@ CREATE TRIGGER handle_users_update
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;So in this case, you should put the &lt;code&gt;$addFields&lt;/code&gt; stage before the &lt;code&gt;$project&lt;/code&gt; stage.&lt;/p&gt;
-</content>
-    </item>
-    
-    <item>
-      <title>Index and Primary Key</title>
-      <link>https://blog.jiyi27.com/posts/database/mysql/002-index-primary-key/</link>
-      <pubDate>Tue, 03 Oct 2023 12:06:36 +0000</pubDate>
-      
-      <guid>https://blog.jiyi27.com/posts/database/mysql/002-index-primary-key/</guid>
-      <description>&lt;h2 id=&#34;1-index-concepts&#34;&gt;1. Index concepts&lt;/h2&gt;
-&lt;p&gt;Learn more: &lt;a href=&#34;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&#34;&gt;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&#34;2-when-will-index-be-created&#34;&gt;2. When will index be created&lt;/h2&gt;
-&lt;p&gt;&lt;strong&gt;Primary Key:&lt;/strong&gt; By default, when you define a primary key constraint on a column or set of columns using the PRIMARY KEY keyword, MySQL automatically creates an index on that column(s).&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;index&lt;/span&gt; will created &lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt; user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;create&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; smallint &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt; auto_increment,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;password&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;primary&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;key&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Unique Constraints:&lt;/strong&gt; When you define a unique constraint on a column or set of columns using the UNIQUE keyword, MySQL automatically creates an index to enforce uniqueness.&lt;/p&gt;</description>
-      <content>&lt;h2 id=&#34;1-index-concepts&#34;&gt;1. Index concepts&lt;/h2&gt;
-&lt;p&gt;Learn more: &lt;a href=&#34;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&#34;&gt;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&#34;2-when-will-index-be-created&#34;&gt;2. When will index be created&lt;/h2&gt;
-&lt;p&gt;&lt;strong&gt;Primary Key:&lt;/strong&gt; By default, when you define a primary key constraint on a column or set of columns using the PRIMARY KEY keyword, MySQL automatically creates an index on that column(s).&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;index&lt;/span&gt; will created &lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt; user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;create&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; smallint &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt; auto_increment,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;password&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;primary&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;key&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Unique Constraints:&lt;/strong&gt; When you define a unique constraint on a column or set of columns using the UNIQUE keyword, MySQL automatically creates an index to enforce uniqueness.&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;index&lt;/span&gt; will be created &lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt; username &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;create&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; smallint &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;password&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;   &lt;span style=&#34;color:#66d9ef&#34;&gt;unique&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; there will be two indexes
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;index&lt;/span&gt; will be created &lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;both&lt;/span&gt; user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;and&lt;/span&gt; username &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;create&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; smallint &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt; auto_increment,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;password&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;primary&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;key&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;),
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;unique&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-why-use-index&#34;&gt;3. Why use index&lt;/h2&gt;
-&lt;p&gt;Indexes are used to find rows with specific column values quickly. Without an index, MySQL must begin with the first row and then read through the entire table to find the relevant rows. The larger the table, the more this costs. If the table has an index for the columns in question, MySQL can quickly determine the position to seek to in the middle of the data file without having to look at all the data. This is much faster than reading every row sequentially.&lt;/p&gt;
-&lt;p&gt;Most MySQL indexes (&lt;code&gt;PRIMARY KEY&lt;/code&gt;, &lt;code&gt;UNIQUE&lt;/code&gt;, &lt;code&gt;INDEX&lt;/code&gt;, and &lt;code&gt;FULLTEXT&lt;/code&gt;) are stored in &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_b_tree&#34;&gt;B-trees&lt;/a&gt;. Exceptions: Indexes on spatial data types use R-trees; &lt;code&gt;MEMORY&lt;/code&gt; tables also support &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.0/en/glossary.html#glos_hash_index&#34;&gt;hash indexes&lt;/a&gt;; &lt;code&gt;InnoDB&lt;/code&gt; uses inverted lists for &lt;code&gt;FULLTEXT&lt;/code&gt; indexes.&lt;/p&gt;
-&lt;p&gt;The best way to improve the performance of &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.0/en/select.html&#34;&gt;&lt;code&gt;SELECT&lt;/code&gt;&lt;/a&gt; operations is to create indexes on one or more of the columns that are tested in the query. &lt;strong&gt;The index entries act like pointers to the table rows&lt;/strong&gt;, allowing the query to quickly determine which rows match a condition in the &lt;code&gt;WHERE&lt;/code&gt; clause, and retrieve the other column values for those rows. All MySQL data types can be indexed.&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;Although it can be tempting to create an indexes for every possible column used in a query, unnecessary indexes waste space and waste time for MySQL to determine which indexes to use. Indexes also add to the cost of inserts, updates, and deletes because each index must be updated. You must find the right balance to achieve fast queries using the optimal set of indexes.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;Source: &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.0/en/optimization-indexes.html&#34;&gt;MySQL :: MySQL 8.0 Reference Manual :: 8.3 Optimization and Indexes&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;Learn when index will be used in MySQL operations: &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.0/en/mysql-indexes.html&#34;&gt;https://dev.mysql.com/doc/refman/8.0/en/mysql-indexes.html&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&#34;4-table-types&#34;&gt;4. Table types&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;MyISAM&lt;/code&gt; and &lt;code&gt;InnoDB&lt;/code&gt; are two different storage engines in MySQL, each with its own characteristics and features.&lt;/p&gt;
-&lt;h3 id=&#34;41-innodb-tables&#34;&gt;4.1. InnoDB tables&lt;/h3&gt;
-&lt;p&gt;InnoDB tables provide B-tree indexes. The indexes provide no packing or prefix compression. In addition, InnoDB also requires a primary key for each table. As with BDB, though, if you don’t provide a primary key, MySQL will supply a 64-bit value for you.&lt;/p&gt;
-&lt;p&gt;The indexes are stored in the InnoDB tablespace, just like the data and data dictionary (table definitions, etc.). Furthermore, &lt;code&gt;InnoDB&lt;/code&gt; uses clustered indexes. That is, the &lt;strong&gt;primary key’s value directly affects the physical location of the row&lt;/strong&gt; as well as its corresponding index node. Because of this, lookups based on primary key in InnoDB are very fast. Once the index node is found, the relevant records are likely to already be cached in InnoDB’s buffer pool.&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;With &lt;em&gt;clustered indexes&lt;/em&gt;, the primary key and the record itself are “clustered” together, and the records are all stored in primary-key order. InnoDB table uses clustered indexes.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h3 id=&#34;42-myisam-tables&#34;&gt;4.2. MyISAM tables&lt;/h3&gt;
-&lt;p&gt;MySQL’s default table type provides B-tree indexes, and as of Version 4.1.0, it provides R-tree indexes for spatial data.&lt;/p&gt;
-&lt;p&gt;With MyISAM tables, the indexes are kept in a completely separate file that contains a list of primary (and possibly secondary) keys and a value that represents the byte offset for the record. These ensure MySQL can find and then quickly skip to that point within the database to locate the record. MySQL has to store the indexes this way because &lt;strong&gt;the records are stored in essentially random order&lt;/strong&gt;.&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;Note that the difference between MyISAM table and InnoDB table is that the records are stored in random order, another tables&amp;rsquo;s record stored according to clustered indexe (primary key).&lt;/p&gt;
-&lt;p&gt;With a standard MyISAM table index, there are two lookups, one to the index, and a second to the table itself via the location specified in the index. With clustered indexes in InnoDB table, there’s a single lookup that points directly to the record in question. Therefore, when your data is almost always searched on via its primary key, clustered indexes can make lookups incredibly fast.&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&#34;5-clustered-vs-secondary-indexes&#34;&gt;5. Clustered vs secondary indexes&lt;/h2&gt;
-&lt;p&gt;Each &lt;code&gt;InnoDB&lt;/code&gt; table has a special index called the &lt;strong&gt;clustered index&lt;/strong&gt; that stores row data. Typically, the clustered index is synonymous with the primary key. To get the best performance from queries, inserts, and other database operations, it is important to understand how &lt;code&gt;InnoDB&lt;/code&gt; uses the clustered index to optimize the common lookup and DML operations.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;When you define a &lt;code&gt;PRIMARY KEY&lt;/code&gt; on a table, &lt;code&gt;InnoDB&lt;/code&gt; uses it as the clustered index. A primary key should be defined for each table. If there is no logical unique and non-null column or set of columns to use a the primary key, add an auto-increment column. Auto-increment column values are unique and are added automatically as new rows are inserted.&lt;/li&gt;
-&lt;li&gt;If you do not define a &lt;code&gt;PRIMARY KEY&lt;/code&gt; for a table, &lt;code&gt;InnoDB&lt;/code&gt; uses the first &lt;code&gt;UNIQUE&lt;/code&gt; index with all key columns defined as &lt;code&gt;NOT NULL&lt;/code&gt; as the clustered index.&lt;/li&gt;
-&lt;li&gt;If a table has no &lt;code&gt;PRIMARY KEY&lt;/code&gt; or suitable &lt;code&gt;UNIQUE&lt;/code&gt; index, &lt;code&gt;InnoDB&lt;/code&gt; generates a hidden clustered index named &lt;code&gt;GEN_CLUST_INDEX&lt;/code&gt; on a synthetic column that contains row ID values. The rows are ordered by the row ID that &lt;code&gt;InnoDB&lt;/code&gt; assigns. The row ID is a 6-byte field that increases monotonically as new rows are inserted. Thus, the rows ordered by the row ID are physically in order of insertion.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Source: &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.0/en/innodb-index-types.html&#34;&gt;https://dev.mysql.com/doc/refman/8.0/en/innodb-index-types.html&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Secondary indexes&lt;/strong&gt; point to the primary key rather than the row. Therefore, if you index on a very large value and have several secondary indexes, you will end up with many duplicate copies of that primary index, first as the clustered index stored alongside the records themselves, but then again for as many times as you have secondary indexes pointing to those clustered indexes. With a small value as the primary key, this may not be so bad, but if you are using something potentially long, such as a URL, this repeated storage of the primary key on disk may cause storage issues.&lt;/p&gt;
-&lt;p&gt;Some operations render clustered indexes less effective. For instance, consider when a secondary index is in use. Going back to our phone book example, suppose you have &lt;code&gt;last_name&lt;/code&gt; set as the primary index and &lt;code&gt;phone_number&lt;/code&gt; set as a secondary index, and you perform the following query:&lt;/p&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;SELECT * FROM phone_book WHERE phone_number = &amp;#39;555-7271&amp;#39;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;MySQL scans the &lt;code&gt;phone_number&lt;/code&gt; index to find the entry for &lt;code&gt;555-7271&lt;/code&gt;, which contains the primary key entry &lt;code&gt;Zawodny&lt;/code&gt; because &lt;code&gt;phone_book&lt;/code&gt;’s primary index is the last name. MySQL then skips to the relevant entry in the database itself.&lt;/p&gt;
-&lt;p&gt;In other words, lookups based on your primary key happen exceedingly fast, and lookups based on secondary indexes happen at essentially the same speed as MyISAM index lookups would.&lt;/p&gt;
-&lt;p&gt;Another less common but equally problematic condition happens when the data is altered such that the &lt;strong&gt;primary key is changed on a record&lt;/strong&gt;. This is the most costly function of clustered indexes. A number of things can happen to make this operation a more severe performance hit:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Alter the record in question according to the query that was issued.&lt;/li&gt;
-&lt;li&gt;Determine the new primary key for that record, based on the altered data record.&lt;/li&gt;
-&lt;li&gt;Relocate the stored records so that the record in question is moved to the proper location in the tablespace.&lt;/li&gt;
-&lt;li&gt;Update any secondary indexes that point to that primary key.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;As you might imagine, if you’re altering the primary key for a number of records, that &lt;code&gt;UPDATE&lt;/code&gt; command might take quite some time to do its job, especially on larger tables. Choose your primary keys wisely. Use values that are unlikely to change, such as a Social Security account number instead of a last name, serial number instead of a product name, and so on.&lt;/p&gt;
-&lt;p&gt;Source: &lt;a href=&#34;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&#34;&gt;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&#34;6-should-each-table-have-a-primary-key&#34;&gt;6. Should each table have a primary key&lt;/h2&gt;
-&lt;p&gt;Short answer: yes, each table should have a PRIMARY KEY so that you could distinguish two records.&lt;/p&gt;
-&lt;p&gt;In MySQL, the &lt;strong&gt;InnoDB storage engine&lt;/strong&gt; always creates a primary key if you didn&amp;rsquo;t specify it explicitly, thus making an extra column you don&amp;rsquo;t have access to.&lt;/p&gt;
-&lt;p&gt;Learn more: &lt;a href=&#34;https://stackoverflow.com/a/840182/16317008&#34;&gt;https://stackoverflow.com/a/840182/16317008&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&#34;7-unique-indexes-versus-primary-keys&#34;&gt;7. Unique indexes versus primary keys&lt;/h2&gt;
-&lt;p&gt;If you’re coming from other relational databases, you might wonder what the difference between a primary key and a unique index is in MySQL. As usual, it depends. In &lt;strong&gt;MyISAM tables&lt;/strong&gt;, there’s almost no difference. The only thing special about a primary key is that it can’t contain NULL values. The primary key is simply a &lt;code&gt;NOT&lt;/code&gt; &lt;code&gt;NULL&lt;/code&gt; &lt;code&gt;UNIQUE&lt;/code&gt; &lt;code&gt;INDEX&lt;/code&gt; named &lt;code&gt;PRIMARY&lt;/code&gt;. MyISAM tables don’t require that you declare a primary key.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;InnoDB and BDB tables&lt;/strong&gt; require primary keys for every table. There’s no requirement that you specify one, however. If you don’t, the storage engine automatically adds a hidden primary key for you. In both cases, the primary keys are simply incrementing numeric values, similar to an &lt;code&gt;AUTO-INCREMENT&lt;/code&gt; column. If you decide to add your own primary key at a later time, simply use &lt;code&gt;ALTER&lt;/code&gt; &lt;code&gt;TABLE&lt;/code&gt; to add one. Both storage engines will discard their internally generated keys in favor of yours. Heap tables don’t require a primary key but will create one for you. In fact, you can create Heap tables with no indexes at all.&lt;/p&gt;
-&lt;h2 id=&#34;8-index-adds-places-and-time-overhead&#34;&gt;8. Index adds places and time overhead&lt;/h2&gt;
-&lt;p&gt;&lt;strong&gt;Time overhead&lt;/strong&gt; is easy to understand, indexes add to the cost of inserts, updates, and deletes because each index must be updated.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;For taking up place,&lt;/strong&gt; there is an example: try to think our book or dictionary which have index (table of contents) which helps us to find the content quickly, the table of contents usually has multiple pages, just like this, index in a table also will take up some place which makes a table bigger.&lt;/p&gt;
-&lt;p&gt;Given that creating an index requires additional disk space (277,778 blocks extra from the above example, a ~28% increase), and that too many indices can cause issues arising from the file systems size limits, careful thought must be used to select the correct fields to index. Learn more: &lt;a href=&#34;https://stackoverflow.com/a/1130/16317008&#34;&gt;https://stackoverflow.com/a/1130/16317008&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;Since indices are only used to speed up the searching for a matching field within the records, it stands to reason that &lt;strong&gt;indexing fields used only for output&lt;/strong&gt; would be simply a waste of disk space and processing time when doing an insert or delete operation, and thus should be avoided.&lt;/p&gt;
-&lt;p&gt;What does &amp;ldquo;&lt;em&gt;indexing fields used only for output&lt;/em&gt;&amp;rdquo; mean?&lt;/p&gt;
-&lt;p&gt;For example, imagine a table of products. Some fields like &amp;ldquo;name&amp;rdquo; or &amp;ldquo;price&amp;rdquo; are used for searching and filtering, while other fields like &amp;ldquo;description&amp;rdquo; or &amp;ldquo;image_url&amp;rdquo; are used only to provide additional information in the output. Creating an index on fields used only for output is not helpful and can waste resources.&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;Indexes trade space for performance. Because MySQL needs to maintain a separate list of indexes’ values and keep them updated as your data changes, you really don’t want to index every column in a table. Indexes are a trade-off between space and time. You’re sacrificing some extra disk space and a bit of CPU overhead on each &lt;code&gt;INSERT&lt;/code&gt;, &lt;code&gt;UPDATE&lt;/code&gt;, and &lt;code&gt;DELETE&lt;/code&gt; query to make most (if not all) your queries much faster. Source: &lt;a href=&#34;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&#34;&gt;https://www.oreilly.com/library/view/high-performance-mysql/0596003064/ch04.html&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
 </content>
     </item>
     
@@ -1471,6 +1435,106 @@ CREATE TRIGGER handle_users_update
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This means you will get all the commands that your redis server received from clients, recall that &lt;code&gt;redis-cli&lt;/code&gt; will connects to the server at the address 127.0.0.1 with port 6379.&lt;/p&gt;
 &lt;p&gt;And if your application &lt;code&gt;C1&lt;/code&gt; use a Redis server &lt;code&gt;S&lt;/code&gt; to save data, your another application &lt;code&gt;C2&lt;/code&gt; that connects to server &lt;code&gt;S&lt;/code&gt; can get that data too. When you run &lt;code&gt;redis-cli&lt;/code&gt;, it start a client, and you can input &lt;code&gt;keys *&lt;/code&gt; to query all key saved on your Redis server.&lt;/p&gt;
 &lt;p&gt;Of course using Redis just from the command line interface(&lt;em&gt;&lt;code&gt;redis-cli&lt;/code&gt;&lt;/em&gt;) is not enough as the goal is to use it from your application. In order to do so you need to download and install a Redis client library for your programming language. You&amp;rsquo;ll find a &lt;a href=&#34;https://redis.io/clients&#34;&gt;full list of clients for different languages in this page&lt;/a&gt;.&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>索引和主键 - MySQL</title>
+      <link>https://blog.jiyi27.com/posts/database/mysql/002-index-primary-key/</link>
+      <pubDate>Thu, 02 Feb 2023 18:22:30 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/database/mysql/002-index-primary-key/</guid>
+      <description>&lt;h2 id=&#34;1-when-will-index-be-created&#34;&gt;1. When will index be created&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Primary Key:&lt;/strong&gt; By default, when you define a primary key constraint on a column or set of columns using the PRIMARY KEY keyword, MySQL automatically creates an index on that column(s).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;index&lt;/span&gt; will created &lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt; user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;create&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; smallint &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt; auto_increment,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;password&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;primary&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;key&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Unique Constraints:&lt;/strong&gt; When you define a unique constraint on a column or set of columns using the UNIQUE keyword, MySQL automatically creates an index to enforce uniqueness.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-when-will-index-be-created&#34;&gt;1. When will index be created&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Primary Key:&lt;/strong&gt; By default, when you define a primary key constraint on a column or set of columns using the PRIMARY KEY keyword, MySQL automatically creates an index on that column(s).&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;index&lt;/span&gt; will created &lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt; user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;create&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; smallint &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt; auto_increment,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;password&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;primary&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;key&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Unique Constraints:&lt;/strong&gt; When you define a unique constraint on a column or set of columns using the UNIQUE keyword, MySQL automatically creates an index to enforce uniqueness.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;index&lt;/span&gt; will be created &lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt; username &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;create&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; smallint &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;password&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;   &lt;span style=&#34;color:#66d9ef&#34;&gt;unique&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; there will be two indexes
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;index&lt;/span&gt; will be created &lt;span style=&#34;color:#66d9ef&#34;&gt;on&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;both&lt;/span&gt; user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;and&lt;/span&gt; username &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;create&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;user&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; smallint &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt; auto_increment,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;password&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; varchar(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;primary&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;key&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;user_id&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;unique&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;username&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;When you define a &lt;code&gt;PRIMARY KEY&lt;/code&gt; on a table, &lt;code&gt;InnoDB&lt;/code&gt; uses it as the &lt;strong&gt;clustered index&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;A primary key should be defined for each table. If you do not define a &lt;code&gt;PRIMARY KEY&lt;/code&gt; for a table, &lt;code&gt;InnoDB&lt;/code&gt; uses the first &lt;code&gt;UNIQUE&lt;/code&gt; index with all key columns defined as &lt;code&gt;NOT NULL&lt;/code&gt; as the &lt;strong&gt;clustered index.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;If a table has no &lt;code&gt;PRIMARY KEY&lt;/code&gt; or suitable &lt;code&gt;UNIQUE&lt;/code&gt; index, &lt;code&gt;InnoDB&lt;/code&gt; generates a hidden clustered index named &lt;code&gt;GEN_CLUST_INDEX&lt;/code&gt; on a synthetic column that contains row ID values.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-indexe-types&#34;&gt;2. Indexe Types&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;&lt;strong&gt;索引类型&lt;/strong&gt;&lt;/th&gt;
+          &lt;th&gt;&lt;strong&gt;存储结构&lt;/strong&gt;&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;主键索引（聚簇索引）&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;数据本身存储在 B+ 树的叶子节点，数据按照主键顺序存储&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;二级索引（普通索引）&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;额外的 B+ 树，只存储索引列和主键 ID，查询时需要回表&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;数据实际按照主键顺序物理存储在硬盘上, &lt;strong&gt;主键索引&lt;/strong&gt;的叶子节点存储的就是实际的数据行（完整数据）&lt;/p&gt;
+&lt;p&gt;示例:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;users&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    name &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    age &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;存储结构:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;B&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;树（主键索引）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-------------------------------&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;| ID=1  | Alice   | 25  |
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; ID&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; Bob     &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; ID&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; Charlie &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-------------------------------&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;数据行是按照 &lt;code&gt;id&lt;/code&gt; 这个主键顺序排列的, 主键索引的叶子节点直接存储了数据。&lt;/p&gt;
+&lt;p&gt;上面我们知道 InnoDB 的数据是按照主键索引顺序存储在硬盘上的, 那建立其它索引是什么意思, 索引不会改变数据的存储顺序吗? 还是数据库会单独不同索引单独建立一个数据表按照索引排序?&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;二级索引&lt;/strong&gt;是为了加快查询速度，但不会改变数据的存储顺序！ 二级索引（普通索引）是 独立于主键索引 的，它只存储 索引字段值 + 主键值。当你查询时，数据库会先通过 二级索引找到主键值，然后再去 主键索引中找到数据。&lt;/p&gt;
+&lt;p&gt;示例 如果我们对 &lt;code&gt;name&lt;/code&gt; 建立索引：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INDEX&lt;/span&gt; idx_name &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;users&lt;/span&gt;(name);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;数据库会额外建立一个 B+ 树 索引：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;B&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;树（&lt;/span&gt;name &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;索引）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-------------------------------&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;| Alice   | ID=1  |
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; Bob     &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; ID&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; Charlie &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; ID&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-------------------------------&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这个 B+ 树按照 &lt;code&gt;name&lt;/code&gt; 排序，但它的叶子节点不存储数据，只存储 主键 ID！查询 &lt;code&gt;name=&#39;Bob&#39;&lt;/code&gt; 时，MySQL 先在 name 索引里找到 ID=5，然后再到主键索引里查找完整数据。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;现在回答上面的问题: 建立索引会不会改变数据的存储顺序？数据库会不会单独为索引建立一个新表？&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;答案是： ✅ 不会改变数据存储顺序！ ✅ 但数据库会额外维护索引结构，每个索引是独立的 B+ 树！&lt;/p&gt;
 </content>
     </item>
     
