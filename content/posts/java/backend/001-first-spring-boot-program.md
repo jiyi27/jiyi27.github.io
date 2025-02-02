@@ -1,16 +1,17 @@
 ---
-title: 创建 Spring Boot 项目及踩坑总结 Spring 学习(一)
+title: Spring Boot 零碎知识点
 date: 2023-07-29 16:47:46
 categories:
  - java
 tags:
  - java
  - spring
+ - 零碎知识
 ---
 
-## 错误总结
+## 1. 错误总结
 
-**(1) 所有Java代码**都要在`java`目录下, 即不可删除`java`目录, 否则, 运行`./mvnw clean package`报错, 你可以自己试试
+**所有 Java 代码**都要在 `java`目录下, 即不可删除 `java`目录, 否则, 运行`./mvnw clean package`报错
 
 ```shell
 ├── pom.xml
@@ -24,7 +25,7 @@ tags:
 │   │   │           └── GreetingController.java
 ```
 
-**(2) controller** 等组件所在文件夹需要在主类的同级或者次级目录, 否则运行程序访问`http://localhost:8080/greeting`会出现错误:
+**controller** 等组件所在文件夹需要在 被 `@SpringBootApplication` 修饰的类的同级目录下, 否则运行程序访问`http://localhost:8080/greeting` 会出现错误:
 
 ```shell
 Whitelabel Error Page 
@@ -32,20 +33,18 @@ This application has no explicit mapping for /error, so you are seeing this as a
 Tue Jun 30 17:24:02 CST 2023 There was an unexpected error (type=Not Found, status=404). No message available 
 ```
 
-主类就是被`@SpringBootApplication`修饰的那个类, 
-
 正确结构:
 
 ```shell
 ├── java
-│   └── com
+│   └── com.example
 │       ├── MyAppApplication.java
 │       └── restservice
 │           ├── Greeting.java
 │           └── GreetingController.java
 # or
 ├── java
-│   └── com
+│   └── com.example
 │       ├── MyAppApplication.java
 │       ├── Greeting.java
 │       └── GreetingController.java
@@ -55,7 +54,7 @@ Tue Jun 30 17:24:02 CST 2023 There was an unexpected error (type=Not Found, stat
 
 ```shell
 ├── java
-│   ├── com
+│   ├── com.example
 │   │   └── MyAppApplication.java
 │   └── restservice
 │       ├── Greeting.java
@@ -64,7 +63,7 @@ Tue Jun 30 17:24:02 CST 2023 There was an unexpected error (type=Not Found, stat
 
 具体可参考: [spring - This application has no explicit mapping for /error - Stack Overflow](https://stackoverflow.com/questions/31134333/this-application-has-no-explicit-mapping-for-error)
 
-## 新概念 Record Class
+## 2. 新概念 Record Class
 
 参照 `Greeting.java` 源码发现 `Greeting` 与传统的类不同, 没有构造函数, 更像是个函数, 
 
@@ -72,7 +71,7 @@ Tue Jun 30 17:24:02 CST 2023 There was an unexpected error (type=Not Found, stat
 
 *POJO* Class: [What Is a Pojo Class? | Baeldung](https://www.baeldung.com/java-pojo-class)
 
-## Jackson 
+## 3. Jackson 
 
 可能会好奇, 为什么没有用 json 库, 直接返回是一个Greeting对象,但得到的内容却是 json 格式的信息呢?  教程里给的解释:
 
@@ -82,7 +81,7 @@ Tue Jun 30 17:24:02 CST 2023 There was an unexpected error (type=Not Found, stat
 
 >When using JSON format, Spring Boot will use an *ObjectMapper* instance to **serialize responses and deserialize requests**. [Spring Boot: Jackson ObjectMapper](https://www.baeldung.com/spring-boot-customize-jackson-objectmapper)
 
-## 源码解释
+## 4. 源码解释
 
  项目创建过程可参考: [Getting Started | Building a RESTful Web Service](https://spring.io/guides/gs/rest-service/)
 
