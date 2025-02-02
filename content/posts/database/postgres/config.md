@@ -1,5 +1,5 @@
 ---
-title: PostgreSQL COnfiguration
+title: PostgreSQL Configuration
 date: 2024-12-27 17:51:35
 categories:
  - 数据库

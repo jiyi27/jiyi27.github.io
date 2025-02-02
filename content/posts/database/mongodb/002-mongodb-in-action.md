@@ -5,7 +5,7 @@ categories:
  - 数据库
 tags:
  - 数据库
- - 读书笔记
+ - 读书
  - mongodb
 ---
 

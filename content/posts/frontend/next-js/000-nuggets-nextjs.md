@@ -1,11 +1,12 @@
 ---
-title: Next.js Notes
+title: 前端开发零碎知识点
 date: 2024-12-07 18:20:22
 categories:
  - 前端开发
 tags:
  - 前端开发
  - next.js
+ - 零碎知识
 ---
 
 **UUIDs vs. Auto-incrementing Keys**

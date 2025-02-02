@@ -1,18 +1,19 @@
 ---
-title: Practice of MySQL
+title: MySQL 建表零碎知识点
 date: 2024-01-10 23:06:36
 categories:
  - 数据库
 tags:
  - 数据库
  - mysql
+ - 零碎知识
 ---
 
 ## 1. 存储字符串
 
 The most commonly used string data types in the context of databases are CHAR and VARCHAR. TEXT and LONGTEXT are also commonly used string data types. 
 
-**`char(10)` vs `varchar(10) `**
+**`char(10)` vs `varchar(10)`**
 
 When you define a column as CHAR(10), it will always occupy 10 characters of storage, regardless of the actual data length. If you store a string shorter than 10 characters, it will be padded with spaces to fill up the remaining space.
 
