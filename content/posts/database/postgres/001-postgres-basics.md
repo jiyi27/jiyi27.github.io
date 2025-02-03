@@ -1,5 +1,5 @@
 ---
-title: PostgreSQL Configuration
+title: PostgreSQL 常用命令
 date: 2024-12-27 17:51:35
 categories:
  - 数据库
