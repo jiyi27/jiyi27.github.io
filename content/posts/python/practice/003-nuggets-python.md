@@ -1,5 +1,5 @@
 ---
-title: 零碎知识 + 踩坑 Python
+title: 零碎知识 + 踩坑 - Python
 date: 2023-12-03 09:01:25
 categories:
   - python

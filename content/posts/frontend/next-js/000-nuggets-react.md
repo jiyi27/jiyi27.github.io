@@ -1,5 +1,5 @@
 ---
-title: 零碎知识 React + Typescript
+title: 零碎知识 - React(Typescript)
 date: 2024-12-07 18:20:22
 categories:
  - 前端开发
