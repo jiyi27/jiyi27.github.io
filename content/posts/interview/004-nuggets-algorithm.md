@@ -1,12 +1,12 @@
 ---
-title: 刷题常用语法  Python
+title: 零碎知识 算法
 date: 2025-02-02 15:28:52
 categories:
  - 面试
 tags:
  - 面试
  - 算法
- - python
+ - 零碎知识
 ---
 
 ## 1. 列表常用操作

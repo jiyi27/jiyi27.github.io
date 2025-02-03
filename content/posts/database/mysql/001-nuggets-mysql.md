@@ -1,5 +1,5 @@
 ---
-title: MySQL 建表零碎知识点
+title: 零碎知识 MySQL
 date: 2024-01-10 23:06:36
 categories:
  - 数据库

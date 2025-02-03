@@ -1,11 +1,12 @@
 ---
-title: Common Mistakes and Tricks Python
+title: 零碎知识 + 踩坑 Python
 date: 2023-12-03 09:01:25
 categories:
   - python
 tags:
   - python
-  - 编程小技巧 
+  - 零碎知识
+  - 踩坑
 ---
 
 ## 1. Slicing makes shallow copy of a list

@@ -1,11 +1,11 @@
 ---
-title: Frontend JS Tricks
+title: 零碎知识 前端开发
 date: 2024-08-05 22:17:19
 categories:
  - 前端开发
 tags:
  - 前端开发
- - 编程小技巧
+ - 零碎知识
 ---
 
 ## 1. `e.preventDefault()`
@@ -109,3 +109,4 @@ And it's ok to write relative path when redirect in Go code:
 // Redirect to login page.
 http.Redirect(w, r, "/login", http.StatusFound)
 ```
+

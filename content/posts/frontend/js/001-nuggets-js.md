@@ -1,17 +1,14 @@
 ---
-title: Tricks & Mistakes in Javascript
+title: 零碎知识 + 踩坑 Javascript
 date: 2024-03-12 10:55:20
 categories:
-  - javascript
-tags:
-  - javascript
-  - 编程技巧
   - 前端开发
+tags:
+  - 前端开发
+  - javascript
+  - 零碎知识
+  - 踩坑
 ---
-
-## 1. Minor tricks
-
-### 1.1. array
 
 > It is useful to remember which operations on arrays mutate them, and which don’t. For example, `push`, `pop`, `reverse`, and sort will mutate the original array, but `slice`, `filter`, and `map` will create a new one.
 >
@@ -57,7 +54,7 @@ function activateUser(id, name, room) {
 }
 ```
 
-### 1.2. string length
+-----------
 
 The `length` of a String value is the length of the string in **UTF-16 code units** not the number of characters. learn more: [String: length - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length)
 
@@ -69,11 +66,7 @@ console.log('😀'.length); // 2
 
 > 1 UTF-16 code unit = 16 bits = 2 bytes
 
-### 1.3. encding string to utf-8 in JS
-
-TextEncoder: [TextEncoder - Web APIs | MDN](https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder)
-
-### 1.4. localStorage
+-------------
 
 `localStorage` calculates its size limit based on the number of UTF-16 code units, not bytes. You can use the `length` property to get the number of code units in a string.
 
@@ -115,7 +108,7 @@ localStorage.setItem('test', new Array((i * 1024) + 1).join('😀'));
 
 Will print: 2500*1024 code units, because `😀` is 2 UTF-16 code units.
 
-## 2. Spread operator
+--------------
 
 [Spread operator `...`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax#description):
 
@@ -138,7 +131,7 @@ setPost(prevPost => ({
 
 > Arrow function will return the value of the expression by default, so we don't need to use `return` keyword.
 
-## 3. Falsy values
+----------------
 
 In JavaScript, we have 6 falsy values:
 
@@ -158,9 +151,7 @@ if(false/0/''/null/undefined/NaN) {
 }
 ```
 
-## 4. Catching errors
-
-### 4.1. Catching errors in async functions
+-----------
 
 In JavaScript, `try...catch` blocks are designed to handle errors in synchronous code. However, they do not work as expected with asynchronous code, unless used in conjunction with async/await.
 
@@ -203,7 +194,7 @@ async function loadData() {
 }
 ```
 
-### 4.2. Forget catching errors in neasted promises
+--------------
 
 ```js
 function fetchPosts() {
@@ -253,7 +244,51 @@ async function fetchPosts() {
 }
 ```
 
-## 5. `await xxxx` won't return a promise but the actual result of the promise
+------------
+
+> A `fetch()` promise **only rejects** when the request fails, for example, because of a badly-formed request URL or a network error. A `fetch()` promise *does not* reject if the server responds with HTTP status codes that indicate errors (`404`, `504`, etc.). https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch
+
+在 JavaScript 中，Promise（承诺）有三种状态：
+
+1. pending（等待中）- 初始状态
+2. fulfilled（已完成）- 操作成功完成
+3. rejected（已拒绝）- 操作失败
+
+`fetch()` 返回的 Promise 只会在以下情况下变成 rejected（拒绝）状态：
+
+- 网络错误, 比如无法连接服务器
+- URL 格式错误, 比如 URL 语法不正确
+
+HTTP 错误状态（比如 404 或 500）不会导致 fetch reject, 服务器返回错误响应也不会导致 fetch reject
+
+```js
+// 这个请求会 reject，因为 URL 格式错误
+fetch('not-a-valid-url')
+  .then(response => console.log('这里不会执行'))
+  .catch(error => console.log('会执行这里，因为 URL 无效'));
+
+// 这个请求不会 reject，即使返回 404
+fetch('https://api.example.com/not-exist')
+  .then(response => {
+    // 这里会执行！即使是 404 错误
+    // 需要手动检查 response.ok 或 response.status
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
+	.catch(error => console.log('会捕获：网络错误、HTTP 错误状态、JSON 解析错误等'));
+```
+
+> Fetch API: how to determine if an error is a network error
+>
+> When using `fetch`, you can't differentiate network errors from other errors caused by building an incorrect request, as both are thrown as `TypeError`. (See https://developer.mozilla.org/en-US/docs/Web/API/fetch#exceptions). (即不止网络错误为 TypeError, 还有其他错误都会出发 TypeError, 所以不能仅凭 TypeError 判断是否为网络错误.) 
+>
+> This is quite a flaw, as application defects that cause an incorrectly built request may go unnoticed, masked as if they were circumstantial network errors.
+>
+> https://stackoverflow.com/a/70103102/16317008
+
+----------
 
 ```js
 async function handleGetPosts(req, res) {
@@ -267,7 +302,7 @@ async function handleGetPosts(req, res) {
 // You will get TypeError: posts.then is not a function
 ```
 
-The issue in your code is that you're using `await` incorrectly with the `fetchPosts` function. When you use `await`, it waits for the promise to resolve and returns the result directly. Therefore, `posts` in your code is not a promise but the actual result of the promise. 
+The issue in your code is that you're using `await` incorrectly with the `fetchPosts` function. When you use `await`, it waits for the promise to resolve and returns the result directly. Therefore, `posts` in your code is not a promise but the actual result of the promise. **`await` won't return a promise but the actual result of the promise.**
 
 ```js
 async function handleGetPosts(req, res) {

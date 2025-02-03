@@ -1,16 +1,17 @@
 ---
-title: Tricks and Common Mistakes - Go
+title: 零碎知识 + 踩坑 Go
 date: 2023-08-27 17:12:55
 categories:
  - golang
 tags:
  - golang
- - 编程小技巧
+ - 零碎知识
+ - 踩坑
 ---
 
-## Tricks
+## 1. Tricks
 
-### remove an element from a slice
+### 1.1. remove an element from a slice
 
 ```go
 // remove the element at index i from a
@@ -18,7 +19,7 @@ tags:
 a = append(a[:i], a[i+1:]...)
 ```
 
-### handle `close()`
+### 1.2. handle `close()`
 
 ```go
 // credit to: https://gist.github.com/benbjohnson/9eebd201ec096ab6430e1f33411e6427
@@ -38,15 +39,15 @@ func doSomething() error {
 
 Why we bother to care about getting error from `f.Close()`? We have got error from  `f.Write()`. Well, there are a lot to say, learn more: [Don't Defer Close() on Writable Files - Go Notes](https://davidzhu.xyz/post/golang/advance/010-defer-close/)
 
-## Common mistakes
+## 2. Common mistakes
 
-#### 1. Encoding non-exported fields struct value with gobs
+#### 2.1. Encoding non-exported fields struct value with gobs
 
 gobs can encode the exported fields of a struct value, if a sturct without exported field, when you try encode its value, you will get a `nil`. 
 
 > Functions and channels will not be sent in a gob. Attempting to encode such a value at the top level will fail. A struct field of chan or func type is treated exactly like an unexported field and is ignored. 
 
-#### 2. Use `var` to declare channel 
+#### 2.2. Use `var` to declare channel 
 
 Variables declared without an explicit initial value are given their zero value. Zero value for a channel is `nil`, read and write a `nil` channel will block forever. The code below is a common mistake:
 
@@ -66,7 +67,7 @@ go func() {
 
 Learn more: https://davidzhu.xyz/post/golang/basics/003-collections/#5-var-vs-make
 
-#### 3. Using goroutines on a loop iterator variable
+#### 2.3. Using goroutines on a loop iterator variable
 
 In Go, the loop iterator variable is a single variable that takes different values in each loop iteration. 
 

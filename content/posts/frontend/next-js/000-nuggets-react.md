@@ -1,11 +1,10 @@
 ---
-title: 前端开发零碎知识点
+title: 零碎知识 React + Typescript
 date: 2024-12-07 18:20:22
 categories:
  - 前端开发
 tags:
  - 前端开发
- - next.js
  - 零碎知识
 ---
 
@@ -71,51 +70,6 @@ func (s *Session) Set(key string, value interface{}) {
     }
 }
 ```
-
-----
-
-> A `fetch()` promise **only rejects** when the request fails, for example, because of a badly-formed request URL or a network error. A `fetch()` promise *does not* reject if the server responds with HTTP status codes that indicate errors (`404`, `504`, etc.). https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch
-
-在 JavaScript 中，Promise（承诺）有三种状态：
-
-1. pending（等待中）- 初始状态
-2. fulfilled（已完成）- 操作成功完成
-3. rejected（已拒绝）- 操作失败
-
-`fetch()` 返回的 Promise 只会在以下情况下变成 rejected（拒绝）状态：
-
-- 网络错误, 比如无法连接服务器
-- URL 格式错误, 比如 URL 语法不正确
-
-HTTP 错误状态（比如 404 或 500）不会导致 fetch reject, 服务器返回错误响应也不会导致 fetch reject
-
-```js
-// 这个请求会 reject，因为 URL 格式错误
-fetch('not-a-valid-url')
-  .then(response => console.log('这里不会执行'))
-  .catch(error => console.log('会执行这里，因为 URL 无效'));
-
-// 这个请求不会 reject，即使返回 404
-fetch('https://api.example.com/not-exist')
-  .then(response => {
-    // 这里会执行！即使是 404 错误
-    // 需要手动检查 response.ok 或 response.status
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  })
-	.catch(error => console.log('会捕获：网络错误、HTTP 错误状态、JSON 解析错误等'));
-```
-
-> Fetch API: how to determine if an error is a network error
->
-> When using `fetch`, you can't differentiate network errors from other errors caused by building an incorrect request, as both are thrown as `TypeError`. (See https://developer.mozilla.org/en-US/docs/Web/API/fetch#exceptions). (即不止网络错误为 TypeError, 还有其他错误都会出发 TypeError, 所以不能仅凭 TypeError 判断是否为网络错误.) 
->
-> This is quite a flaw, as application defects that cause an incorrectly built request may go unnoticed, masked as if they were circumstantial network errors.
->
-> https://stackoverflow.com/a/70103102/16317008
-
 ------
 
 可选定义真的是搞的头大, 我们来看一下:

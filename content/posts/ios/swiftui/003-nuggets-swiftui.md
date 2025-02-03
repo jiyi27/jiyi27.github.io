@@ -1,12 +1,13 @@
 ---
-title: SwiftUI 踩坑记
+title: 零碎知识 + 踩坑 SwiftUI
 date: 2024-05-31 16:17:30
 categories:
  - ios
 tags:
  - ios
  - swiftui
- - 编程小技巧
+ - 零碎知识
+ - 踩坑
 ---
 
 ### 1. 使用 HStack 水平排列
