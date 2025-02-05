@@ -6,7 +6,223 @@
     <description>Recent content in 编译原理 on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 28 Nov 2023 20:30:17 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 04 Feb 2025 08:50:26 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>JVM 运行时常量池 - 动态链接</title>
+      <link>https://blog.jiyi27.com/posts/java/basics/005-dynamic-linking-constant-pool/</link>
+      <pubDate>Tue, 04 Feb 2025 08:50:26 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/java/basics/005-dynamic-linking-constant-pool/</guid>
+      <description>&lt;h2 id=&#34;1-run-time-data-areas---运行时常量池&#34;&gt;1. Run-Time Data Areas - 运行时常量池&lt;/h2&gt;
+&lt;p&gt;在 JVM 内存分类 两种方式 文章里, 我们知道了 JVM 中只有 Run-Time Data Areas 的概念, 即用来放数据的地方, 它的主要分类逻辑就是线程共享和线程私有区域, 而我们平时更倾向于站在堆栈传统角度对内存进行分类, 因为这样很容易理解, 今天就看一下  Run-Time Data Areas 线程共享区域的 运行时常量池, 因为在 JVM 类加载的过程中它很重要, 就相当于编译中的符号表, 在动态链接的时候主要就靠它来告诉 JVM 该类用到了哪些标准库的东西, 外部的类和函数, 去哪加载 等等,&lt;/p&gt;
+&lt;h2 id=&#34;2-每个-class-文件都有一个常量池&#34;&gt;2. 每个 .class 文件都有一个常量池&lt;/h2&gt;
+&lt;p&gt;在 Java 中，&lt;strong&gt;每一个 &lt;code&gt;.class&lt;/code&gt; 文件&lt;/strong&gt;里都带有一张自己的&lt;strong&gt;常量池&lt;/strong&gt;。这张常量池的存在是为了在字节码里用 “符号引用” 或 “常量” 来代替真正的类、方法、字段、字符串、数值等内容，并且让它们可以在 JVM 运行时 被 “解析” 成真实的类、方法或者对象引用。&lt;/p&gt;
+&lt;p&gt;为什么每个 &lt;code&gt;.class&lt;/code&gt; 文件都有自己的常量池？&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;每个 &lt;code&gt;.class&lt;/code&gt; 文件是一个&lt;strong&gt;独立的编译单元&lt;/strong&gt;，它可能引用不同的类、不同的方法、不同的字符串、不同的常量&lt;/li&gt;
+&lt;li&gt;在 Java 编译阶段，&lt;code&gt;javac&lt;/code&gt; 会为&lt;strong&gt;该类&lt;/strong&gt;所需的一切外部引用（类、字段、方法等）和字面量&lt;strong&gt;记录到它自己的常量池&lt;/strong&gt;中&lt;/li&gt;
+&lt;li&gt;当这个类加载到 JVM 里时候, 需要使用其中任何符号引用或常量，就会通过它&lt;strong&gt;自己&lt;/strong&gt;的常量池去做解析&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-看个例子&#34;&gt;3. 看个例子&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Demo&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String&lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt; args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello World&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;编译后执行 &lt;code&gt;javac Demo.java&lt;/code&gt;，得到 &lt;code&gt;Demo.class&lt;/code&gt;, 然后用 &lt;code&gt;javap -v Demo.class&lt;/code&gt; 查看其常量池部分：&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-run-time-data-areas---运行时常量池&#34;&gt;1. Run-Time Data Areas - 运行时常量池&lt;/h2&gt;
+&lt;p&gt;在 JVM 内存分类 两种方式 文章里, 我们知道了 JVM 中只有 Run-Time Data Areas 的概念, 即用来放数据的地方, 它的主要分类逻辑就是线程共享和线程私有区域, 而我们平时更倾向于站在堆栈传统角度对内存进行分类, 因为这样很容易理解, 今天就看一下  Run-Time Data Areas 线程共享区域的 运行时常量池, 因为在 JVM 类加载的过程中它很重要, 就相当于编译中的符号表, 在动态链接的时候主要就靠它来告诉 JVM 该类用到了哪些标准库的东西, 外部的类和函数, 去哪加载 等等,&lt;/p&gt;
+&lt;h2 id=&#34;2-每个-class-文件都有一个常量池&#34;&gt;2. 每个 .class 文件都有一个常量池&lt;/h2&gt;
+&lt;p&gt;在 Java 中，&lt;strong&gt;每一个 &lt;code&gt;.class&lt;/code&gt; 文件&lt;/strong&gt;里都带有一张自己的&lt;strong&gt;常量池&lt;/strong&gt;。这张常量池的存在是为了在字节码里用 “符号引用” 或 “常量” 来代替真正的类、方法、字段、字符串、数值等内容，并且让它们可以在 JVM 运行时 被 “解析” 成真实的类、方法或者对象引用。&lt;/p&gt;
+&lt;p&gt;为什么每个 &lt;code&gt;.class&lt;/code&gt; 文件都有自己的常量池？&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;每个 &lt;code&gt;.class&lt;/code&gt; 文件是一个&lt;strong&gt;独立的编译单元&lt;/strong&gt;，它可能引用不同的类、不同的方法、不同的字符串、不同的常量&lt;/li&gt;
+&lt;li&gt;在 Java 编译阶段，&lt;code&gt;javac&lt;/code&gt; 会为&lt;strong&gt;该类&lt;/strong&gt;所需的一切外部引用（类、字段、方法等）和字面量&lt;strong&gt;记录到它自己的常量池&lt;/strong&gt;中&lt;/li&gt;
+&lt;li&gt;当这个类加载到 JVM 里时候, 需要使用其中任何符号引用或常量，就会通过它&lt;strong&gt;自己&lt;/strong&gt;的常量池去做解析&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-看个例子&#34;&gt;3. 看个例子&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Demo&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String&lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt; args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello World&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;编译后执行 &lt;code&gt;javac Demo.java&lt;/code&gt;，得到 &lt;code&gt;Demo.class&lt;/code&gt;, 然后用 &lt;code&gt;javap -v Demo.class&lt;/code&gt; 查看其常量池部分：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Classfile .../Demo.class
+  Last modified ...; size ...
+  MD5 checksum ...
+public class Demo
+  minor version: 0
+  major version: 52
+  flags: ACC_PUBLIC, ACC_SUPER
+Constant pool:
+   #1 = Methodref          #7.#22         // java/io/PrintStream.println:(Ljava/lang/String;)V
+   #2 = String             #23            // Hello World
+   #3 = Fieldref           #8.#24         // java/lang/System.out:Ljava/io/PrintStream;
+   #4 = Class              #25            // Demo
+   #5 = Class              #26            // java/io/PrintStream
+   #6 = Utf8               Demo
+   #7 = Utf8               java/io/PrintStream
+   #8 = Utf8               java/lang/System
+   #9 = Utf8               main
+   #10 = Utf8              ([Ljava/lang/String;)V
+   #11 = Utf8              Code
+   ...
+   #22 = NameAndType       #27:#28        // println:(Ljava/lang/String;)V
+   #23 = Utf8              Hello World
+   #24 = NameAndType       #29:#30        // out:Ljava/io/PrintStream;
+   #25 = Utf8              Demo
+   #26 = Utf8              java/io/PrintStream
+   #27 = Utf8              println
+   #28 = Utf8              (Ljava/lang/String;)V
+   #29 = Utf8              out
+   #30 = Utf8              Ljava/io/PrintStream;
+   ...
+{
+  public Demo();
+    ...
+  public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=1, args_size=1
+         0: getstatic     #3      // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: ldc           #2      // String Hello World
+         5: invokevirtual #1      // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+         8: return
+      ...
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;4-常量池里都有啥&#34;&gt;4. 常量池里都有啥？&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;#1 = Methodref #7.#22 // java/io/PrintStream.println:(Ljava/lang/String;)V&lt;/code&gt;&lt;/strong&gt;
+表示：这是一个 &lt;strong&gt;&lt;code&gt;Methodref&lt;/code&gt;&lt;/strong&gt; 常量，指向“类 #7”与“NameAndType #22”的组合&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;“类 #7” 就是 &lt;code&gt;java/io/PrintStream&lt;/code&gt;（见后面 &lt;code&gt;#7 = Utf8 &amp;quot;java/io/PrintStream&amp;quot;&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;“NameAndType #22” 则表示方法名和方法描述符——在 &lt;code&gt;#22&lt;/code&gt; 里你会看到 &lt;code&gt;&amp;lt;println:(Ljava/lang/String;)V&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;#2 = String #23 // Hello World&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;表示：这是一个 &lt;strong&gt;&lt;code&gt;String&lt;/code&gt;&lt;/strong&gt; 常量，对应了 “字符串 #23”；“#23” 实际是一个 &lt;code&gt;Utf8&lt;/code&gt; 条目，存放 &lt;code&gt;&amp;quot;Hello World&amp;quot;&lt;/code&gt; 的字符&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;#3 = Fieldref #8.#24 // java/lang/System.out:Ljava/io/PrintStream;&lt;/code&gt;&lt;/strong&gt;
+表示：这是一个 &lt;strong&gt;&lt;code&gt;Fieldref&lt;/code&gt;&lt;/strong&gt; 常量，指向“类 #8”与“NameAndType #24”的组合&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;“类 #8” -&amp;gt; &lt;code&gt;java/lang/System&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;“NameAndType #24” -&amp;gt; “&lt;code&gt;out:Ljava/io/PrintStream;&lt;/code&gt;”&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;#22 = NameAndType #27:#28 // println:(Ljava/lang/String;)V&lt;/code&gt;&lt;/strong&gt;
+表示：这是一个 &lt;strong&gt;&lt;code&gt;NameAndType&lt;/code&gt;&lt;/strong&gt; 常量，&lt;code&gt;#27&lt;/code&gt; 是方法名 &lt;code&gt;println&lt;/code&gt;，&lt;code&gt;#28&lt;/code&gt; 是方法描述符 &lt;code&gt;&amp;quot;(Ljava/lang/String;)V&amp;quot;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;#23 = Utf8 &amp;quot;Hello World&amp;quot;&lt;/code&gt;&lt;/strong&gt;
+表示：这是一个存放字符串 &lt;code&gt;&amp;quot;Hello World&amp;quot;&lt;/code&gt; 的 &lt;strong&gt;&lt;code&gt;Utf8&lt;/code&gt;&lt;/strong&gt; 常量&lt;/p&gt;
+&lt;p&gt;可以看到，编译器把你写的代码里所有用到的类名、方法名、字段名、描述符以及字符串字面量，都以 各种类型的 cp_info（&lt;code&gt;Methodref&lt;/code&gt;、&lt;code&gt;Fieldref&lt;/code&gt;、&lt;code&gt;NameAndType&lt;/code&gt;、&lt;code&gt;Utf8&lt;/code&gt;、&lt;code&gt;String&lt;/code&gt; 等）记录到了同一个常量池数组里。&lt;/p&gt;
+&lt;h2 id=&#34;5-这些条目在运行时怎么被用到&#34;&gt;5. 这些条目在运行时怎么被用到？&lt;/h2&gt;
+&lt;p&gt;在实际运行过程中，你可以从反汇编的字节码看到：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;0: getstatic     #3      // Field java/lang/System.out:Ljava/io/PrintStream;
+3: ldc           #2      // String Hello World
+5: invokevirtual #1      // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+8: return
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;#3&lt;/code&gt;、&lt;code&gt;#2&lt;/code&gt;、&lt;code&gt;#1&lt;/code&gt; 都是&lt;strong&gt;常量池索引&lt;/strong&gt;。当 JVM 执行到这条指令时，它会到 Demo 类的常量池里找相应记录，再看看&lt;strong&gt;那条记录&lt;/strong&gt;里描述了什么类、字段或方法名、描述符，然后去解析并链接到真实的 &lt;code&gt;System.out&lt;/code&gt; 字段或 &lt;code&gt;PrintStream.println(...)&lt;/code&gt; 方法上。&lt;/p&gt;
+&lt;h2 id=&#34;6-类的加载验证准备解析初始化&#34;&gt;6. 类的加载、验证、准备、解析、初始化&lt;/h2&gt;
+&lt;p&gt;在 Java 中，类加载（Class Loading）之后，紧随其后（或在实际使用时触发）的过程，通常称为 类的链接（Linking）和 初始化（Initialization）。而链接过程里最关键的一步就是 解析（Resolution）。有时我们也把 在&lt;strong&gt;运行时将常量池符号引用转成直接引用&lt;/strong&gt; 称为动态链接（Dynamic Linking），因为它跟 C/C++ 的 “编译期/链接期绑定” 不一样，而是在Java 程序执行期间由 JVM 来完成。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;第 4 步的解析（Resolution）往往就是我们所说的“动态链接”的核心：把&lt;strong&gt;字节码中符号形式的引用&lt;/strong&gt;——例如 “&lt;code&gt;java/lang/System&lt;/code&gt;” 、“&lt;code&gt;out&lt;/code&gt;” 、“&lt;code&gt;println&lt;/code&gt;”——&lt;strong&gt;映射到 JVM 内部真正的方法、字段、类结构&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;编译后字节码（通过 &lt;code&gt;javap -v&lt;/code&gt;）大概是：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;0: getstatic     #3      // Field java/lang/System.out:Ljava/io/PrintStream;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;3: ldc           #2      // String Hello World
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;5: invokevirtual #1      // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;8: return
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这里的 &lt;code&gt;#3&lt;/code&gt;, &lt;code&gt;#2&lt;/code&gt;, &lt;code&gt;#1&lt;/code&gt; 是常量池索引。当 JVM 在解释或JIT 编译这些指令时，如果某个索引还没解析，就会触发解析逻辑&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;解析 &lt;code&gt;#3&lt;/code&gt; (getstatic …)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;#3&lt;/code&gt; 在常量池中是一个 &lt;code&gt;Fieldref&lt;/code&gt;，比如 “&lt;code&gt;java/lang/System.out:Ljava/io/PrintStream;&lt;/code&gt;”&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;JVM 首先看 “这个类&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;java/lang/System
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;加载了没？”&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;如果没有，就让 Bootstrap ClassLoader 去加载并验证、准备（以及后续可能触发解析和初始化）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;找到它后，在 &lt;code&gt;java.lang.System&lt;/code&gt; 的元数据里查找名为 &lt;code&gt;out&lt;/code&gt;、描述符 &lt;code&gt;Ljava/io/PrintStream;&lt;/code&gt;、并且是 &lt;code&gt;static&lt;/code&gt; 的字段&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;若能找到，就把这个常量池引用标记为已解析，并存储一个指向 &lt;code&gt;System.out&lt;/code&gt; 字段的内部标识（可能是一个指针/偏移量）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;此时还要检查 &lt;code&gt;System&lt;/code&gt; 类是否已经初始化过。如果没初始化，就先初始化 &lt;code&gt;System&lt;/code&gt;（调用其 &lt;code&gt;&amp;lt;clinit&amp;gt;&lt;/code&gt;）。在 &lt;code&gt;&amp;lt;clinit&amp;gt;&lt;/code&gt; 里会将 &lt;code&gt;System.out&lt;/code&gt; 赋值为一个新的 &lt;code&gt;PrintStream&lt;/code&gt; 对象。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;执行 &lt;code&gt;getstatic #3&lt;/code&gt; 时，JVM 发现“已解析”，就能直接去拿 &lt;code&gt;System.out&lt;/code&gt; 这个静态字段的对象引用&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;2.2 解析 &lt;code&gt;#2&lt;/code&gt; (ldc …)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;#2&lt;/code&gt; 在常量池中是一个 &lt;code&gt;String&lt;/code&gt; 类型常量，如 “Hello World”&lt;/li&gt;
+&lt;li&gt;当执行 &lt;code&gt;ldc #2&lt;/code&gt; 时，如果还没解析，就去常量池里取出对应的 UTF-8 字符串，将其&lt;strong&gt;intern&lt;/strong&gt;或放到字符串池，生成一个 &lt;code&gt;java.lang.String&lt;/code&gt; 实例（或从已有字符串池中返回）&lt;/li&gt;
+&lt;li&gt;然后把这个 &lt;code&gt;String&lt;/code&gt; 对象引用压栈，用于后续 &lt;code&gt;println&lt;/code&gt; 调用。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;2.3 解析 &lt;code&gt;#1&lt;/code&gt; (invokevirtual …)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;#1&lt;/code&gt; 在常量池是一个 &lt;code&gt;Methodref&lt;/code&gt;，如 “&lt;code&gt;java/io/PrintStream.println:(Ljava/lang/String;)V&lt;/code&gt;”&lt;/li&gt;
+&lt;li&gt;JVM 会检查 &lt;code&gt;java.io.PrintStream&lt;/code&gt; 这个类加载了吗？没的话，去加载它&lt;/li&gt;
+&lt;li&gt;在它的元数据里找到对应的方法表项 &lt;code&gt;println(String)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;若找到，就把常量池条目更新为已解析，后续执行指令 &lt;code&gt;invokevirtual #1&lt;/code&gt; 时，就能通过对象的类型信息 + 方法表来跳转到 &lt;code&gt;PrintStream.println(String)&lt;/code&gt; 的实现&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;以上步骤&lt;/strong&gt;就是“解析 + 动态链接”最本质的行为：&lt;strong&gt;从常量池的“符号引用”&lt;/strong&gt;（例如 “&lt;code&gt;Field java/lang/System.out&lt;/code&gt;” 或 “&lt;code&gt;Method java/io/PrintStream.println&lt;/code&gt;”）&lt;strong&gt;转成 JVM 内部可执行、可定位的实际字段或方法引用&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id=&#34;7-动态链接-vs-静态链接&#34;&gt;7. 动态链接 VS. 静态链接&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;静态链接（C/C++）&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;编译和链接器阶段就把对 &lt;code&gt;printf&lt;/code&gt; 等函数的调用解析到某个符号表里，生成可执行文件，运行时再由 OS 的动态加载器做符号重定位，最终把 &lt;code&gt;printf&lt;/code&gt; 的地址映射到可执行程序里。&lt;/li&gt;
+&lt;li&gt;也就是说，C/C++ 大部分链接工作在编译期/链接期就做好了，运行时只剩下操作系统层面的动态库装载、重定位&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Java 的动态链接&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;.class&lt;/code&gt; 文件只保留对 &lt;code&gt;System.out&lt;/code&gt;、&lt;code&gt;println(String)&lt;/code&gt; 等的符号引用&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;真正的解析、绑定过程在&lt;/p&gt;
+&lt;p&gt;JVM 运行时&lt;/p&gt;
+&lt;p&gt;发生：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;加载对应的类（可能还要加载该类所依赖的其他类），&lt;/li&gt;
+&lt;li&gt;验证和准备，&lt;/li&gt;
+&lt;li&gt;在用到这些常量池引用时触发“解析”，最终把它指向 JVM 内部的真实方法或字段对象&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;这使得 Java 可以做到“&lt;strong&gt;类的动态加载&lt;/strong&gt;”：运行中可以从网络或别的地方得到一个 &lt;code&gt;.class&lt;/code&gt;，用自定义 ClassLoader 加载并解析它。而不需要像 C++ 一样必须在编译/链接时就知道所有符号&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;8-总结解析resolution和动态链接是什么&#34;&gt;8. 总结：解析（Resolution）和动态链接是什么？&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;解析（Resolution）&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;发生在链接阶段的一个子步骤，也可能因为&lt;strong&gt;惰性解析&lt;/strong&gt;而在第一次使用时才执行&lt;/li&gt;
+&lt;li&gt;目的：把常量池中的符号引用（如 &lt;code&gt;Class&lt;/code&gt;, &lt;code&gt;Methodref&lt;/code&gt;, &lt;code&gt;Fieldref&lt;/code&gt;）转换成直接引用（JVM 内部可识别、可执行的东西，比如指向具体的方法表项或字段表项）&lt;/li&gt;
+&lt;li&gt;步骤包括：
+&lt;ul&gt;
+&lt;li&gt;检查或触发目标类加载（若尚未加载），&lt;/li&gt;
+&lt;li&gt;在类元数据里找对应字段/方法，校验访问权限和签名等，&lt;/li&gt;
+&lt;li&gt;如果成功，就把常量池相应项目标记为已解析，并缓存引用信息&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;动态链接（Dynamic Linking）&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;相对静态语言（如 C/C++）的编译期链接而言，Java 的链接是在&lt;strong&gt;运行时&lt;/strong&gt;进行，所以称为动态链接&lt;/li&gt;
+&lt;li&gt;当你执行 &lt;code&gt;java Demo&lt;/code&gt; 时，JVM 在运行过程中才决定 “&lt;code&gt;System.out&lt;/code&gt;” 指向哪个对象，“&lt;code&gt;println&lt;/code&gt;” 调用哪个方法实现&lt;/li&gt;
+&lt;li&gt;这让 Java 可以做到&lt;strong&gt;跨平台&lt;/strong&gt;、&lt;strong&gt;延迟加载&lt;/strong&gt;、&lt;strong&gt;反射&lt;/strong&gt;、&lt;strong&gt;热替换&lt;/strong&gt;等能力&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;简而言之&lt;/strong&gt;：在你看到的 &lt;code&gt;getstatic #3&lt;/code&gt;, &lt;code&gt;invokevirtual #1&lt;/code&gt; 这些字节码指令的背后，就是“解析 + 动态链接”的过程——JVM 在 &lt;strong&gt;运行时&lt;/strong&gt; 根据常量池里记载的符号引用，找到实际的类和方法，真正把它们链接起来，这就是“解析和动态链接”的具体含义&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
     <item>
       <title>Typing in Programming Language</title>
       <link>https://blog.jiyi27.com/posts/cs-basics/000-languge-types-design/</link>
