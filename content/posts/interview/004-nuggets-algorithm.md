@@ -152,3 +152,67 @@ def totalFruit(self, fruits):
     return max_len
 ```
 
+## 4. 循环嵌套 58 Length of Last Word
+
+找出下面代码的逻辑问题, 最开始的解决思路, len 记录单词的长度, 每次遇到空格就会跳出 while 循环, 然后更新重新计算新的单词的长度, 
+
+```python
+def lengthOfLastWord(self, s):
+    len = 0
+    for i in range(len(s)):
+        len = 0
+        while s[i] != ' ' and i < len(s):
+            len += 1
+            i += 1
+    return len
+```
+
+关于 len 的重置有问题, 没有考虑最后有空格的情况, 比如 `"Hello World  "`, 我们期望 5，实际输出是 0, 因为遍历完最后一个单词跳出 while 后, i 仍没越界, 此时重新进入 for 循环, len 又被重置为零, 可是后面的都是空格, 也不会进入 while 循环, len 一直为 0, 
+
+```python
+def lengthOfLastWord(self, s):
+    len = 0 # len 是个函数, 命名重复
+    for i in range(len(s)):
+        len = 0  # 这个重置会导致问题, 没有考虑最后有空格的情况
+        # i < len(s) 这个检查并不安全, 应该先检查是否越界
+        while s[i] != ' ' and i < len(s):
+            len += 1
+            i += 1 # 最严重的问题在这, 
+    return len
+```
+
+`i` 在 while 循环中被改变了（`i += 1`），但是这个 `i` 也是 for 循环的控制变量。这会导致：
+
+- 比如当 for 循环 i = 0 时
+- while 循环增加 i 到 5
+- 但 for 循环下一轮会让 i = 1，**又重新从头开始数**
+
+所以**永远不要在两个地方修改循环变量**, 正确的写法如下:
+
+```python
+def lengthOfLastWord(self, s):
+    s = s.strip() # 截取空格
+    length = 0
+    for i in range(len(s)):
+        if s[i] != ' ':
+            length += 1
+        else:
+            length = 0
+    return length
+```
+
+但是这还不够高效, 可以直接从后面倒序遍历, 遇到空格就跳出:
+
+```python
+def lengthOfLastWord(self, s):
+    s = s.strip()
+    length = 0
+    # 又一次出现了这个聪明的遍历方式
+    for i in range(len(s) - 1, -1, -1):
+        if s[i] != ' ':
+            length += 1
+        else:
+            break
+    return length
+```
+
