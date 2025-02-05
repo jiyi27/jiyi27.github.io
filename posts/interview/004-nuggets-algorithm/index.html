@@ -127,7 +127,7 @@
   <h1 class="post-title">
     <a href="https://blog.jiyi27.com/posts/interview/004-nuggets-algorithm/">零碎知识 - 算法</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2025-02-02</time><span class="post-reading-time">3 分钟阅读 (546 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2025-02-02</time><span class="post-reading-time">4 分钟阅读 (757 字数)</span></div>
 
   
     <span class="post-tags">
@@ -264,6 +264,53 @@
 </span></span><span style="display:flex;"><span>        max_len <span style="color:#f92672">=</span> max(max_len, j <span style="color:#f92672">-</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> max_len
+</span></span></code></pre></div><h2 id="4-循环嵌套-58-length-of-last-word">4. 循环嵌套 58 Length of Last Word<a href="#4-循环嵌套-58-length-of-last-word" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>找出下面代码的逻辑问题, 最开始的解决思路, len 记录单词的长度, 每次遇到空格就会跳出 while 循环, 然后更新重新计算新的单词的长度,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">lengthOfLastWord</span>(self, s):
+</span></span><span style="display:flex;"><span>    len <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(len(s)):
+</span></span><span style="display:flex;"><span>        len <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> s[i] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39; &#39;</span> <span style="color:#f92672">and</span> i <span style="color:#f92672">&lt;</span> len(s):
+</span></span><span style="display:flex;"><span>            len <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            i <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> len
+</span></span></code></pre></div><p>关于 len 的重置有问题, 没有考虑最后有空格的情况, 比如 <code>&quot;Hello World  &quot;</code>, 我们期望 5，实际输出是 0, 因为遍历完最后一个单词跳出 while 后, i 仍没越界, 此时重新进入 for 循环, len 又被重置为零, 可是后面的都是空格, 也不会进入 while 循环, len 一直为 0,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">lengthOfLastWord</span>(self, s):
+</span></span><span style="display:flex;"><span>    len <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span> <span style="color:#75715e"># len 是个函数, 命名重复</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(len(s)):
+</span></span><span style="display:flex;"><span>        len <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>  <span style="color:#75715e"># 这个重置会导致问题, 没有考虑最后有空格的情况</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># i &lt; len(s) 这个检查并不安全, 应该先检查是否越界</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> s[i] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39; &#39;</span> <span style="color:#f92672">and</span> i <span style="color:#f92672">&lt;</span> len(s):
+</span></span><span style="display:flex;"><span>            len <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            i <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e"># 最严重的问题在这, </span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> len
+</span></span></code></pre></div><p><code>i</code> 在 while 循环中被改变了（<code>i += 1</code>），但是这个 <code>i</code> 也是 for 循环的控制变量。这会导致：</p>
+<ul>
+<li>比如当 for 循环 i = 0 时</li>
+<li>while 循环增加 i 到 5</li>
+<li>但 for 循环下一轮会让 i = 1，<strong>又重新从头开始数</strong></li>
+</ul>
+<p>所以<strong>永远不要在两个地方修改循环变量</strong>, 正确的写法如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">lengthOfLastWord</span>(self, s):
+</span></span><span style="display:flex;"><span>    s <span style="color:#f92672">=</span> s<span style="color:#f92672">.</span>strip() <span style="color:#75715e"># 截取空格</span>
+</span></span><span style="display:flex;"><span>    length <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(len(s)):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> s[i] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39; &#39;</span>:
+</span></span><span style="display:flex;"><span>            length <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            length <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> length
+</span></span></code></pre></div><p>但是这还不够高效, 可以直接从后面倒序遍历, 遇到空格就跳出:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">lengthOfLastWord</span>(self, s):
+</span></span><span style="display:flex;"><span>    s <span style="color:#f92672">=</span> s<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>    length <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 又一次出现了这个聪明的遍历方式</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(len(s) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> s[i] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39; &#39;</span>:
+</span></span><span style="display:flex;"><span>            length <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> length
 </span></span></code></pre></div>
       </div></div>
 
