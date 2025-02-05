@@ -1,11 +1,11 @@
 ---
 title: JVM 内存结构 两种分类方式
-date: 2023-05-14 21:50:26
+date: 2025-02-04 21:50:26
 categories:
- - 面试
-tags:
- - 面试
  - java
+tags:
+ - java
+ - 面试
 ---
 
 ## 1. Java SE / JVM Specification

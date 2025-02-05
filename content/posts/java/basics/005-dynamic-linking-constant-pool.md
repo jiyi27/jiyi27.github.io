@@ -1,12 +1,12 @@
 ---
 title: JVM 运行时常量池 - 动态链接
-date: 2025-02-05 08:50:26
+date: 2025-02-04 08:50:26
 categories:
- - 面试
-tags:
- - 面试
- - 编译原理
  - java
+tags:
+ - java
+ - 编译原理
+ - 面试
 ---
 
 ## 1. Run-Time Data Areas - 运行时常量池

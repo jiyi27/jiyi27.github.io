@@ -2,10 +2,10 @@
 title: JDK JRE JVM JavaSE
 date: 2023-07-26 21:49:41
 categories:
- - 面试
-tags:
- - 面试
  - java
+tags:
+ - java
+ - 面试
 ---
 
 ## 1. JDK
