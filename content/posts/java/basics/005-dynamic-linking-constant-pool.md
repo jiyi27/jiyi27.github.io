@@ -127,50 +127,6 @@ Constant pool:
 
 > 第 4 步的解析（Resolution）往往就是我们所说的“动态链接”的核心：把**字节码中符号形式的引用**——例如 “`java/lang/System`” 、“`out`” 、“`println`”——**映射到 JVM 内部真正的方法、字段、类结构**
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-下面就以 “`System.out.println("Hello World")`” 为例，进一步说明“解析和动态链接”到底是怎么发生的，以及它们在 JVM 内部是如何工作的。
-
-------
-
-## 1. 类的加载、验证、准备、解析、初始化
-
-根据《Java 虚拟机规范》（Java Virtual Machine Specification），当 JVM 需要使用到某个类时，大体会经历以下阶段：
-
-1. 加载（Loading）
-   - 通过 ClassLoader 从 `.class` 文件（或其他来源）把字节码读取到内存，在 **方法区（Method Area，或元空间）** 中创建对应的 `Class` 对象和元数据结构。
-2. 验证（Verification）
-   - 检查字节码合法性、常量池正确性、操作数栈和局部变量表是否匹配等，保证不破坏 JVM 安全。
-3. 准备（Preparation）
-   - 为类的 **静态变量** 分配内存并初始化默认值（如 `0`、`null`、`false` 等），如果有编译期常量（`final static` 基本类型等），这里也可能直接赋值。
-4. 解析（Resolution）
-   - 把常量池里的**符号引用**（例如 “`java/lang/System` 的静态字段 `out`”）转换成真正的**直接引用**（JVM 内部可定位的结构，比如指向某个字段、方法的指针或索引）。这一步可以在这里一次性做完，也可以采用**懒解析**（第一次用到某个引用时才去解析）。
-5. 初始化（Initialization）
-   - 执行类的 `<clinit>` 方法（静态初始化块和静态变量的赋值操作）。
-   - 如果我们访问一个类的静态字段，而该类尚未初始化，就会先触发它的初始化。比如 `System` 类会在它的 `<clinit>` 中初始化 `System.out` 这个 `PrintStream` 对象。
-
-**其中第 4 步的解析（Resolution）** 往往就是我们所说的“动态链接”的核心：把**字节码中符号形式的引用**——例如 “`java/lang/System`” 、“`out`” 、“`println`”——**映射到 JVM 内部真正的方法、字段、类结构**。
-
-------
-
-## 2. 以 `System.out.println("Hello World")` 为例，看看解析如何发生
-
 编译后字节码（通过 `javap -v`）大概是：
 
 ```text
@@ -180,9 +136,9 @@ Constant pool:
 8: return
 ```
 
-这里的 `#3`, `#2`, `#1` 是**常量池索引**。当 JVM 在**解释**或**JIT 编译**这些指令时，如果某个索引还没解析，就会触发解析逻辑。
+这里的 `#3`, `#2`, `#1` 是常量池索引。当 JVM 在解释或JIT 编译这些指令时，如果某个索引还没解析，就会触发解析逻辑。
 
-### 2.1 解析 `#3` (getstatic …)
+**解析 `#3` (getstatic …)**
 
 - `#3` 在常量池中是一个 `Fieldref`，比如 “`java/lang/System.out:Ljava/io/PrintStream;`”。
 
@@ -194,23 +150,23 @@ Constant pool:
 
    加载了没？”
 
-  - 如果没有，就让 **Bootstrap ClassLoader** 去加载并验证、准备（以及后续可能触发解析和初始化）。
+  - 如果没有，就让 Bootstrap ClassLoader 去加载并验证、准备（以及后续可能触发解析和初始化）。
 
 - 找到它后，在 `java.lang.System` 的元数据里查找名为 `out`、描述符 `Ljava/io/PrintStream;`、并且是 `static` 的字段。
 
 - 若能找到，就把这个常量池引用标记为已解析，并存储一个指向 `System.out` 字段的内部标识（可能是一个指针/偏移量）。
 
-- 此时还要检查 `System` 类是否已经**初始化**过。如果没初始化，就先初始化 `System`（调用其 `<clinit>`）。在 `<clinit>` 里会将 `System.out` 赋值为一个新的 `PrintStream` 对象。
+- 此时还要检查 `System` 类是否已经初始化过。如果没初始化，就先初始化 `System`（调用其 `<clinit>`）。在 `<clinit>` 里会将 `System.out` 赋值为一个新的 `PrintStream` 对象。
 
-- 执行 `getstatic #3` 时，JVM 发现“已解析”，就能**直接**去拿 `System.out` 这个静态字段的对象引用。
+- 执行 `getstatic #3` 时，JVM 发现“已解析”，就能直接去拿 `System.out` 这个静态字段的对象引用。
 
-### 2.2 解析 `#2` (ldc …)
+**2.2 解析 `#2` (ldc …)**
 
 - `#2` 在常量池中是一个 `String` 类型常量，如 “Hello World”。
 - 当执行 `ldc #2` 时，如果还没解析，就去常量池里取出对应的 UTF-8 字符串，将其**intern**或放到字符串池，生成一个 `java.lang.String` 实例（或从已有字符串池中返回）。
 - 然后把这个 `String` 对象引用压栈，用于后续 `println` 调用。
 
-### 2.3 解析 `#1` (invokevirtual …)
+**2.3 解析 `#1` (invokevirtual …)**
 
 - `#1` 在常量池是一个 `Methodref`，如 “`java/io/PrintStream.println:(Ljava/lang/String;)V`”。
 - JVM 会检查 `java.io.PrintStream` 这个类加载了吗？没的话，去加载它。
@@ -219,9 +175,7 @@ Constant pool:
 
 **以上步骤**就是“解析 + 动态链接”最本质的行为：**从常量池的“符号引用”**（例如 “`Field java/lang/System.out`” 或 “`Method java/io/PrintStream.println`”）**转成 JVM 内部可执行、可定位的实际字段或方法引用**。
 
-------
-
-## 3. 动态链接 VS. 静态链接
+## 7. 动态链接 VS. 静态链接
 
 - **静态链接（C/C++）**：
 
@@ -244,9 +198,7 @@ Constant pool:
 
   - 这使得 Java 可以做到“**类的动态加载**”：运行中可以从网络或别的地方得到一个 `.class`，用自定义 ClassLoader 加载并解析它。而不需要像 C++ 一样必须在编译/链接时就知道所有符号。
 
-------
-
-## 4. 总结：解析（Resolution）和动态链接是什么？
+## 8. 总结：解析（Resolution）和动态链接是什么？
 
 1. **解析（Resolution）**
    - 发生在链接阶段的一个子步骤，也可能因为**惰性解析**而在第一次使用时才执行。
@@ -260,6 +212,4 @@ Constant pool:
    - 当你执行 `java Demo` 时，JVM 在运行过程中才决定 “`System.out`” 指向哪个对象，“`println`” 调用哪个方法实现。
    - 这让 Java 可以做到**跨平台**、**延迟加载**、**反射**、**热替换**等能力。
 
-------
-
-**简而言之**：在你看到的 `getstatic #3`, `invokevirtual #1` 这些字节码指令的背后，就是“解析 + 动态链接”的过程——JVM 在 **运行时** 根据常量池里记载的符号引用，找到实际的类和方法，真正把它们链接起来，这就是“解析和动态链接”的具体含义。
+> **简而言之**：在你看到的 `getstatic #3`, `invokevirtual #1` 这些字节码指令的背后，就是“解析 + 动态链接”的过程——JVM 在 **运行时** 根据常量池里记载的符号引用，找到实际的类和方法，真正把它们链接起来，这就是“解析和动态链接”的具体含义。

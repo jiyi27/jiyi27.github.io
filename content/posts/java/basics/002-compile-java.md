@@ -6,6 +6,7 @@ categories:
 tags:
  - java
  - jvm
+ - 编译原理
 ---
 
 ## 1. java & javac
