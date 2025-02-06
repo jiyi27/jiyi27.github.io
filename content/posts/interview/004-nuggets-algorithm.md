@@ -216,3 +216,47 @@ def lengthOfLastWord(self, s):
     return length
 ```
 
+## 5. 代码输入输出调试
+
+https://kamacoder.com/problempage.php?pid=1070
+
+```python
+import sys
+
+input = sys.stdin.read
+
+def main():
+    data = input().split()  # 读取并拆分输入 (空白字符拆分
+    index = 0
+    n = int(data[index])  # 读取数组大小, 不要忘了 data 是字符数组
+    index += 1
+
+    nums = []
+    for i in range(n):
+        nums.append(int(data[index + i]))  # 读取数组的数值
+    index += n  # 读取完 nums 后移动 index
+
+    # 构建前缀和数组
+    sums = [0] * n # 初始化 不要忘了
+    sums[0] = nums[0]
+    for i in range(1, n):
+        sums[i] = sums[i - 1] + nums[i]
+
+    result = []
+    while index < len(data):
+        left = int(data[index]) # 转换为整数
+        right = int(data[index + 1])
+        index += 2  # 移动到下一个查询
+
+        if left == 0:
+            result.append(sums[right])
+        else:
+            result.append(sums[right] - sums[left - 1])
+
+    for res in result:
+        print(res)
+
+if __name__ == "__main__":
+    main()
+```
+
