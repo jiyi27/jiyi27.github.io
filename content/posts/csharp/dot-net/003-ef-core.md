@@ -6,7 +6,6 @@ categories:
 tags:
  - c#
  - .net
- - orm
 ---
 
 ## 1. Rider EF Core - Migrations
