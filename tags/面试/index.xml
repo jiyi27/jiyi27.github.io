@@ -6,7 +6,265 @@
     <description>Recent content in 面试 on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 04 Feb 2025 21:50:26 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 06 Feb 2025 23:15:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>JDBC, JPA, ORM Hibernate</title>
+      <link>https://blog.jiyi27.com/posts/interview/005-jpa-hibernate-jdbc/</link>
+      <pubDate>Thu, 06 Feb 2025 23:15:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/005-jpa-hibernate-jdbc/</guid>
+      <description>&lt;h2 id=&#34;1-jdbc-vs-mysql-connector&#34;&gt;1. JDBC vs MySQL Connector&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;JDBC（Java Database Connectivity）是 Java 访问数据库的最底层标准规范和 API。它提供了连接数据库、执行 SQL、获取结果集等核心功能。&lt;/p&gt;
+&lt;p&gt;后面提到的 MyBatis、Hibernate、Spring Data JPA 都是基于 JDBC 来执行底层 SQL 操作的。&lt;/p&gt;
+&lt;p&gt;可以直接编写 SQL、使用 &lt;code&gt;PreparedStatement&lt;/code&gt; 等 API 来执行操作。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Sometimes, I always mistake MySQL driver for JDBC, a little funny, lol. JDBC is part of JDK, which is java&amp;rsquo;s standard library, like code below&lt;code&gt;java.sql.*&lt;/code&gt; belongs to &lt;strong&gt;Java SE API&lt;/strong&gt;, which is also called &lt;strong&gt;JDBC API&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;We often add &lt;code&gt;com.mysql.cj.jdbc.Driver&lt;/code&gt; dependency to our maven project. Actually &lt;code&gt;com.mysql.cj.jdbc.Driver&lt;/code&gt; is &lt;strong&gt;MySQL Connector&lt;/strong&gt;.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-jdbc-vs-mysql-connector&#34;&gt;1. JDBC vs MySQL Connector&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;JDBC（Java Database Connectivity）是 Java 访问数据库的最底层标准规范和 API。它提供了连接数据库、执行 SQL、获取结果集等核心功能。&lt;/p&gt;
+&lt;p&gt;后面提到的 MyBatis、Hibernate、Spring Data JPA 都是基于 JDBC 来执行底层 SQL 操作的。&lt;/p&gt;
+&lt;p&gt;可以直接编写 SQL、使用 &lt;code&gt;PreparedStatement&lt;/code&gt; 等 API 来执行操作。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Sometimes, I always mistake MySQL driver for JDBC, a little funny, lol. JDBC is part of JDK, which is java&amp;rsquo;s standard library, like code below&lt;code&gt;java.sql.*&lt;/code&gt; belongs to &lt;strong&gt;Java SE API&lt;/strong&gt;, which is also called &lt;strong&gt;JDBC API&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;We often add &lt;code&gt;com.mysql.cj.jdbc.Driver&lt;/code&gt; dependency to our maven project. Actually &lt;code&gt;com.mysql.cj.jdbc.Driver&lt;/code&gt; is &lt;strong&gt;MySQL Connector&lt;/strong&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;package&lt;/span&gt; database;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// java.sql.* 属于 Java SE API, 这就是 JDBC API&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; java.sql.Connection;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; java.sql.DriverManager;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; java.sql.SQLException;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;MysqlDatabase&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Override&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; Connection &lt;span style=&#34;color:#a6e22e&#34;&gt;connect&lt;/span&gt;() &lt;span style=&#34;color:#66d9ef&#34;&gt;throws&lt;/span&gt; SQLException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// You must load jdbc driver, otherwise you will get null for connection.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Class.&lt;span style=&#34;color:#a6e22e&#34;&gt;forName&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;com.mysql.cj.jdbc.Driver&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; DriverManager.&lt;span style=&#34;color:#a6e22e&#34;&gt;getConnection&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;user&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;password&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/02/79dc888c7c722f47ead990dff67223ee.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;As shown above &lt;code&gt;java.sql.SQLException&lt;/code&gt; and &lt;code&gt;java.sql.Connection&lt;/code&gt; are all belong to &lt;code&gt;java.sql.*&lt;/code&gt; which is part of &lt;strong&gt;java se api&lt;/strong&gt;, namely, &lt;strong&gt;JDBC&lt;/strong&gt;. So we don&amp;rsquo;t commucate with MySQL database with &lt;strong&gt;MySQL Connector&lt;/strong&gt; directly, actually, we conmmucate with MySQL(retrive &amp;amp; insert data) by &amp;ldquo;talking&amp;rdquo; to JDBC API, then JDBC API commucate with &lt;strong&gt;MySQL Connector&lt;/strong&gt;, and MySQL Connector commucate with MySQL database.&lt;/p&gt;
+&lt;h2 id=&#34;2-jpa-是什么&#34;&gt;2. JPA 是什么&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;JPA（Java Persistence API）&lt;/strong&gt;：它是 Java 官方定义的一个&lt;strong&gt;ORM 规范（或接口标准）&lt;/strong&gt;，而不是一个具体的实现。换言之，JPA 相当于规定了“如何将 Java 对象与数据库表映射和交互”的一套接口和注解体系，但它自己并不提供具体的底层代码去完成这件事。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;JPA 的实现&lt;/strong&gt;：要想让 JPA 的接口和注解真的“跑起来”，就需要有一个具体的实现类库（provider）。常见的 JPA 实现有：
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Hibernate&lt;/strong&gt;（最常见、最流行的 JPA 实现）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;OpenJPA&lt;/strong&gt;（Apache 的实现）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Spring Data JPA 与 JPA&lt;/strong&gt;：Spring Data JPA 不是一个独立的 JPA 实现，而是对 JPA 规范进行了一层更高级的封装，让我们用更少的代码、更简单的配置，就能完成数据库的 CRUD 操作。但它在底层依赖的仍然是这些“JPA 实现”之一（最常见就是 Hibernate）。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;3-mybatis&#34;&gt;3. MyBatis&lt;/h2&gt;
+&lt;p&gt;MyBatis 是一款半 ORM / 数据映射（Data Mapper）框架，与传统的 JDBC 相比更灵活且简化了数据访问的过程，但不像 Hibernate 那样做全量的实体与表的自动映射。&lt;/p&gt;
+&lt;p&gt;本质上还是你在 XML 或注解中编写 SQL，然后 MyBatis 帮你做参数注入、结果映射等工作。&lt;/p&gt;
+&lt;p&gt;MyBatis 并不实现 JPA 规范，因此 Spring Data JPA 不会用 MyBatis 作为 JPA provider。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注意 JPA 和 Spring JPA 并不是一个东西&lt;/p&gt;
+&lt;p&gt;Under the hood, Hibernate and most other providers for JPA write SQL and use JDBC API to read and write from and to the DB. Simply think, JPA is a Java ORM, and Hibernate implements JPA using JDBC API. &lt;a href=&#34;https://stackoverflow.com/questions/11881548/jpa-or-jdbc-how-are-they-different&#34;&gt;java - JPA or JDBC, how are they different? - Stack Overflow&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;4-hibernatemybatisspring-data-jpa-和-jpa-的对比&#34;&gt;4. Hibernate、MyBatis、Spring Data JPA 和 JPA 的对比&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Hibernate&lt;/strong&gt;：既是单独的 ORM 框架，也是最常用的 JPA 实现之一。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;MyBatis&lt;/strong&gt;：非 JPA 实现，写 SQL 较多，灵活。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Spring Data JPA&lt;/strong&gt;：基于 JPA 规范之上的高级抽象和封装，底层还要用 Hibernate/EclipseLink 来执行。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;JPA&lt;/strong&gt;：只是一套接口规范，没有实际功能实现，必须搭配“实现”才能使用。&lt;/p&gt;
+&lt;h2 id=&#34;5-哪些属于接口哪些属于注解&#34;&gt;5. 哪些属于“接口”？哪些属于“注解”？&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;接口/类&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;JPA 规范：&lt;code&gt;EntityManager&lt;/code&gt;, &lt;code&gt;EntityManagerFactory&lt;/code&gt;, &lt;code&gt;Query&lt;/code&gt; 等&lt;/li&gt;
+&lt;li&gt;Hibernate：&lt;code&gt;Session&lt;/code&gt;, &lt;code&gt;SessionFactory&lt;/code&gt;, &lt;code&gt;Configuration&lt;/code&gt; 等&lt;/li&gt;
+&lt;li&gt;Spring Data JPA：&lt;code&gt;JpaRepository&lt;/code&gt;, &lt;code&gt;CrudRepository&lt;/code&gt;, &lt;code&gt;JpaSpecificationExecutor&lt;/code&gt; 等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;上述这些通常是你在写业务层（或持久层）代码时 &lt;strong&gt;“调用”&lt;/strong&gt; 或 &lt;strong&gt;“继承”&lt;/strong&gt; 的对象/接口。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;注解&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;JPA 规范注解：&lt;code&gt;@Entity&lt;/code&gt;, &lt;code&gt;@Table&lt;/code&gt;, &lt;code&gt;@Id&lt;/code&gt;, &lt;code&gt;@Column&lt;/code&gt;, &lt;code&gt;@OneToMany&lt;/code&gt; 等&lt;/li&gt;
+&lt;li&gt;Hibernate 专有注解：&lt;code&gt;@Type&lt;/code&gt;, &lt;code&gt;@GenericGenerator&lt;/code&gt;, &lt;code&gt;@BatchSize&lt;/code&gt; 等&lt;/li&gt;
+&lt;li&gt;Spring Data JPA 常用注解：&lt;code&gt;@EnableJpaRepositories&lt;/code&gt;, &lt;code&gt;@Query&lt;/code&gt;, &lt;code&gt;@Modifying&lt;/code&gt; 等（当然，Spring 的 &lt;code&gt;@Autowired&lt;/code&gt;, &lt;code&gt;@Repository&lt;/code&gt; 等也经常配合使用）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;JPA 规范注解通常比较通用，例如 &lt;code&gt;@Entity&lt;/code&gt;、&lt;code&gt;@Id&lt;/code&gt;、&lt;code&gt;@Column&lt;/code&gt;、&lt;code&gt;@GeneratedValue&lt;/code&gt;、&lt;code&gt;@NamedQuery&lt;/code&gt; 等，你在任何 JPA 实现（Hibernate、EclipseLink、OpenJPA）里都能用。&lt;/p&gt;
+&lt;p&gt;Hibernate 专有注解通常会涉及自定义类型、缓存策略、特定的主键生成策略等。&lt;/p&gt;
+&lt;p&gt;Spring Data JPA 的注解大多是为了让 Spring 容器去识别 Repository 接口或方法（比如 &lt;code&gt;@Query&lt;/code&gt;），以及通过“约定优于配置”来帮助自动生成实现类。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;6-总结&#34;&gt;6. 总结&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;JPA&lt;/strong&gt;：一套接口和注解标准（&lt;code&gt;javax.persistence&lt;/code&gt; 或 &lt;code&gt;jakarta.persistence&lt;/code&gt;），没有真正的实现，需要一个“JPA Provider”去执行实际的数据库交互。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Hibernate&lt;/strong&gt;：最常见的 JPA 实现（&lt;code&gt;org.hibernate.*&lt;/code&gt;）。既能实现 JPA 规范，也提供很多额外的高级特性（缓存、批量处理、自定义类型等）。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Spring Data JPA&lt;/strong&gt;：在 JPA 之上做了进一步的封装（&lt;code&gt;org.springframework.data.jpa.*&lt;/code&gt;），通过 Repository 接口、方法命名约定、自动生成实现等方式，极大减少了样板代码。但底层依旧要依赖 Hibernate/EclipseLink 等某种 JPA 实现来真正操作数据库。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;如何区分&lt;/strong&gt;：&lt;strong&gt;看包名&lt;/strong&gt;是最直接、最有效的方式；然后再看所用的注解或接口是否是规范性（JPA 通用）还是实现方（Hibernate / Spring Data）提供的扩展。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;示例&lt;/strong&gt;（标准 JPA 实体）：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; javax.persistence.Entity;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; javax.persistence.Table;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; javax.persistence.Id;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; javax.persistence.GeneratedValue;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; javax.persistence.GenerationType;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; javax.persistence.Column;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Entity&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Table&lt;/span&gt;(name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;users&amp;#34;&lt;/span&gt;)  &lt;span style=&#34;color:#75715e&#34;&gt;// 标准的 JPA 注解&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;User&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Id&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@GeneratedValue&lt;/span&gt;(strategy &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; GenerationType.&lt;span style=&#34;color:#a6e22e&#34;&gt;IDENTITY&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; Long id;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Column&lt;/span&gt;(name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;username&amp;#34;&lt;/span&gt;, nullable &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; String username;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// ... getters/setters ...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;特点&lt;/strong&gt;：所有注解都来自 &lt;code&gt;javax.persistence.*&lt;/code&gt;，这是纯粹的 JPA 规范写法。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;示例&lt;/strong&gt;（Spring Data JPA repository）：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; org.springframework.data.jpa.repository.JpaRepository;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; org.springframework.data.jpa.repository.Query;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;UserRepository&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;extends&lt;/span&gt; JpaRepository&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User, Long&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 基于方法名解析，自动生成 SQL&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    User &lt;span style=&#34;color:#a6e22e&#34;&gt;findByUsername&lt;/span&gt;(String username);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 自定义查询&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Query&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SELECT u FROM User u WHERE u.username = ?1 AND u.active = true&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    User &lt;span style=&#34;color:#a6e22e&#34;&gt;findActiveUserByUsername&lt;/span&gt;(String username);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;特点&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;继承了 &lt;code&gt;JpaRepository&lt;/code&gt;（属于 &lt;code&gt;org.springframework.data.jpa.repository&lt;/code&gt; 包）&lt;/li&gt;
+&lt;li&gt;使用了 &lt;code&gt;@Query&lt;/code&gt;（也在同一个包里）&lt;/li&gt;
+&lt;li&gt;一般和 &lt;code&gt;@EnableJpaRepositories&lt;/code&gt; 联合使用，Spring 会自动生成实现类并注入到容器中。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;示例&lt;/strong&gt;（Hibernate 专有的注解）：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; org.hibernate.annotations.GenericGenerator;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; org.hibernate.annotations.Type;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Entity&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Table&lt;/span&gt;(name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;products&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Product&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Id&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@GenericGenerator&lt;/span&gt;(name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;uuid-gen&amp;#34;&lt;/span&gt;, strategy &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;uuid2&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@GeneratedValue&lt;/span&gt;(generator &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;uuid-gen&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; String id;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Type&lt;/span&gt;(type &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;org.hibernate.type.TextType&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; String description;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// ...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;特点&lt;/strong&gt;：虽然它依旧是一个 JPA 实体类，但使用了 &lt;code&gt;org.hibernate.annotations.*&lt;/code&gt; 下的注解（&lt;code&gt;@GenericGenerator&lt;/code&gt;, &lt;code&gt;@Type&lt;/code&gt; 等），这些就是 &lt;strong&gt;Hibernate 专有&lt;/strong&gt; 的功能。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;因此，当你看到一个类或者注解时，先看一下它是从哪个包引入（import）的，基本就能确定它属于 JPA、Hibernate，还是 Spring Data JPA。这样也就能搞清楚某段代码是用来做“通用的持久化管理”（JPA），还是用来做“特定实现的高级特性”（Hibernate），亦或是“自动生成 Repository 接口实现”（Spring Data JPA）了。&lt;/p&gt;
+&lt;h2 id=&#34;7-疑问&#34;&gt;7. 疑问&lt;/h2&gt;
+&lt;h3 id=&#34;71-是否可以混用不同注解&#34;&gt;7.1. 是否可以“混用”不同注解？&lt;/h3&gt;
+&lt;p&gt;还有个疑问, 就是这些来自 JPA 的注解, Spring JPA 的注解, 以及 Hibernate 的注解 和 他们的接口, 他们是可以互通的吗?  比如一个类或者一个方法上可以使用多个来自不同的注解?&lt;/p&gt;
+&lt;p&gt;在实际开发中，&lt;strong&gt;JPA、Hibernate、Spring Data JPA&lt;/strong&gt; 这三者之间的注解、接口确实可能会“混用”在同一个实体类或 Repository 接口里。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;JPA 注解&lt;/strong&gt;：最基础、最通用，如 &lt;code&gt;@Entity&lt;/code&gt;、&lt;code&gt;@Table&lt;/code&gt;、&lt;code&gt;@Id&lt;/code&gt; 等，任何 JPA Provider（Hibernate、EclipseLink 等）都能识别。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Hibernate 注解&lt;/strong&gt;：在实现 JPA 规范的同时，Hibernate 提供了一些特有的增强功能注解，比如 &lt;code&gt;@Type&lt;/code&gt;, &lt;code&gt;@GenericGenerator&lt;/code&gt;, &lt;code&gt;@BatchSize&lt;/code&gt; 等。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Spring Data JPA 注解&lt;/strong&gt;：主要在 Repository 层（如 &lt;code&gt;@Query&lt;/code&gt;, &lt;code&gt;@Modifying&lt;/code&gt;）或配置层（如 &lt;code&gt;@EnableJpaRepositories&lt;/code&gt;），用来配合 Spring 生态简化 CRUD。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; javax.persistence.Entity;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; javax.persistence.Table;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; javax.persistence.Id;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; org.hibernate.annotations.GenericGenerator;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Entity&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Table&lt;/span&gt;(name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;products&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Product&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Id&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@GenericGenerator&lt;/span&gt;(name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;uuid-gen&amp;#34;&lt;/span&gt;, strategy &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;uuid2&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// ↑ 这里是 Hibernate 特有的主键生成策略&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; String id;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 其他字段省略 ...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;@Entity&lt;/code&gt;、&lt;code&gt;@Table&lt;/code&gt; 属于 &lt;strong&gt;JPA 标准&lt;/strong&gt;，告诉任何 JPA Provider“这是一个实体”。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;@GenericGenerator&lt;/code&gt; 属于 &lt;strong&gt;Hibernate&lt;/strong&gt; 专有，用来指定主键生成策略。&lt;/p&gt;
+&lt;p&gt;这两种注解可以在同一个类中共存，&lt;strong&gt;前提是&lt;/strong&gt;，底层你的 JPA Provider 选择的是 Hibernate，那么它能理解并执行 &lt;code&gt;@GenericGenerator&lt;/code&gt; 的逻辑。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;注意:&lt;/strong&gt; 如果将来你&lt;strong&gt;切换&lt;/strong&gt;到 EclipseLink、OpenJPA 做底层实现，JPA 注解依然通用，但 &lt;code&gt;@GenericGenerator&lt;/code&gt; 这种 &lt;strong&gt;Hibernate 专属&lt;/strong&gt; 的功能就不会被新的实现识别。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;72-spring-data-jpa-的注解能否与-jpa--hibernate-注解并存&#34;&gt;7.2. Spring Data JPA 的注解能否与 JPA / Hibernate 注解并存？&lt;/h3&gt;
+&lt;p&gt;也可以。一般来说，&lt;strong&gt;Spring Data JPA 的注解&lt;/strong&gt;（如 &lt;code&gt;@Query&lt;/code&gt;, &lt;code&gt;@Modifying&lt;/code&gt; 等）是用在 &lt;strong&gt;Repository 接口或方法上&lt;/strong&gt;，跟实体类注解（JPA/Hibernate）其实处于不同的“层次”：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 实体层（JPA 或 Hibernate 注解）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Entity&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Table&lt;/span&gt;(name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;users&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;User&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;   &lt;span style=&#34;color:#a6e22e&#34;&gt;@Id&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;   &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; Long id;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;   &lt;span style=&#34;color:#75715e&#34;&gt;// ...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Repository 层（Spring Data JPA 注解）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;UserRepository&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;extends&lt;/span&gt; JpaRepository&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User, Long&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 方法名解析&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    User &lt;span style=&#34;color:#a6e22e&#34;&gt;findByUsername&lt;/span&gt;(String username);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 自定义查询&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Query&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SELECT u FROM User u WHERE u.username = ?1&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    User &lt;span style=&#34;color:#a6e22e&#34;&gt;findUserByUsername&lt;/span&gt;(String username);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Modifying&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Query&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;UPDATE User u SET u.active = false WHERE u.username = ?1&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;deactivateUser&lt;/span&gt;(String username);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这样一来，&lt;strong&gt;实体类上&lt;/strong&gt;的注解大多属于 &lt;strong&gt;JPA 规范&lt;/strong&gt;（可能也带一点 Hibernate 特有的注解），&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Repository 上&lt;/strong&gt;的注解属于 &lt;strong&gt;Spring Data JPA&lt;/strong&gt;，它用来告诉 Spring 如何自动生成具体的持久化方法、或者如何执行自定义查询。&lt;/p&gt;
+&lt;p&gt;有时也会出现这种场景，比如你写了一个字段，既有 &lt;code&gt;@Column&lt;/code&gt;（JPA 注解）指定数据库列信息，又有 &lt;code&gt;@Type&lt;/code&gt;（Hibernate 注解）指定特定的映射类型，这在底层只要由 Hibernate 来运行，也是&lt;strong&gt;允许&lt;/strong&gt;的。不同注解解析不同的功能点，大多情况下并不会互相冲突，&lt;strong&gt;只要你明白这些注解各自负责什么即可&lt;/strong&gt;。&lt;/p&gt;
+&lt;h3 id=&#34;73-这些注解接口互通的实质含义&#34;&gt;7.3. 这些注解、接口“互通”的实质含义&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;JPA 注解&lt;/strong&gt;本质上是“通用协议”，告诉所有符合 JPA 规范的实现如何映射实体。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Hibernate 注解&lt;/strong&gt;则是对这个“通用协议”的一个&lt;strong&gt;专有扩展&lt;/strong&gt;，只有在使用 Hibernate 做 Provider 时，Hibernate 自己才能理解并执行；换成其他实现，就会被忽略或导致异常（如果该注解是强绑定特性）。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Spring Data JPA 注解&lt;/strong&gt;主要是为了&lt;strong&gt;简化业务层&lt;/strong&gt;或&lt;strong&gt;简化配置&lt;/strong&gt;，与实体映射本身关系不大，但它的核心还是依赖 JPA（大多数情况下依赖 Hibernate）来真正执行数据库操作。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;因此，从技术栈角度看，它们确实是在同一个“生态体系”下工作：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Spring Data JPA 提供了便捷的 Repository 接口&lt;/li&gt;
+&lt;li&gt;底层还是要通过 JPA Provider（通常是 Hibernate）进行实体到数据库的操作&lt;/li&gt;
+&lt;li&gt;JPA Provider 要么只认通用 JPA 注解，要么也会识别自己专有的扩展注解&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;他们“互通”不代表注解可以&lt;strong&gt;替代&lt;/strong&gt;对方，而是指可以在同一个项目中共存、互相配合。例如：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;你用 &lt;strong&gt;JPA&lt;/strong&gt; 注解（&lt;code&gt;@Entity&lt;/code&gt;、&lt;code&gt;@Id&lt;/code&gt; 等）来定义实体的基本映射&lt;/li&gt;
+&lt;li&gt;需要 &lt;strong&gt;Hibernate&lt;/strong&gt; 的特殊能力时，再额外加一些 &lt;code&gt;@org.hibernate.annotations.*&lt;/code&gt; 的注解&lt;/li&gt;
+&lt;li&gt;在 &lt;strong&gt;Spring Data JPA&lt;/strong&gt; 里的 Repository 层，用 &lt;code&gt;@Query&lt;/code&gt;, &lt;code&gt;@Modifying&lt;/code&gt; 等注解来实现特定的数据库操作逻辑&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;74-需要注意的点&#34;&gt;7.4. 需要注意的点&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;避免使用过多专有注解&lt;/strong&gt;
+如果你希望自己的代码尽量“可移植”，就尽量只用 JPA 标准注解。&lt;strong&gt;Hibernate 专有&lt;/strong&gt;的注解能解决某些高级场景，但会让你的代码更依赖 Hibernate。如果项目没有强烈需要，就不要过度使用。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;冲突或覆盖问题&lt;/strong&gt;
+大多数情况下，JPA 和 Hibernate 注解不会冲突，因为Hibernate 本身实现了JPA，而且两者的注解大多做的是不同维度的事情。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;例如 &lt;code&gt;@Column(name=&amp;quot;xxx&amp;quot;)&lt;/code&gt; 来定义列名是 JPA 基础映射；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@Type(type=&amp;quot;...&amp;quot;)&lt;/code&gt; 是 Hibernate 特有的自定义类型映射。
+只有在出现“同一个配置由多个注解分别定义且含义冲突”时，才可能导致奇怪的问题。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Spring Data JPA 注解主要针对 Repository&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Spring Data JPA 的 &lt;code&gt;@Query&lt;/code&gt;, &lt;code&gt;@Modifying&lt;/code&gt; 等注解是给&lt;strong&gt;接口方法&lt;/strong&gt;用的；&lt;/li&gt;
+&lt;li&gt;像 &lt;code&gt;@EnableJpaRepositories&lt;/code&gt; 是给&lt;strong&gt;配置类&lt;/strong&gt;或&lt;strong&gt;启动类&lt;/strong&gt;用的；&lt;/li&gt;
+&lt;li&gt;它们基本不会跟 JPA/Hibernate 注解写在同一个地方，所以不太会有冲突问题。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;项目结构与分层&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;你的 &lt;strong&gt;实体类&lt;/strong&gt;（domain/model 层）可能主要写 &lt;strong&gt;JPA&lt;/strong&gt; + &lt;strong&gt;Hibernate&lt;/strong&gt;(可选)注解；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;数据访问层&lt;/strong&gt;（repository/dao 层）则使用 &lt;strong&gt;Spring Data JPA&lt;/strong&gt; 的接口和注解；&lt;/li&gt;
+&lt;li&gt;三者各司其职，互相协作。&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
     <item>
       <title>JVM 内存结构 两种分类方式</title>
       <link>https://blog.jiyi27.com/posts/java/basics/003-jvm-memory/</link>
@@ -595,6 +853,45 @@ Constant pool:
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;:
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;break&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; length
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;5-代码输入输出调试&#34;&gt;5. 代码输入输出调试&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://kamacoder.com/problempage.php?pid=1070&#34;&gt;https://kamacoder.com/problempage.php?pid=1070&lt;/a&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; sys
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;input &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sys&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;stdin&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;read
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;():
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    data &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; input()&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;split()  &lt;span style=&#34;color:#75715e&#34;&gt;# 读取并拆分输入 (空白字符拆分&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    index &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    n &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; int(data[index])  &lt;span style=&#34;color:#75715e&#34;&gt;# 读取数组大小, 不要忘了 data 是字符数组&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    index &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    nums &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; []
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(n):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        nums&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;append(int(data[index &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; i]))  &lt;span style=&#34;color:#75715e&#34;&gt;# 读取数组的数值&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    index &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; n  &lt;span style=&#34;color:#75715e&#34;&gt;# 读取完 nums 后移动 index&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 构建前缀和数组&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    sums &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; n &lt;span style=&#34;color:#75715e&#34;&gt;# 初始化 不要忘了&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    sums[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; nums[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, n):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        sums[i] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; sums[i &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; nums[i]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; []
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; index &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; len(data):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        left &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; int(data[index]) &lt;span style=&#34;color:#75715e&#34;&gt;# 转换为整数&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        right &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; int(data[index &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;])
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        index &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;# 移动到下一个查询&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; left &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            result&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;append(sums[right])
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            result&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;append(sums[right] &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; sums[left &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;])
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; res &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; result:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        print(res)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; __name__ &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;__main__&amp;#34;&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    main()
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
     </item>
     
