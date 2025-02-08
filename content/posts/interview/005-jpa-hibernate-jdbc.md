@@ -50,6 +50,16 @@ As shown above `java.sql.SQLException` and `java.sql.Connection` are all belong 
    - OpenJPA（Apache 的实现）
 3. Spring Data JPA 与 JPA：Spring Data JPA 不是一个独立的 JPA 实现，而是对 JPA 规范进行了一层更高级的封装，让我们用更少的代码、更简单的配置，就能完成数据库的 CRUD 操作。但它在底层依赖的仍然是这些“JPA 实现”之一（最常见就是 Hibernate）
 
+## 3. Spring Data JPA + JPA + Hibernate 各司其职
+
+| 组件                | 主要职责                                   | 作用层                            |
+| ------------------- | ------------------------------------------ | --------------------------------- |
+| **JPA**             | 定义标准 API，声明 Entity、关系映射        | **Model 层**（数据对象定义）      |
+| **Hibernate**       | 实现 JPA 规范，处理 SQL 生成、缓存、事务等 | **持久化层**（数据库交互底层）    |
+| **Spring Data JPA** | 提供 `JpaRepository` 等工具，简化 DAO 访问 | **Repository 层**（数据访问接口） |
+
+**JPA（Model 层）：**
+
 ```java
 import jakarta.persistence.*;
 
@@ -70,23 +80,39 @@ public class User {
 }
 ```
 
-这里 `@Entity` 和 `@Table` 是 JPA 规范的一部分，它们只是 **告诉 JPA Provider（比如 Hibernate）**，这个类需要映射到数据库表。但真正解析这些注解并生成 SQL 语句的是 Hibernate。
+> - `@Entity`：标明该类是 JPA 实体
+> - `@Table(name = "users")`：指定数据库表名
+> - `@Id`、`@GeneratedValue`：定义主键及其生成策略
+> - `@Column`：指定字段约束
+>
+> 这里 `@Entity` 和 `@Table` 是 JPA 规范的一部分，它们只是 **告诉 JPA Provider（比如 Hibernate）**，这个类需要映射到数据库表。但真正解析这些注解并生成 SQL 语句的是 Hibernate。你写的是 JPA 代码，但实际 SQL 是 Hibernate 生成的, **JPA 只定义规则，Hibernate 负责执行。**
 
-Hibernate 在运行时生成的 SQL:
+**Spring Data JPA（Repository 层）**
 
-```sql
-CREATE TABLE users (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL
-);
+Spring Data JPA 让我们可以不写 SQL 也能操作数据库：
+
+```java
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByEmail(String email);
+}
 ```
 
-你写的是 JPA 代码，但实际 SQL 是 Hibernate 生成的。**JPA 只定义规则，Hibernate 负责执行。**
+> - `JpaRepository<User, Long>`：提供了 CRUD 方法
+>- `findByEmail(String email)`：Spring Data JPA 会自动生成查询 SQL
 
-> 所有注解都来自 `javax.persistence.*`, 这是纯粹的 JPA 规范写法
+**Hibernate（持久化层）**
 
-## 3. Spring Data JPA + JPA + Hibernate
+Hibernate 作为 JPA Provider，在后台实际执行 SQL 语句, 当我们调用 `userRepository.findByEmail("test@example.com")` 时，Hibernate 会生成 SQL 查询：
+
+```java
+SELECT * FROM users WHERE email = 'test@example.com' LIMIT 1;
+```
+
+
+## 4. Spring Data JPA + JPA + Hibernate
 
 ```java
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -175,74 +201,7 @@ Hibernate 作为 JPA Provider，接手 `EntityManager` 提供的查询请求，�
 
 💡 **最终的 SQL 查询是 Hibernate 负责执行的**，Spring Data JPA 和 JPA 只是提供 API 和接口，真正的数据库操作全靠 Hibernate。
 
-## 4. MyBatis
+## 5. MyBatis
 
-MyBatis 是一款半 ORM / 数据映射（Data Mapper）框架，与传统的 JDBC 相比更灵活且简化了数据访问的过程，但不像 Hibernate 那样做全量的实体与表的自动映射。
-
-本质上还是你在 XML 或注解中编写 SQL，然后 MyBatis 帮你做参数注入、结果映射等工作。
-
-MyBatis 并不实现 JPA 规范，因此 Spring Data JPA 不会用 MyBatis 作为 JPA provider。
-
-> 注意 JPA 和 Spring JPA 并不是一个东西
->
-> Under the hood, Hibernate and most other providers for JPA write SQL and use JDBC API to read and write from and to the DB. Simply think, JPA is a Java ORM, and Hibernate implements JPA using JDBC API. [java - JPA or JDBC, how are they different? - Stack Overflow](https://stackoverflow.com/questions/11881548/jpa-or-jdbc-how-are-they-different)
-
-## 5. 总结
-
-| 组件                | 主要职责                                   | 作用层                            |
-| ------------------- | ------------------------------------------ | --------------------------------- |
-| **JPA**             | 定义标准 API，声明 Entity、关系映射        | **Model 层**（数据对象定义）      |
-| **Hibernate**       | 实现 JPA 规范，处理 SQL 生成、缓存、事务等 | **持久化层**（数据库交互底层）    |
-| **Spring Data JPA** | 提供 `JpaRepository` 等工具，简化 DAO 访问 | **Repository 层**（数据访问接口） |
-
-**JPA（Model 层）：**
-
-```java
-import jakarta.persistence.*;
-
-@Entity
-@Table(name = "users")
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
-    private String name;
-
-    @Column(unique = true, nullable = false)
-    private String email;
-
-    // Getters and Setters...
-}
-```
-
-> - `@Entity`：标明该类是 JPA 实体
-> - `@Table(name = "users")`：指定数据库表名
-> - `@Id`、`@GeneratedValue`：定义主键及其生成策略
-> - `@Column`：指定字段约束
-
-**Spring Data JPA（Repository 层）**
-
-Spring Data JPA 让我们可以不写 SQL 也能操作数据库：
-
-```java
-import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.Optional;
-
-public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByEmail(String email);
-}
-```
-
-> - `JpaRepository<User, Long>`：提供了 CRUD 方法
->- `findByEmail(String email)`：Spring Data JPA 会自动生成查询 SQL
-
-**Hibernate（持久化层）**
-
-Hibernate 作为 JPA Provider，在后台实际执行 SQL 语句, 当我们调用 `userRepository.findByEmail("test@example.com")` 时，Hibernate 会生成 SQL 查询：
-
-```java
-SELECT * FROM users WHERE email = 'test@example.com' LIMIT 1;
-```
+MyBatis 是一款半 ORM / 数据映射（Data Mapper）框架，与传统的 JDBC 相比更灵活且简化了数据访问的过程，但不像 Hibernate 那样做全量的实体与表的自动映射。本质上还是你在 XML 或注解中编写 SQL，然后 MyBatis 帮你做参数注入、结果映射等工作。**MyBatis 并不实现 JPA 规范，因此 Spring Data JPA 不会用 MyBatis 作为 JPA provider**。
 
