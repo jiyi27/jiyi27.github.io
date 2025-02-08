@@ -223,9 +223,8 @@ https://kamacoder.com/problempage.php?pid=1070
 ```python
 import sys
 
-input = sys.stdin.read
-
 def main():
+  	input = sys.stdin.read # 读取
     data = input().split()  # 读取并拆分输入 (空白字符拆分
     index = 0
     n = int(data[index])  # 读取数组大小, 不要忘了 data 是字符数组
@@ -255,6 +254,68 @@ def main():
 
     for res in result:
         print(res)
+
+if __name__ == "__main__":
+    main()
+```
+
+## 6. 二维数组
+
+开发商购买土地: https://kamacoder.com/problempage.php?pid=1044
+
+```
+3 3
+1 2 3
+2 1 3
+1 2 3
+```
+
+```python
+def main():
+    import sys
+    
+    input = sys.stdin.read 
+    data = input().split()
+    
+    index = 0
+    n = int(data[index])
+    m = int(data[index + 1])
+    index += 2
+    
+    nums = []
+    sum = 0
+    for i in range(n):
+        row = []
+        for j in range(m):
+            num = int(data[index])
+            row.append(num)
+            index += 1 
+            sum += num
+        nums.append(row)
+    
+    horizontal = [0] * n
+    for i in range(n):
+        for j in range(m):
+            horizontal[i] += nums[i][j]
+    
+    vertical = [0] * m
+    for j in range(m):
+        for i in range(n):
+            vertical[j] += nums[i][j]
+            
+    result = float('inf')
+    horizontalCut = 0
+    for i in range(n):
+        horizontalCut += horizontal[i]
+        # horizontalCut - (sum - horizontalCut) = 两个区域的差 取绝对值
+        result = min(result, abs(sum - 2 * horizontalCut))
+    
+    verticalCut = 0
+    for j in range(m):
+        verticalCut += vertical[j]
+        result = min(result, abs(sum - 2 * verticalCut))
+        
+    print(result)
 
 if __name__ == "__main__":
     main()
