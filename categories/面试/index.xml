@@ -57,6 +57,34 @@
 &lt;/li&gt;
 &lt;li&gt;Spring Data JPA 与 JPA：Spring Data JPA 不是一个独立的 JPA 实现，而是对 JPA 规范进行了一层更高级的封装，让我们用更少的代码、更简单的配置，就能完成数据库的 CRUD 操作。但它在底层依赖的仍然是这些“JPA 实现”之一（最常见就是 Hibernate）&lt;/li&gt;
 &lt;/ol&gt;
+&lt;h2 id=&#34;3-spring-data-jpa--jpa--hibernate-各司其职&#34;&gt;3. Spring Data JPA + JPA + Hibernate 各司其职&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;组件&lt;/th&gt;
+          &lt;th&gt;主要职责&lt;/th&gt;
+          &lt;th&gt;作用层&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;JPA&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;定义标准 API，声明 Entity、关系映射&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;Model 层&lt;/strong&gt;（数据对象定义）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Hibernate&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;实现 JPA 规范，处理 SQL 生成、缓存、事务等&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;持久化层&lt;/strong&gt;（数据库交互底层）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;Spring Data JPA&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;提供 &lt;code&gt;JpaRepository&lt;/code&gt; 等工具，简化 DAO 访问&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;Repository 层&lt;/strong&gt;（数据访问接口）&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;JPA（Model 层）：&lt;/strong&gt;&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; jakarta.persistence.*;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Entity&lt;/span&gt;
@@ -74,18 +102,33 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// Getters and Setters...&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这里 &lt;code&gt;@Entity&lt;/code&gt; 和 &lt;code&gt;@Table&lt;/code&gt; 是 JPA 规范的一部分，它们只是 &lt;strong&gt;告诉 JPA Provider（比如 Hibernate）&lt;/strong&gt;，这个类需要映射到数据库表。但真正解析这些注解并生成 SQL 语句的是 Hibernate。&lt;/p&gt;
-&lt;p&gt;Hibernate 在运行时生成的 SQL:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; users (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id BIGINT AUTO_INCREMENT &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    name VARCHAR(&lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    email VARCHAR(&lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;你写的是 JPA 代码，但实际 SQL 是 Hibernate 生成的。&lt;strong&gt;JPA 只定义规则，Hibernate 负责执行。&lt;/strong&gt;&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;所有注解都来自 &lt;code&gt;javax.persistence.*&lt;/code&gt;, 这是纯粹的 JPA 规范写法&lt;/p&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@Entity&lt;/code&gt;：标明该类是 JPA 实体&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@Table(name = &amp;quot;users&amp;quot;)&lt;/code&gt;：指定数据库表名&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@Id&lt;/code&gt;、&lt;code&gt;@GeneratedValue&lt;/code&gt;：定义主键及其生成策略&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@Column&lt;/code&gt;：指定字段约束&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这里 &lt;code&gt;@Entity&lt;/code&gt; 和 &lt;code&gt;@Table&lt;/code&gt; 是 JPA 规范的一部分，它们只是 &lt;strong&gt;告诉 JPA Provider（比如 Hibernate）&lt;/strong&gt;，这个类需要映射到数据库表。但真正解析这些注解并生成 SQL 语句的是 Hibernate。你写的是 JPA 代码，但实际 SQL 是 Hibernate 生成的, &lt;strong&gt;JPA 只定义规则，Hibernate 负责执行。&lt;/strong&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&#34;3-spring-data-jpa--jpa--hibernate&#34;&gt;3. Spring Data JPA + JPA + Hibernate&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Spring Data JPA（Repository 层）&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Spring Data JPA 让我们可以不写 SQL 也能操作数据库：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; org.springframework.data.jpa.repository.JpaRepository;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; java.util.Optional;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;UserRepository&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;extends&lt;/span&gt; JpaRepository&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User, Long&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Optional&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;findByEmail&lt;/span&gt;(String email);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;JpaRepository&amp;lt;User, Long&amp;gt;&lt;/code&gt;：提供了 CRUD 方法&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;findByEmail(String email)&lt;/code&gt;：Spring Data JPA 会自动生成查询 SQL&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Hibernate（持久化层）&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Hibernate 作为 JPA Provider，在后台实际执行 SQL 语句, 当我们调用 &lt;code&gt;userRepository.findByEmail(&amp;quot;test@example.com&amp;quot;)&lt;/code&gt; 时，Hibernate 会生成 SQL 查询：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;SELECT &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; FROM users WHERE email &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;test&lt;span style=&#34;color:#a6e22e&#34;&gt;@example.com&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt; LIMIT 1;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;4-spring-data-jpa--jpa--hibernate&#34;&gt;4. Spring Data JPA + JPA + Hibernate&lt;/h2&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; org.springframework.data.jpa.repository.JpaRepository;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; java.util.Optional;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
@@ -185,85 +228,9 @@
 &lt;li&gt;Hibernate 作为 JPA Provider，负责执行 SQL，并转换结果&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;💡 &lt;strong&gt;最终的 SQL 查询是 Hibernate 负责执行的&lt;/strong&gt;，Spring Data JPA 和 JPA 只是提供 API 和接口，真正的数据库操作全靠 Hibernate。&lt;/p&gt;
-&lt;h2 id=&#34;4-mybatis&#34;&gt;4. MyBatis&lt;/h2&gt;
-&lt;p&gt;MyBatis 是一款半 ORM / 数据映射（Data Mapper）框架，与传统的 JDBC 相比更灵活且简化了数据访问的过程，但不像 Hibernate 那样做全量的实体与表的自动映射。&lt;/p&gt;
-&lt;p&gt;本质上还是你在 XML 或注解中编写 SQL，然后 MyBatis 帮你做参数注入、结果映射等工作。&lt;/p&gt;
-&lt;p&gt;MyBatis 并不实现 JPA 规范，因此 Spring Data JPA 不会用 MyBatis 作为 JPA provider。&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;注意 JPA 和 Spring JPA 并不是一个东西&lt;/p&gt;
-&lt;p&gt;Under the hood, Hibernate and most other providers for JPA write SQL and use JDBC API to read and write from and to the DB. Simply think, JPA is a Java ORM, and Hibernate implements JPA using JDBC API. &lt;a href=&#34;https://stackoverflow.com/questions/11881548/jpa-or-jdbc-how-are-they-different&#34;&gt;java - JPA or JDBC, how are they different? - Stack Overflow&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&#34;5-总结&#34;&gt;5. 总结&lt;/h2&gt;
-&lt;table&gt;
-  &lt;thead&gt;
-      &lt;tr&gt;
-          &lt;th&gt;组件&lt;/th&gt;
-          &lt;th&gt;主要职责&lt;/th&gt;
-          &lt;th&gt;作用层&lt;/th&gt;
-      &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;JPA&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;定义标准 API，声明 Entity、关系映射&lt;/td&gt;
-          &lt;td&gt;&lt;strong&gt;Model 层&lt;/strong&gt;（数据对象定义）&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Hibernate&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;实现 JPA 规范，处理 SQL 生成、缓存、事务等&lt;/td&gt;
-          &lt;td&gt;&lt;strong&gt;持久化层&lt;/strong&gt;（数据库交互底层）&lt;/td&gt;
-      &lt;/tr&gt;
-      &lt;tr&gt;
-          &lt;td&gt;&lt;strong&gt;Spring Data JPA&lt;/strong&gt;&lt;/td&gt;
-          &lt;td&gt;提供 &lt;code&gt;JpaRepository&lt;/code&gt; 等工具，简化 DAO 访问&lt;/td&gt;
-          &lt;td&gt;&lt;strong&gt;Repository 层&lt;/strong&gt;（数据访问接口）&lt;/td&gt;
-      &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-&lt;p&gt;&lt;strong&gt;JPA（Model 层）：&lt;/strong&gt;&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; jakarta.persistence.*;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Entity&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Table&lt;/span&gt;(name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;users&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;User&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Id&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@GeneratedValue&lt;/span&gt;(strategy &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; GenerationType.&lt;span style=&#34;color:#a6e22e&#34;&gt;IDENTITY&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; Long id;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Column&lt;/span&gt;(nullable &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; String name;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Column&lt;/span&gt;(unique &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;, nullable &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; String email;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// Getters and Setters...&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;@Entity&lt;/code&gt;：标明该类是 JPA 实体&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;@Table(name = &amp;quot;users&amp;quot;)&lt;/code&gt;：指定数据库表名&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;@Id&lt;/code&gt;、&lt;code&gt;@GeneratedValue&lt;/code&gt;：定义主键及其生成策略&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;@Column&lt;/code&gt;：指定字段约束&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;&lt;strong&gt;Spring Data JPA（Repository 层）&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;Spring Data JPA 让我们可以不写 SQL 也能操作数据库：&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; org.springframework.data.jpa.repository.JpaRepository;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; java.util.Optional;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;UserRepository&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;extends&lt;/span&gt; JpaRepository&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User, Long&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Optional&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;findByEmail&lt;/span&gt;(String email);
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;JpaRepository&amp;lt;User, Long&amp;gt;&lt;/code&gt;：提供了 CRUD 方法&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;findByEmail(String email)&lt;/code&gt;：Spring Data JPA 会自动生成查询 SQL&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/blockquote&gt;
-&lt;p&gt;&lt;strong&gt;Hibernate（持久化层）&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;Hibernate 作为 JPA Provider，在后台实际执行 SQL 语句, 当我们调用 &lt;code&gt;userRepository.findByEmail(&amp;quot;test@example.com&amp;quot;)&lt;/code&gt; 时，Hibernate 会生成 SQL 查询：&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;SELECT &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; FROM users WHERE email &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;test&lt;span style=&#34;color:#a6e22e&#34;&gt;@example.com&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt; LIMIT 1;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+&lt;h2 id=&#34;5-mybatis&#34;&gt;5. MyBatis&lt;/h2&gt;
+&lt;p&gt;MyBatis 是一款半 ORM / 数据映射（Data Mapper）框架，与传统的 JDBC 相比更灵活且简化了数据访问的过程，但不像 Hibernate 那样做全量的实体与表的自动映射。本质上还是你在 XML 或注解中编写 SQL，然后 MyBatis 帮你做参数注入、结果映射等工作。&lt;strong&gt;MyBatis 并不实现 JPA 规范，因此 Spring Data JPA 不会用 MyBatis 作为 JPA provider&lt;/strong&gt;。&lt;/p&gt;
+</content>
     </item>
     
     <item>
