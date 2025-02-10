@@ -16,9 +16,9 @@ tags:
 >
 > 可以直接编写 SQL、使用 `PreparedStatement` 等 API 来执行操作。
 
-Sometimes, I always mistake MySQL driver for JDBC, a little funny, lol. JDBC is part of JDK, which is java's standard library, like code below`java.sql.*` belongs to **Java SE API**, which is also called **JDBC API**. 
+Sometimes, I always mistake MySQL driver for JDBC, a little funny, lol. JDBC is part of JDK, which is java's standard library, like code below`java.sql.*` belongs to **Java SE API**, which is also called JDBC API. 
 
-We often add `com.mysql.cj.jdbc.Driver` dependency to our maven project. Actually `com.mysql.cj.jdbc.Driver` is **MySQL Connector**. 
+We often add `com.mysql.cj.jdbc.Driver` dependency to our maven project. Actually `com.mysql.cj.jdbc.Driver` is MySQL Connector. 
 
 ```java
 package database;
@@ -40,23 +40,23 @@ public class MysqlDatabase {
 
 ![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/02/79dc888c7c722f47ead990dff67223ee.png)
 
-As shown above `java.sql.SQLException` and `java.sql.Connection` are all belong to `java.sql.*` which is part of **java se api**, namely, **JDBC**. So we don't commucate with MySQL database with **MySQL Connector** directly, actually, we conmmucate with MySQL(retrive & insert data) by "talking" to JDBC API, then JDBC API commucate with **MySQL Connector**, and MySQL Connector commucate with MySQL database. 
+As shown above `java.sql.SQLException` and `java.sql.Connection` are all belong to `java.sql.*` which is part of java se api, namely, JDBC. So we don't commucate with MySQL database with MySQL Connector directly, actually, we conmmucate with MySQL(retrive & insert data) by "talking" to JDBC API, then JDBC API commucate with MySQL Connector, and MySQL Connector commucate with MySQL database. 
 
-## 2. JPA 是什么
+## 2. JPA (Jakarta Persistence API)
 
-1. JPA（Java Persistence API）：JPA 规定了“如何将 Java 对象与数据库表映射和交互”的**一套接口和注解体系**，但它自己并不提供具体的底层代码去完成这件事
-2. JPA 的实现：要想让 JPA 的接口和注解真的“跑起来”，就需要有一个具体的实现类库（provider）。常见的 JPA 实现有：
-   - Hibernate（最常见、最流行的 JPA 实现）
-   - OpenJPA（Apache 的实现）
-3. Spring Data JPA 与 JPA：Spring Data JPA 不是一个独立的 JPA 实现，而是对 JPA 规范进行了一层更高级的封装，让我们用更少的代码、更简单的配置，就能完成数据库的 CRUD 操作。但它在底层依赖的仍然是这些“JPA 实现”之一（最常见就是 Hibernate）
+JPA 只是一个规范, 它定义了一套接口和注解体系，比如 `@Entity`, `@Table`, `@Id`, `@Column` 等。
+
+JPA 的实现：要想让 JPA 的接口和注解真的“跑起来”，就需要有一个具体的实现类库（provider）
+- Hibernate 是 JPA 的一个实现。它负责解析 JPA 的注解，并执行具体的 ORM（对象关系映射）逻辑，比如生成 SQL 语句，管理数据库操作等。**JPA 只是定义规则，而 Hibernate 负责执行。** 如果没有 JPA 的实现，`@Entity` 等注解就没有意义
+- OpenJPA（Apache 的实现）
+
+**Spring Data JPA** 是 **基于 JPA 规范** 的一个 Spring 生态组件，它简化了 JPA 的使用，比如提供了 `JpaRepository` 让你不用手写 SQL 查询。Spring Data JPA 仍然需要 JPA Provider（比如 Hibernate） 来执行实际的数据库操作。Spring Data JPA 本身不是 ORM 框架，它只是对 JPA 进行了封装，使得 JPA 的使用更方便。
+
+> MyBatis 是一款半 ORM / 数据映射（Data Mapper）框架，与传统的 JDBC 相比更灵活且简化了数据访问的过程，但不像 Hibernate 那样做全量的实体与表的自动映射。
+>
+> **MyBatis 不是 JPA 实现**，而是另一种独立的 ORM 方案，不能用来替代 Hibernate，但可以在项目中和 JPA 共同使用（比如复杂查询用 MyBatis，简单增删改查用 JPA）。
 
 ## 3. Spring Data JPA + JPA + Hibernate 各司其职
-
-| 组件                | 主要职责                                   | 作用层                            |
-| ------------------- | ------------------------------------------ | --------------------------------- |
-| **JPA**             | 定义标准 API，声明 Entity、关系映射        | **Model 层**（数据对象定义）      |
-| **Hibernate**       | 实现 JPA 规范，处理 SQL 生成、缓存、事务等 | **持久化层**（数据库交互底层）    |
-| **Spring Data JPA** | 提供 `JpaRepository` 等工具，简化 DAO 访问 | **Repository 层**（数据访问接口） |
 
 **JPA（Model 层）：**
 
@@ -75,8 +75,6 @@ public class User {
 
     @Column(unique = true, nullable = false)
     private String email;
-
-    // Getters and Setters...
 }
 ```
 
@@ -85,7 +83,7 @@ public class User {
 > - `@Id`、`@GeneratedValue`：定义主键及其生成策略
 > - `@Column`：指定字段约束
 >
-> 这里 `@Entity` 和 `@Table` 是 JPA 规范的一部分，它们只是 **告诉 JPA Provider（比如 Hibernate）**，这个类需要映射到数据库表。但真正解析这些注解并生成 SQL 语句的是 Hibernate。你写的是 JPA 代码，但实际 SQL 是 Hibernate 生成的, **JPA 只定义规则，Hibernate 负责执行。**
+> 这里 `@Entity` 和 `@Table` 等是 JPA 规范的一部分，它们只是 **告诉 JPA Provider（比如 Hibernate）**，这个类需要映射到数据库表。但真正解析这些注解并生成 SQL 语句的是 Hibernate。你写的是 JPA 代码，但实际 SQL 是 Hibernate 生成的, **JPA 只定义规则，Hibernate 负责执行。**
 
 **Spring Data JPA（Repository 层）**
 
@@ -200,8 +198,4 @@ Hibernate 作为 JPA Provider，接手 `EntityManager` 提供的查询请求，�
 - Hibernate 作为 JPA Provider，负责执行 SQL，并转换结果
 
 💡 **最终的 SQL 查询是 Hibernate 负责执行的**，Spring Data JPA 和 JPA 只是提供 API 和接口，真正的数据库操作全靠 Hibernate。
-
-## 5. MyBatis
-
-MyBatis 是一款半 ORM / 数据映射（Data Mapper）框架，与传统的 JDBC 相比更灵活且简化了数据访问的过程，但不像 Hibernate 那样做全量的实体与表的自动映射。本质上还是你在 XML 或注解中编写 SQL，然后 MyBatis 帮你做参数注入、结果映射等工作。**MyBatis 并不实现 JPA 规范，因此 Spring Data JPA 不会用 MyBatis 作为 JPA provider**。
 

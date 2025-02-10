@@ -48,6 +48,10 @@ def sortedSquares(self, nums: List[int]) -> List[int]:
     return ans
 ```
 
+```python
+ matrix = [[0] * n for _ in range(n)]  # 初始化 n×n 矩阵
+```
+
 ## 2. 滑动窗口+暴力遍历 - 209 长度最小的子数组
 
 注意子数组的意思是从一个数组任意截取连续的一段子数组, 不是从里面任取数字然后组合, 子序列也是这个概念, 
@@ -320,4 +324,63 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
+```python
+class Solution(object):
+    def generateMatrix(self, n):
+        """
+        :type n: int
+        :rtype: List[List[int]]
+        """
+        top = left = 0
+        bottom = right = n - 1
+        square = n * n
+        result = [[0] * n for _ in range(n)]
+        
+        num = 1
+        while num <= square:
+            # 从左到右填充
+            for col in range(left, right + 1):
+                result[top][col] = num
+                num += 1
+            top += 1
+            
+            # 从上到下填充
+            for row in range(top, bottom + 1):
+                result[row][right] = num
+                num += 1
+            right -= 1
+            
+            # 从右到左填充
+            if top <= bottom:
+                for col in range(right, left - 1, -1):
+                    result[bottom][col] = num
+                    num += 1
+                bottom -= 1
+                
+            # 从下到上填充
+            if left <= right:
+                for row in range(bottom, top - 1, -1):
+                    result[row][left] = num
+                    num += 1
+                left += 1
+            
+        return result
+```
+
+我们的遍历范围在 **左闭右闭**（即 `[left, right]` 或 `[top, bottom]`），也就是说，遍历时包括起点 `start` 和终点 `end`。这就是为什么我们在 `range()` 里要 `+1` 或 `-1` 来确保终点被包含。
+
+**从右到左填充**
+
+- 这一部分填充的是 **当前最底部的行** (`bottom` 行)。
+- 但此时，`top` 已经向下移动了一格 (`top += 1`)，所以需要 **额外判断 `top <= bottom`**，确保当前 `bottom` 这行仍然 **未被填充过**。
+- 如果 `top > bottom`，说明 `bottom` 这一行已经被上面的填充覆盖了，不需要执行这一步。
+
+**从下到上填充**
+
+- 这一部分填充的是 **当前最左侧的列** (`left` 列)。
+- 但此时，`right` 已经向左移动了一格 (`right -= 1`)，所以需要 **额外判断 `left <= right`**，确保当前 `left` 这列仍然 **未被填充过**。
+- 如果 `left > right`，说明 `left` 这一列已经被右边的填充覆盖了，不需要执行这一步。
+
+在进入循环时，`top <= bottom` 和 `left <= right` 一定成立，因为矩阵初始是完整的，所以不需要额外判断。
 
