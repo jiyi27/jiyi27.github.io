@@ -9,10 +9,10 @@
     <lastBuildDate>Thu, 06 Feb 2025 23:15:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/java/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>JDBC, JPA, ORM Hibernate</title>
-      <link>https://blog.jiyi27.com/posts/interview/005-jpa-hibernate-jdbc/</link>
+      <link>https://blog.jiyi27.com/posts/interview/006-jpa-hibernate-jdbc/</link>
       <pubDate>Thu, 06 Feb 2025 23:15:20 +0000</pubDate>
       
-      <guid>https://blog.jiyi27.com/posts/interview/005-jpa-hibernate-jdbc/</guid>
+      <guid>https://blog.jiyi27.com/posts/interview/006-jpa-hibernate-jdbc/</guid>
       <description>&lt;h2 id=&#34;1-jdbc-vs-mysql-connector&#34;&gt;1. JDBC vs MySQL Connector&lt;/h2&gt;
 &lt;blockquote&gt;
 &lt;p&gt;JDBC（Java Database Connectivity）是 Java 访问数据库的最底层标准规范和 API。它提供了连接数据库、执行 SQL、获取结果集等核心功能。&lt;/p&gt;
@@ -59,7 +59,7 @@
 &lt;p&gt;&lt;strong&gt;MyBatis 不是 JPA 实现&lt;/strong&gt;，而是另一种独立的 ORM 方案，不能用来替代 Hibernate，但可以在项目中和 JPA 共同使用（比如复杂查询用 MyBatis，简单增删改查用 JPA）。&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;h2 id=&#34;3-spring-data-jpa--jpa--hibernate-各司其职&#34;&gt;3. Spring Data JPA + JPA + Hibernate 各司其职&lt;/h2&gt;
-&lt;p&gt;&lt;strong&gt;JPA（Model 层）：&lt;/strong&gt;&lt;/p&gt;
+&lt;h3 id=&#34;31-jpamodel-层&#34;&gt;3.1. JPA（Model 层）&lt;/h3&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; jakarta.persistence.*;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Entity&lt;/span&gt;
@@ -68,12 +68,9 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Id&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@GeneratedValue&lt;/span&gt;(strategy &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; GenerationType.&lt;span style=&#34;color:#a6e22e&#34;&gt;IDENTITY&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; Long id;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Column&lt;/span&gt;(nullable &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; String name;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Column&lt;/span&gt;(unique &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;, nullable &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; String email;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// nullable = false 在 Java 层面防止错误数据进入数据库，即使数据库层面有 NOT NULL 约束&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Column&lt;/span&gt;(nullable &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;, unique &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;, length &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 50)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; String username;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
 &lt;ul&gt;
@@ -84,21 +81,41 @@
 &lt;/ul&gt;
 &lt;p&gt;这里 &lt;code&gt;@Entity&lt;/code&gt; 和 &lt;code&gt;@Table&lt;/code&gt; 等是 JPA 规范的一部分，它们只是 &lt;strong&gt;告诉 JPA Provider（比如 Hibernate）&lt;/strong&gt;，这个类需要映射到数据库表。但真正解析这些注解并生成 SQL 语句的是 Hibernate。你写的是 JPA 代码，但实际 SQL 是 Hibernate 生成的, &lt;strong&gt;JPA 只定义规则，Hibernate 负责执行。&lt;/strong&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;&lt;strong&gt;Spring Data JPA（Repository 层）&lt;/strong&gt;&lt;/p&gt;
+&lt;h3 id=&#34;32-spring-data-jparepository-层&#34;&gt;3.2. Spring Data JPA（Repository 层）&lt;/h3&gt;
 &lt;p&gt;Spring Data JPA 让我们可以不写 SQL 也能操作数据库：&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; org.springframework.data.jpa.repository.JpaRepository;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; java.util.Optional;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; org.springframework.data.jpa.repository.Query;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; org.springframework.data.repository.query.Param;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; org.springframework.stereotype.Repository;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;UserRepository&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;extends&lt;/span&gt; JpaRepository&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User, Long&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Optional&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;findByEmail&lt;/span&gt;(String email);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Repository&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;PostRepository&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;extends&lt;/span&gt; JpaRepository&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post, Long&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 查找用户的所有帖子&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Query&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SELECT p FROM Post p WHERE p.userId = :userId AND p.status = 1&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Page&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;findByUserId&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;@Param&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;userId&amp;#34;&lt;/span&gt;) Long userId, Pageable pageable);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 查找所有正常状态的帖子（分页）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Query&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SELECT p FROM Post p WHERE p.status = 1&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Page&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;findAllActivePosts&lt;/span&gt;(Pageable pageable);
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;JpaRepository&amp;lt;User, Long&amp;gt;&lt;/code&gt;：提供了 CRUD 方法&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;findByEmail(String email)&lt;/code&gt;：Spring Data JPA 会自动生成查询 SQL&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;@Query&lt;/code&gt;、&lt;code&gt;@Param&lt;/code&gt;、&lt;code&gt;JpaRepository&lt;/code&gt;、&lt;code&gt;Pageable&lt;/code&gt; 等注解和接口都是 Spring Data JPA 提供的，而不是 标准 JPA（Jakarta Persistence API） 或 Hibernate 本身的一部分。&lt;/p&gt;
+&lt;p&gt;这些方法 &lt;strong&gt;不需要手动实现&lt;/strong&gt;，&lt;strong&gt;Spring Data JPA&lt;/strong&gt; 会&lt;strong&gt;自动&lt;/strong&gt;生成对应的 SQL 语句并执行，你只需要声明方法即可直接调用。&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;&lt;strong&gt;Hibernate（持久化层）&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;@Query&lt;/code&gt; 可以优化掉，让 Spring Data JPA 自动生成 SQL 语句, Spring Data JPA 会 &lt;strong&gt;自动解析方法名&lt;/strong&gt; 生成 SQL 查询, 上面代码可以改成:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Repository&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;PostRepository&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;extends&lt;/span&gt; JpaRepository&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post, Long&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 查找用户的所有正常状态帖子&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Page&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;findByUserIdAndStatus&lt;/span&gt;(Long userId, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; status, Pageable pageable);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 查找所有正常状态的帖子&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Page&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;findByStatus&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; status, Pageable pageable);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果查询逻辑 复杂，Spring Data JPA 无法自动推断，就需要 &lt;code&gt;@Query&lt;/code&gt;，比如：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Query&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SELECT p FROM Post p WHERE p.userId = :userId AND p.status = 1 ORDER BY p.createdAt DESC&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;List&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;findRecentPostsByUser&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;@Param&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;userId&amp;#34;&lt;/span&gt;) Long userId);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;33-hibernate持久化层&#34;&gt;3.3. &lt;strong&gt;Hibernate（持久化层）&lt;/strong&gt;&lt;/h3&gt;
 &lt;p&gt;Hibernate 作为 JPA Provider，在后台实际执行 SQL 语句, 当我们调用 &lt;code&gt;userRepository.findByEmail(&amp;quot;test@example.com&amp;quot;)&lt;/code&gt; 时，Hibernate 会生成 SQL 查询：&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;SELECT &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; FROM users WHERE email &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;test&lt;span style=&#34;color:#a6e22e&#34;&gt;@example.com&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt; LIMIT 1;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;4-spring-data-jpa--jpa--hibernate&#34;&gt;4. Spring Data JPA + JPA + Hibernate&lt;/h2&gt;
