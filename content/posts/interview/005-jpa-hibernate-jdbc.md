@@ -58,7 +58,7 @@ JPA 的实现：要想让 JPA 的接口和注解真的“跑起来”，就需�
 
 ## 3. Spring Data JPA + JPA + Hibernate 各司其职
 
-**JPA（Model 层）：**
+### 3.1. JPA（Model 层）
 
 ```java
 import jakarta.persistence.*;
@@ -69,12 +69,9 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
-    private String name;
-
-    @Column(unique = true, nullable = false)
-    private String email;
+    // nullable = false 在 Java 层面防止错误数据进入数据库，即使数据库层面有 NOT NULL 约束
+    @Column(nullable = false, unique = true, length = 50)
+    private String username;
 }
 ```
 
@@ -85,23 +82,54 @@ public class User {
 >
 > 这里 `@Entity` 和 `@Table` 等是 JPA 规范的一部分，它们只是 **告诉 JPA Provider（比如 Hibernate）**，这个类需要映射到数据库表。但真正解析这些注解并生成 SQL 语句的是 Hibernate。你写的是 JPA 代码，但实际 SQL 是 Hibernate 生成的, **JPA 只定义规则，Hibernate 负责执行。**
 
-**Spring Data JPA（Repository 层）**
+### 3.2. Spring Data JPA（Repository 层）
 
 Spring Data JPA 让我们可以不写 SQL 也能操作数据库：
 
 ```java
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+...
 
-public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByEmail(String email);
+@Repository
+public interface PostRepository extends JpaRepository<Post, Long> {
+    // 查找用户的所有帖子
+    @Query("SELECT p FROM Post p WHERE p.userId = :userId AND p.status = 1")
+    Page<Post> findByUserId(@Param("userId") Long userId, Pageable pageable);
+
+    // 查找所有正常状态的帖子（分页）
+    @Query("SELECT p FROM Post p WHERE p.status = 1")
+    Page<Post> findAllActivePosts(Pageable pageable);
 }
 ```
 
-> - `JpaRepository<User, Long>`：提供了 CRUD 方法
->- `findByEmail(String email)`：Spring Data JPA 会自动生成查询 SQL
+> `@Query`、`@Param`、`JpaRepository`、`Pageable` 等注解和接口都是 Spring Data JPA 提供的，而不是 标准 JPA（Jakarta Persistence API） 或 Hibernate 本身的一部分。
+>
+> 这些方法 **不需要手动实现**，**Spring Data JPA** 会**自动**生成对应的 SQL 语句并执行，你只需要声明方法即可直接调用。
 
-**Hibernate（持久化层）**
+`@Query` 可以优化掉，让 Spring Data JPA 自动生成 SQL 语句, Spring Data JPA 会 **自动解析方法名** 生成 SQL 查询, 上面代码可以改成:
+
+```java
+@Repository
+public interface PostRepository extends JpaRepository<Post, Long> {
+    // 查找用户的所有正常状态帖子
+    Page<Post> findByUserIdAndStatus(Long userId, int status, Pageable pageable);
+
+    // 查找所有正常状态的帖子
+    Page<Post> findByStatus(int status, Pageable pageable);
+}
+```
+
+如果查询逻辑 复杂，Spring Data JPA 无法自动推断，就需要 `@Query`，比如：
+
+```java
+@Query("SELECT p FROM Post p WHERE p.userId = :userId AND p.status = 1 ORDER BY p.createdAt DESC")
+List<Post> findRecentPostsByUser(@Param("userId") Long userId);
+```
+
+### 3.3. **Hibernate（持久化层）**
 
 Hibernate 作为 JPA Provider，在后台实际执行 SQL 语句, 当我们调用 `userRepository.findByEmail("test@example.com")` 时，Hibernate 会生成 SQL 查询：
 

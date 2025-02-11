@@ -5,7 +5,8 @@ categories:
  - 数据库
 tags:
  - 数据库
- - mysql
+ - 并发编程
+ - 面试
 ---
 
 一个帖子系统, 用户可以发帖, 点赞帖子, 给帖子发表评论, 点赞评论, 回复评论
@@ -34,6 +35,7 @@ CREATE TABLE posts (
     status TINYINT NOT NULL DEFAULT 1 COMMENT '状态:1-正常,2-已删除',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    version INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号';
     KEY idx_user_id (user_id) COMMENT '用户ID索引,用于查询用户的帖子列表',
     KEY idx_created_at (created_at) COMMENT '创建时间索引,用于按时间排序'
 ) COMMENT '帖子表';
@@ -60,6 +62,7 @@ CREATE TABLE comments (
     status TINYINT NOT NULL DEFAULT 1 COMMENT '状态:1-正常,2-已删除',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    version INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号';
     KEY idx_post_id (post_id) COMMENT '帖子ID索引,用于查询帖子的评论列表',
     KEY idx_user_id (user_id) COMMENT '用户ID索引,用于查询用户的评论列表',
     KEY idx_parent_id (parent_id) COMMENT '父评论ID索引,用于查询评论的回复列表'
