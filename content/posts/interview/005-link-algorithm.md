@@ -8,7 +8,7 @@ tags:
  - 算法
 ---
 
-## 1. 常用技巧 dummy head
+## 1. Dummy Head
 
 链表 A B C, 我们若想移除 B, 需要 A.next = B.next, 所以当头部节点也有可能被移除的时候, 我们就需要一个 dummy 节点: D A B C, 从而实现 D.next = A.next 进而删除 A 节点,
 

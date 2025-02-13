@@ -24,3 +24,6 @@ JWT由三部分组成, Header, Payload, Signature, JWT 的 Header 和 Payload �
 >
 > [Stackoverflow][https://stackoverflow.com/a/45214431/16317008]
 
+## 2. 什么时候开启事务
+
+If an interface involves modifying multiple database tables, transactions should be used to avoid data inconsistencies. 
