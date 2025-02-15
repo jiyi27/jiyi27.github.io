@@ -30,6 +30,5 @@ If an interface involves modifying multiple database tables, transactions should
 
 事务 AOP 等概念https://juejin.cn/post/6844904179341737991
 
-```bash
-```
+
 
