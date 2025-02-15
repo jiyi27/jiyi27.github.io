@@ -7,65 +7,44 @@ tags:
  - java
 ---
 
-## 1. JDK
+## 1. Java SE、Java EE
 
-JDK 是 **Java 开发者需要的完整开发环境**，它包含：
+Java SE（Java Standard Edition，Java 标准版）
 
-- **JRE**（即 JVM + Java 标准库）
-- **Java 编译器（`javac`）**，用于将 `.java` 源代码编译成 `.class` 字节码
-- **开发工具**（如 `jdb` 调试器、`javap` 反编译工具、`jar` 打包工具）
+- Java SE 是 Java 语言的核心，包含 JVM、JDK、JRE 和标准库（如 `java.lang`, `java.util`）
+- JDK 默认指的是 Java SE 的 JDK
 
->适用于**开发者**，用于编写、编译和运行 Java 代码, 如果你是开发者，**安装 JDK 就可以包含 JRE 和 JVM**，无需额外安装 JRE
->
->JDK ≈ JRE + 开发工具
+Java EE（Java Enterprise Edition，Java 企业版）
 
-## 2. JRE
+- 在 Java SE 的基础上，提供 企业级开发功能，如 Servlet、JSP
 
-JRE 是 运行 Java 程序的环境，它包含：
+## 2. JDK
 
-- JVM（Java 虚拟机）
-- Java 标准类库（Java API，如 `java.lang`, `java.util`）
-- 运行 Java 程序的核心文件（如 `rt.jar` 以提供 Java SE API）
+JDK 是 Java 开发者需要的完整开发环境, 它包含：
 
-> 如果你只是运行 Java 程序，而不进行 Java 开发，只需要 JRE
+- JRE（即 JVM + Java 标准库）
+- Java 编译器（`javac`），用于将 `.java` 源代码编译成 `.class` 字节码
+- 开发工具（如 `jdb` 调试器、`javap` 反编译工具、`jar` 打包工具）
+
+不同的 JDK 版本:
+
+- Oracle JDK（商业版，需要许可证）
+
+- OpenJDK（开源版，和 Oracle JDK 主要功能一致）
+
+- 其他厂商 JDK（如 Amazon Corretto, AdoptOpenJDK）
+
+## 3. JRE 运行 Java 程序的环境
+
+JVM +  Java 标准库 ( `java.lang`, `java.util`) + 运行 Java 程序的核心文件
+
+> 如果你只是运行 Java 程序, 而不进行 Java 开发, 只需要 JRE, 
 >
 > JRE ≈ JVM + Java 标准库
+>
+> JDK = JRE + Java 开发工具
 
-## 3. JVM
-
-JVM 是 Java 运行环境的核心，它的作用是：
-
-- 负责运行 Java 字节码（.class 文件）
-- 提供跨平台能力（"Write Once, Run Anywhere"）
-- 进行垃圾回收（GC）
-
-JVM 是 Java 语言的运行时组件，不包含 Java 开发工具（如编译器 `javac`）
-
-## 3. Java SE、Java EE、Java ME
-
-这几个术语表示不同的 Java 版本（规格），不是具体的软件包：
-
-### **（1）Java SE（Java Standard Edition，Java 标准版）**
-
-- Java SE 是 Java 语言的核心，包含 **JVM、JDK、JRE 和标准库**（如 `java.lang`, `java.util`）
-- 适用于**桌面应用**、**基础后端开发**（如 Spring Boot）
-- JDK 默认指的是 **Java SE 的 JDK**
-
-### **（2）Java EE（Java Enterprise Edition，Java 企业版）**
-
-- 在 Java SE 的基础上，提供 **企业级开发功能**，如 **Servlet、JSP、JMS、EJB**
-- 适用于**大型 Web 应用、分布式系统**（如 Spring Cloud）
-- 现在由 Eclipse 基金会维护，改名为 **Jakarta EE**
-
-## 4. JDK 版本
-
-JDK 也有不同版本：
-
-- **Oracle JDK**（商业版，需要许可证）
-- **OpenJDK**（开源版，和 Oracle JDK 主要功能一致）
-- **其他厂商 JDK**（如 Amazon Corretto, AdoptOpenJDK）
-
-## 5. 疑问 JRE 还存在吗
+## 4. JRE 还存在吗
 
 我的电脑有两个 jdk, 一个是我自己下载的 jdk17, 一个是电脑预安装的 jdk19:
 

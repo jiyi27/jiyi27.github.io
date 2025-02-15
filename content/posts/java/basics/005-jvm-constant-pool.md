@@ -92,27 +92,27 @@ Constant pool:
 
 ## 4. 常量池里都有啥？
 
-**`#1 = Methodref #7.#22 // java/io/PrintStream.println:(Ljava/lang/String;)V`**
-表示：这是一个 **`Methodref`** 常量，指向“类 #7”与“NameAndType #22”的组合
+`#1 = Methodref #7.#22 // java/io/PrintStream.println:(Ljava/lang/String;)V`
+表示：这是一个 `Methodref` 常量，指向“类 #7”与“NameAndType #22”的组合
 
 - “类 #7” 就是 `java/io/PrintStream`（见后面 `#7 = Utf8 "java/io/PrintStream"`）
 - “NameAndType #22” 则表示方法名和方法描述符——在 `#22` 里你会看到 `<println:(Ljava/lang/String;)V>`
 
-**`#2 = String #23 // Hello World`**
+`#2 = String #23 // Hello World`
 
-表示：这是一个 **`String`** 常量，对应了 “字符串 #23”；“#23” 实际是一个 `Utf8` 条目，存放 `"Hello World"` 的字符
+表示：这是一个 `String` 常量，对应了 “字符串 #23”；“#23” 实际是一个 `Utf8` 条目，存放 `"Hello World"` 的字符
 
-**`#3 = Fieldref #8.#24 // java/lang/System.out:Ljava/io/PrintStream;`**
-表示：这是一个 **`Fieldref`** 常量，指向“类 #8”与“NameAndType #24”的组合
+`#3 = Fieldref #8.#24 // java/lang/System.out:Ljava/io/PrintStream;`
+表示：这是一个 `Fieldref` 常量，指向“类 #8”与“NameAndType #24”的组合
 
 - “类 #8” -> `java/lang/System`
 - “NameAndType #24” -> “`out:Ljava/io/PrintStream;`”
 
-**`#22 = NameAndType #27:#28 // println:(Ljava/lang/String;)V`**
-表示：这是一个 **`NameAndType`** 常量，`#27` 是方法名 `println`，`#28` 是方法描述符 `"(Ljava/lang/String;)V"`
+`#22 = NameAndType #27:#28 // println:(Ljava/lang/String;)V`
+表示：这是一个 `NameAndType` 常量，`#27` 是方法名 `println`，`#28` 是方法描述符 `"(Ljava/lang/String;)V"`
 
-**`#23 = Utf8 "Hello World"`**
-表示：这是一个存放字符串 `"Hello World"` 的 **`Utf8`** 常量
+`#23 = Utf8 "Hello World"`
+表示：这是一个存放字符串 `"Hello World"` 的 `Utf8` 常量
 
 可以看到，编译器把你写的代码里所有用到的类名、方法名、字段名、描述符以及字符串字面量，都以 各种类型的 cp_info（`Methodref`、`Fieldref`、`NameAndType`、`Utf8`、`String` 等）记录到了同一个常量池数组里。
 
