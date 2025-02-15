@@ -339,7 +339,18 @@ Global AuthenticationManager configured with an AuthenticationProvider bean. Use
 2. 创建 `AuthenticationManager`，并将 `DaoAuthenticationProvider` 添加进去
 3. 允许基于用户名/密码的身份验证（即 `UsernamePasswordAuthenticationFilter`）
 
-所以我们直接删除  `DaoAuthenticationProvider daoAuthenticationProvider(){...}` 函数让 Spring Security 自动管理就行了, 
+所以我们直接删除  `DaoAuthenticationProvider daoAuthenticationProvider(){...}` 函数让 Spring Security 自动管理就行了, 然后之前的代码:
+
+```java
+http.authenticationProvider(daoAuthenticationProvider())
+  .formLogin(Customizer.withDefaults());
+```
+
+改为:
+
+```java
+http.formLogin(Customizer.withDefaults());
+```
 
 ### 4.2. 验证 Session ID
 
@@ -508,6 +519,8 @@ public class AppConfig {
    - `SecurityContextHolder` 存储 `Authentication`，用户成功登录
 8. 认证通过后，Spring Security 允许访问受保护资源
 ```
+
+
 
 
 
