@@ -5,9 +5,7 @@ categories:
  - java
 tags:
  - java
- - tomcat
  - spring
- - 后端开发
 ---
 
 一直听说Spring Boot内嵌了Tomcat, 然后Spring Boot默认把应用打包为Jar, 这到底意味着什么呢, 为啥不直接用War包部署到外部服务器呢(外部的Tomcat)?  不了解War可以看看我的其它[War相关的文章](https://davidzhu.xyz/2023/04/27/Java/Backend/War/)或者站内搜War等关键字. 在StackOverflow上看到一个[关于什么是内嵌Tomcat回答](https://stackoverflow.com/a/23176765/16317008), 看看咋说的

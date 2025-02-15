@@ -1,12 +1,11 @@
 ---
-title: 零碎知识 - 后端八股文
+title: 后端八股文
 date: 2025-01-22 15:30:20
 categories:
  - 面试
 tags:
  - 面试
- - 后端开发
- - 零碎知识
+ - 八股文
 ---
 
 ### 1. Sessions 状态管理
@@ -23,12 +22,4 @@ JWT由三部分组成, Header, Payload, Signature, JWT 的 Header 和 Payload �
 > - Transporting it securely. (后端设置 cookie, 只允许通过 HTTPS 传输)
 >
 > [Stackoverflow][https://stackoverflow.com/a/45214431/16317008]
-
-## 2. 什么时候开启事务
-
-If an interface involves modifying multiple database tables, transactions should be used to avoid data inconsistencies. 
-
-事务 AOP 等概念https://juejin.cn/post/6844904179341737991
-
-
 

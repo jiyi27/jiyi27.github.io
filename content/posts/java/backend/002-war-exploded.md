@@ -6,7 +6,6 @@ categories:
 tags:
  - java
  - spring
- - tomcat
 ---
 
 在 IDEA 把 webapp deploy 到 tomcat上的时候会看到以下设置:

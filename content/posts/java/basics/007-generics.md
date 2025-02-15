@@ -5,7 +5,6 @@ categories:
  - java
 tags:
  - java
- - 泛型
 ---
 
 ## 1. Why Generics?

@@ -15,7 +15,7 @@ Technically, `javac` is the program that translates Java code into bytecode (.cl
 
 And `java` is the program that starts the **JVM**, which in turn, loads the `.class` file, verifies the bytecode and executes it. 
 
-## 2. 手动编译并运行java程序
+## 2. 手动编译并运行 java 程序
 
 目录结构:
 
@@ -74,7 +74,7 @@ $ java -cp myproject/src Main
 mew~
 ```
 
-## 3. How JVM Finds Classes
+## 3. JVM 加载类的顺序
 
 The virtual machine searches for and loads classes in this order:
 
