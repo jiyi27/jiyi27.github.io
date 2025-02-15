@@ -133,7 +133,7 @@ Run-Time Data Areas └─ Method Area └─ Runtime Constant Pool 2. 每个 .c
   <h1 class="post-title">
     <a href="https://blog.jiyi27.com/posts/java/basics/005-jvm-constant-pool/">JVM 运行时常量池 - 动态链接</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2025-02-04</time><span class="post-reading-time">3 分钟阅读 (623 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2025-02-04</time><span class="post-reading-time">3 分钟阅读 (580 字数)</span></div>
 
   
     <span class="post-tags">
@@ -261,12 +261,7 @@ Constant pool:
 <p><code>#3</code> 在常量池中是一个 <code>Fieldref</code>，比如 “<code>java/lang/System.out:Ljava/io/PrintStream;</code>”</p>
 </li>
 <li>
-<p>JVM 首先看 “这个类</p>
-<pre tabindex="0"><code>java/lang/System
-</code></pre><p>加载了没？”</p>
-<ul>
-<li>如果没有，就让 Bootstrap ClassLoader 去加载并验证、准备（以及后续可能触发解析和初始化）</li>
-</ul>
+<p>JVM 首先看 这个类 <code>java/lang/System</code> 加载了没？如果没有，就让 Bootstrap ClassLoader 去加载并验证、准备（以及后续可能触发解析和初始化）</p>
 </li>
 <li>
 <p>找到它后，在 <code>java.lang.System</code> 的元数据里查找名为 <code>out</code>、描述符 <code>Ljava/io/PrintStream;</code>、并且是 <code>static</code> 的字段</p>
@@ -284,7 +279,7 @@ Constant pool:
 <p><strong>2.2 解析 <code>#2</code> (ldc …)</strong></p>
 <ul>
 <li><code>#2</code> 在常量池中是一个 <code>String</code> 类型常量，如 “Hello World”</li>
-<li>当执行 <code>ldc #2</code> 时，如果还没解析，就去常量池里取出对应的 UTF-8 字符串，将其<strong>intern</strong>或放到字符串池，生成一个 <code>java.lang.String</code> 实例（或从已有字符串池中返回）</li>
+<li>当执行 <code>ldc #2</code> 时，如果还没解析，就去常量池里取出对应的 UTF-8 字符串，将其intern或放到字符串池，生成一个 <code>java.lang.String</code> 实例（或从已有字符串池中返回）</li>
 <li>然后把这个 <code>String</code> 对象引用压栈，用于后续 <code>println</code> 调用。</li>
 </ul>
 <p><strong>2.3 解析 <code>#1</code> (invokevirtual …)</strong></p>
@@ -294,7 +289,7 @@ Constant pool:
 <li>在它的元数据里找到对应的方法表项 <code>println(String)</code></li>
 <li>若找到，就把常量池条目更新为已解析，后续执行指令 <code>invokevirtual #1</code> 时，就能通过对象的类型信息 + 方法表来跳转到 <code>PrintStream.println(String)</code> 的实现</li>
 </ul>
-<p><strong>以上步骤</strong>就是“解析 + 动态链接”最本质的行为：<strong>从常量池的“符号引用”</strong>（例如 “<code>Field java/lang/System.out</code>” 或 “<code>Method java/io/PrintStream.println</code>”）<strong>转成 JVM 内部可执行、可定位的实际字段或方法引用</strong></p>
+<p>以上步骤就是“解析 + 动态链接”最本质的行为：从常量池的“符号引用”（例如 “<code>Field java/lang/System.out</code>” 或 “<code>Method java/io/PrintStream.println</code>”）转成 JVM 内部可执行、可定位的实际字段或方法引用</p>
 <h2 id="7-动态链接-vs-静态链接">7. 动态链接 VS. 静态链接<a href="#7-动态链接-vs-静态链接" class="hanchor" ariaLabel="Anchor">#</a> </h2>
 <p><strong>静态链接（C/C++）</strong>：</p>
 <ul>
@@ -304,48 +299,22 @@ Constant pool:
 <p><strong>Java 的动态链接</strong>：</p>
 <ul>
 <li>
-<p><code>.class</code> 文件只保留对 <code>System.out</code>、<code>println(String)</code> 等的符号引用</p>
+<p><strong><code>.class</code> 文件只保留对 <code>System.out</code>、<code>println(String)</code> 等的符号引用</strong></p>
 </li>
 <li>
-<p>真正的解析、绑定过程在</p>
-<p>JVM 运行时</p>
-<p>发生：</p>
+<p>真正的解析、绑定过程在JVM 运行时发生：</p>
 <ol>
 <li>加载对应的类（可能还要加载该类所依赖的其他类），</li>
+</ol>
+</li>
+</ul>
+<ol start="2">
 <li>验证和准备，</li>
 <li>在用到这些常量池引用时触发“解析”，最终把它指向 JVM 内部的真实方法或字段对象</li>
 </ol>
-</li>
-<li>
-<p>这使得 Java 可以做到“<strong>类的动态加载</strong>”：运行中可以从网络或别的地方得到一个 <code>.class</code>，用自定义 ClassLoader 加载并解析它。而不需要像 C++ 一样必须在编译/链接时就知道所有符号</p>
-</li>
-</ul>
-<h2 id="8-总结解析resolution和动态链接是什么">8. 总结：解析（Resolution）和动态链接是什么？<a href="#8-总结解析resolution和动态链接是什么" class="hanchor" ariaLabel="Anchor">#</a> </h2>
-<ol>
-<li><strong>解析（Resolution）</strong>
 <ul>
-<li>发生在链接阶段的一个子步骤，也可能因为<strong>惰性解析</strong>而在第一次使用时才执行</li>
-<li>目的：把常量池中的符号引用（如 <code>Class</code>, <code>Methodref</code>, <code>Fieldref</code>）转换成直接引用（JVM 内部可识别、可执行的东西，比如指向具体的方法表项或字段表项）</li>
-<li>步骤包括：
-<ul>
-<li>检查或触发目标类加载（若尚未加载），</li>
-<li>在类元数据里找对应字段/方法，校验访问权限和签名等，</li>
-<li>如果成功，就把常量池相应项目标记为已解析，并缓存引用信息</li>
+<li>这使得 Java 可以做到“类的动态加载”：运行中可以从网络或别的地方得到一个 <code>.class</code>，用自定义 ClassLoader 加载并解析它。而不需要像 C++ 一样必须在编译/链接时就知道所有符号</li>
 </ul>
-</li>
-</ul>
-</li>
-<li><strong>动态链接（Dynamic Linking）</strong>
-<ul>
-<li>相对静态语言（如 C/C++）的编译期链接而言，Java 的链接是在<strong>运行时</strong>进行，所以称为动态链接</li>
-<li>当你执行 <code>java Demo</code> 时，JVM 在运行过程中才决定 “<code>System.out</code>” 指向哪个对象，“<code>println</code>” 调用哪个方法实现</li>
-<li>这让 Java 可以做到<strong>跨平台</strong>、<strong>延迟加载</strong>、<strong>反射</strong>、<strong>热替换</strong>等能力</li>
-</ul>
-</li>
-</ol>
-<blockquote>
-<p><strong>简而言之</strong>：在你看到的 <code>getstatic #3</code>, <code>invokevirtual #1</code> 这些字节码指令的背后，就是“解析 + 动态链接”的过程——JVM 在 <strong>运行时</strong> 根据常量池里记载的符号引用，找到实际的类和方法，真正把它们链接起来，这就是“解析和动态链接”的具体含义</p>
-</blockquote>
 
       </div></div>
 

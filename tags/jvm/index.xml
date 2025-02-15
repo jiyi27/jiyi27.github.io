@@ -376,12 +376,7 @@ Constant pool:
 &lt;p&gt;&lt;code&gt;#3&lt;/code&gt; 在常量池中是一个 &lt;code&gt;Fieldref&lt;/code&gt;，比如 “&lt;code&gt;java/lang/System.out:Ljava/io/PrintStream;&lt;/code&gt;”&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;JVM 首先看 “这个类&lt;/p&gt;
-&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;java/lang/System
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;加载了没？”&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;如果没有，就让 Bootstrap ClassLoader 去加载并验证、准备（以及后续可能触发解析和初始化）&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;JVM 首先看 这个类 &lt;code&gt;java/lang/System&lt;/code&gt; 加载了没？如果没有，就让 Bootstrap ClassLoader 去加载并验证、准备（以及后续可能触发解析和初始化）&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;找到它后，在 &lt;code&gt;java.lang.System&lt;/code&gt; 的元数据里查找名为 &lt;code&gt;out&lt;/code&gt;、描述符 &lt;code&gt;Ljava/io/PrintStream;&lt;/code&gt;、并且是 &lt;code&gt;static&lt;/code&gt; 的字段&lt;/p&gt;
@@ -399,7 +394,7 @@ Constant pool:
 &lt;p&gt;&lt;strong&gt;2.2 解析 &lt;code&gt;#2&lt;/code&gt; (ldc …)&lt;/strong&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;#2&lt;/code&gt; 在常量池中是一个 &lt;code&gt;String&lt;/code&gt; 类型常量，如 “Hello World”&lt;/li&gt;
-&lt;li&gt;当执行 &lt;code&gt;ldc #2&lt;/code&gt; 时，如果还没解析，就去常量池里取出对应的 UTF-8 字符串，将其&lt;strong&gt;intern&lt;/strong&gt;或放到字符串池，生成一个 &lt;code&gt;java.lang.String&lt;/code&gt; 实例（或从已有字符串池中返回）&lt;/li&gt;
+&lt;li&gt;当执行 &lt;code&gt;ldc #2&lt;/code&gt; 时，如果还没解析，就去常量池里取出对应的 UTF-8 字符串，将其intern或放到字符串池，生成一个 &lt;code&gt;java.lang.String&lt;/code&gt; 实例（或从已有字符串池中返回）&lt;/li&gt;
 &lt;li&gt;然后把这个 &lt;code&gt;String&lt;/code&gt; 对象引用压栈，用于后续 &lt;code&gt;println&lt;/code&gt; 调用。&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;&lt;strong&gt;2.3 解析 &lt;code&gt;#1&lt;/code&gt; (invokevirtual …)&lt;/strong&gt;&lt;/p&gt;
@@ -409,7 +404,7 @@ Constant pool:
 &lt;li&gt;在它的元数据里找到对应的方法表项 &lt;code&gt;println(String)&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;若找到，就把常量池条目更新为已解析，后续执行指令 &lt;code&gt;invokevirtual #1&lt;/code&gt; 时，就能通过对象的类型信息 + 方法表来跳转到 &lt;code&gt;PrintStream.println(String)&lt;/code&gt; 的实现&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;strong&gt;以上步骤&lt;/strong&gt;就是“解析 + 动态链接”最本质的行为：&lt;strong&gt;从常量池的“符号引用”&lt;/strong&gt;（例如 “&lt;code&gt;Field java/lang/System.out&lt;/code&gt;” 或 “&lt;code&gt;Method java/io/PrintStream.println&lt;/code&gt;”）&lt;strong&gt;转成 JVM 内部可执行、可定位的实际字段或方法引用&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;以上步骤就是“解析 + 动态链接”最本质的行为：从常量池的“符号引用”（例如 “&lt;code&gt;Field java/lang/System.out&lt;/code&gt;” 或 “&lt;code&gt;Method java/io/PrintStream.println&lt;/code&gt;”）转成 JVM 内部可执行、可定位的实际字段或方法引用&lt;/p&gt;
 &lt;h2 id=&#34;7-动态链接-vs-静态链接&#34;&gt;7. 动态链接 VS. 静态链接&lt;/h2&gt;
 &lt;p&gt;&lt;strong&gt;静态链接（C/C++）&lt;/strong&gt;：&lt;/p&gt;
 &lt;ul&gt;
@@ -419,48 +414,22 @@ Constant pool:
 &lt;p&gt;&lt;strong&gt;Java 的动态链接&lt;/strong&gt;：&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;
-&lt;p&gt;&lt;code&gt;.class&lt;/code&gt; 文件只保留对 &lt;code&gt;System.out&lt;/code&gt;、&lt;code&gt;println(String)&lt;/code&gt; 等的符号引用&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;.class&lt;/code&gt; 文件只保留对 &lt;code&gt;System.out&lt;/code&gt;、&lt;code&gt;println(String)&lt;/code&gt; 等的符号引用&lt;/strong&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;真正的解析、绑定过程在&lt;/p&gt;
-&lt;p&gt;JVM 运行时&lt;/p&gt;
-&lt;p&gt;发生：&lt;/p&gt;
+&lt;p&gt;真正的解析、绑定过程在JVM 运行时发生：&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;加载对应的类（可能还要加载该类所依赖的其他类），&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol start=&#34;2&#34;&gt;
 &lt;li&gt;验证和准备，&lt;/li&gt;
 &lt;li&gt;在用到这些常量池引用时触发“解析”，最终把它指向 JVM 内部的真实方法或字段对象&lt;/li&gt;
 &lt;/ol&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;这使得 Java 可以做到“&lt;strong&gt;类的动态加载&lt;/strong&gt;”：运行中可以从网络或别的地方得到一个 &lt;code&gt;.class&lt;/code&gt;，用自定义 ClassLoader 加载并解析它。而不需要像 C++ 一样必须在编译/链接时就知道所有符号&lt;/p&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&#34;8-总结解析resolution和动态链接是什么&#34;&gt;8. 总结：解析（Resolution）和动态链接是什么？&lt;/h2&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;strong&gt;解析（Resolution）&lt;/strong&gt;
 &lt;ul&gt;
-&lt;li&gt;发生在链接阶段的一个子步骤，也可能因为&lt;strong&gt;惰性解析&lt;/strong&gt;而在第一次使用时才执行&lt;/li&gt;
-&lt;li&gt;目的：把常量池中的符号引用（如 &lt;code&gt;Class&lt;/code&gt;, &lt;code&gt;Methodref&lt;/code&gt;, &lt;code&gt;Fieldref&lt;/code&gt;）转换成直接引用（JVM 内部可识别、可执行的东西，比如指向具体的方法表项或字段表项）&lt;/li&gt;
-&lt;li&gt;步骤包括：
-&lt;ul&gt;
-&lt;li&gt;检查或触发目标类加载（若尚未加载），&lt;/li&gt;
-&lt;li&gt;在类元数据里找对应字段/方法，校验访问权限和签名等，&lt;/li&gt;
-&lt;li&gt;如果成功，就把常量池相应项目标记为已解析，并缓存引用信息&lt;/li&gt;
+&lt;li&gt;这使得 Java 可以做到“类的动态加载”：运行中可以从网络或别的地方得到一个 &lt;code&gt;.class&lt;/code&gt;，用自定义 ClassLoader 加载并解析它。而不需要像 C++ 一样必须在编译/链接时就知道所有符号&lt;/li&gt;
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;动态链接（Dynamic Linking）&lt;/strong&gt;
-&lt;ul&gt;
-&lt;li&gt;相对静态语言（如 C/C++）的编译期链接而言，Java 的链接是在&lt;strong&gt;运行时&lt;/strong&gt;进行，所以称为动态链接&lt;/li&gt;
-&lt;li&gt;当你执行 &lt;code&gt;java Demo&lt;/code&gt; 时，JVM 在运行过程中才决定 “&lt;code&gt;System.out&lt;/code&gt;” 指向哪个对象，“&lt;code&gt;println&lt;/code&gt;” 调用哪个方法实现&lt;/li&gt;
-&lt;li&gt;这让 Java 可以做到&lt;strong&gt;跨平台&lt;/strong&gt;、&lt;strong&gt;延迟加载&lt;/strong&gt;、&lt;strong&gt;反射&lt;/strong&gt;、&lt;strong&gt;热替换&lt;/strong&gt;等能力&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;blockquote&gt;
-&lt;p&gt;&lt;strong&gt;简而言之&lt;/strong&gt;：在你看到的 &lt;code&gt;getstatic #3&lt;/code&gt;, &lt;code&gt;invokevirtual #1&lt;/code&gt; 这些字节码指令的背后，就是“解析 + 动态链接”的过程——JVM 在 &lt;strong&gt;运行时&lt;/strong&gt; 根据常量池里记载的符号引用，找到实际的类和方法，真正把它们链接起来，这就是“解析和动态链接”的具体含义&lt;/p&gt;
-&lt;/blockquote&gt;
 </content>
     </item>
     
