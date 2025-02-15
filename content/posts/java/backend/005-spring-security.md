@@ -404,6 +404,31 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
 
 但这完全是不必要的，因为 Spring Security 已经自动处理了这个逻辑。
 
+```
+1. 用户发送 `POST /login` 请求
+2. `SecurityFilterChain`（接口，定义 Spring Security 过滤器链）
+   - 由 `DefaultSecurityFilterChain` 实现
+   - 其中包含 `UsernamePasswordAuthenticationFilter`
+   - `UsernamePasswordAuthenticationFilter` 解析请求，并调用 `AuthenticationManager`
+3. `AuthenticationManager`（接口，定义认证管理逻辑）
+   - 由 `ProviderManager` 实现
+   - `ProviderManager` 遍历 `List<AuthenticationProvider>`
+4. `AuthenticationProvider`（接口，定义认证提供者）
+   - `DaoAuthenticationProvider`（`AuthenticationProvider` 的实现）
+   - `DaoAuthenticationProvider` 调用 `UserDetailsService.loadUserByUsername()`
+5. `UserDetailsService`（接口，定义用户数据加载逻辑）
+   - 由 `MyUserDetailsService` 实现
+   - `MyUserDetailsService` 查询数据库，返回 `UserDetails`（包含用户名、密码、权限）
+6. `DaoAuthenticationProvider` 使用 `PasswordEncoder` 验证密码
+   - `PasswordEncoder.matches(rawPassword, encodedPassword)`
+   - 由 `BCryptPasswordEncoder` 实现
+7. 如果认证成功：
+   - `DaoAuthenticationProvider` 返回 `UsernamePasswordAuthenticationToken`（已认证的 `Authentication` 对象）
+   - `ProviderManager` 返回 `Authentication`，认证完成
+   - `SecurityContextHolder` 存储 `Authentication`，用户成功登录
+8. 认证通过后，Spring Security 允许访问受保护资源
+```
+
 ### 4.3. 自定义登录表单页面
 
 上面我们提到, 我们不仅可以使用 Spring Security 自定义的表单页面, 还可以自己定义页面使用, 我们要做的就是在  `securityFilterChain()` 方法中, 替换之前指定默认表单的语句:
@@ -454,7 +479,7 @@ ERR_TOO_MANY_REDIRECTS
 
 大致原因是没有实现 `/login` 路径的 GET 方法, 且没有设置为 所有用户都可以访问 `/login`, 如果你的 `loginPage("/login")` 其实返回的是某个 Thymeleaf 模板（或者前端页面），却没有对外暴露出可访问的 `GET /login` 路由（或者在控制器中又重定向到别的地方），就会导致访问 `/login` 时再次跳到另一个需要认证的路径，从而产生循环。
 
-> Spring Security 中, 很多种认证方式, JWT 或者 http.formLogin 或者 httpBasic(Customizer.withDefaults()); 且他们可以同时存在, 但一般不会这么做, https://chatgpt.com/share/67aeb98d-7038-8002-afa9-c758167f6dea
+> Spring Security 中, 很多种认证方式, JWT 或者 http.formLogin 或者 httpBasic(Customizer.withDefaults()); 且他们可以同时存在, 但一般不会这么做, [了解更多](https://chatgpt.com/share/67aeb98d-7038-8002-afa9-c758167f6dea)
 >
 > 对于纯 REST API 场景，使用无状态认证（JWT 或 OAuth2）是主流做法，后端无需维护 Session，更适合前后端分离和分布式微服务场景。如果业务中尚有一部分需要基于 Session 的传统登录或后台管理，可以针对不同路径（`/home`, `/discuss`, `/api/users`, `/api/posts/[id]`）进行多 `HttpSecurity` 配置，把 JWT 和 FormLogin (Session) 并存。
 
@@ -494,31 +519,6 @@ public class AppConfig {
 ```
 
 两种方式都会让 `MyService` 变成 Spring 管理的 Bean，但一般推荐用 `@Component`，除非 `MyService` 需要复杂的初始化逻辑。
-
-```java
-1. 用户发送 `POST /login` 请求
-2. `SecurityFilterChain`（接口，定义 Spring Security 过滤器链）
-   - 由 `DefaultSecurityFilterChain` 实现
-   - 其中包含 `UsernamePasswordAuthenticationFilter`
-   - `UsernamePasswordAuthenticationFilter` 解析请求，并调用 `AuthenticationManager`
-3. `AuthenticationManager`（接口，定义认证管理逻辑）
-   - 由 `ProviderManager` 实现
-   - `ProviderManager` 遍历 `List<AuthenticationProvider>`
-4. `AuthenticationProvider`（接口，定义认证提供者）
-   - `DaoAuthenticationProvider`（`AuthenticationProvider` 的实现）
-   - `DaoAuthenticationProvider` 调用 `UserDetailsService.loadUserByUsername()`
-5. `UserDetailsService`（接口，定义用户数据加载逻辑）
-   - 由 `MyUserDetailsService` 实现
-   - `MyUserDetailsService` 查询数据库，返回 `UserDetails`（包含用户名、密码、权限）
-6. `DaoAuthenticationProvider` 使用 `PasswordEncoder` 验证密码
-   - `PasswordEncoder.matches(rawPassword, encodedPassword)`
-   - 由 `BCryptPasswordEncoder` 实现
-7. 如果认证成功：
-   - `DaoAuthenticationProvider` 返回 `UsernamePasswordAuthenticationToken`（已认证的 `Authentication` 对象）
-   - `ProviderManager` 返回 `Authentication`，认证完成
-   - `SecurityContextHolder` 存储 `Authentication`，用户成功登录
-8. 认证通过后，Spring Security 允许访问受保护资源
-```
 
 
 
