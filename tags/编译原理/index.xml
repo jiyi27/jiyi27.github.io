@@ -6,16 +6,121 @@
     <description>Recent content in 编译原理 on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 04 Feb 2025 08:50:26 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 15 Feb 2025 15:07:57 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>JVM 启动时都加载了哪些类 - Java 编译原理</title>
+      <link>https://blog.jiyi27.com/posts/java/basics/002-compile-java/</link>
+      <pubDate>Sat, 15 Feb 2025 15:07:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/java/basics/002-compile-java/</guid>
+      <description>&lt;h2 id=&#34;1--java-代码的执行流程&#34;&gt;1.  Java 代码的执行流程&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;源代码编译：Java 源代码（&lt;code&gt;.java&lt;/code&gt; 文件）首先由 Java 编译器 (Javac) 编译成 字节码 (Bytecode), 生成二进制的 &lt;code&gt;.class&lt;/code&gt; 文件, 字节码是一种中间表示, 不是直接的机器码&lt;/li&gt;
+&lt;li&gt;Java 源代码在编译后会变成 &lt;code&gt;.class&lt;/code&gt; 字节码文件, JVM 在执行时会采用 &lt;strong&gt;两种方式&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;解释执行 (Interpretation)：JVM 逐行翻译字节码, 并立即执行, 这就是“边翻译边执行”&lt;/li&gt;
+&lt;li&gt;JIT (Just-In-Time Compilation)：JVM 发现高频代码（如循环、热点方法）, 会使用 JIT Compiler 将其编译成本地机器码, 避免重复翻译, 提高执行效率&lt;/li&gt;
+&lt;li&gt;JIT Compiler: 如 HotSpot VM 的 C1/C2 编译器&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;扩充1:&lt;/strong&gt; 类的生命周期 主要发生在 JVM 运行时, 且仅在类第一次被使用时触发, 并不是 JVM 启动时就一次性加载所有类,&lt;/p&gt;
+&lt;p&gt;类的生命周期包括: 加载→验证→准备→解析→初始化&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;**扩充2: ** 编译时, 每个单独的 &lt;code&gt;.java&lt;/code&gt; 源码文件被认为是一个单独的编译单元, 被单独编译成一个 .class 字节码文件, 所以在 Java 项目中, 通常会被编译成多个 &lt;code&gt;.class&lt;/code&gt; 文件, 如果直接分发 &lt;code&gt;.class&lt;/code&gt; 文件, 管理起来会很麻烦, 因此, Java 提供了 &lt;code&gt;.jar&lt;/code&gt; 这种格式, 可以把多个 &lt;code&gt;.class&lt;/code&gt; 文件打包在一起, 便于 分发、部署和加载&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1--java-代码的执行流程&#34;&gt;1.  Java 代码的执行流程&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;源代码编译：Java 源代码（&lt;code&gt;.java&lt;/code&gt; 文件）首先由 Java 编译器 (Javac) 编译成 字节码 (Bytecode), 生成二进制的 &lt;code&gt;.class&lt;/code&gt; 文件, 字节码是一种中间表示, 不是直接的机器码&lt;/li&gt;
+&lt;li&gt;Java 源代码在编译后会变成 &lt;code&gt;.class&lt;/code&gt; 字节码文件, JVM 在执行时会采用 &lt;strong&gt;两种方式&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;解释执行 (Interpretation)：JVM 逐行翻译字节码, 并立即执行, 这就是“边翻译边执行”&lt;/li&gt;
+&lt;li&gt;JIT (Just-In-Time Compilation)：JVM 发现高频代码（如循环、热点方法）, 会使用 JIT Compiler 将其编译成本地机器码, 避免重复翻译, 提高执行效率&lt;/li&gt;
+&lt;li&gt;JIT Compiler: 如 HotSpot VM 的 C1/C2 编译器&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;扩充1:&lt;/strong&gt; 类的生命周期 主要发生在 JVM 运行时, 且仅在类第一次被使用时触发, 并不是 JVM 启动时就一次性加载所有类,&lt;/p&gt;
+&lt;p&gt;类的生命周期包括: 加载→验证→准备→解析→初始化&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;**扩充2: ** 编译时, 每个单独的 &lt;code&gt;.java&lt;/code&gt; 源码文件被认为是一个单独的编译单元, 被单独编译成一个 .class 字节码文件, 所以在 Java 项目中, 通常会被编译成多个 &lt;code&gt;.class&lt;/code&gt; 文件, 如果直接分发 &lt;code&gt;.class&lt;/code&gt; 文件, 管理起来会很麻烦, 因此, Java 提供了 &lt;code&gt;.jar&lt;/code&gt; 这种格式, 可以把多个 &lt;code&gt;.class&lt;/code&gt; 文件打包在一起, 便于 分发、部署和加载&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-手动编译并运行-java-程序&#34;&gt;2. 手动编译并运行 java 程序&lt;/h2&gt;
+&lt;p&gt;目录结构:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── myproject
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   └── src
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── Main.java
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       └── animal
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           └── Cat.java
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;代码内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Cat.java&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;package&lt;/span&gt; animal;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cat&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String name;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cat&lt;/span&gt;(String name) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; name;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;mew~&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Main.java&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; animal.Cat;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Main&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String &lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt;args){
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Cat cat &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Cat(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;kitty&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在&lt;code&gt;src&lt;/code&gt;下编译:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;javac Main.java
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;编译后多出了两个字节码文件,  如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── myproject
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   └── src
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── Main.class
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── Main.java
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       └── animal
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           ├── Cat.class
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           └── Cat.java
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以发现, 我们只是编译了&lt;code&gt;Main.java&lt;/code&gt;, 被其用到的类 &lt;code&gt;Cat.java&lt;/code&gt; 也被编译了, 然后在其它文件夹下执行该程序, 用 &lt;code&gt;-cp&lt;/code&gt; 来指明 classpath, 即告诉 JVM 去哪找 user-defined class 字节码文件, &lt;code&gt;-cp&lt;/code&gt; 默认值为当前文件夹: &lt;code&gt;./&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ java -cp myproject/src Main 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mew~
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; Technically, &lt;code&gt;javac&lt;/code&gt; is the program that translates Java code into bytecode (.class file). And &lt;code&gt;java&lt;/code&gt; is the program that starts the &lt;strong&gt;JVM&lt;/strong&gt;, which in turn, loads the &lt;code&gt;.class&lt;/code&gt; file, verifies the bytecode and executes it.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;3-jvm-启动时都加载了哪些类&#34;&gt;3. JVM 启动时都加载了哪些类&lt;/h2&gt;
+&lt;p&gt;The virtual machine searches for and loads classes in this order:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Bootstrap Classes 引导类, 加载核心库, 主要包含 Java 标准库的基础类 如 &lt;code&gt;java.lang.*&lt;/code&gt; (&lt;code&gt;String&lt;/code&gt;、&lt;code&gt;Object&lt;/code&gt;、&lt;code&gt;Math&lt;/code&gt;、&lt;code&gt;System&lt;/code&gt;)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Extension ClassLoader 加载扩展库&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;User classes - Classes defined by developers and third parties that do not take advantage of the extension mechanism. You identify the location of these classes using the &lt;code&gt;-classpath&lt;/code&gt; option on the command line (the preferred method) or by using the CLASSPATH environment variable.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In general, you only have to specify the location of user classes. Bootstrap classes and extension classes are found &amp;ldquo;automatically&amp;rdquo;.&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
     <item>
       <title>JVM 运行时常量池 - 动态链接</title>
-      <link>https://blog.jiyi27.com/posts/java/basics/005-dynamic-linking-constant-pool/</link>
+      <link>https://blog.jiyi27.com/posts/java/basics/005-jvm-constant-pool/</link>
       <pubDate>Tue, 04 Feb 2025 08:50:26 +0000</pubDate>
       
-      <guid>https://blog.jiyi27.com/posts/java/basics/005-dynamic-linking-constant-pool/</guid>
-      <description>&lt;h2 id=&#34;1-run-time-data-areas---运行时常量池&#34;&gt;1. Run-Time Data Areas - 运行时常量池&lt;/h2&gt;
-&lt;p&gt;在 JVM 内存分类 两种方式 文章里, 我们知道了 JVM 中只有 Run-Time Data Areas 的概念, 即用来放数据的地方, 它的主要分类逻辑就是线程共享和线程私有区域, 而我们平时更倾向于站在堆栈传统角度对内存进行分类, 因为这样很容易理解, 今天就看一下  Run-Time Data Areas 线程共享区域的 运行时常量池, 因为在 JVM 类加载的过程中它很重要, 就相当于编译中的符号表, 在动态链接的时候主要就靠它来告诉 JVM 该类用到了哪些标准库的东西, 外部的类和函数, 去哪加载 等等,&lt;/p&gt;
-&lt;h2 id=&#34;2-每个-class-文件都有一个常量池&#34;&gt;2. 每个 .class 文件都有一个常量池&lt;/h2&gt;
+      <guid>https://blog.jiyi27.com/posts/java/basics/005-jvm-constant-pool/</guid>
+      <description>&lt;h2 id=&#34;1-前言&#34;&gt;1. 前言&lt;/h2&gt;
+&lt;p&gt;JVM 规范中只有 Run-Time Data Areas 的概念, 它的主要分类逻辑就是线程共享和线程私有区域, 而我们平时更倾向于站在堆栈传统角度对内存进行分类, 因为这样很容易理解,&lt;/p&gt;
+&lt;p&gt;在 JVM 类加载过程中 Run-Time Data Areas 方法区的 Runtime Constant Pool 很重要, 相当于编译中的符号表, 在动态链接的时候主要就靠它来告诉 JVM 该类用到了哪些标准库的东西, 外部的类和函数, 去哪加载等等元数据信息, 今天就来研究一下&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Run-Time Data Areas
+ └─ Method Area
+     └─ Runtime Constant Pool
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;2-每个-class-文件都有一个常量池&#34;&gt;2. 每个 .class 文件都有一个常量池&lt;/h2&gt;
 &lt;p&gt;在 Java 中，&lt;strong&gt;每一个 &lt;code&gt;.class&lt;/code&gt; 文件&lt;/strong&gt;里都带有一张自己的&lt;strong&gt;常量池&lt;/strong&gt;。这张常量池的存在是为了在字节码里用 “符号引用” 或 “常量” 来代替真正的类、方法、字段、字符串、数值等内容，并且让它们可以在 JVM 运行时 被 “解析” 成真实的类、方法或者对象引用。&lt;/p&gt;
 &lt;p&gt;为什么每个 &lt;code&gt;.class&lt;/code&gt; 文件都有自己的常量池？&lt;/p&gt;
 &lt;ul&gt;
@@ -30,9 +135,13 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;编译后执行 &lt;code&gt;javac Demo.java&lt;/code&gt;，得到 &lt;code&gt;Demo.class&lt;/code&gt;, 然后用 &lt;code&gt;javap -v Demo.class&lt;/code&gt; 查看其常量池部分：&lt;/p&gt;</description>
-      <content>&lt;h2 id=&#34;1-run-time-data-areas---运行时常量池&#34;&gt;1. Run-Time Data Areas - 运行时常量池&lt;/h2&gt;
-&lt;p&gt;在 JVM 内存分类 两种方式 文章里, 我们知道了 JVM 中只有 Run-Time Data Areas 的概念, 即用来放数据的地方, 它的主要分类逻辑就是线程共享和线程私有区域, 而我们平时更倾向于站在堆栈传统角度对内存进行分类, 因为这样很容易理解, 今天就看一下  Run-Time Data Areas 线程共享区域的 运行时常量池, 因为在 JVM 类加载的过程中它很重要, 就相当于编译中的符号表, 在动态链接的时候主要就靠它来告诉 JVM 该类用到了哪些标准库的东西, 外部的类和函数, 去哪加载 等等,&lt;/p&gt;
-&lt;h2 id=&#34;2-每个-class-文件都有一个常量池&#34;&gt;2. 每个 .class 文件都有一个常量池&lt;/h2&gt;
+      <content>&lt;h2 id=&#34;1-前言&#34;&gt;1. 前言&lt;/h2&gt;
+&lt;p&gt;JVM 规范中只有 Run-Time Data Areas 的概念, 它的主要分类逻辑就是线程共享和线程私有区域, 而我们平时更倾向于站在堆栈传统角度对内存进行分类, 因为这样很容易理解,&lt;/p&gt;
+&lt;p&gt;在 JVM 类加载过程中 Run-Time Data Areas 方法区的 Runtime Constant Pool 很重要, 相当于编译中的符号表, 在动态链接的时候主要就靠它来告诉 JVM 该类用到了哪些标准库的东西, 外部的类和函数, 去哪加载等等元数据信息, 今天就来研究一下&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Run-Time Data Areas
+ └─ Method Area
+     └─ Runtime Constant Pool
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;2-每个-class-文件都有一个常量池&#34;&gt;2. 每个 .class 文件都有一个常量池&lt;/h2&gt;
 &lt;p&gt;在 Java 中，&lt;strong&gt;每一个 &lt;code&gt;.class&lt;/code&gt; 文件&lt;/strong&gt;里都带有一张自己的&lt;strong&gt;常量池&lt;/strong&gt;。这张常量池的存在是为了在字节码里用 “符号引用” 或 “常量” 来代替真正的类、方法、字段、字符串、数值等内容，并且让它们可以在 JVM 运行时 被 “解析” 成真实的类、方法或者对象引用。&lt;/p&gt;
 &lt;p&gt;为什么每个 &lt;code&gt;.class&lt;/code&gt; 文件都有自己的常量池？&lt;/p&gt;
 &lt;ul&gt;
@@ -92,24 +201,24 @@ Constant pool:
       ...
 }
 &lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;4-常量池里都有啥&#34;&gt;4. 常量池里都有啥？&lt;/h2&gt;
-&lt;p&gt;&lt;strong&gt;&lt;code&gt;#1 = Methodref #7.#22 // java/io/PrintStream.println:(Ljava/lang/String;)V&lt;/code&gt;&lt;/strong&gt;
-表示：这是一个 &lt;strong&gt;&lt;code&gt;Methodref&lt;/code&gt;&lt;/strong&gt; 常量，指向“类 #7”与“NameAndType #22”的组合&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#1 = Methodref #7.#22 // java/io/PrintStream.println:(Ljava/lang/String;)V&lt;/code&gt;
+表示：这是一个 &lt;code&gt;Methodref&lt;/code&gt; 常量，指向“类 #7”与“NameAndType #22”的组合&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;“类 #7” 就是 &lt;code&gt;java/io/PrintStream&lt;/code&gt;（见后面 &lt;code&gt;#7 = Utf8 &amp;quot;java/io/PrintStream&amp;quot;&lt;/code&gt;）&lt;/li&gt;
 &lt;li&gt;“NameAndType #22” 则表示方法名和方法描述符——在 &lt;code&gt;#22&lt;/code&gt; 里你会看到 &lt;code&gt;&amp;lt;println:(Ljava/lang/String;)V&amp;gt;&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;strong&gt;&lt;code&gt;#2 = String #23 // Hello World&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;表示：这是一个 &lt;strong&gt;&lt;code&gt;String&lt;/code&gt;&lt;/strong&gt; 常量，对应了 “字符串 #23”；“#23” 实际是一个 &lt;code&gt;Utf8&lt;/code&gt; 条目，存放 &lt;code&gt;&amp;quot;Hello World&amp;quot;&lt;/code&gt; 的字符&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;&lt;code&gt;#3 = Fieldref #8.#24 // java/lang/System.out:Ljava/io/PrintStream;&lt;/code&gt;&lt;/strong&gt;
-表示：这是一个 &lt;strong&gt;&lt;code&gt;Fieldref&lt;/code&gt;&lt;/strong&gt; 常量，指向“类 #8”与“NameAndType #24”的组合&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#2 = String #23 // Hello World&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;表示：这是一个 &lt;code&gt;String&lt;/code&gt; 常量，对应了 “字符串 #23”；“#23” 实际是一个 &lt;code&gt;Utf8&lt;/code&gt; 条目，存放 &lt;code&gt;&amp;quot;Hello World&amp;quot;&lt;/code&gt; 的字符&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#3 = Fieldref #8.#24 // java/lang/System.out:Ljava/io/PrintStream;&lt;/code&gt;
+表示：这是一个 &lt;code&gt;Fieldref&lt;/code&gt; 常量，指向“类 #8”与“NameAndType #24”的组合&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;“类 #8” -&amp;gt; &lt;code&gt;java/lang/System&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;“NameAndType #24” -&amp;gt; “&lt;code&gt;out:Ljava/io/PrintStream;&lt;/code&gt;”&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;strong&gt;&lt;code&gt;#22 = NameAndType #27:#28 // println:(Ljava/lang/String;)V&lt;/code&gt;&lt;/strong&gt;
-表示：这是一个 &lt;strong&gt;&lt;code&gt;NameAndType&lt;/code&gt;&lt;/strong&gt; 常量，&lt;code&gt;#27&lt;/code&gt; 是方法名 &lt;code&gt;println&lt;/code&gt;，&lt;code&gt;#28&lt;/code&gt; 是方法描述符 &lt;code&gt;&amp;quot;(Ljava/lang/String;)V&amp;quot;&lt;/code&gt;&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;&lt;code&gt;#23 = Utf8 &amp;quot;Hello World&amp;quot;&lt;/code&gt;&lt;/strong&gt;
-表示：这是一个存放字符串 &lt;code&gt;&amp;quot;Hello World&amp;quot;&lt;/code&gt; 的 &lt;strong&gt;&lt;code&gt;Utf8&lt;/code&gt;&lt;/strong&gt; 常量&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#22 = NameAndType #27:#28 // println:(Ljava/lang/String;)V&lt;/code&gt;
+表示：这是一个 &lt;code&gt;NameAndType&lt;/code&gt; 常量，&lt;code&gt;#27&lt;/code&gt; 是方法名 &lt;code&gt;println&lt;/code&gt;，&lt;code&gt;#28&lt;/code&gt; 是方法描述符 &lt;code&gt;&amp;quot;(Ljava/lang/String;)V&amp;quot;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#23 = Utf8 &amp;quot;Hello World&amp;quot;&lt;/code&gt;
+表示：这是一个存放字符串 &lt;code&gt;&amp;quot;Hello World&amp;quot;&lt;/code&gt; 的 &lt;code&gt;Utf8&lt;/code&gt; 常量&lt;/p&gt;
 &lt;p&gt;可以看到，编译器把你写的代码里所有用到的类名、方法名、字段名、描述符以及字符串字面量，都以 各种类型的 cp_info（&lt;code&gt;Methodref&lt;/code&gt;、&lt;code&gt;Fieldref&lt;/code&gt;、&lt;code&gt;NameAndType&lt;/code&gt;、&lt;code&gt;Utf8&lt;/code&gt;、&lt;code&gt;String&lt;/code&gt; 等）记录到了同一个常量池数组里。&lt;/p&gt;
 &lt;h2 id=&#34;5-这些条目在运行时怎么被用到&#34;&gt;5. 这些条目在运行时怎么被用到？&lt;/h2&gt;
 &lt;p&gt;在实际运行过程中，你可以从反汇编的字节码看到：&lt;/p&gt;
@@ -128,7 +237,7 @@ Constant pool:
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;3: ldc           #2      // String Hello World
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;5: invokevirtual #1      // Method java/io/PrintStream.println:(Ljava/lang/String;)V
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;8: return
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这里的 &lt;code&gt;#3&lt;/code&gt;, &lt;code&gt;#2&lt;/code&gt;, &lt;code&gt;#1&lt;/code&gt; 是常量池索引。当 JVM 在解释或JIT 编译这些指令时，如果某个索引还没解析，就会触发解析逻辑&lt;/p&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这里的 &lt;code&gt;#3&lt;/code&gt;, &lt;code&gt;#2&lt;/code&gt;, &lt;code&gt;#1&lt;/code&gt; 是常量池索引, 当 JVM 在解释或JIT 编译这些指令时，如果某个索引还没解析，就会触发解析逻辑。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;解析 &lt;code&gt;#3&lt;/code&gt; (getstatic …)&lt;/strong&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;
@@ -767,102 +876,6 @@ str = 5       # now it is an integer; perfectly OK
 &lt;li&gt;&lt;a href=&#34;https://dave.cheney.net/tag/cgo&#34;&gt;cgo | Dave Cheney&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://mt165.co.uk/blog/static-link-go/index.html&#34;&gt;Matt Turner - Statically Linking Go in 2022&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-</content>
-    </item>
-    
-    <item>
-      <title>手动编译运行 Java 程序 - JVM 加载类的顺序</title>
-      <link>https://blog.jiyi27.com/posts/java/basics/002-compile-java/</link>
-      <pubDate>Wed, 26 Jul 2023 17:52:40 +0000</pubDate>
-      
-      <guid>https://blog.jiyi27.com/posts/java/basics/002-compile-java/</guid>
-      <description>&lt;h2 id=&#34;1-java--javac&#34;&gt;1. java &amp;amp; javac&lt;/h2&gt;
-&lt;p&gt;Technically, &lt;code&gt;javac&lt;/code&gt; is the program that translates Java code into bytecode (.class file).&lt;/p&gt;
-&lt;p&gt;And &lt;code&gt;java&lt;/code&gt; is the program that starts the &lt;strong&gt;JVM&lt;/strong&gt;, which in turn, loads the &lt;code&gt;.class&lt;/code&gt; file, verifies the bytecode and executes it.&lt;/p&gt;
-&lt;h2 id=&#34;2-手动编译并运行java程序&#34;&gt;2. 手动编译并运行java程序&lt;/h2&gt;
-&lt;p&gt;目录结构:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── myproject
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   └── src
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── Main.java
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       └── animal
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           └── Cat.java
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;代码内容:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Cat.java&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;package&lt;/span&gt; animal;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cat&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String name;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cat&lt;/span&gt;(String name) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; name;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;mew~&amp;#34;&lt;/span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Main.java&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; animal.Cat;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Main&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String &lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt;args){
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Cat cat &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Cat(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;kitty&amp;#34;&lt;/span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在&lt;code&gt;src&lt;/code&gt;下编译:&lt;/p&gt;</description>
-      <content>&lt;h2 id=&#34;1-java--javac&#34;&gt;1. java &amp;amp; javac&lt;/h2&gt;
-&lt;p&gt;Technically, &lt;code&gt;javac&lt;/code&gt; is the program that translates Java code into bytecode (.class file).&lt;/p&gt;
-&lt;p&gt;And &lt;code&gt;java&lt;/code&gt; is the program that starts the &lt;strong&gt;JVM&lt;/strong&gt;, which in turn, loads the &lt;code&gt;.class&lt;/code&gt; file, verifies the bytecode and executes it.&lt;/p&gt;
-&lt;h2 id=&#34;2-手动编译并运行java程序&#34;&gt;2. 手动编译并运行java程序&lt;/h2&gt;
-&lt;p&gt;目录结构:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── myproject
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   └── src
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── Main.java
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       └── animal
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           └── Cat.java
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;代码内容:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Cat.java&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;package&lt;/span&gt; animal;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cat&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String name;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cat&lt;/span&gt;(String name) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; name;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;mew~&amp;#34;&lt;/span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Main.java&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; animal.Cat;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Main&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String &lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt;args){
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Cat cat &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Cat(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;kitty&amp;#34;&lt;/span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在&lt;code&gt;src&lt;/code&gt;下编译:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;javac Main.java
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;编译后多出了两个字节码文件,  如下:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── myproject
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   └── src
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── Main.class
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── Main.java
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       └── animal
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           ├── Cat.class
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           └── Cat.java
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以发现, 我们只是编译了&lt;code&gt;Main.java&lt;/code&gt;, 被其用到的类 &lt;code&gt;Cat.java&lt;/code&gt; 也被编译了, 然后在其它文件夹下执行该程序, 用 &lt;code&gt;-cp&lt;/code&gt; 来指明 classpath, 即告诉 JVM 去哪找 user-defined class 字节码文件, &lt;code&gt;-cp&lt;/code&gt; 默认值为当前文件夹: &lt;code&gt;./&lt;/code&gt;&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ java -cp myproject/src Main 
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mew~
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-how-jvm-finds-classes&#34;&gt;3. How JVM Finds Classes&lt;/h2&gt;
-&lt;p&gt;The virtual machine searches for and loads classes in this order:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;Bootstrap Classes 引导类, 加载核心库, 主要包含 Java 标准库的基础类 如 &lt;code&gt;java.lang.*&lt;/code&gt; (&lt;code&gt;String&lt;/code&gt;、&lt;code&gt;Object&lt;/code&gt;、&lt;code&gt;Math&lt;/code&gt;、&lt;code&gt;System&lt;/code&gt;)&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;Extension ClassLoader 加载扩展库&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;User classes - Classes defined by developers and third parties that do not take advantage of the extension mechanism. You identify the location of these classes using the &lt;code&gt;-classpath&lt;/code&gt; option on the command line (the preferred method) or by using the CLASSPATH environment variable.&lt;/p&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;In general, you only have to specify the location of user classes. Bootstrap classes and extension classes are found &amp;ldquo;automatically&amp;rdquo;.&lt;/p&gt;
-&lt;blockquote&gt;
-&lt;p&gt;在 Java 项目中，代码通常会被编译成多个 &lt;code&gt;.class&lt;/code&gt; 文件。如果直接分发 &lt;code&gt;.class&lt;/code&gt; 文件，管理起来会很麻烦。因此，Java 提供了 &lt;code&gt;.jar&lt;/code&gt; 这种格式，可以把多个 &lt;code&gt;.class&lt;/code&gt; 文件打包在一起，便于 分发、部署和加载。&lt;/p&gt;
-&lt;/blockquote&gt;
 </content>
     </item>
     

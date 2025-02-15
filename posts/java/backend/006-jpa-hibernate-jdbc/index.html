@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>JDBC, JPA, ORM Hibernate :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. JDBC vs MySQL Connector JDBC（Java Database Connectivity）是 Java 访问数据库的最底层标准规范和 API。它提供了连接数据库、执行 SQL、获取结果集等核心功能。
+后面提到的 MyBatis、Hibernate、Spring Data JPA 都是基于 JDBC 来执行底层 SQL 操作的。
+可以直接编写 SQL、使用 PreparedStatement 等 API 来执行操作。
+Sometimes, I always mistake MySQL driver for JDBC, a little funny, lol. JDBC is part of JDK, which is java&rsquo;s standard library, like code belowjava.sql.* belongs to Java SE API, which is also called JDBC API.
+We often add com.mysql.cj.jdbc.Driver dependency to our maven project. Actually com.mysql.cj.jdbc.Driver is MySQL Connector.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/java/backend/006-jpa-hibernate-jdbc/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="JDBC, JPA, ORM Hibernate">
+<meta property="og:description" content="1. JDBC vs MySQL Connector JDBC（Java Database Connectivity）是 Java 访问数据库的最底层标准规范和 API。它提供了连接数据库、执行 SQL、获取结果集等核心功能。
+后面提到的 MyBatis、Hibernate、Spring Data JPA 都是基于 JDBC 来执行底层 SQL 操作的。
+可以直接编写 SQL、使用 PreparedStatement 等 API 来执行操作。
+Sometimes, I always mistake MySQL driver for JDBC, a little funny, lol. JDBC is part of JDK, which is java&rsquo;s standard library, like code belowjava.sql.* belongs to Java SE API, which is also called JDBC API.
+We often add com.mysql.cj.jdbc.Driver dependency to our maven project. Actually com.mysql.cj.jdbc.Driver is MySQL Connector.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/java/backend/006-jpa-hibernate-jdbc/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="java" />
+
+
+  <meta property="article:published_time" content="2025-02-06 23:15:20 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/java/backend/006-jpa-hibernate-jdbc/">JDBC, JPA, ORM Hibernate</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-02-06</time><span class="post-reading-time">4 分钟阅读 (775 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/java/">java</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/spring/">spring</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-jdbc-vs-mysql-connector">1. JDBC vs MySQL Connector<a href="#1-jdbc-vs-mysql-connector" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<blockquote>
+<p>JDBC（Java Database Connectivity）是 Java 访问数据库的最底层标准规范和 API。它提供了连接数据库、执行 SQL、获取结果集等核心功能。</p>
+<p>后面提到的 MyBatis、Hibernate、Spring Data JPA 都是基于 JDBC 来执行底层 SQL 操作的。</p>
+<p>可以直接编写 SQL、使用 <code>PreparedStatement</code> 等 API 来执行操作。</p>
+</blockquote>
+<p>Sometimes, I always mistake MySQL driver for JDBC, a little funny, lol. JDBC is part of JDK, which is java&rsquo;s standard library, like code below<code>java.sql.*</code> belongs to <strong>Java SE API</strong>, which is also called JDBC API.</p>
+<p>We often add <code>com.mysql.cj.jdbc.Driver</code> dependency to our maven project. Actually <code>com.mysql.cj.jdbc.Driver</code> is MySQL Connector.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">package</span> database;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// java.sql.* 属于 Java SE API, 这就是 JDBC API</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.sql.Connection;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.sql.DriverManager;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.sql.SQLException;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MysqlDatabase</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> Connection <span style="color:#a6e22e">connect</span>() <span style="color:#66d9ef">throws</span> SQLException {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// You must load jdbc driver, otherwise you will get null for connection.</span>
+</span></span><span style="display:flex;"><span>        Class.<span style="color:#a6e22e">forName</span>(<span style="color:#e6db74">&#34;com.mysql.cj.jdbc.Driver&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> DriverManager.<span style="color:#a6e22e">getConnection</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">url</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">user</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">password</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/02/79dc888c7c722f47ead990dff67223ee.png" alt=""></p>
+<p>As shown above <code>java.sql.SQLException</code> and <code>java.sql.Connection</code> are all belong to <code>java.sql.*</code> which is part of java se api, namely, JDBC. So we don&rsquo;t commucate with MySQL database with MySQL Connector directly, actually, we conmmucate with MySQL(retrive &amp; insert data) by &ldquo;talking&rdquo; to JDBC API, then JDBC API commucate with MySQL Connector, and MySQL Connector commucate with MySQL database.</p>
+<h2 id="2-jpa-jakarta-persistence-api">2. JPA (Jakarta Persistence API)<a href="#2-jpa-jakarta-persistence-api" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>JPA 只是一个规范, 它定义了一套接口和注解体系，比如 <code>@Entity</code>, <code>@Table</code>, <code>@Id</code>, <code>@Column</code> 等。</p>
+<p>JPA 的实现：要想让 JPA 的接口和注解真的“跑起来”，就需要有一个具体的实现类库（provider）</p>
+<ul>
+<li>Hibernate 是 JPA 的一个实现。它负责解析 JPA 的注解，并执行具体的 ORM（对象关系映射）逻辑，比如生成 SQL 语句，管理数据库操作等。<strong>JPA 只是定义规则，而 Hibernate 负责执行。</strong> 如果没有 JPA 的实现，<code>@Entity</code> 等注解就没有意义</li>
+<li>OpenJPA（Apache 的实现）</li>
+</ul>
+<p><strong>Spring Data JPA</strong> 是 <strong>基于 JPA 规范</strong> 的一个 Spring 生态组件，它简化了 JPA 的使用，比如提供了 <code>JpaRepository</code> 让你不用手写 SQL 查询。Spring Data JPA 仍然需要 JPA Provider（比如 Hibernate） 来执行实际的数据库操作。Spring Data JPA 本身不是 ORM 框架，它只是对 JPA 进行了封装，使得 JPA 的使用更方便。</p>
+<blockquote>
+<p>MyBatis 是一款半 ORM / 数据映射（Data Mapper）框架，与传统的 JDBC 相比更灵活且简化了数据访问的过程，但不像 Hibernate 那样做全量的实体与表的自动映射。</p>
+<p><strong>MyBatis 不是 JPA 实现</strong>，而是另一种独立的 ORM 方案，不能用来替代 Hibernate，但可以在项目中和 JPA 共同使用（比如复杂查询用 MyBatis，简单增删改查用 JPA）。</p>
+</blockquote>
+<h2 id="3-spring-data-jpa--jpa--hibernate-各司其职">3. Spring Data JPA + JPA + Hibernate 各司其职<a href="#3-spring-data-jpa--jpa--hibernate-各司其职" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-jpamodel-层">3.1. JPA（Model 层）<a href="#31-jpamodel-层" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">import</span> jakarta.persistence.*;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Entity</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Table</span>(name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;users&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">User</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Id</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@GeneratedValue</span>(strategy <span style="color:#f92672">=</span> GenerationType.<span style="color:#a6e22e">IDENTITY</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> Long id;
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// nullable = false 在 Java 层面防止错误数据进入数据库，即使数据库层面有 NOT NULL 约束</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Column</span>(nullable <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>, unique <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>, length <span style="color:#f92672">=</span> 50)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> String username;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<ul>
+<li><code>@Entity</code>：标明该类是 JPA 实体</li>
+<li><code>@Table(name = &quot;users&quot;)</code>：指定数据库表名</li>
+<li><code>@Id</code>、<code>@GeneratedValue</code>：定义主键及其生成策略</li>
+<li><code>@Column</code>：指定字段约束</li>
+</ul>
+<p>这里 <code>@Entity</code> 和 <code>@Table</code> 等是 JPA 规范的一部分，它们只是 <strong>告诉 JPA Provider（比如 Hibernate）</strong>，这个类需要映射到数据库表。但真正解析这些注解并生成 SQL 语句的是 Hibernate。你写的是 JPA 代码，但实际 SQL 是 Hibernate 生成的, <strong>JPA 只定义规则，Hibernate 负责执行。</strong></p>
+</blockquote>
+<h3 id="32-spring-data-jparepository-层">3.2. Spring Data JPA（Repository 层）<a href="#32-spring-data-jparepository-层" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Spring Data JPA 让我们可以不写 SQL 也能操作数据库：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">import</span> org.springframework.data.jpa.repository.JpaRepository;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> org.springframework.data.jpa.repository.Query;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> org.springframework.data.repository.query.Param;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> org.springframework.stereotype.Repository;
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Repository</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">PostRepository</span> <span style="color:#66d9ef">extends</span> JpaRepository<span style="color:#f92672">&lt;</span>Post, Long<span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 查找用户的所有帖子</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Query</span>(<span style="color:#e6db74">&#34;SELECT p FROM Post p WHERE p.userId = :userId AND p.status = 1&#34;</span>)
+</span></span><span style="display:flex;"><span>    Page<span style="color:#f92672">&lt;</span>Post<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findByUserId</span>(<span style="color:#a6e22e">@Param</span>(<span style="color:#e6db74">&#34;userId&#34;</span>) Long userId, Pageable pageable);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 查找所有正常状态的帖子（分页）</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Query</span>(<span style="color:#e6db74">&#34;SELECT p FROM Post p WHERE p.status = 1&#34;</span>)
+</span></span><span style="display:flex;"><span>    Page<span style="color:#f92672">&lt;</span>Post<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findAllActivePosts</span>(Pageable pageable);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<p><code>@Query</code>、<code>@Param</code>、<code>JpaRepository</code>、<code>Pageable</code> 等注解和接口都是 Spring Data JPA 提供的，而不是 标准 JPA（Jakarta Persistence API） 或 Hibernate 本身的一部分。</p>
+<p>这些方法 <strong>不需要手动实现</strong>，<strong>Spring Data JPA</strong> 会<strong>自动</strong>生成对应的 SQL 语句并执行，你只需要声明方法即可直接调用。</p>
+</blockquote>
+<p><code>@Query</code> 可以优化掉，让 Spring Data JPA 自动生成 SQL 语句, Spring Data JPA 会 <strong>自动解析方法名</strong> 生成 SQL 查询, 上面代码可以改成:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Repository</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">PostRepository</span> <span style="color:#66d9ef">extends</span> JpaRepository<span style="color:#f92672">&lt;</span>Post, Long<span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 查找用户的所有正常状态帖子</span>
+</span></span><span style="display:flex;"><span>    Page<span style="color:#f92672">&lt;</span>Post<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findByUserIdAndStatus</span>(Long userId, <span style="color:#66d9ef">int</span> status, Pageable pageable);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 查找所有正常状态的帖子</span>
+</span></span><span style="display:flex;"><span>    Page<span style="color:#f92672">&lt;</span>Post<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findByStatus</span>(<span style="color:#66d9ef">int</span> status, Pageable pageable);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>如果查询逻辑 复杂，Spring Data JPA 无法自动推断，就需要 <code>@Query</code>，比如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Query</span>(<span style="color:#e6db74">&#34;SELECT p FROM Post p WHERE p.userId = :userId AND p.status = 1 ORDER BY p.createdAt DESC&#34;</span>)
+</span></span><span style="display:flex;"><span>List<span style="color:#f92672">&lt;</span>Post<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findRecentPostsByUser</span>(<span style="color:#a6e22e">@Param</span>(<span style="color:#e6db74">&#34;userId&#34;</span>) Long userId);
+</span></span></code></pre></div><h3 id="33-hibernate持久化层">3.3. <strong>Hibernate（持久化层）</strong><a href="#33-hibernate持久化层" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Hibernate 作为 JPA Provider，在后台实际执行 SQL 语句, 当我们调用 <code>userRepository.findByEmail(&quot;test@example.com&quot;)</code> 时，Hibernate 会生成 SQL 查询：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>SELECT <span style="color:#f92672">*</span> FROM users WHERE email <span style="color:#f92672">=</span> <span style="color:#960050;background-color:#1e0010">&#39;</span>test<span style="color:#a6e22e">@example.com</span><span style="color:#960050;background-color:#1e0010">&#39;</span> LIMIT 1;
+</span></span></code></pre></div><h2 id="4-spring-data-jpa--jpa--hibernate">4. Spring Data JPA + JPA + Hibernate<a href="#4-spring-data-jpa--jpa--hibernate" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">import</span> org.springframework.data.jpa.repository.JpaRepository;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.util.Optional;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">UserRepository</span> <span style="color:#66d9ef">extends</span> JpaRepository<span style="color:#f92672">&lt;</span>User, Long<span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>    Optional<span style="color:#f92672">&lt;</span>User<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findByEmail</span>(String email);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这里 <code>findByEmail(String email)</code> 方法没有实现，为什么它还能执行数据库查询呢？这是 <strong>Spring Data JPA + JPA + Hibernate</strong> 三者协作的结果。</p>
+<p>当你调用：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>Optional<span style="color:#f92672">&lt;</span>User<span style="color:#f92672">&gt;</span> user <span style="color:#f92672">=</span> userRepository.<span style="color:#a6e22e">findByEmail</span>(<span style="color:#e6db74">&#34;test@example.com&#34;</span>);
+</span></span></code></pre></div><p>Spring Data JPA、JPA（EntityManager）和 Hibernate 会分别执行自己的工作：</p>
+<p><strong>1️⃣ Spring Data JPA（提供 Repository 代理）</strong></p>
+<p>Spring Data JPA 看到 <code>UserRepository</code> 继承了 <code>JpaRepository</code>，就会：</p>
+<ul>
+<li>自动生成 <code>findByEmail</code> 方法的实现</li>
+<li>调用 JPA 的 <code>EntityManager</code> API 进行查询</li>
+</ul>
+<p>📌 这里的关键点：</p>
+<ul>
+<li>你没有手写 SQL，但 Spring Data JPA 根据方法名 解析出查询意图</li>
+<li>它会调用 JPA（EntityManager） 来执行查询</li>
+</ul>
+<p><strong>2️⃣ JPA（EntityManager 提供查询 API）</strong></p>
+<p>Spring Data JPA 内部会使用 JPA 的 <code>EntityManager</code> 执行查询：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>entityManager.<span style="color:#a6e22e">createQuery</span>(<span style="color:#e6db74">&#34;SELECT u FROM User u WHERE u.email = :email&#34;</span>, User.<span style="color:#a6e22e">class</span>);
+</span></span></code></pre></div><p>📌 JPA（EntityManager）在这里的角色：</p>
+<ul>
+<li>提供 API 让 Spring Data JPA 调用（比如 <code>createQuery()</code>）</li>
+<li>不会解析和执行 SQL，它只是 JPA 标准的实现者</li>
+</ul>
+<p><strong>3️⃣ Hibernate（JPA Provider 解析 &amp; 执行 SQL）</strong></p>
+<p>Hibernate 作为 JPA Provider，接手 <code>EntityManager</code> 提供的查询请求，并执行 SQL：</p>
+<ul>
+<li>
+<p>解析 JPQL：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> u <span style="color:#66d9ef">FROM</span> <span style="color:#66d9ef">User</span> u <span style="color:#66d9ef">WHERE</span> u.email <span style="color:#f92672">=</span> :email
+</span></span></code></pre></div></li>
+<li>
+<p>转换成原生 SQL（针对 MySQL、PostgreSQL 等数据库生成 SQL）：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> users <span style="color:#66d9ef">WHERE</span> email <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;test@example.com&#39;</span> <span style="color:#66d9ef">LIMIT</span> <span style="color:#ae81ff">1</span>;
+</span></span></code></pre></div></li>
+<li>
+<p>执行 SQL，从数据库查询结果，并返回 <code>User</code> 实例。</p>
+</li>
+</ul>
+<p>📌 Hibernate 负责的部分：</p>
+<ul>
+<li>解析 JPA 的查询语法（JPQL）</li>
+<li>生成 SQL 并执行</li>
+<li>把数据库查询结果转换成 Java 对象</li>
+</ul>
+<p><strong>完整流程总结</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th><strong>步骤</strong></th>
+          <th><strong>执行者</strong></th>
+          <th><strong>作用</strong></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>1</strong></td>
+          <td><strong>Spring Data JPA</strong></td>
+          <td>解析 <code>findByEmail</code> 方法，调用 <code>EntityManager</code></td>
+      </tr>
+      <tr>
+          <td><strong>2</strong></td>
+          <td><strong>JPA（EntityManager）</strong></td>
+          <td>负责 API 调用，准备 JPQL 查询</td>
+      </tr>
+      <tr>
+          <td><strong>3</strong></td>
+          <td><strong>Hibernate</strong></td>
+          <td>解析 JPQL，转换为 SQL，并执行查询</td>
+      </tr>
+      <tr>
+          <td><strong>4</strong></td>
+          <td><strong>数据库</strong></td>
+          <td>运行 SQL，返回数据</td>
+      </tr>
+      <tr>
+          <td><strong>5</strong></td>
+          <td><strong>Hibernate</strong></td>
+          <td>解析 SQL 结果，转换成 <code>User</code> 对象</td>
+      </tr>
+      <tr>
+          <td><strong>6</strong></td>
+          <td><strong>Spring Data JPA</strong></td>
+          <td>返回 <code>User</code> 对象给调用者</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>总结</strong></p>
+<ul>
+<li>Spring Data JPA 让你不用手写 SQL，直接调用 <code>JpaRepository</code> 方法</li>
+<li>JPA（EntityManager） 只是提供 API，不会执行 SQL</li>
+<li>Hibernate 作为 JPA Provider，负责执行 SQL，并转换结果</li>
+</ul>
+<p>💡 <strong>最终的 SQL 查询是 Hibernate 负责执行的</strong>，Spring Data JPA 和 JPA 只是提供 API 和接口，真正的数据库操作全靠 Hibernate。</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/005-link-algorithm/" class="button inline prev">
+        算法题 链表系列
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/java/basics/003-jvm-memory/" class="button inline next">
+        JVM 内存结构 两种分类方式
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

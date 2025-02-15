@@ -3,15 +3,13 @@
 <head>
   
     
-    <title>手动编译运行 Java 程序 - JVM 加载类的顺序 :: 为霜的博客</title>
+    <title>JVM 启动时都加载了哪些类 - Java 编译原理 :: 为霜的博客</title>
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="1. java &amp; javac Technically, javac is the program that translates Java code into bytecode (.class file).
-And java is the program that starts the JVM, which in turn, loads the .class file, verifies the bytecode and executes it.
-2. 手动编译并运行java程序 目录结构:
-├── myproject │ └── src │ ├── Main.java │ └── animal │ └── Cat.java 代码内容:
-// Cat.java package animal; public class Cat { String name; public Cat(String name) { this.name = name; System.out.println(&#34;mew~&#34;); } } // Main.java import animal.Cat; public class Main { public static void main(String []args){ Cat cat = new Cat(&#34;kitty&#34;); } } 在src下编译:
+<meta name="description" content="1. Java 代码的执行流程 源代码编译：Java 源代码（.java 文件）首先由 Java 编译器 (Javac) 编译成 字节码 (Bytecode), 生成二进制的 .class 文件, 字节码是一种中间表示, 不是直接的机器码 Java 源代码在编译后会变成 .class 字节码文件, JVM 在执行时会采用 两种方式： 解释执行 (Interpretation)：JVM 逐行翻译字节码, 并立即执行, 这就是“边翻译边执行” JIT (Just-In-Time Compilation)：JVM 发现高频代码（如循环、热点方法）, 会使用 JIT Compiler 将其编译成本地机器码, 避免重复翻译, 提高执行效率 JIT Compiler: 如 HotSpot VM 的 C1/C2 编译器 扩充1: 类的生命周期 主要发生在 JVM 运行时, 且仅在类第一次被使用时触发, 并不是 JVM 启动时就一次性加载所有类,
+类的生命周期包括: 加载→验证→准备→解析→初始化
+**扩充2: ** 编译时, 每个单独的 .java 源码文件被认为是一个单独的编译单元, 被单独编译成一个 .class 字节码文件, 所以在 Java 项目中, 通常会被编译成多个 .class 文件, 如果直接分发 .class 文件, 管理起来会很麻烦, 因此, Java 提供了 .jar 这种格式, 可以把多个 .class 文件打包在一起, 便于 分发、部署和加载
 " />
 <meta name="keywords" content="" />
 
@@ -86,12 +84,10 @@ And java is the program that starts the JVM, which in turn, loads the .class fil
 
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
-<meta property="og:title" content="手动编译运行 Java 程序 - JVM 加载类的顺序">
-<meta property="og:description" content="1. java &amp; javac Technically, javac is the program that translates Java code into bytecode (.class file).
-And java is the program that starts the JVM, which in turn, loads the .class file, verifies the bytecode and executes it.
-2. 手动编译并运行java程序 目录结构:
-├── myproject │ └── src │ ├── Main.java │ └── animal │ └── Cat.java 代码内容:
-// Cat.java package animal; public class Cat { String name; public Cat(String name) { this.name = name; System.out.println(&#34;mew~&#34;); } } // Main.java import animal.Cat; public class Main { public static void main(String []args){ Cat cat = new Cat(&#34;kitty&#34;); } } 在src下编译:
+<meta property="og:title" content="JVM 启动时都加载了哪些类 - Java 编译原理">
+<meta property="og:description" content="1. Java 代码的执行流程 源代码编译：Java 源代码（.java 文件）首先由 Java 编译器 (Javac) 编译成 字节码 (Bytecode), 生成二进制的 .class 文件, 字节码是一种中间表示, 不是直接的机器码 Java 源代码在编译后会变成 .class 字节码文件, JVM 在执行时会采用 两种方式： 解释执行 (Interpretation)：JVM 逐行翻译字节码, 并立即执行, 这就是“边翻译边执行” JIT (Just-In-Time Compilation)：JVM 发现高频代码（如循环、热点方法）, 会使用 JIT Compiler 将其编译成本地机器码, 避免重复翻译, 提高执行效率 JIT Compiler: 如 HotSpot VM 的 C1/C2 编译器 扩充1: 类的生命周期 主要发生在 JVM 运行时, 且仅在类第一次被使用时触发, 并不是 JVM 启动时就一次性加载所有类,
+类的生命周期包括: 加载→验证→准备→解析→初始化
+**扩充2: ** 编译时, 每个单独的 .java 源码文件被认为是一个单独的编译单元, 被单独编译成一个 .class 字节码文件, 所以在 Java 项目中, 通常会被编译成多个 .class 文件, 如果直接分发 .class 文件, 管理起来会很麻烦, 因此, Java 提供了 .jar 这种格式, 可以把多个 .class 文件打包在一起, 便于 分发、部署和加载
 " />
 <meta property="og:url" content="https://blog.jiyi27.com/posts/java/basics/002-compile-java/" />
 <meta property="og:site_name" content="为霜的博客" />
@@ -104,7 +100,7 @@ And java is the program that starts the JVM, which in turn, loads the .class fil
   <meta property="article:section" content="java" />
 
 
-  <meta property="article:published_time" content="2023-07-26 17:52:40 &#43;0000 UTC" />
+  <meta property="article:published_time" content="2025-02-15 15:07:57 &#43;0000 UTC" />
 
 
 
@@ -131,9 +127,9 @@ And java is the program that starts the JVM, which in turn, loads the .class fil
     
 <article class="post">
   <h1 class="post-title">
-    <a href="https://blog.jiyi27.com/posts/java/basics/002-compile-java/">手动编译运行 Java 程序 - JVM 加载类的顺序</a>
+    <a href="https://blog.jiyi27.com/posts/java/basics/002-compile-java/">JVM 启动时都加载了哪些类 - Java 编译原理</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2023-07-26</time><span class="post-reading-time">2 分钟阅读 (253 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2025-02-15</time><span class="post-reading-time">2 分钟阅读 (324 字数)</span></div>
 
   
     <span class="post-tags">
@@ -152,10 +148,25 @@ And java is the program that starts the JVM, which in turn, loads the .class fil
   
 
   <div class="post-content"><div>
-        <h2 id="1-java--javac">1. java &amp; javac<a href="#1-java--javac" class="hanchor" ariaLabel="Anchor">#</a> </h2>
-<p>Technically, <code>javac</code> is the program that translates Java code into bytecode (.class file).</p>
-<p>And <code>java</code> is the program that starts the <strong>JVM</strong>, which in turn, loads the <code>.class</code> file, verifies the bytecode and executes it.</p>
-<h2 id="2-手动编译并运行java程序">2. 手动编译并运行java程序<a href="#2-手动编译并运行java程序" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+        <h2 id="1--java-代码的执行流程">1.  Java 代码的执行流程<a href="#1--java-代码的执行流程" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<ol>
+<li>源代码编译：Java 源代码（<code>.java</code> 文件）首先由 Java 编译器 (Javac) 编译成 字节码 (Bytecode), 生成二进制的 <code>.class</code> 文件, 字节码是一种中间表示, 不是直接的机器码</li>
+<li>Java 源代码在编译后会变成 <code>.class</code> 字节码文件, JVM 在执行时会采用 <strong>两种方式</strong>：
+<ul>
+<li>解释执行 (Interpretation)：JVM 逐行翻译字节码, 并立即执行, 这就是“边翻译边执行”</li>
+<li>JIT (Just-In-Time Compilation)：JVM 发现高频代码（如循环、热点方法）, 会使用 JIT Compiler 将其编译成本地机器码, 避免重复翻译, 提高执行效率</li>
+<li>JIT Compiler: 如 HotSpot VM 的 C1/C2 编译器</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p><strong>扩充1:</strong> 类的生命周期 主要发生在 JVM 运行时, 且仅在类第一次被使用时触发, 并不是 JVM 启动时就一次性加载所有类,</p>
+<p>类的生命周期包括: 加载→验证→准备→解析→初始化</p>
+</blockquote>
+<blockquote>
+<p>**扩充2: ** 编译时, 每个单独的 <code>.java</code> 源码文件被认为是一个单独的编译单元, 被单独编译成一个 .class 字节码文件, 所以在 Java 项目中, 通常会被编译成多个 <code>.class</code> 文件, 如果直接分发 <code>.class</code> 文件, 管理起来会很麻烦, 因此, Java 提供了 <code>.jar</code> 这种格式, 可以把多个 <code>.class</code> 文件打包在一起, 便于 分发、部署和加载</p>
+</blockquote>
+<h2 id="2-手动编译并运行-java-程序">2. 手动编译并运行 java 程序<a href="#2-手动编译并运行-java-程序" class="hanchor" ariaLabel="Anchor">#</a> </h2>
 <p>目录结构:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>├── myproject
 </span></span><span style="display:flex;"><span>│   └── src
@@ -193,7 +204,10 @@ And java is the program that starts the JVM, which in turn, loads the .class fil
 </span></span></code></pre></div><p>可以发现, 我们只是编译了<code>Main.java</code>, 被其用到的类 <code>Cat.java</code> 也被编译了, 然后在其它文件夹下执行该程序, 用 <code>-cp</code> 来指明 classpath, 即告诉 JVM 去哪找 user-defined class 字节码文件, <code>-cp</code> 默认值为当前文件夹: <code>./</code></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ java -cp myproject/src Main 
 </span></span><span style="display:flex;"><span>mew~
-</span></span></code></pre></div><h2 id="3-how-jvm-finds-classes">3. How JVM Finds Classes<a href="#3-how-jvm-finds-classes" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+</span></span></code></pre></div><blockquote>
+<p><strong>Note:</strong> Technically, <code>javac</code> is the program that translates Java code into bytecode (.class file). And <code>java</code> is the program that starts the <strong>JVM</strong>, which in turn, loads the <code>.class</code> file, verifies the bytecode and executes it.</p>
+</blockquote>
+<h2 id="3-jvm-启动时都加载了哪些类">3. JVM 启动时都加载了哪些类<a href="#3-jvm-启动时都加载了哪些类" class="hanchor" ariaLabel="Anchor">#</a> </h2>
 <p>The virtual machine searches for and loads classes in this order:</p>
 <ul>
 <li>
@@ -206,9 +220,8 @@ And java is the program that starts the JVM, which in turn, loads the .class fil
 <p>User classes - Classes defined by developers and third parties that do not take advantage of the extension mechanism. You identify the location of these classes using the <code>-classpath</code> option on the command line (the preferred method) or by using the CLASSPATH environment variable.</p>
 </li>
 </ul>
-<p>In general, you only have to specify the location of user classes. Bootstrap classes and extension classes are found &ldquo;automatically&rdquo;.</p>
 <blockquote>
-<p>在 Java 项目中，代码通常会被编译成多个 <code>.class</code> 文件。如果直接分发 <code>.class</code> 文件，管理起来会很麻烦。因此，Java 提供了 <code>.jar</code> 这种格式，可以把多个 <code>.class</code> 文件打包在一起，便于 分发、部署和加载。</p>
+<p>In general, you only have to specify the location of user classes. Bootstrap classes and extension classes are found &ldquo;automatically&rdquo;.</p>
 </blockquote>
 
       </div></div>
@@ -222,16 +235,10 @@ And java is the program that starts the JVM, which in turn, loads the .class fil
   </div>
   <div class="pagination__buttons">
     
-      <a href="https://blog.jiyi27.com/posts/java/basics/001-jdk-jre-jvm/" class="button inline prev">
-        JDK JRE JVM JavaSE
-      </a>
     
     
-      ::
-    
-    
-      <a href="https://blog.jiyi27.com/posts/bugs/001-npm-install-locally/" class="button inline next">
-        npm install 总是安装到全局目录排查与解决
+      <a href="https://blog.jiyi27.com/posts/interview/002-nuggets-java-basic/" class="button inline next">
+        Java 基础八股文
       </a>
     
   </div>
