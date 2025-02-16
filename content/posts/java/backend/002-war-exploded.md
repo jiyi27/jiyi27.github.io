@@ -2,10 +2,9 @@
 title: IDEA 项目中的 War 和 War Exploded 的区别
 date: 2023-04-25 14:27:35
 categories:
- - java
+ - spring boot
 tags:
- - java
- - spring
+ - spring boot
 ---
 
 在 IDEA 把 webapp deploy 到 tomcat上的时候会看到以下设置:

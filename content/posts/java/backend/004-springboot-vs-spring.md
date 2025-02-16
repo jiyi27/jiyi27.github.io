@@ -2,10 +2,9 @@
 title: Spring Boot 与 Spring 框架的对比-阅读笔记
 date: 2023-04-25 12:30:22
 categories:
- - java
+ - spring boot
 tags:
- - java
- - spring
+ - spring boot
 ---
 
 ## 1. 什么是Spring Boot

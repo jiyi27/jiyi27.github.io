@@ -2,10 +2,9 @@
 title: JDBC, JPA, ORM Hibernate
 date: 2025-02-06 23:15:20
 categories:
- - java
+ - spring boot
 tags:
- - java
- - spring
+ - spring boot
 ---
 
 ## 1. JDBC vs MySQL Connector

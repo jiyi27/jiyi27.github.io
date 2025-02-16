@@ -2,10 +2,9 @@
 title: Spring Security 一根难啃的骨头
 date: 2025-02-13 20:29:10
 categories:
- - java
+ - spring boot
 tags:
- - java
- - spring
+ - spring boot
 ---
 
 ## 1. 前言
