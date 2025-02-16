@@ -16,7 +16,7 @@ Java SE（Java Standard Edition，Java 标准版）
 
 Java EE（Java Enterprise Edition，Java 企业版）
 
-- 在 Java SE 的基础上，提供 企业级开发功能，如 Servlet、JSP
+- 在 Java SE 的基础上，提供 企业级开发功能，如 Servlet、JSP、JDBC
 
 ## 2. JDK
 

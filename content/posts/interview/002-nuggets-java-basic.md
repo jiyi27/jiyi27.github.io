@@ -135,3 +135,94 @@ int len = s.length();
 
 所以若程序编译后直接存储物理地址, 是不现实的, 除非一个机器只运行特定的一个程序, 
 
+## 3. Java 基本类型和包装类型的区别
+
+包装类型 (也叫引用类型) 就是把基础值包装成一个类然后添加一些常用工具方法, 基础类型就是最基本的, 告诉编译器分配多大内存空间
+
+>  注意：**基本数据类型存放在栈中是一个常见的误区！** 基本数据类型的存储位置取决于它们的作用域和声明方式。如果它们是局部变量，那么它们会存放在栈中；如果它们是成员变量，那么它们会存放在堆/方法区/元空间中。
+
+## 4. 自动装箱与拆箱
+
+**装箱**：将基本类型用它们对应的引用类型包装起来；
+
+**拆箱**：将包装类型转换为基本数据类型；调用包装类型对象的 `valueOf()`方法
+
+```java
+Integer i = 10;  //装箱
+int n = i;   //拆箱
+```
+
+## 5. 泛型
+
+**泛型类（需要显式声明）**
+
+```java
+class Box<T> {
+    private T value;
+    public Box(T value) { this.value = value; }
+}
+
+// 使用时必须写 <Integer>
+Box<Integer> box = new Box<>(123);
+```
+
+**泛型方法（自动推断）**
+
+```java
+public <T> void print(T value) {
+    System.out.println(value);
+}
+
+print(123);      // 自动推断 T = Integer
+print("Hello");  // 自动推断 T = String
+```
+
+上面的函数声明也可以改写为:
+```java
+public <T> T print(T value) {
+    System.out.println(value);
+}
+```
+
+意思是, 函数 print 接受的参数值类型为 T, 返回值类型也是 T, 
+
+```java
+String str = print("Hello, Generics!");  // 传入 String
+Integer num = print(100);                // 传入 Integer
+Double decimal = print(99.99);           // 传入 Double
+```
+
+**泛型方法可以定义多个类型参数**
+
+```java
+// 泛型方法可以定义多个类型参数
+public static <T, U> void showPair(T first, U second) {
+    System.out.println("First: " + first + ", Second: " + second);
+}
+
+showPair("Age", 25);     // String 和 Integer
+showPair(3.14, true);    // Double 和 Boolean
+showPair('A', "Apple");  // Character 和 String
+
+// 输出
+First: Age, Second: 25
+First: 3.14, Second: true
+First: A, Second: Apple
+```
+
+
+
+```bash
+curl -X POST "http://localhost:8080/api/posts" \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NjczNjI1LCJleHAiOjE3Mzk3NjAwMjV9.T4CYnCRlVidX0V2K8ag5ETINSH-YMmporfqC8fLNQdo" \
+     -d '{
+           "title": "My First Post",
+           "content": "This is a test post content."
+         }' -v
+
+curl -X POST "http://localhost:8080/api/posts/user/1" \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NjczNjI1LCJleHAiOjE3Mzk3NjAwMjV9.T4CYnCRlVidX0V2K8ag5ETINSH-YMmporfqC8fLNQdo" -v
+```
+
