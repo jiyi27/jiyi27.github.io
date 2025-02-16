@@ -6,7 +6,51 @@
     <description>Recent content in Bugs on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sun, 26 Jan 2025 10:36:22 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/bugs/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 16 Feb 2025 12:49:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/bugs/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Spring Boot 踩坑汇总</title>
+      <link>https://blog.jiyi27.com/posts/java/backend/007-nuggets-spring-boot/</link>
+      <pubDate>Sun, 16 Feb 2025 12:49:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/java/backend/007-nuggets-spring-boot/</guid>
+      <description>&lt;h2 id=&#34;1-responsestatusexception-总是返回-403&#34;&gt;1. &lt;code&gt;ResponseStatusException&lt;/code&gt; 总是返回 403&lt;/h2&gt;
+&lt;p&gt;Service 层的部分代码:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (isPostLiked(postId, userId)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;throw&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; ResponseStatusException(HttpStatus.&lt;span style=&#34;color:#a6e22e&#34;&gt;CONFLICT&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;已经点赞过该帖子&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可是每次执行到这里, 客户端收到的总是 403 forbidden, 而不是 409, 刚开始猜想是这个异常被框架的某个部分吞了, 然后全都自动翻译成 403, 其实并不是这样, 我在&lt;a href=&#34;https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html#_all_dispatches_are_authorized&#34;&gt;官方文档&lt;/a&gt;找到了对应的描述:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The &lt;code&gt;AuthorizationFilter&lt;/code&gt; runs not just on every request, but on every dispatch. This means that the &lt;code&gt;REQUEST&lt;/code&gt; dispatch needs authorization, but also &lt;code&gt;FORWARD&lt;/code&gt;s, &lt;code&gt;ERROR&lt;/code&gt;s, and &lt;code&gt;INCLUDE&lt;/code&gt;s.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;当 ResponseStatusException 被抛出时, Spring MVC &lt;strong&gt;不会直接把 409 发送给客户端&lt;/strong&gt;, 而是会&lt;strong&gt;触发 &lt;code&gt;ERROR&lt;/code&gt; Dispatch&lt;/strong&gt;, &lt;code&gt;ERROR&lt;/code&gt; dispatch 不是一个真正的 HTTP 请求, 而是在服务器内部重新分发请求的机制, 这个机制不是客户端发起的，而是服务器自己创建的, 目的是：&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-responsestatusexception-总是返回-403&#34;&gt;1. &lt;code&gt;ResponseStatusException&lt;/code&gt; 总是返回 403&lt;/h2&gt;
+&lt;p&gt;Service 层的部分代码:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (isPostLiked(postId, userId)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;throw&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; ResponseStatusException(HttpStatus.&lt;span style=&#34;color:#a6e22e&#34;&gt;CONFLICT&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;已经点赞过该帖子&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可是每次执行到这里, 客户端收到的总是 403 forbidden, 而不是 409, 刚开始猜想是这个异常被框架的某个部分吞了, 然后全都自动翻译成 403, 其实并不是这样, 我在&lt;a href=&#34;https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html#_all_dispatches_are_authorized&#34;&gt;官方文档&lt;/a&gt;找到了对应的描述:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The &lt;code&gt;AuthorizationFilter&lt;/code&gt; runs not just on every request, but on every dispatch. This means that the &lt;code&gt;REQUEST&lt;/code&gt; dispatch needs authorization, but also &lt;code&gt;FORWARD&lt;/code&gt;s, &lt;code&gt;ERROR&lt;/code&gt;s, and &lt;code&gt;INCLUDE&lt;/code&gt;s.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;当 ResponseStatusException 被抛出时, Spring MVC &lt;strong&gt;不会直接把 409 发送给客户端&lt;/strong&gt;, 而是会&lt;strong&gt;触发 &lt;code&gt;ERROR&lt;/code&gt; Dispatch&lt;/strong&gt;, &lt;code&gt;ERROR&lt;/code&gt; dispatch 不是一个真正的 HTTP 请求, 而是在服务器内部重新分发请求的机制, 这个机制不是客户端发起的，而是服务器自己创建的, 目的是：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;让 Spring 的全局异常处理（比如 &lt;code&gt;@ControllerAdvice&lt;/code&gt;）有机会处理这个错误&lt;/li&gt;
+&lt;li&gt;让 &lt;code&gt;/error&lt;/code&gt; 端点（如果有）可以生成友好的错误页面或 JSON 响应&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Spring Security 认为 &lt;code&gt;ERROR&lt;/code&gt; dispatch 是新的请求, 默认情况下，&lt;code&gt;ERROR&lt;/code&gt; dispatch 需要单独授权, 否则可能会被拦截, 导致 &lt;code&gt;403 Forbidden&lt;/code&gt;,&lt;/p&gt;
+&lt;p&gt;所以直接修改 Spring Security 配置代码:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;http.&lt;span style=&#34;color:#a6e22e&#34;&gt;authorizeHttpRequests&lt;/span&gt;(auth &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; auth
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .&lt;span style=&#34;color:#a6e22e&#34;&gt;requestMatchers&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/api/users/login&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/api/users/register&amp;#34;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;permitAll&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 允许所有人访问错误页面（防止 Spring Security 拦截 500, 400 等错误页面）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .&lt;span style=&#34;color:#a6e22e&#34;&gt;dispatcherTypeMatchers&lt;/span&gt;(DispatcherType.&lt;span style=&#34;color:#a6e22e&#34;&gt;ERROR&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;permitAll&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .&lt;span style=&#34;color:#a6e22e&#34;&gt;anyRequest&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;authenticated&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;参考: &lt;a href=&#34;https://stackoverflow.com/a/76951737/16317008&#34;&gt;Why is Spring ResponseStatusException 400 translated into 403&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
     <item>
       <title>记录 CORS Preflight Request 错误前后端排查过程</title>
       <link>https://blog.jiyi27.com/posts/bugs/012-cors-options/</link>

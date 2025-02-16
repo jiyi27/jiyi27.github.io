@@ -6,7 +6,357 @@
     <description>Recent content in 零碎知识 on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 07 Dec 2024 18:20:22 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E9%9B%B6%E7%A2%8E%E7%9F%A5%E8%AF%86/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 16 Feb 2025 12:49:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E9%9B%B6%E7%A2%8E%E7%9F%A5%E8%AF%86/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Spring Boot 踩坑汇总</title>
+      <link>https://blog.jiyi27.com/posts/java/backend/007-nuggets-spring-boot/</link>
+      <pubDate>Sun, 16 Feb 2025 12:49:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/java/backend/007-nuggets-spring-boot/</guid>
+      <description>&lt;h2 id=&#34;1-responsestatusexception-总是返回-403&#34;&gt;1. &lt;code&gt;ResponseStatusException&lt;/code&gt; 总是返回 403&lt;/h2&gt;
+&lt;p&gt;Service 层的部分代码:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (isPostLiked(postId, userId)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;throw&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; ResponseStatusException(HttpStatus.&lt;span style=&#34;color:#a6e22e&#34;&gt;CONFLICT&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;已经点赞过该帖子&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可是每次执行到这里, 客户端收到的总是 403 forbidden, 而不是 409, 刚开始猜想是这个异常被框架的某个部分吞了, 然后全都自动翻译成 403, 其实并不是这样, 我在&lt;a href=&#34;https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html#_all_dispatches_are_authorized&#34;&gt;官方文档&lt;/a&gt;找到了对应的描述:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The &lt;code&gt;AuthorizationFilter&lt;/code&gt; runs not just on every request, but on every dispatch. This means that the &lt;code&gt;REQUEST&lt;/code&gt; dispatch needs authorization, but also &lt;code&gt;FORWARD&lt;/code&gt;s, &lt;code&gt;ERROR&lt;/code&gt;s, and &lt;code&gt;INCLUDE&lt;/code&gt;s.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;当 ResponseStatusException 被抛出时, Spring MVC &lt;strong&gt;不会直接把 409 发送给客户端&lt;/strong&gt;, 而是会&lt;strong&gt;触发 &lt;code&gt;ERROR&lt;/code&gt; Dispatch&lt;/strong&gt;, &lt;code&gt;ERROR&lt;/code&gt; dispatch 不是一个真正的 HTTP 请求, 而是在服务器内部重新分发请求的机制, 这个机制不是客户端发起的，而是服务器自己创建的, 目的是：&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-responsestatusexception-总是返回-403&#34;&gt;1. &lt;code&gt;ResponseStatusException&lt;/code&gt; 总是返回 403&lt;/h2&gt;
+&lt;p&gt;Service 层的部分代码:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (isPostLiked(postId, userId)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;throw&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; ResponseStatusException(HttpStatus.&lt;span style=&#34;color:#a6e22e&#34;&gt;CONFLICT&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;已经点赞过该帖子&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可是每次执行到这里, 客户端收到的总是 403 forbidden, 而不是 409, 刚开始猜想是这个异常被框架的某个部分吞了, 然后全都自动翻译成 403, 其实并不是这样, 我在&lt;a href=&#34;https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html#_all_dispatches_are_authorized&#34;&gt;官方文档&lt;/a&gt;找到了对应的描述:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The &lt;code&gt;AuthorizationFilter&lt;/code&gt; runs not just on every request, but on every dispatch. This means that the &lt;code&gt;REQUEST&lt;/code&gt; dispatch needs authorization, but also &lt;code&gt;FORWARD&lt;/code&gt;s, &lt;code&gt;ERROR&lt;/code&gt;s, and &lt;code&gt;INCLUDE&lt;/code&gt;s.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;当 ResponseStatusException 被抛出时, Spring MVC &lt;strong&gt;不会直接把 409 发送给客户端&lt;/strong&gt;, 而是会&lt;strong&gt;触发 &lt;code&gt;ERROR&lt;/code&gt; Dispatch&lt;/strong&gt;, &lt;code&gt;ERROR&lt;/code&gt; dispatch 不是一个真正的 HTTP 请求, 而是在服务器内部重新分发请求的机制, 这个机制不是客户端发起的，而是服务器自己创建的, 目的是：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;让 Spring 的全局异常处理（比如 &lt;code&gt;@ControllerAdvice&lt;/code&gt;）有机会处理这个错误&lt;/li&gt;
+&lt;li&gt;让 &lt;code&gt;/error&lt;/code&gt; 端点（如果有）可以生成友好的错误页面或 JSON 响应&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Spring Security 认为 &lt;code&gt;ERROR&lt;/code&gt; dispatch 是新的请求, 默认情况下，&lt;code&gt;ERROR&lt;/code&gt; dispatch 需要单独授权, 否则可能会被拦截, 导致 &lt;code&gt;403 Forbidden&lt;/code&gt;,&lt;/p&gt;
+&lt;p&gt;所以直接修改 Spring Security 配置代码:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;http.&lt;span style=&#34;color:#a6e22e&#34;&gt;authorizeHttpRequests&lt;/span&gt;(auth &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; auth
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .&lt;span style=&#34;color:#a6e22e&#34;&gt;requestMatchers&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/api/users/login&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/api/users/register&amp;#34;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;permitAll&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 允许所有人访问错误页面（防止 Spring Security 拦截 500, 400 等错误页面）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .&lt;span style=&#34;color:#a6e22e&#34;&gt;dispatcherTypeMatchers&lt;/span&gt;(DispatcherType.&lt;span style=&#34;color:#a6e22e&#34;&gt;ERROR&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;permitAll&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .&lt;span style=&#34;color:#a6e22e&#34;&gt;anyRequest&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;authenticated&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;参考: &lt;a href=&#34;https://stackoverflow.com/a/76951737/16317008&#34;&gt;Why is Spring ResponseStatusException 400 translated into 403&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Java 基础八股文</title>
+      <link>https://blog.jiyi27.com/posts/interview/002-nuggets-java-basic/</link>
+      <pubDate>Sat, 15 Feb 2025 10:30:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/002-nuggets-java-basic/</guid>
+      <description>&lt;h2 id=&#34;1-访问控制修饰符&#34;&gt;1. 访问控制修饰符&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;访问修饰符&lt;/th&gt;
+          &lt;th&gt;同一个类&lt;/th&gt;
+          &lt;th&gt;同一个包&lt;/th&gt;
+          &lt;th&gt;子类（不同包）&lt;/th&gt;
+          &lt;th&gt;其他包&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;private&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;default&lt;/strong&gt;（无修饰符）&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;protected&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;public&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;2-java-类的生命周期&#34;&gt;2. Java 类的生命周期&lt;/h2&gt;
+&lt;h3 id=&#34;21-基本概念&#34;&gt;2.1. 基本概念&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;类的生命周期包括: 加载 &amp;ndash;&amp;gt; 验证 &amp;ndash;&amp;gt; 准备 &amp;ndash;&amp;gt; 解析 &amp;ndash;&amp;gt; 初始化 &amp;ndash;&amp;gt; 使用 &amp;ndash;&amp;gt; 卸载&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;类只会被加载一次&lt;/strong&gt;, 即使 &lt;code&gt;new&lt;/code&gt; 了多个对象, 也不会重复加载,&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;类的加载是个连续的过程, 加载完就会进入验证, 准备等阶段&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;类的初始化 vs 对象的初始化&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;类初始化是 JVM 处理静态变量和静态代码块的过程, 发生在类的生命周期中, 类的初始化只执行一次（类第一次被加载时）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;对象初始化是创建对象并赋值实例变量的过程, 发生在实例化阶段（&lt;code&gt;new&lt;/code&gt; 关键字）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;JVM 不会在程序启动时一次性加载所有类, 而是按需加载, 触发类加载的条件：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;创建类的实例（&lt;code&gt;new&lt;/code&gt; 操作）&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-访问控制修饰符&#34;&gt;1. 访问控制修饰符&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;访问修饰符&lt;/th&gt;
+          &lt;th&gt;同一个类&lt;/th&gt;
+          &lt;th&gt;同一个包&lt;/th&gt;
+          &lt;th&gt;子类（不同包）&lt;/th&gt;
+          &lt;th&gt;其他包&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;private&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;default&lt;/strong&gt;（无修饰符）&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;protected&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;public&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;2-java-类的生命周期&#34;&gt;2. Java 类的生命周期&lt;/h2&gt;
+&lt;h3 id=&#34;21-基本概念&#34;&gt;2.1. 基本概念&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;类的生命周期包括: 加载 &amp;ndash;&amp;gt; 验证 &amp;ndash;&amp;gt; 准备 &amp;ndash;&amp;gt; 解析 &amp;ndash;&amp;gt; 初始化 &amp;ndash;&amp;gt; 使用 &amp;ndash;&amp;gt; 卸载&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;类只会被加载一次&lt;/strong&gt;, 即使 &lt;code&gt;new&lt;/code&gt; 了多个对象, 也不会重复加载,&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;类的加载是个连续的过程, 加载完就会进入验证, 准备等阶段&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;类的初始化 vs 对象的初始化&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;类初始化是 JVM 处理静态变量和静态代码块的过程, 发生在类的生命周期中, 类的初始化只执行一次（类第一次被加载时）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;对象初始化是创建对象并赋值实例变量的过程, 发生在实例化阶段（&lt;code&gt;new&lt;/code&gt; 关键字）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;JVM 不会在程序启动时一次性加载所有类, 而是按需加载, 触发类加载的条件：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;创建类的实例（&lt;code&gt;new&lt;/code&gt; 操作）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;访问类的静态成员（静态变量、静态方法）&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;静态变量/方法属于&lt;strong&gt;类级别&lt;/strong&gt;，JVM 在访问它之前必须确保类已经被加载&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;调用 Class.forName(&amp;ldquo;类名&amp;rdquo;) 反射加载: &lt;code&gt;Class.forName()&lt;/code&gt; 直接强制 JVM 加载并初始化该类&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;子类初始化时，父类会先被初始化&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;引用类的静态常量（&lt;code&gt;static final&lt;/code&gt;）：不会触发类的加载, 因为 &lt;code&gt;static final&lt;/code&gt; 常量在编译时已确定, 编译器会直接替换值&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;A&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;final&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; CONST &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 100;  &lt;span style=&#34;color:#75715e&#34;&gt;// 常量&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; value &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 10;         &lt;span style=&#34;color:#75715e&#34;&gt;// 静态变量&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;A 类初始化&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Test&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String&lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt; args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(A.&lt;span style=&#34;color:#a6e22e&#34;&gt;CONST&lt;/span&gt;);  &lt;span style=&#34;color:#75715e&#34;&gt;// 不会触发 A 的加载&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(A.&lt;span style=&#34;color:#a6e22e&#34;&gt;value&lt;/span&gt;);  &lt;span style=&#34;color:#75715e&#34;&gt;// 触发 A 的加载&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;22-过程&#34;&gt;2.2. 过程&lt;/h3&gt;
+&lt;h4 id=&#34;221-加载&#34;&gt;2.2.1. 加载&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;JVM 通过类的全限定名找到 &lt;code&gt;.class&lt;/code&gt; 文件，并读取字节码&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;创建 &lt;code&gt;java.lang.Class&lt;/code&gt; 对象（这只是一个描述类的对象，而不是类的实例！）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;222-验证&#34;&gt;2.2.2. 验证&lt;/h4&gt;
+&lt;h4 id=&#34;223-准备&#34;&gt;2.2.3. 准备&lt;/h4&gt;
+&lt;p&gt;为类的静态变量（&lt;code&gt;static&lt;/code&gt; 变量）分配内存，并赋默认值（不会执行具体的赋值操作）, 这里的 &amp;ldquo;默认值&amp;rdquo; 不是程序员写的值，而是 JVM 规定的默认初值&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Test&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 10;  &lt;span style=&#34;color:#75715e&#34;&gt;// 在 &amp;#34;准备&amp;#34; 阶段 a = 0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;final&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; b &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 20; &lt;span style=&#34;color:#75715e&#34;&gt;// b 是编译期常量，直接在 class 文件常量池中存储&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;224-解析-动态链接&#34;&gt;2.2.4. 解析 动态链接&lt;/h4&gt;
+&lt;p&gt;在 Java 中，类、方法、变量等在 &lt;code&gt;.class&lt;/code&gt; 文件中以符号引用的形式&lt;strong&gt;存储在常量池&lt;/strong&gt;中。当 JVM 运行到 解析阶段 时，JVM 会&lt;strong&gt;根据符号引用找到实际的内存地址&lt;/strong&gt;，并替换掉符号引用。&lt;/p&gt;
+&lt;p&gt;符号引用 是 &lt;code&gt;.class&lt;/code&gt; 文件中使用的逻辑地址，用于表示：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;类和接口（如 &lt;code&gt;&amp;quot;java/lang/String&amp;quot;&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;字段（静态变量、实例变量）（如 &lt;code&gt;java/lang/System.out&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;方法（实例方法、静态方法）（如 &lt;code&gt;java/lang/String.length()&lt;/code&gt;）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;String s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; s.&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在 &lt;code&gt;.class&lt;/code&gt; 文件的常量池中：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#1 = Class              #2 // java/lang/String
+#2 = Utf8               java/lang/String
+#3 = Methodref          #1.#4 // String.length()I
+#4 = NameAndType        #5:#6 // length:()I
+#5 = Utf8               length
+#6 = Utf8               ()I
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这里的 &lt;code&gt;#3 = Methodref&lt;/code&gt; 代表 &lt;code&gt;&amp;quot;java/lang/String.length()&amp;quot;&lt;/code&gt; 方法的符号引用&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;为什么要用符号引用，而不是一开始就存储内存地址？&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;如果一开始就存储内存地址, 就意味着 &lt;strong&gt;编译时&lt;/strong&gt;（而非运行时）就已经确定了一些关键的信息,&lt;/p&gt;
+&lt;p&gt;函数、变量地址已经确定, 无法加载动态库（DLL、so）, 不同操作系统的 &lt;code&gt;syscall&lt;/code&gt; 地址不同也会导致兼容性问题。&lt;/p&gt;
+&lt;p&gt;那 Java 还怎么实现跨平台呢? 就连 C, 大部分时候都是采用动态链接, 即一些标准库函数在编译后也只是符号连接, 在执行的时候动态链接阶段才会把符号引用换成内存地址,&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;C 语言的静态编译：地址是否确定？&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;在 C 语言的静态编译 过程中，编译器和链接器（linker）会对程序进行地址分配，但这些地址是 相对地址（Relative Address），并不是 物理地址（Physical Address）。具体来说：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;编译阶段（Compilation）
+&lt;ul&gt;
+&lt;li&gt;C 源代码（&lt;code&gt;.c&lt;/code&gt;）转换成 目标文件（&lt;code&gt;.o&lt;/code&gt; 或 &lt;code&gt;.obj&lt;/code&gt;），此时变量和函数的地址是 符号引用（Symbolic Reference），还没有实际地址。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;链接阶段（Linking）
+&lt;ul&gt;
+&lt;li&gt;静态编译 时，链接器（Linker）会分配相对地址，并替换符号引用。&lt;/li&gt;
+&lt;li&gt;可执行文件（&lt;code&gt;.exe&lt;/code&gt; / ELF）中的地址是 虚拟地址（Virtual Address），而非物理地址。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;加载（Loading）
+&lt;ul&gt;
+&lt;li&gt;操作系统（OS） 在运行 C 语言程序时，会使用 内存管理单元（MMU） 将虚拟地址映射到 实际物理地址。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;所以若程序编译后直接存储物理地址, 是不现实的, 除非一个机器只运行特定的一个程序,&lt;/p&gt;
+&lt;h2 id=&#34;3-java-基本类型和包装类型的区别&#34;&gt;3. Java 基本类型和包装类型的区别&lt;/h2&gt;
+&lt;p&gt;包装类型 (也叫引用类型) 就是把基础值包装成一个类然后添加一些常用工具方法, 基础类型就是最基本的, 告诉编译器分配多大内存空间&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注意：&lt;strong&gt;基本数据类型存放在栈中是一个常见的误区！&lt;/strong&gt; 基本数据类型的存储位置取决于它们的作用域和声明方式。如果它们是局部变量，那么它们会存放在栈中；如果它们是成员变量，那么它们会存放在堆/方法区/元空间中。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;4-自动装箱与拆箱&#34;&gt;4. 自动装箱与拆箱&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;装箱&lt;/strong&gt;：将基本类型用它们对应的引用类型包装起来；&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;拆箱&lt;/strong&gt;：将包装类型转换为基本数据类型；调用包装类型对象的 &lt;code&gt;valueOf()&lt;/code&gt;方法&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Integer i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 10;  &lt;span style=&#34;color:#75715e&#34;&gt;//装箱&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; n &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; i;   &lt;span style=&#34;color:#75715e&#34;&gt;//拆箱&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;5-泛型&#34;&gt;5. 泛型&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;泛型类（需要显式声明）&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Box&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; T value;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Box&lt;/span&gt;(T value) { &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;value&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; value; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 使用时必须写 &amp;lt;Integer&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Box&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Integer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; box &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Box&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt;(123);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;泛型方法（自动推断）&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(T value) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(value);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(123);      &lt;span style=&#34;color:#75715e&#34;&gt;// 自动推断 T = Integer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello&amp;#34;&lt;/span&gt;);  &lt;span style=&#34;color:#75715e&#34;&gt;// 自动推断 T = String&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;上面的函数声明也可以改写为:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; T &lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(T value) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(value);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;意思是, 函数 print 接受的参数值类型为 T, 返回值类型也是 T,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;String str &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; print(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello, Generics!&amp;#34;&lt;/span&gt;);  &lt;span style=&#34;color:#75715e&#34;&gt;// 传入 String&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Integer num &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; print(100);                &lt;span style=&#34;color:#75715e&#34;&gt;// 传入 Integer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Double decimal &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; print(99.&lt;span style=&#34;color:#a6e22e&#34;&gt;99&lt;/span&gt;);           &lt;span style=&#34;color:#75715e&#34;&gt;// 传入 Double&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;泛型方法可以定义多个类型参数&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 泛型方法可以定义多个类型参数&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T, U&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;showPair&lt;/span&gt;(T first, U second) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;First: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; first &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;, Second: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; second);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;showPair(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Age&amp;#34;&lt;/span&gt;, 25);     &lt;span style=&#34;color:#75715e&#34;&gt;// String 和 Integer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;showPair(3.&lt;span style=&#34;color:#a6e22e&#34;&gt;14&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;);    &lt;span style=&#34;color:#75715e&#34;&gt;// Double 和 Boolean&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;showPair(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Apple&amp;#34;&lt;/span&gt;);  &lt;span style=&#34;color:#75715e&#34;&gt;// Character 和 String&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 输出&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;First: Age, Second: 25
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;First: 3.&lt;span style=&#34;color:#a6e22e&#34;&gt;14&lt;/span&gt;, Second: &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;First: A, Second: Apple
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ab -n &lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt; -c &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; -T &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;application/json&amp;#34;&lt;/span&gt; -H &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NzE3MTA4LCJleHAiOjE3Mzk4MDM1MDh9.ImiwrYoWgKKc2mfSdVNzBdgm-tfx6Vvw50VE18-Oso8&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;    -p post_data.json http://localhost:8080/api/posts
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;curl -X POST &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://localhost:8080/api/posts/123/like&amp;#34;&lt;/span&gt; -H &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NzIyNzkyLCJleHAiOjE3Mzk4MDkxOTJ9.G2jiyn2OCeAKz8kqlHIbiCVy8h8Lko_bzt16UJGEiek&amp;#34;&lt;/span&gt; -v
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;curl -X POST &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://localhost:8080/api/posts&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;     -H &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Content-Type: application/json&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;     -H &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NzE3MTA4LCJleHAiOjE3Mzk4MDM1MDh9.ImiwrYoWgKKc2mfSdVNzBdgm-tfx6Vvw50VE18-Oso8&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;     -d &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;{
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;           &amp;#34;title&amp;#34;: &amp;#34;My First Post&amp;#34;,
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;           &amp;#34;content&amp;#34;: &amp;#34;This is a test post content.&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;         }&amp;#39;&lt;/span&gt; -v
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;curl -X POST &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://localhost:8080/api/posts/user/1&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;     -H &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Content-Type: application/json&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;     -H &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NjczNjI1LCJleHAiOjE3Mzk3NjAwMjV9.T4CYnCRlVidX0V2K8ag5ETINSH-YMmporfqC8fLNQdo&amp;#34;&lt;/span&gt; -v
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+    </item>
+    
     <item>
       <title>零碎知识 - React(Typescript)</title>
       <link>https://blog.jiyi27.com/posts/frontend/next-js/000-nuggets-react/</link>
