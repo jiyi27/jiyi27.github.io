@@ -23,7 +23,7 @@
 &lt;blockquote&gt;
 &lt;p&gt;The &lt;code&gt;AuthorizationFilter&lt;/code&gt; runs not just on every request, but on every dispatch. This means that the &lt;code&gt;REQUEST&lt;/code&gt; dispatch needs authorization, but also &lt;code&gt;FORWARD&lt;/code&gt;s, &lt;code&gt;ERROR&lt;/code&gt;s, and &lt;code&gt;INCLUDE&lt;/code&gt;s.&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;当 ResponseStatusException 被抛出时, Spring MVC &lt;strong&gt;不会直接把 409 发送给客户端&lt;/strong&gt;, 而是会&lt;strong&gt;触发 &lt;code&gt;ERROR&lt;/code&gt; Dispatch&lt;/strong&gt;, &lt;code&gt;ERROR&lt;/code&gt; dispatch 不是一个真正的 HTTP 请求, 而是在服务器内部重新分发请求的机制, 这个机制不是客户端发起的，而是服务器自己创建的, 目的是：&lt;/p&gt;</description>
+&lt;p&gt;当 ResponseStatusException 被抛出时, Spring MVC &lt;strong&gt;不会直接把 409 发送给客户端&lt;/strong&gt;, 而是会&lt;strong&gt;触发 &lt;code&gt;ERROR&lt;/code&gt; Dispatch&lt;/strong&gt;, 注意 &lt;code&gt;ERROR&lt;/code&gt; dispatch 不是一个真正的 HTTP 请求, 而是在服务器内部重新分发请求的机制, 这个机制不是客户端发起的，而是服务器自己创建的, 目的是：&lt;/p&gt;</description>
       <content>&lt;h2 id=&#34;1-responsestatusexception-总是返回-403&#34;&gt;1. &lt;code&gt;ResponseStatusException&lt;/code&gt; 总是返回 403&lt;/h2&gt;
 &lt;p&gt;Service 层的部分代码:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (isPostLiked(postId, userId)) {
@@ -34,7 +34,7 @@
 &lt;blockquote&gt;
 &lt;p&gt;The &lt;code&gt;AuthorizationFilter&lt;/code&gt; runs not just on every request, but on every dispatch. This means that the &lt;code&gt;REQUEST&lt;/code&gt; dispatch needs authorization, but also &lt;code&gt;FORWARD&lt;/code&gt;s, &lt;code&gt;ERROR&lt;/code&gt;s, and &lt;code&gt;INCLUDE&lt;/code&gt;s.&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;当 ResponseStatusException 被抛出时, Spring MVC &lt;strong&gt;不会直接把 409 发送给客户端&lt;/strong&gt;, 而是会&lt;strong&gt;触发 &lt;code&gt;ERROR&lt;/code&gt; Dispatch&lt;/strong&gt;, &lt;code&gt;ERROR&lt;/code&gt; dispatch 不是一个真正的 HTTP 请求, 而是在服务器内部重新分发请求的机制, 这个机制不是客户端发起的，而是服务器自己创建的, 目的是：&lt;/p&gt;
+&lt;p&gt;当 ResponseStatusException 被抛出时, Spring MVC &lt;strong&gt;不会直接把 409 发送给客户端&lt;/strong&gt;, 而是会&lt;strong&gt;触发 &lt;code&gt;ERROR&lt;/code&gt; Dispatch&lt;/strong&gt;, 注意 &lt;code&gt;ERROR&lt;/code&gt; dispatch 不是一个真正的 HTTP 请求, 而是在服务器内部重新分发请求的机制, 这个机制不是客户端发起的，而是服务器自己创建的, 目的是：&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;让 Spring 的全局异常处理（比如 &lt;code&gt;@ControllerAdvice&lt;/code&gt;）有机会处理这个错误&lt;/li&gt;
 &lt;li&gt;让 &lt;code&gt;/error&lt;/code&gt; 端点（如果有）可以生成友好的错误页面或 JSON 响应&lt;/li&gt;
@@ -47,7 +47,28 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .&lt;span style=&#34;color:#a6e22e&#34;&gt;dispatcherTypeMatchers&lt;/span&gt;(DispatcherType.&lt;span style=&#34;color:#a6e22e&#34;&gt;ERROR&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;permitAll&lt;/span&gt;()
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .&lt;span style=&#34;color:#a6e22e&#34;&gt;anyRequest&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;authenticated&lt;/span&gt;()
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;参考: &lt;a href=&#34;https://stackoverflow.com/a/76951737/16317008&#34;&gt;Why is Spring ResponseStatusException 400 translated into 403&lt;/a&gt;&lt;/p&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以在 &lt;code&gt;application.properties&lt;/code&gt; 里打开 Spring 的 &lt;code&gt;DispatcherServlet&lt;/code&gt; 日志：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;然后在 Controller 里故意抛出 &lt;code&gt;ResponseStatusException&lt;/code&gt;，查看日志：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;DEBUG org.springframework.web.servlet.DispatcherServlet: &amp;#34;ERROR&amp;#34; dispatch for GET &amp;#34;/like&amp;#34;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;参考: &lt;a href=&#34;https://stackoverflow.com/a/76951737/16317008&#34;&gt;Why is Spring ResponseStatusException 400 translated into 403&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-spring-data-jpa-命名规则&#34;&gt;2. Spring Data JPA 命名规则&lt;/h2&gt;
+&lt;p&gt;Spring Data JPA 会根据 方法名 解析出 SQL 查询语句, 它的解析规则是：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;findBy + 字段名&lt;/code&gt; → 根据字段名查询&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;findBy + 字段名1 + And + 字段名2&lt;/code&gt; → 根据多个字段查询&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;findBy + 字段名 + OrderBy + 排序字段 + Desc/Asc&lt;/code&gt; → 带排序的查询&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;countBy + 字段名&lt;/code&gt; → 统计数量&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;existsBy + 字段名&lt;/code&gt; → 判断数据是否存在&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;所以在查询的时候 JPA 只解析 &lt;code&gt;find（实体）By（字段）&lt;/code&gt;, 不会解析 &lt;code&gt;find（字段）By（字段）&lt;/code&gt;, 也就是说如果你想查询某个字段, 抱歉只能通过 &lt;code&gt;@Query&lt;/code&gt;, 单凭 JPA 解析方法自动生成 SQL 并不行, 因为 JPA 只可以查询实体, 比如下面这个:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;UserRepository&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;extends&lt;/span&gt; JpaRepository&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User, Long&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  List&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;findByName&lt;/span&gt;(String name);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  List&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;findByNameAndAge&lt;/span&gt;(String name, Integer age);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这样的可以自动解析, 因为要查询的是单个或者多个 &lt;code&gt;User&lt;/code&gt;, 如果你要是想查询 name, 写出下面的语句:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;List&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;String&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;findNamesByAge&lt;/span&gt;(Integer age);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;编译时不报错, 等到运行的时候就会抛出异常, 到时候你会发现此方法最后返回的并不是 &lt;code&gt;List&amp;lt;String&amp;gt;&lt;/code&gt; 而是 &lt;code&gt;User&lt;/code&gt; 类型, 意外吧, 是的, 你的函数声明只是个摆设, Spring Data JPA 解析的 SQL 才决定了最终返回的类型,&lt;/p&gt;
 </content>
     </item>
     
@@ -336,24 +357,6 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;First: Age, Second: 25
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;First: 3.&lt;span style=&#34;color:#a6e22e&#34;&gt;14&lt;/span&gt;, Second: &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;First: A, Second: Apple
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ab -n &lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt; -c &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; -T &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;application/json&amp;#34;&lt;/span&gt; -H &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NzE3MTA4LCJleHAiOjE3Mzk4MDM1MDh9.ImiwrYoWgKKc2mfSdVNzBdgm-tfx6Vvw50VE18-Oso8&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;    -p post_data.json http://localhost:8080/api/posts
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;curl -X POST &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://localhost:8080/api/posts/123/like&amp;#34;&lt;/span&gt; -H &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NzIyNzkyLCJleHAiOjE3Mzk4MDkxOTJ9.G2jiyn2OCeAKz8kqlHIbiCVy8h8Lko_bzt16UJGEiek&amp;#34;&lt;/span&gt; -v
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;curl -X POST &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://localhost:8080/api/posts&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;     -H &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Content-Type: application/json&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;     -H &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NzE3MTA4LCJleHAiOjE3Mzk4MDM1MDh9.ImiwrYoWgKKc2mfSdVNzBdgm-tfx6Vvw50VE18-Oso8&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;     -d &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;{
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;           &amp;#34;title&amp;#34;: &amp;#34;My First Post&amp;#34;,
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;           &amp;#34;content&amp;#34;: &amp;#34;This is a test post content.&amp;#34;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;         }&amp;#39;&lt;/span&gt; -v
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;curl -X POST &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://localhost:8080/api/posts/user/1&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;     -H &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Content-Type: application/json&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;&lt;/span&gt;     -H &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NjczNjI1LCJleHAiOjE3Mzk3NjAwMjV9.T4CYnCRlVidX0V2K8ag5ETINSH-YMmporfqC8fLNQdo&amp;#34;&lt;/span&gt; -v
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
     </item>
     
