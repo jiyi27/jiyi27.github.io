@@ -211,26 +211,3 @@ First: 3.14, Second: true
 First: A, Second: Apple
 ```
 
-
-
-```bash
-ab -n 1000 -c 10 -T "application/json" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NzE3MTA4LCJleHAiOjE3Mzk4MDM1MDh9.ImiwrYoWgKKc2mfSdVNzBdgm-tfx6Vvw50VE18-Oso8" \
-    -p post_data.json http://localhost:8080/api/posts
-    
-    
-curl -X POST "http://localhost:8080/api/posts/123/like" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NzIyNzkyLCJleHAiOjE3Mzk4MDkxOTJ9.G2jiyn2OCeAKz8kqlHIbiCVy8h8Lko_bzt16UJGEiek" -v
-
-
-curl -X POST "http://localhost:8080/api/posts" \
-     -H "Content-Type: application/json" \
-     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NzE3MTA4LCJleHAiOjE3Mzk4MDM1MDh9.ImiwrYoWgKKc2mfSdVNzBdgm-tfx6Vvw50VE18-Oso8" \
-     -d '{
-           "title": "My First Post",
-           "content": "This is a test post content."
-         }' -v
-
-curl -X POST "http://localhost:8080/api/posts/user/1" \
-     -H "Content-Type: application/json" \
-     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsInVzZXJJZCI6MSwiaWF0IjoxNzM5NjczNjI1LCJleHAiOjE3Mzk3NjAwMjV9.T4CYnCRlVidX0V2K8ag5ETINSH-YMmporfqC8fLNQdo" -v
-```
-
