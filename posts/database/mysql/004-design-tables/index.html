@@ -3,12 +3,12 @@
 <head>
   
     
-    <title>数据库设计 - 悲观锁/乐观锁 缓存 :: 为霜的博客</title>
+    <title>数据库表设计 事务 悲观锁/乐观锁 缓存 :: 为霜的博客</title>
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="一个帖子系统, 用户可以发帖, 点赞帖子, 给帖子发表评论, 点赞评论, 回复评论
--- 用户表 CREATE TABLE users ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;用户ID&#39;, username VARCHAR(50) NOT NULL COMMENT &#39;用户名&#39;, email VARCHAR(100) NOT NULL COMMENT &#39;邮箱&#39;, password_hash VARCHAR(255) NOT NULL COMMENT &#39;密码哈希&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;更新时间&#39;, UNIQUE KEY idx_username (username), UNIQUE KEY idx_email (email) ) COMMENT &#39;用户表&#39;; -- 帖子表 CREATE TABLE posts ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;帖子ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;作者ID&#39;, title VARCHAR(200) NOT NULL COMMENT &#39;标题&#39;, content TEXT NOT NULL COMMENT &#39;内容&#39;, likes_count INT NOT NULL DEFAULT 0 COMMENT &#39;点赞数&#39;, comments_count INT NOT NULL DEFAULT 0 COMMENT &#39;评论数&#39;, status TINYINT NOT NULL DEFAULT 1 COMMENT &#39;状态:1-正常,2-已删除&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;更新时间&#39;, version INT NOT NULL DEFAULT 0 COMMENT &#39;乐观锁版本号&#39;; KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的帖子列表&#39;, KEY idx_created_at (created_at) COMMENT &#39;创建时间索引,用于按时间排序&#39; ) COMMENT &#39;帖子表&#39;; -- 帖子点赞表 CREATE TABLE post_likes ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;点赞ID&#39;, post_id BIGINT NOT NULL COMMENT &#39;帖子ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;用户ID&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, UNIQUE KEY idx_post_user (post_id, user_id) COMMENT &#39;帖子用户联合唯一索引,防止重复点赞&#39;, KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的点赞列表&#39; ) COMMENT &#39;帖子点赞表&#39;; -- 评论表 CREATE TABLE comments ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;评论ID&#39;, post_id BIGINT NOT NULL COMMENT &#39;帖子ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;评论者ID&#39;, parent_id BIGINT DEFAULT NULL COMMENT &#39;父评论ID,回复评论时使用&#39;, content TEXT NOT NULL COMMENT &#39;评论内容&#39;, likes_count INT NOT NULL DEFAULT 0 COMMENT &#39;点赞数&#39;, replies_count INT NOT NULL DEFAULT 0 COMMENT &#39;回复数&#39;, status TINYINT NOT NULL DEFAULT 1 COMMENT &#39;状态:1-正常,2-已删除&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;更新时间&#39;, version INT NOT NULL DEFAULT 0 COMMENT &#39;乐观锁版本号&#39;; KEY idx_post_id (post_id) COMMENT &#39;帖子ID索引,用于查询帖子的评论列表&#39;, KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的评论列表&#39;, KEY idx_parent_id (parent_id) COMMENT &#39;父评论ID索引,用于查询评论的回复列表&#39; ) COMMENT &#39;评论表&#39;; -- 评论点赞表 CREATE TABLE comment_likes ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;点赞ID&#39;, comment_id BIGINT NOT NULL COMMENT &#39;评论ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;用户ID&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, UNIQUE KEY idx_comment_user (comment_id, user_id) COMMENT &#39;评论用户联合唯一索引,防止重复点赞&#39;, KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的点赞列表&#39; ) COMMENT &#39;评论点赞表&#39;; 1. 帖子中应该放点赞数和回复数吗 优点是读取性能好, 减少数据库压力 , 显示帖子列表时无需连表统计,
+<meta name="description" content="1. 典型设计 一个帖子系统, 用户可以发帖, 点赞帖子, 给帖子发表评论, 点赞评论, 回复评论
+-- 用户表 CREATE TABLE users ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;用户ID&#39;, username VARCHAR(50) NOT NULL COMMENT &#39;用户名&#39;, email VARCHAR(100) NOT NULL COMMENT &#39;邮箱&#39;, password_hash VARCHAR(255) NOT NULL COMMENT &#39;密码哈希&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;更新时间&#39;, UNIQUE KEY idx_username (username), UNIQUE KEY idx_email (email) ) COMMENT &#39;用户表&#39;; -- 帖子表 CREATE TABLE posts ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;帖子ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;作者ID&#39;, title VARCHAR(200) NOT NULL COMMENT &#39;标题&#39;, content TEXT NOT NULL COMMENT &#39;内容&#39;, likes_count INT NOT NULL DEFAULT 0 COMMENT &#39;点赞数&#39;, comments_count INT NOT NULL DEFAULT 0 COMMENT &#39;评论数&#39;, status TINYINT NOT NULL DEFAULT 1 COMMENT &#39;状态:1-正常,2-已删除&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;更新时间&#39;, version INT NOT NULL DEFAULT 0 COMMENT &#39;乐观锁版本号&#39;; KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的帖子列表&#39;, KEY idx_created_at (created_at) COMMENT &#39;创建时间索引,用于按时间排序&#39; ) COMMENT &#39;帖子表&#39;; -- 帖子点赞表 CREATE TABLE post_likes ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;点赞ID&#39;, post_id BIGINT NOT NULL COMMENT &#39;帖子ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;用户ID&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, UNIQUE KEY idx_post_user (post_id, user_id) COMMENT &#39;帖子用户联合唯一索引,防止重复点赞&#39;, KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的点赞列表&#39; ) COMMENT &#39;帖子点赞表&#39;; -- 评论表 CREATE TABLE comments ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;评论ID&#39;, post_id BIGINT NOT NULL COMMENT &#39;帖子ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;评论者ID&#39;, parent_id BIGINT DEFAULT NULL COMMENT &#39;父评论ID,回复评论时使用&#39;, content TEXT NOT NULL COMMENT &#39;评论内容&#39;, likes_count INT NOT NULL DEFAULT 0 COMMENT &#39;点赞数&#39;, replies_count INT NOT NULL DEFAULT 0 COMMENT &#39;回复数&#39;, status TINYINT NOT NULL DEFAULT 1 COMMENT &#39;状态:1-正常,2-已删除&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;更新时间&#39;, version INT NOT NULL DEFAULT 0 COMMENT &#39;乐观锁版本号&#39;; KEY idx_post_id (post_id) COMMENT &#39;帖子ID索引,用于查询帖子的评论列表&#39;, KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的评论列表&#39;, KEY idx_parent_id (parent_id) COMMENT &#39;父评论ID索引,用于查询评论的回复列表&#39; ) COMMENT &#39;评论表&#39;; -- 评论点赞表 CREATE TABLE comment_likes ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;点赞ID&#39;, comment_id BIGINT NOT NULL COMMENT &#39;评论ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;用户ID&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, UNIQUE KEY idx_comment_user (comment_id, user_id) COMMENT &#39;评论用户联合唯一索引,防止重复点赞&#39;, KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的点赞列表&#39; ) COMMENT &#39;评论点赞表&#39;; 2. 帖子中应该放点赞数和回复数吗 2.1. 数据一致性问题 - 事务 优点是读取性能好, 减少数据库压力 , 显示帖子列表时无需连表统计, 缺点是会有写入一致性问题和并发问题, 假设用户点赞一个帖子，我们需要做两件事：
 " />
 <meta name="keywords" content="" />
 
@@ -83,9 +83,9 @@
 
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
-<meta property="og:title" content="数据库设计 - 悲观锁/乐观锁 缓存">
-<meta property="og:description" content="一个帖子系统, 用户可以发帖, 点赞帖子, 给帖子发表评论, 点赞评论, 回复评论
--- 用户表 CREATE TABLE users ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;用户ID&#39;, username VARCHAR(50) NOT NULL COMMENT &#39;用户名&#39;, email VARCHAR(100) NOT NULL COMMENT &#39;邮箱&#39;, password_hash VARCHAR(255) NOT NULL COMMENT &#39;密码哈希&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;更新时间&#39;, UNIQUE KEY idx_username (username), UNIQUE KEY idx_email (email) ) COMMENT &#39;用户表&#39;; -- 帖子表 CREATE TABLE posts ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;帖子ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;作者ID&#39;, title VARCHAR(200) NOT NULL COMMENT &#39;标题&#39;, content TEXT NOT NULL COMMENT &#39;内容&#39;, likes_count INT NOT NULL DEFAULT 0 COMMENT &#39;点赞数&#39;, comments_count INT NOT NULL DEFAULT 0 COMMENT &#39;评论数&#39;, status TINYINT NOT NULL DEFAULT 1 COMMENT &#39;状态:1-正常,2-已删除&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;更新时间&#39;, version INT NOT NULL DEFAULT 0 COMMENT &#39;乐观锁版本号&#39;; KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的帖子列表&#39;, KEY idx_created_at (created_at) COMMENT &#39;创建时间索引,用于按时间排序&#39; ) COMMENT &#39;帖子表&#39;; -- 帖子点赞表 CREATE TABLE post_likes ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;点赞ID&#39;, post_id BIGINT NOT NULL COMMENT &#39;帖子ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;用户ID&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, UNIQUE KEY idx_post_user (post_id, user_id) COMMENT &#39;帖子用户联合唯一索引,防止重复点赞&#39;, KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的点赞列表&#39; ) COMMENT &#39;帖子点赞表&#39;; -- 评论表 CREATE TABLE comments ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;评论ID&#39;, post_id BIGINT NOT NULL COMMENT &#39;帖子ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;评论者ID&#39;, parent_id BIGINT DEFAULT NULL COMMENT &#39;父评论ID,回复评论时使用&#39;, content TEXT NOT NULL COMMENT &#39;评论内容&#39;, likes_count INT NOT NULL DEFAULT 0 COMMENT &#39;点赞数&#39;, replies_count INT NOT NULL DEFAULT 0 COMMENT &#39;回复数&#39;, status TINYINT NOT NULL DEFAULT 1 COMMENT &#39;状态:1-正常,2-已删除&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;更新时间&#39;, version INT NOT NULL DEFAULT 0 COMMENT &#39;乐观锁版本号&#39;; KEY idx_post_id (post_id) COMMENT &#39;帖子ID索引,用于查询帖子的评论列表&#39;, KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的评论列表&#39;, KEY idx_parent_id (parent_id) COMMENT &#39;父评论ID索引,用于查询评论的回复列表&#39; ) COMMENT &#39;评论表&#39;; -- 评论点赞表 CREATE TABLE comment_likes ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;点赞ID&#39;, comment_id BIGINT NOT NULL COMMENT &#39;评论ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;用户ID&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, UNIQUE KEY idx_comment_user (comment_id, user_id) COMMENT &#39;评论用户联合唯一索引,防止重复点赞&#39;, KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的点赞列表&#39; ) COMMENT &#39;评论点赞表&#39;; 1. 帖子中应该放点赞数和回复数吗 优点是读取性能好, 减少数据库压力 , 显示帖子列表时无需连表统计,
+<meta property="og:title" content="数据库表设计 事务 悲观锁/乐观锁 缓存">
+<meta property="og:description" content="1. 典型设计 一个帖子系统, 用户可以发帖, 点赞帖子, 给帖子发表评论, 点赞评论, 回复评论
+-- 用户表 CREATE TABLE users ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;用户ID&#39;, username VARCHAR(50) NOT NULL COMMENT &#39;用户名&#39;, email VARCHAR(100) NOT NULL COMMENT &#39;邮箱&#39;, password_hash VARCHAR(255) NOT NULL COMMENT &#39;密码哈希&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;更新时间&#39;, UNIQUE KEY idx_username (username), UNIQUE KEY idx_email (email) ) COMMENT &#39;用户表&#39;; -- 帖子表 CREATE TABLE posts ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;帖子ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;作者ID&#39;, title VARCHAR(200) NOT NULL COMMENT &#39;标题&#39;, content TEXT NOT NULL COMMENT &#39;内容&#39;, likes_count INT NOT NULL DEFAULT 0 COMMENT &#39;点赞数&#39;, comments_count INT NOT NULL DEFAULT 0 COMMENT &#39;评论数&#39;, status TINYINT NOT NULL DEFAULT 1 COMMENT &#39;状态:1-正常,2-已删除&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;更新时间&#39;, version INT NOT NULL DEFAULT 0 COMMENT &#39;乐观锁版本号&#39;; KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的帖子列表&#39;, KEY idx_created_at (created_at) COMMENT &#39;创建时间索引,用于按时间排序&#39; ) COMMENT &#39;帖子表&#39;; -- 帖子点赞表 CREATE TABLE post_likes ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;点赞ID&#39;, post_id BIGINT NOT NULL COMMENT &#39;帖子ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;用户ID&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, UNIQUE KEY idx_post_user (post_id, user_id) COMMENT &#39;帖子用户联合唯一索引,防止重复点赞&#39;, KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的点赞列表&#39; ) COMMENT &#39;帖子点赞表&#39;; -- 评论表 CREATE TABLE comments ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;评论ID&#39;, post_id BIGINT NOT NULL COMMENT &#39;帖子ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;评论者ID&#39;, parent_id BIGINT DEFAULT NULL COMMENT &#39;父评论ID,回复评论时使用&#39;, content TEXT NOT NULL COMMENT &#39;评论内容&#39;, likes_count INT NOT NULL DEFAULT 0 COMMENT &#39;点赞数&#39;, replies_count INT NOT NULL DEFAULT 0 COMMENT &#39;回复数&#39;, status TINYINT NOT NULL DEFAULT 1 COMMENT &#39;状态:1-正常,2-已删除&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;更新时间&#39;, version INT NOT NULL DEFAULT 0 COMMENT &#39;乐观锁版本号&#39;; KEY idx_post_id (post_id) COMMENT &#39;帖子ID索引,用于查询帖子的评论列表&#39;, KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的评论列表&#39;, KEY idx_parent_id (parent_id) COMMENT &#39;父评论ID索引,用于查询评论的回复列表&#39; ) COMMENT &#39;评论表&#39;; -- 评论点赞表 CREATE TABLE comment_likes ( id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT &#39;点赞ID&#39;, comment_id BIGINT NOT NULL COMMENT &#39;评论ID&#39;, user_id BIGINT NOT NULL COMMENT &#39;用户ID&#39;, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;, UNIQUE KEY idx_comment_user (comment_id, user_id) COMMENT &#39;评论用户联合唯一索引,防止重复点赞&#39;, KEY idx_user_id (user_id) COMMENT &#39;用户ID索引,用于查询用户的点赞列表&#39; ) COMMENT &#39;评论点赞表&#39;; 2. 帖子中应该放点赞数和回复数吗 2.1. 数据一致性问题 - 事务 优点是读取性能好, 减少数据库压力 , 显示帖子列表时无需连表统计, 缺点是会有写入一致性问题和并发问题, 假设用户点赞一个帖子，我们需要做两件事：
 " />
 <meta property="og:url" content="https://blog.jiyi27.com/posts/database/mysql/004-design-tables/" />
 <meta property="og:site_name" content="为霜的博客" />
@@ -98,7 +98,7 @@
   <meta property="article:section" content="数据库" />
 
 
-  <meta property="article:published_time" content="2025-02-02 19:20:35 &#43;0000 UTC" />
+  <meta property="article:published_time" content="2025-02-17 19:20:35 &#43;0000 UTC" />
 
 
 
@@ -125,9 +125,9 @@
     
 <article class="post">
   <h1 class="post-title">
-    <a href="https://blog.jiyi27.com/posts/database/mysql/004-design-tables/">数据库设计 - 悲观锁/乐观锁 缓存</a>
+    <a href="https://blog.jiyi27.com/posts/database/mysql/004-design-tables/">数据库表设计 事务 悲观锁/乐观锁 缓存</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2025-02-02</time><span class="post-reading-time">4 分钟阅读 (647 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2025-02-17</time><span class="post-reading-time">6 分钟阅读 (1095 字数)</span></div>
 
   
     <span class="post-tags">
@@ -146,7 +146,8 @@
   
 
   <div class="post-content"><div>
-        <p>一个帖子系统, 用户可以发帖, 点赞帖子, 给帖子发表评论, 点赞评论, 回复评论</p>
+        <h2 id="1-典型设计">1. 典型设计<a href="#1-典型设计" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>一个帖子系统, 用户可以发帖, 点赞帖子, 给帖子发表评论, 点赞评论, 回复评论</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span><span style="color:#75715e">-- 用户表
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> <span style="color:#a6e22e">users</span> (
 </span></span><span style="display:flex;"><span>    id <span style="color:#66d9ef">BIGINT</span> <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> <span style="color:#66d9ef">AUTO_INCREMENT</span> COMMENT <span style="color:#e6db74">&#39;用户ID&#39;</span>,
@@ -212,56 +213,199 @@
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">UNIQUE</span> <span style="color:#66d9ef">KEY</span> <span style="color:#a6e22e">idx_comment_user</span> (comment_id, user_id) COMMENT <span style="color:#e6db74">&#39;评论用户联合唯一索引,防止重复点赞&#39;</span>,
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">KEY</span> <span style="color:#a6e22e">idx_user_id</span> (user_id) COMMENT <span style="color:#e6db74">&#39;用户ID索引,用于查询用户的点赞列表&#39;</span>
 </span></span><span style="display:flex;"><span>) COMMENT <span style="color:#e6db74">&#39;评论点赞表&#39;</span>;
-</span></span></code></pre></div><h2 id="1-帖子中应该放点赞数和回复数吗">1. 帖子中应该放点赞数和回复数吗<a href="#1-帖子中应该放点赞数和回复数吗" class="hanchor" ariaLabel="Anchor">#</a> </h2>
-<p>优点是读取性能好, 减少数据库压力 , 显示帖子列表时无需连表统计,</p>
-<p>缺点是会有<strong>写入一致性问题</strong>,</p>
-<p>假设用户点赞一个帖子，我们需要做两件事：</p>
+</span></span></code></pre></div><h2 id="2-帖子中应该放点赞数和回复数吗">2. 帖子中应该放点赞数和回复数吗<a href="#2-帖子中应该放点赞数和回复数吗" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="21-数据一致性问题---事务">2.1. 数据一致性问题 - 事务<a href="#21-数据一致性问题---事务" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>优点是读取性能好, 减少数据库压力 , 显示帖子列表时无需连表统计, 缺点是会有<strong>写入一致性问题和并发问题</strong>, 假设用户点赞一个帖子，我们需要做两件事：</p>
 <ol>
 <li>在 post_likes 表插入一条点赞记录</li>
 <li>在 posts 表把这个帖子的 likes_count 加1</li>
 </ol>
-<p>如果不使用事务，可能出现以下问题：</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span><span style="color:#75715e">-- 第一步：插入点赞记录成功
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> <span style="color:#a6e22e">post_likes</span> (post_id, user_id) <span style="color:#66d9ef">VALUES</span> (<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>);
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">-- 第二步：更新帖子点赞数
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">-- 假设在这时候数据库突然崩溃了或者网络中断了
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">UPDATE</span> posts <span style="color:#66d9ef">SET</span> likes_count <span style="color:#f92672">=</span> likes_count <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
-</span></span></code></pre></div><p>这就导致了数据不一致：post_likes 表显示用户点赞了, 但是 posts 表的点赞数没有增加,</p>
-<p>还会有<strong>并发问题</strong>, 想象一个具体的场景：帖子当前有100个赞，两个用户 A 和 B 同时点赞:</p>
+</span></span></code></pre></div><p>这就导致了数据不一致: post_likes 表显示用户点赞了, 但是 posts 表的点赞数没有增加, 我们可以通过加入事务来解决:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">BEGIN</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> post_likes (post_id, user_id) <span style="color:#66d9ef">VALUES</span> (<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">UPDATE</span> posts <span style="color:#66d9ef">SET</span> likes_count <span style="color:#f92672">=</span> likes_count <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">COMMIT</span>;
+</span></span></code></pre></div><p>通过使用事务, 若 <code>BEGIN ... COMMIT</code> 中的一个语句执行失败, 之前所有的操作都不会成功, 这就解决了数据一致性问题</p>
+<h3 id="22-并发问题---x锁">2.2. 并发问题 - X锁<a href="#22-并发问题---x锁" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>下面先说一下一个常见的<strong>误解</strong>, 假如帖子当前有100个赞，两个用户 A 和 B 同时点赞:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span><span style="color:#75715e">-- 用户A的操作
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">UPDATE</span> posts <span style="color:#66d9ef">SET</span> likes_count <span style="color:#f92672">=</span> likes_count <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">-- 用户B的操作(同时进行)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">-- 用户B的操作(同时进行, 则都会读取到 likes_count = 100)
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">UPDATE</span> posts <span style="color:#66d9ef">SET</span> likes_count <span style="color:#f92672">=</span> likes_count <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
-</span></span></code></pre></div><p>可能出现的问题：</p>
+</span></span></code></pre></div><p>有人会想到可能会出现下面问题：</p>
 <ol>
-<li>A读取到 likes_count = 100</li>
-<li>B读取到 likes_count = 100</li>
-<li>A更新 likes_count = 101</li>
-<li>B更新 likes_count = 101</li>
+<li>A读取到 likes_count = 100, B读取到 likes_count = 100</li>
+<li>A更新 likes_count = 101, B 更新 likes_count = 101</li>
 </ol>
-<p>最终结果是 likes_count = 101，但实际上应该是102，因为发生了两次点赞。这些问题可以通过悲观锁和乐观锁解决, 但是也会引入额外的消耗:</p>
-<p>此时有一个简单的解决办法, 使用事务 + 悲观锁:</p>
+<p>最终结果是 likes_count = 101，但实际上应该是102。</p>
+<p>其实并不会出现这个问题, 这里需要指出两个关于事务和锁事实:</p>
+<ul>
+<li>在 MySQL 中，默认情况下 <code>autocommit</code> 是开启的（即 <code>autocommit=1</code>）。在这个模式下，每条单独的 SQL 语句 (增删改, <strong>除了查</strong>) 都会被当作一个独立的事务来执行。<code>SELECT</code> 语句通常不涉及事务（除非是 <code>SELECT ... FOR UPDATE</code> 这种需要锁的语句）</li>
+<li>在数据修改操作（Update、Delete、Insert）中, InnoDB 会<strong>自动</strong>对受影响的行加上行级的<strong>排它锁</strong>（X 锁）</li>
+<li>锁只会在事务 commit 或者 rollback 的时候自动被释放, 这也是为什么锁必须配合事务使用</li>
+</ul>
+<p>根据第二条事实, 我们知道当执行 <code>UPDATE posts SET likes_count = likes_count + 1 WHERE id = 1;</code> 时, MySQL 会自动为 id=1 的行加上一个 x 锁, 意味着在这个锁没有被释放前, 其它任何事务都不可以修改这行数据, 因为想要修改某行数据必须要获得这行数据的 x 锁 (MySQL 默认行为), 而这行数据的 x锁还没被释放,</p>
+<p>下面使用如下表格展示用户A和用户B并发执行更新时的操作流程, 假设初始状态：<code>posts</code> 表中 id=1 的记录 <code>likes_count=100</code>:</p>
+<table>
+  <thead>
+      <tr>
+          <th>时间 (T)</th>
+          <th>用户A的操作</th>
+          <th>用户B的操作</th>
+          <th>备注说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>T₀</td>
+          <td>——</td>
+          <td>——</td>
+          <td>初始状态：点赞数 100</td>
+      </tr>
+      <tr>
+          <td>T₁</td>
+          <td>执行 <code>UPDATE ...</code> 加排他锁并将值由 100 更新为 101</td>
+          <td>——</td>
+          <td>用户A自动获得行锁，其他事务无法修改该行</td>
+      </tr>
+      <tr>
+          <td>T₂</td>
+          <td>——（等待提交或后续操作）</td>
+          <td>尝试执行相同 <code>UPDATE</code> 语句但因行被锁，进入等待状态</td>
+          <td>用户B操作被阻塞，等待用户A释放锁</td>
+      </tr>
+      <tr>
+          <td>T₃</td>
+          <td>提交事务，释放锁</td>
+          <td>——</td>
+          <td>用户A提交后，行更新为 101，释放了锁</td>
+      </tr>
+      <tr>
+          <td>T₄</td>
+          <td>——</td>
+          <td>获得锁后执行 <code>UPDATE ...</code> 将值由 101 更新为 102</td>
+          <td>用户B操作获得锁，基于最新数据进行更新</td>
+      </tr>
+      <tr>
+          <td>T₅</td>
+          <td>——</td>
+          <td>提交事务</td>
+          <td>最终结果：点赞数102（累加 2）</td>
+      </tr>
+  </tbody>
+</table>
+<p>可以看出, 并不需要手动加x锁, 只需要使用事务保证操作的原子性就好了, 因为UPDATE 会自动获得 x 锁, 不必担心并发问题, 如下:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span>BEGIN;
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- 1. 锁住这行数据,其他事务无法修改
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> posts <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">FOR</span> <span style="color:#66d9ef">UPDATE</span>;  
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- 2. 插入点赞记录
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- 插入点赞记录
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> <span style="color:#a6e22e">post_likes</span> (post_id, user_id) <span style="color:#66d9ef">VALUES</span> (<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>);
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- 3. 更新点赞数
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- 更新点赞数
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">UPDATE</span> posts <span style="color:#66d9ef">SET</span> likes_count <span style="color:#f92672">=</span> likes_count <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
-</span></span><span style="display:flex;"><span>COMMIT;  <span style="color:#75715e">-- 提交事务时才释放锁
-</span></span></span></code></pre></div><p>综上, 添加计数字段(likes_count, comments_count)带来的问题：</p>
+</span></span><span style="display:flex;"><span>COMMIT;
+</span></span></code></pre></div><p>至于防止用户重复点赞, 我们可以在 <code>(post_id, user_id)</code> 上建立索引, 若相同数据插入, <code>INSERT INTO post_likes (post_id, user_id) VALUES (1, 1);</code> 必然失败, 导致业务逻辑抛出异常, 下面的更新操作也不会发生, 然后我们捕获异常, 告诉用户点赞重复即可,</p>
+<h3 id="23-事务--悲观锁">2.3. 事务 + 悲观锁<a href="#23-事务--悲观锁" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>既然每条修改语句都会先尝试获取排它锁, 然后才能修改数据, 为什么还会有并发问题呢? 上面的情况很简单, 所以没有问题, 我们来考虑一个复杂一些的问题,</p>
+<p>假设有一个库存系统，需要先判断库存是否充足，再扣减库存。如果不使用显式加锁，可能会出现多个事务同时读取相同库存数量，然后都判断库存足够，导致库存扣减错误。</p>
+<table>
+  <thead>
+      <tr>
+          <th>时间 (T)</th>
+          <th>用户A的操作</th>
+          <th>用户B的操作</th>
+          <th>备注说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>T₀</td>
+          <td>——</td>
+          <td>——</td>
+          <td>初始状态：库存 <code>stock = 10</code></td>
+      </tr>
+      <tr>
+          <td>T₁</td>
+          <td>查询库存,  stock = 10</td>
+          <td>——</td>
+          <td>用户A读取库存，未加锁（普通 SELECT）</td>
+      </tr>
+      <tr>
+          <td>T₂</td>
+          <td>——</td>
+          <td>查询库存,  <code>stock = 10</code></td>
+          <td>用户B也读取库存，双方看到的都是相同的初始库存</td>
+      </tr>
+      <tr>
+          <td>T₃</td>
+          <td>库存足够10 ≥ 8, 加 X 锁, 更新库存 10 - 8 = 2,</td>
+          <td>——</td>
+          <td>用户A更新时加锁，库存实际变为 2</td>
+      </tr>
+      <tr>
+          <td>T₄</td>
+          <td>——</td>
+          <td>库存足够10 ≥ 6, 尝试更新库存数据, 无法获取 x锁, 尝试更新失败</td>
+          <td>用户B的 UPDATE 操作因被 A 的锁阻塞，等待 A 提交</td>
+      </tr>
+      <tr>
+          <td>T₅</td>
+          <td>提交事务，释放锁</td>
+          <td>——</td>
+          <td>用户A提交后，锁释放，此时数据库中库存为 2</td>
+      </tr>
+      <tr>
+          <td>T₆</td>
+          <td>——</td>
+          <td>获得x锁后执行 UPDATE 操作 10 - 6 = 4,</td>
+          <td>用户B执行更新时，虽然其早先读取到库存为 10，但更新操作是基于当前实际库存（2）进行扣减，即 2 - 6 = -4</td>
+      </tr>
+      <tr>
+          <td>T₇</td>
+          <td>——</td>
+          <td>提交事务</td>
+          <td>最终库存变为 -4，出现库存不足但仍被扣减的问题</td>
+      </tr>
+  </tbody>
+</table>
+<p>这种问题通常需要使用悲观锁（例如 <code>SELECT ... FOR UPDATE</code>）, 即使用显式加锁可以解决这个问题：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#75715e">-- 开启事务保证多个操作的原子性(数据一致性)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">BEGIN</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- 手工显式加x锁，防止其他事务在判断和扣减期间修改库存
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">SELECT</span> stock <span style="color:#66d9ef">FROM</span> products <span style="color:#66d9ef">WHERE</span> product_id <span style="color:#f92672">=</span> <span style="color:#ae81ff">100</span> <span style="color:#66d9ef">FOR</span> <span style="color:#66d9ef">UPDATE</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- 根据读取的库存进行判断
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">IF</span> (stock <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">5</span>) <span style="color:#66d9ef">THEN</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">UPDATE</span> products <span style="color:#66d9ef">SET</span> stock <span style="color:#f92672">=</span> stock <span style="color:#f92672">-</span> <span style="color:#ae81ff">5</span> <span style="color:#66d9ef">WHERE</span> product_id <span style="color:#f92672">=</span> <span style="color:#ae81ff">100</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">END</span> <span style="color:#66d9ef">IF</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">COMMIT</span>;
+</span></span></code></pre></div><p>这里我们在事务开始前显式添加了 x锁, 这意味着若其它事务想修改 <code>product_id = 100</code> 这行数据, <strong>必须先拿到这一行的 x锁</strong>, 而此时若事务 A 已经显式拿到了  <code>product_id = 100</code> 这一行数据的 x锁, 意味着事务 A 不结束, 该锁永远不会被释放, 也就是其它事务永远不可能拿到这行数据的x锁, 也就无法执行下面的流程 (比如: 查询编号为100的商品的剩余, 更新该行数据),</p>
+<p>注意这里添加事务是为了保留显式添加的锁直到整个事务结束,</p>
+<p>可以看出, 使用悲观锁（通过 <code>SELECT ... FOR UPDATE</code> 显示加 X 锁）的主要目的就是在执行更新前，确保读取到的数据是最新且不会被其他并发事务修改，从而<strong>保证基于该数据做出的判断是可靠的</strong>。如果判断通过，再执行更新操作，而这整个过程都在同一个事务内执行，确保了原子性和隔离性，避免数据竞争和不一致的问题。</p>
+<blockquote>
+<p><strong>小贴士</strong>:  <strong><code>X锁</code> 的加锁方式有两种</strong>，第一种是自动加锁，在对数据进行<strong>增删改</strong>的时候，都会默认加上一个<code>X锁</code>。还有一种是手工加锁，我们用一个<code>FOR UPDATE</code>给一行数据加上一个<code>X锁</code>, <code>X锁</code>在同一时刻只能被一个事务持有, 其它事务想获得, 必须等待</p>
+</blockquote>
+<blockquote>
+<p><strong>数据一致性:</strong> 数据一致性问题分为好多种, 比如上面用户A, B同时点赞, 导致点赞数丢失的问题, 还有个常见的例子(库存扣减、银行转账等操)比如多个人给一个账户转 100 块钱,  A事务读取到此时账户余额为 100, B事务 也读取到账户余额为 100, 所以 A: 余额= 100 + 100 = 200, B事务 也是这样, 最后账户余额仅为 200 而不是 300, 导致数据一致性问题, <strong>这种数据一致性问题可以通过 x 锁来解决,</strong> 当然 MySQL 数据库默认加上了 x 锁, 我们不必担心</p>
+<p>数据一致性问题还有其他类型, 比如假设你在银行 A 账户有 1000 元，你想转账 200 元到银行 B 账户, 正常情况下 从 A 账户扣除 200 元（余额变成 800）, 向 B 账户增加 200 元（余额变成 1200）, 假设在步骤 1 之后（A 账户变成 800），系统崩溃或网络异常，导致步骤 2 没有执行, 这就导致 A 账户已经减少了 200 元（800），但 B 账户仍然是 1000, 这也是数据一致性问题, <strong>这种数据一致性问题我们可以添加事务 利用事务的原子性来解决</strong>,</p>
+<p>还有另一种常见的数据一致性问题, 缓存与数据库不一致, 用户 A 购买商品</p>
 <ul>
-<li>并发问题：多人同时操作导致计数不准确</li>
-<li>数据一致性问题：计数更新和实际操作需要同时成功或失败</li>
+<li>读取缓存，库存为 10</li>
+<li>购买 2 个，库存变成 8，更新数据库</li>
+<li>更新缓存（库存改为 8）</li>
 </ul>
-<p>解决方案必须同时使用事务和锁：</p>
+<p>用户 B 也购买商品</p>
 <ul>
-<li>事务：保证关联操作的原子性（要么都成功，要么都失败）</li>
-<li>锁：防止并发冲突</li>
+<li>读取缓存，发现库存仍然是 10（因为缓存可能未及时更新）</li>
+<li>购买 3 个，库存变成 7，更新数据库</li>
+<li>更新缓存（库存改为 7）</li>
 </ul>
-<p>两种锁的选择：</p>
+<p>用户 A 的库存更新在数据库执行后，但缓存还没更新时，用户 B 读取的库存数据是错误的，导致超卖问题, 这种问题可以通过<strong>写回数据库后删除缓存</strong>或<strong>使用事务机制</strong>, 确保数据库和缓存的同步</p>
+</blockquote>
+<h3 id="24-悲观锁和乐观锁常见实现">2.4. 悲观锁和乐观锁常见实现<a href="#24-悲观锁和乐观锁常见实现" class="hanchor" ariaLabel="Anchor">#</a> </h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span><span style="color:#75715e">-- 方案1：事务 + 悲观锁
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>BEGIN;
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> posts <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">FOR</span> <span style="color:#66d9ef">UPDATE</span>;  <span style="color:#75715e">-- 悲观锁
@@ -281,15 +425,15 @@
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">AND</span> version <span style="color:#f92672">=</span> <span style="color:#ae81ff">5</span>;  <span style="color:#75715e">-- 乐观锁通过版本号检查, 如果版本号不匹配，说明数据被其他人修改过
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>COMMIT;
 </span></span></code></pre></div><p>因为帖子系统, 查询点赞和回复数非常的频繁, 比如用户刷新主页, 进入帖子, 都会引起查询, 这也是论坛的主要功能, 所以还是帖子表和评论表还是应该放点赞和回复数的, 对于中小型系统, 上面的问题通过悲观锁+事务其实就可以解决了, 因为并发量并不会特别高, 又不是微博, X那种高互动的网站,</p>
-<h2 id="2-帖子表放点赞和回复数-高并发系统怎么优化">2. 帖子表放点赞和回复数 高并发系统怎么优化<a href="#2-帖子表放点赞和回复数-高并发系统怎么优化" class="hanchor" ariaLabel="Anchor">#</a> </h2>
-<h3 id="21-使用缓存redis">2.1. 使用缓存（Redis）<a href="#21-使用缓存redis" class="hanchor" ariaLabel="Anchor">#</a> </h3>
-<p>做法：点赞和评论操作先更新缓存（如 Redis 中的计数器），并采用原子操作保证计数准确；然后通过后台任务定期将缓存数据同步到 MySQL 中。</p>
-<p>优点：利用内存数据库的高性能，可以应对高并发写入；同时减少数据库直接写操作，降低锁竞争。</p>
-<p>缺点：增加了系统架构复杂度，需要额外处理缓存同步和可能的数据不一致问题。</p>
-<h3 id="22-异步更新延迟更新批量更新">2.2. 异步更新（延迟更新/批量更新）<a href="#22-异步更新延迟更新批量更新" class="hanchor" ariaLabel="Anchor">#</a> </h3>
-<p>做法：点赞和评论的原始数据依然记录在 <code>post_likes</code> 和 <code>comments</code> 表中；而 <code>posts</code> 表中的统计字段不是实时更新，而是通过定时任务或异步消息队列，定时聚合计算后批量更新。</p>
-<p>优点：降低了对 <code>posts</code> 表的实时写入压力，能够平滑高并发下的更新流量，减少锁竞争问题。</p>
-<p>缺点：数据实时性降低（<strong>存在延迟</strong>），对实时数据展示要求较高的场景可能不适用。</p>
+<h2 id="3-帖子表放点赞和回复数-高并发系统怎么优化">3. 帖子表放点赞和回复数 高并发系统怎么优化<a href="#3-帖子表放点赞和回复数-高并发系统怎么优化" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-使用缓存redis">3.1. 使用缓存（Redis）<a href="#31-使用缓存redis" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>做法：点赞和评论操作先更新缓存（如 Redis 中的计数器），并采用原子操作保证计数准确；然后通过后台任务定期将缓存数据同步到 MySQL 中</p>
+<p>优点：利用内存数据库的高性能，可以应对高并发写入；同时减少数据库直接写操作，降低锁竞争</p>
+<p>缺点：增加了系统架构复杂度，需要额外处理缓存同步和可能的数据不一致问题</p>
+<h3 id="32-异步更新延迟更新批量更新">3.2. 异步更新（延迟更新/批量更新）<a href="#32-异步更新延迟更新批量更新" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>做法：点赞和评论的原始数据依然记录在 <code>post_likes</code> 和 <code>comments</code> 表中；而 <code>posts</code> 表中的统计字段不是实时更新，而是通过定时任务或异步消息队列，定时聚合计算后批量更新</p>
+<p>优点：降低了对 <code>posts</code> 表的实时写入压力，能够平滑高并发下的更新流量，减少锁竞争问题</p>
+<p>缺点：数据实时性降低（<strong>存在延迟</strong>），对实时数据展示要求较高的场景可能不适用</p>
 
       </div></div>
 
@@ -302,16 +446,16 @@
   </div>
   <div class="pagination__buttons">
     
-      <a href="https://blog.jiyi27.com/posts/reading/003-fallacies/" class="button inline prev">
-        常见谬误
+      <a href="https://blog.jiyi27.com/posts/database/mysql/005-transaction-locks/" class="button inline prev">
+        MySQL 事务 悲观锁 乐观锁 数据一致性
       </a>
     
     
       ::
     
     
-      <a href="https://blog.jiyi27.com/posts/interview/004-array-algorithm/" class="button inline next">
-        算法题 数组系列
+      <a href="https://blog.jiyi27.com/posts/java/backend/007-nuggets-spring-boot/" class="button inline next">
+        Spring Boot 踩坑汇总
       </a>
     
   </div>

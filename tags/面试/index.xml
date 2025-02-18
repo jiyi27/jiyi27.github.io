@@ -6,7 +6,555 @@
     <description>Recent content in 面试 on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 15 Feb 2025 10:30:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 17 Feb 2025 20:39:22 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>MySQL 事务 悲观锁 乐观锁 数据一致性</title>
+      <link>https://blog.jiyi27.com/posts/database/mysql/005-transaction-locks/</link>
+      <pubDate>Mon, 17 Feb 2025 20:39:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/database/mysql/005-transaction-locks/</guid>
+      <description>&lt;h2 id=&#34;1-事务&#34;&gt;1. 事务&lt;/h2&gt;
+&lt;h3 id=&#34;11-事务的概念&#34;&gt;1.1. 事务的概念&lt;/h3&gt;
+&lt;p&gt;事务是一组要么全部成功，要么全部失败的数据库操作，保证数据的一致性。&lt;/p&gt;
+&lt;p&gt;假设你要从 A 账户转 100 元到 B 账户，这个过程涉及两个操作：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;从 A 账户扣 100 元&lt;/li&gt;
+&lt;li&gt;给 B 账户加 100 元&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;如果第一步执行了，但第二步失败了，就会导致 A 的钱少了，但 B 没收到钱，这导致了数据一致性问题。事务可以防止这种情况。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;START TRANSACTION;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 从 A 账户扣 100 元
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; accounts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 给 B 账户加 100 元
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; accounts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;B&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;COMMIT;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果在执行过程中出现错误（比如 B 账户不存在），可以执行回滚，撤销已经执行的操作。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;拓展:&lt;/strong&gt; 在 MySQL（InnoDB 存储引擎）中，单个 DML 语句（INSERT, UPDATE, DELETE）本身就是一个事务，如果 &lt;code&gt;AUTOCOMMIT&lt;/code&gt; 处于默认开启状态，它会自动提交，不需要手动 &lt;code&gt;COMMIT&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;在数据修改操作（Update、Delete、Insert）中, MySQL InnoDB 会&lt;strong&gt;自动&lt;/strong&gt;对受影响的行加上 x 锁, 事务提交的时候(语句执行完成), x锁会被自动释放。&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-事务&#34;&gt;1. 事务&lt;/h2&gt;
+&lt;h3 id=&#34;11-事务的概念&#34;&gt;1.1. 事务的概念&lt;/h3&gt;
+&lt;p&gt;事务是一组要么全部成功，要么全部失败的数据库操作，保证数据的一致性。&lt;/p&gt;
+&lt;p&gt;假设你要从 A 账户转 100 元到 B 账户，这个过程涉及两个操作：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;从 A 账户扣 100 元&lt;/li&gt;
+&lt;li&gt;给 B 账户加 100 元&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;如果第一步执行了，但第二步失败了，就会导致 A 的钱少了，但 B 没收到钱，这导致了数据一致性问题。事务可以防止这种情况。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;START TRANSACTION;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 从 A 账户扣 100 元
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; accounts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 给 B 账户加 100 元
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; accounts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;B&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;COMMIT;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果在执行过程中出现错误（比如 B 账户不存在），可以执行回滚，撤销已经执行的操作。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;拓展:&lt;/strong&gt; 在 MySQL（InnoDB 存储引擎）中，单个 DML 语句（INSERT, UPDATE, DELETE）本身就是一个事务，如果 &lt;code&gt;AUTOCOMMIT&lt;/code&gt; 处于默认开启状态，它会自动提交，不需要手动 &lt;code&gt;COMMIT&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;在数据修改操作（Update、Delete、Insert）中, MySQL InnoDB 会&lt;strong&gt;自动&lt;/strong&gt;对受影响的行加上 x 锁, 事务提交的时候(语句执行完成), x锁会被自动释放。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;后端开发:&lt;/strong&gt; 在 Spring Data JPA 中，事务管理是由 Spring 的事务管理器（通常是 &lt;code&gt;@Transactional&lt;/code&gt; 注解）来控制的，自动回滚行为也由 Spring 决定。Spring 默认会在遇到 &lt;strong&gt;运行时异常（RuntimeException 及其子类）&lt;/strong&gt; 或 &lt;strong&gt;错误（Error）&lt;/strong&gt; 时自动回滚事务。&lt;/p&gt;
+&lt;p&gt;如果在事务方法内部捕获了异常，并没有将异常抛出到事务管理器，那么 Spring 不会感知到异常，从而事务不会自动回滚。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Transactional&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;updateSomeData&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 一些数据库操作&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 可能抛出异常&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (Exception e) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 捕获异常后不重新抛出，事务将按正常流程提交&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;h3 id=&#34;12-事务不是导致错误的原因而是处理错误的机制&#34;&gt;1.2. 事务不是导致错误的原因，而是处理错误的机制&lt;/h3&gt;
+&lt;p&gt;连接类错误, 语法错误, 系统资源相关错误, 数据完整性和约束错误, 事务和锁相关错误, 前几种没什么好说的, 看一下最后两种:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;违反完整性约束的错误: 数据库自身的机制, 比如：主键重复、外键不存在、唯一约束冲突、&lt;code&gt;CHECK&lt;/code&gt; 约束失败等&lt;/li&gt;
+&lt;li&gt;事务和锁相关错误: 在事务操作中遇到死锁或锁等待等问题
+&lt;ul&gt;
+&lt;li&gt;两个或多个事务在等待对方持有的资源而形成循环依赖，导致系统检测到死锁。&lt;/li&gt;
+&lt;li&gt;事务等待获取资源的时间超出了设定的超时时间，可能需要检查当前事务的锁竞争情况&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;事务不是导致错误的原因，而是处理错误的机制:&lt;/strong&gt;&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;&lt;strong&gt;情况&lt;/strong&gt;&lt;/th&gt;
+          &lt;th&gt;&lt;strong&gt;数据库是否报错？&lt;/strong&gt;&lt;/th&gt;
+          &lt;th&gt;&lt;strong&gt;事务是否回滚？&lt;/strong&gt;&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;主键冲突&lt;/td&gt;
+          &lt;td&gt;✅ 报错&lt;/td&gt;
+          &lt;td&gt;✅ 回滚（事务开启时）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;外键约束失败&lt;/td&gt;
+          &lt;td&gt;✅ 报错&lt;/td&gt;
+          &lt;td&gt;✅ 回滚（事务开启时）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;唯一约束失败&lt;/td&gt;
+          &lt;td&gt;✅ 报错&lt;/td&gt;
+          &lt;td&gt;✅ 回滚（事务开启时）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;业务逻辑错误（如负余额）&lt;/td&gt;
+          &lt;td&gt;✅ 报错&lt;/td&gt;
+          &lt;td&gt;✅ 回滚（事务开启时）&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;ol&gt;
+&lt;li&gt;没开启事务时, 每条 SQL 都是独立提交的, 报错不会回滚之前的操作&lt;/li&gt;
+&lt;li&gt;事务不会主动报错，报错的原因是 SQL 语句违反数据库的完整性约束&lt;/li&gt;
+&lt;li&gt;事务的作用是确保错误发生时，数据不会进入不一致的状态, 事务只是处理数据库错误的工具, 并不是开启事务就万事大吉了&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;13-事务的特性&#34;&gt;1.3. 事务的特性&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;原子性（Atomicity）&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;事务是一个不可分割的最小操作单元，要么全部执行成功，要么全部回滚&lt;/li&gt;
+&lt;li&gt;以转账场景为例，一个账户的余额减少，另一个账户的余额增加，这两个操作一定是同时成功或者同时失败的&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;一致性（Consistency）&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;事务执行前后，数据库必须保持一致性状态，即不会违反数据库的完整性约束&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;隔离性（Isolation）&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;并发事务互不影响，一个事务未提交前，其他事务无法看到其变化&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;持久性（Durability）&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;事务提交后，其修改的数据会被永久保存，即使系统崩溃也不会丢失&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;一致性并不是事务本身的固有属性, 而更像是一种外在要求,&lt;/strong&gt; 不难发现其他三个都是实打实的特征, 唯独一致性, 无法理解, 这里的一致性更像是一种外在要求, 而不是事务本身的固有的属性, 即是一种需要依赖业务层逻辑来实现的状态,&lt;/p&gt;
+&lt;p&gt;举个不恰当的例子, 我们说一个苹果, 苹果是圆的, 苹果可以为我们提供维生素C, 这都是苹果的特征, 可是你却说, 苹果也有生吃性, 苹果必须生吃才能最大化的提供营养价值, WTF? 生不生吃苹果取决于个人啊, 这怎么能是苹果的特性呢?&lt;/p&gt;
+&lt;p&gt;同理, 数据库是不是保持一致性, 这取决于业务逻辑啊, 比如需要结合锁来实现, 什么悲观锁, 乐观锁, 这怎么能是事务的特性呢?&lt;/p&gt;
+&lt;h2 id=&#34;2-数据一致性问题&#34;&gt;2. 数据一致性问题&lt;/h2&gt;
+&lt;h3 id=&#34;21-直接修改操作---隐式-x-锁&#34;&gt;2.1. 直接修改操作 - 隐式 x 锁&lt;/h3&gt;
+&lt;p&gt;比如常见的转账例子多个人给同一个账户转 100 块钱,  系统可能会有下面的命令:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; account &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; account_id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;002&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;高并发状态下, A事务读取到此时账户余额为 100, B事务 也读取到账户余额为 100,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;A 事务: 余额 = 100 + 100 = 200,&lt;/li&gt;
+&lt;li&gt;B 事务:  余额 = 100 + 100 = 200&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;最后账户余额仅为 200 而不是 300, 导致数据一致性问题, 因为 InnoDB 会在执行 UPDATE 时对目标行加上排它锁（X 锁）, 从而确保这些操作是串行化的,&lt;/p&gt;
+&lt;p&gt;好像是告诉事务, 你想更新 &lt;code&gt;account_id = 002&lt;/code&gt; 的数据? 行, 但请先获得这行数据的 X 锁, 所以不可能会有两个事务同时对同一行执行 UPDATE 操作, 也就是说使用单条 UPDATE 语句时, 不会出现多个事务都获取到相同 balance 的情况, 因为数据修改操作都是串行化的,&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;在数据修改操作（Update、Delete、Insert）中, 事务会先尝试获得受影响行的 X 锁, 若得到, 才能进行更新, 否则只能等待, 不要忘了单个语句, 也默认属于一个事务&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;22-检查--修改操作----显式-x锁-悲观锁-或乐观锁&#34;&gt;2.2. 检查 + 修改操作 -  显式 x锁 (悲观锁) 或乐观锁&lt;/h3&gt;
+&lt;p&gt;这种属于多个事务中基于过时数据进行判断后再写入更新的场景, 读取数据与更新操作之间缺乏必要的锁机制保护, 导致多个事务基于同一份数据进行判断并更新, 从而引发数据不一致,&lt;/p&gt;
+&lt;p&gt;上面的例子过于简化了, 实际系统肯定不会直接给账户加钱, 还有很多考虑, 比如检查收账人是否存在, 检查转账人的余额是不是足够, 然后进行扣款,&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;步骤 1：同时读取余额&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;事务 A 和事务 B 同时对转账人账户执行查询操作，读取到余额都为 100 元&lt;/li&gt;
+&lt;li&gt;此时，如果没有加锁（如 &lt;code&gt;FOR UPDATE&lt;/code&gt;），两个事务都基于相同的旧数据做判断&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;步骤 2：判断余额充足&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;事务 A 判断：100 元 &amp;gt;= 转账金额 80 元，认为余额足够&lt;/li&gt;
+&lt;li&gt;事务 B 同样判断：100 元 &amp;gt;= 转账金额 60 元，也认为余额足够&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;步骤 3：分别执行扣款&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;事务 A 扣款 80 元，更新余额为 20 元&lt;/li&gt;
+&lt;li&gt;事务 B 扣款 80 元，同样在自己的事务中基于最初读取到的 100 元执行更新，更新余额为 40 元&lt;/li&gt;
+&lt;li&gt;最终两个事务都成功提交，导致余额可能是40, 也可能是20, 也可能是100 - 80 - 60 = -40, 导致余额出现问题（负数或不一致）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;解决办法1: 悲观锁&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;BEGIN;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; balance &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; accounts &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FOR&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;-- 加锁
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 判断余额是否充足, 通过业务代码实现, SQL 无法实现逻辑判断
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; accounts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;COMMIT;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这样可以确保在一个事务完成之前，其他事务必须等待，避免同时读取同一份数据进行判断。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;解决办法2: 乐观锁&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;BEGIN;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; balance, version &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; accounts &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 判断余额是否充足, 通过业务代码实现, SQL 无法实现逻辑判断
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; accounts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt;, version &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; version &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; version &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 判断 UPDATE 是否成功, 否则重试或抛出异常返回给客户端执行失败, 通过业务代码实现
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;COMMIT;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;23-多表操作---事务原子性&#34;&gt;2.3. 多表操作 - 事务原子性&lt;/h3&gt;
+&lt;p&gt;除此之外还要确保转账人的账户 -100, 收款人的账户 +100, 不能出现后者操作失败了, 导致收款人账户余额没变, 转账人账户的钱却少了 100, 这也是属于数据不一致,&lt;/p&gt;
+&lt;p&gt;这种很简单, 把更新两张表的语句放到同一个事务里就行了, 因为可以利用事务的回滚保证, 若有一个操作失败, 则同时都失败,&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>数据库表设计 事务 悲观锁/乐观锁 缓存</title>
+      <link>https://blog.jiyi27.com/posts/database/mysql/004-design-tables/</link>
+      <pubDate>Mon, 17 Feb 2025 19:20:35 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/database/mysql/004-design-tables/</guid>
+      <description>&lt;h2 id=&#34;1-典型设计&#34;&gt;1. 典型设计&lt;/h2&gt;
+&lt;p&gt;一个帖子系统, 用户可以发帖, 点赞帖子, 给帖子发表评论, 点赞评论, 回复评论&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 用户表
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;users&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    username &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户名&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    email &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;邮箱&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    password_hash &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;密码哈希&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    updated_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;更新时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_username&lt;/span&gt; (username),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_email&lt;/span&gt; (email)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户表&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 帖子表
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;posts&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;作者ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    title &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;200&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;标题&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    content &lt;span style=&#34;color:#66d9ef&#34;&gt;TEXT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;内容&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    likes_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞数&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    comments_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论数&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    status &lt;span style=&#34;color:#66d9ef&#34;&gt;TINYINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;状态:1-正常,2-已删除&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    updated_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;更新时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    version &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;乐观锁版本号&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的帖子列表&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_created_at&lt;/span&gt; (created_at) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间索引,用于按时间排序&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子表&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 帖子点赞表
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_likes&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    post_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_post_user&lt;/span&gt; (post_id, user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子用户联合唯一索引,防止重复点赞&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的点赞列表&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子点赞表&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 评论表
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;comments&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    post_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论者ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    parent_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;父评论ID,回复评论时使用&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    content &lt;span style=&#34;color:#66d9ef&#34;&gt;TEXT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论内容&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    likes_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞数&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    replies_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;回复数&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    status &lt;span style=&#34;color:#66d9ef&#34;&gt;TINYINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;状态:1-正常,2-已删除&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    updated_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;更新时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    version &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;乐观锁版本号&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_post_id&lt;/span&gt; (post_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID索引,用于查询帖子的评论列表&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的评论列表&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_parent_id&lt;/span&gt; (parent_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;父评论ID索引,用于查询评论的回复列表&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论表&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 评论点赞表
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;comment_likes&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    comment_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_comment_user&lt;/span&gt; (comment_id, user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论用户联合唯一索引,防止重复点赞&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的点赞列表&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论点赞表&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-帖子中应该放点赞数和回复数吗&#34;&gt;2. 帖子中应该放点赞数和回复数吗&lt;/h2&gt;
+&lt;h3 id=&#34;21-数据一致性问题---事务&#34;&gt;2.1. 数据一致性问题 - 事务&lt;/h3&gt;
+&lt;p&gt;优点是读取性能好, 减少数据库压力 , 显示帖子列表时无需连表统计, 缺点是会有&lt;strong&gt;写入一致性问题和并发问题&lt;/strong&gt;, 假设用户点赞一个帖子，我们需要做两件事：&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-典型设计&#34;&gt;1. 典型设计&lt;/h2&gt;
+&lt;p&gt;一个帖子系统, 用户可以发帖, 点赞帖子, 给帖子发表评论, 点赞评论, 回复评论&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 用户表
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;users&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    username &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户名&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    email &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;邮箱&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    password_hash &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;密码哈希&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    updated_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;更新时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_username&lt;/span&gt; (username),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_email&lt;/span&gt; (email)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户表&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 帖子表
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;posts&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;作者ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    title &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;200&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;标题&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    content &lt;span style=&#34;color:#66d9ef&#34;&gt;TEXT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;内容&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    likes_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞数&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    comments_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论数&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    status &lt;span style=&#34;color:#66d9ef&#34;&gt;TINYINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;状态:1-正常,2-已删除&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    updated_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;更新时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    version &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;乐观锁版本号&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的帖子列表&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_created_at&lt;/span&gt; (created_at) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间索引,用于按时间排序&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子表&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 帖子点赞表
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_likes&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    post_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_post_user&lt;/span&gt; (post_id, user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子用户联合唯一索引,防止重复点赞&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的点赞列表&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子点赞表&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 评论表
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;comments&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    post_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论者ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    parent_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;父评论ID,回复评论时使用&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    content &lt;span style=&#34;color:#66d9ef&#34;&gt;TEXT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论内容&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    likes_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞数&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    replies_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;回复数&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    status &lt;span style=&#34;color:#66d9ef&#34;&gt;TINYINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;状态:1-正常,2-已删除&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    updated_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;更新时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    version &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;乐观锁版本号&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_post_id&lt;/span&gt; (post_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID索引,用于查询帖子的评论列表&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的评论列表&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_parent_id&lt;/span&gt; (parent_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;父评论ID索引,用于查询评论的回复列表&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论表&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 评论点赞表
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;comment_likes&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    comment_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_comment_user&lt;/span&gt; (comment_id, user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论用户联合唯一索引,防止重复点赞&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的点赞列表&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论点赞表&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-帖子中应该放点赞数和回复数吗&#34;&gt;2. 帖子中应该放点赞数和回复数吗&lt;/h2&gt;
+&lt;h3 id=&#34;21-数据一致性问题---事务&#34;&gt;2.1. 数据一致性问题 - 事务&lt;/h3&gt;
+&lt;p&gt;优点是读取性能好, 减少数据库压力 , 显示帖子列表时无需连表统计, 缺点是会有&lt;strong&gt;写入一致性问题和并发问题&lt;/strong&gt;, 假设用户点赞一个帖子，我们需要做两件事：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;在 post_likes 表插入一条点赞记录&lt;/li&gt;
+&lt;li&gt;在 posts 表把这个帖子的 likes_count 加1&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 第一步：插入点赞记录成功
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;INSERT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INTO&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_likes&lt;/span&gt; (post_id, user_id) &lt;span style=&#34;color:#66d9ef&#34;&gt;VALUES&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 第二步：更新帖子点赞数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 假设在这时候数据库突然崩溃了或者网络中断了
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这就导致了数据不一致: post_likes 表显示用户点赞了, 但是 posts 表的点赞数没有增加, 我们可以通过加入事务来解决:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;INSERT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INTO&lt;/span&gt; post_likes (post_id, user_id) &lt;span style=&#34;color:#66d9ef&#34;&gt;VALUES&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COMMIT&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;通过使用事务, 若 &lt;code&gt;BEGIN ... COMMIT&lt;/code&gt; 中的一个语句执行失败, 之前所有的操作都不会成功, 这就解决了数据一致性问题&lt;/p&gt;
+&lt;h3 id=&#34;22-并发问题---x锁&#34;&gt;2.2. 并发问题 - X锁&lt;/h3&gt;
+&lt;p&gt;下面先说一下一个常见的&lt;strong&gt;误解&lt;/strong&gt;, 假如帖子当前有100个赞，两个用户 A 和 B 同时点赞:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 用户A的操作
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 用户B的操作(同时进行, 则都会读取到 likes_count = 100)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;有人会想到可能会出现下面问题：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;A读取到 likes_count = 100, B读取到 likes_count = 100&lt;/li&gt;
+&lt;li&gt;A更新 likes_count = 101, B 更新 likes_count = 101&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;最终结果是 likes_count = 101，但实际上应该是102。&lt;/p&gt;
+&lt;p&gt;其实并不会出现这个问题, 这里需要指出两个关于事务和锁事实:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在 MySQL 中，默认情况下 &lt;code&gt;autocommit&lt;/code&gt; 是开启的（即 &lt;code&gt;autocommit=1&lt;/code&gt;）。在这个模式下，每条单独的 SQL 语句 (增删改, &lt;strong&gt;除了查&lt;/strong&gt;) 都会被当作一个独立的事务来执行。&lt;code&gt;SELECT&lt;/code&gt; 语句通常不涉及事务（除非是 &lt;code&gt;SELECT ... FOR UPDATE&lt;/code&gt; 这种需要锁的语句）&lt;/li&gt;
+&lt;li&gt;在数据修改操作（Update、Delete、Insert）中, InnoDB 会&lt;strong&gt;自动&lt;/strong&gt;对受影响的行加上行级的&lt;strong&gt;排它锁&lt;/strong&gt;（X 锁）&lt;/li&gt;
+&lt;li&gt;锁只会在事务 commit 或者 rollback 的时候自动被释放, 这也是为什么锁必须配合事务使用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;根据第二条事实, 我们知道当执行 &lt;code&gt;UPDATE posts SET likes_count = likes_count + 1 WHERE id = 1;&lt;/code&gt; 时, MySQL 会自动为 id=1 的行加上一个 x 锁, 意味着在这个锁没有被释放前, 其它任何事务都不可以修改这行数据, 因为想要修改某行数据必须要获得这行数据的 x 锁 (MySQL 默认行为), 而这行数据的 x锁还没被释放,&lt;/p&gt;
+&lt;p&gt;下面使用如下表格展示用户A和用户B并发执行更新时的操作流程, 假设初始状态：&lt;code&gt;posts&lt;/code&gt; 表中 id=1 的记录 &lt;code&gt;likes_count=100&lt;/code&gt;:&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;时间 (T)&lt;/th&gt;
+          &lt;th&gt;用户A的操作&lt;/th&gt;
+          &lt;th&gt;用户B的操作&lt;/th&gt;
+          &lt;th&gt;备注说明&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₀&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;初始状态：点赞数 100&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₁&lt;/td&gt;
+          &lt;td&gt;执行 &lt;code&gt;UPDATE ...&lt;/code&gt; 加排他锁并将值由 100 更新为 101&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;用户A自动获得行锁，其他事务无法修改该行&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₂&lt;/td&gt;
+          &lt;td&gt;——（等待提交或后续操作）&lt;/td&gt;
+          &lt;td&gt;尝试执行相同 &lt;code&gt;UPDATE&lt;/code&gt; 语句但因行被锁，进入等待状态&lt;/td&gt;
+          &lt;td&gt;用户B操作被阻塞，等待用户A释放锁&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₃&lt;/td&gt;
+          &lt;td&gt;提交事务，释放锁&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;用户A提交后，行更新为 101，释放了锁&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₄&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;获得锁后执行 &lt;code&gt;UPDATE ...&lt;/code&gt; 将值由 101 更新为 102&lt;/td&gt;
+          &lt;td&gt;用户B操作获得锁，基于最新数据进行更新&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₅&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;提交事务&lt;/td&gt;
+          &lt;td&gt;最终结果：点赞数102（累加 2）&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;可以看出, 并不需要手动加x锁, 只需要使用事务保证操作的原子性就好了, 因为UPDATE 会自动获得 x 锁, 不必担心并发问题, 如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;BEGIN;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;-- 插入点赞记录
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;INSERT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INTO&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_likes&lt;/span&gt; (post_id, user_id) &lt;span style=&#34;color:#66d9ef&#34;&gt;VALUES&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;-- 更新点赞数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;COMMIT;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;至于防止用户重复点赞, 我们可以在 &lt;code&gt;(post_id, user_id)&lt;/code&gt; 上建立索引, 若相同数据插入, &lt;code&gt;INSERT INTO post_likes (post_id, user_id) VALUES (1, 1);&lt;/code&gt; 必然失败, 导致业务逻辑抛出异常, 下面的更新操作也不会发生, 然后我们捕获异常, 告诉用户点赞重复即可,&lt;/p&gt;
+&lt;h3 id=&#34;23-事务--悲观锁&#34;&gt;2.3. 事务 + 悲观锁&lt;/h3&gt;
+&lt;p&gt;既然每条修改语句都会先尝试获取排它锁, 然后才能修改数据, 为什么还会有并发问题呢? 上面的情况很简单, 所以没有问题, 我们来考虑一个复杂一些的问题,&lt;/p&gt;
+&lt;p&gt;假设有一个库存系统，需要先判断库存是否充足，再扣减库存。如果不使用显式加锁，可能会出现多个事务同时读取相同库存数量，然后都判断库存足够，导致库存扣减错误。&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;时间 (T)&lt;/th&gt;
+          &lt;th&gt;用户A的操作&lt;/th&gt;
+          &lt;th&gt;用户B的操作&lt;/th&gt;
+          &lt;th&gt;备注说明&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₀&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;初始状态：库存 &lt;code&gt;stock = 10&lt;/code&gt;&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₁&lt;/td&gt;
+          &lt;td&gt;查询库存,  stock = 10&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;用户A读取库存，未加锁（普通 SELECT）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₂&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;查询库存,  &lt;code&gt;stock = 10&lt;/code&gt;&lt;/td&gt;
+          &lt;td&gt;用户B也读取库存，双方看到的都是相同的初始库存&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₃&lt;/td&gt;
+          &lt;td&gt;库存足够10 ≥ 8, 加 X 锁, 更新库存 10 - 8 = 2,&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;用户A更新时加锁，库存实际变为 2&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₄&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;库存足够10 ≥ 6, 尝试更新库存数据, 无法获取 x锁, 尝试更新失败&lt;/td&gt;
+          &lt;td&gt;用户B的 UPDATE 操作因被 A 的锁阻塞，等待 A 提交&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₅&lt;/td&gt;
+          &lt;td&gt;提交事务，释放锁&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;用户A提交后，锁释放，此时数据库中库存为 2&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₆&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;获得x锁后执行 UPDATE 操作 10 - 6 = 4,&lt;/td&gt;
+          &lt;td&gt;用户B执行更新时，虽然其早先读取到库存为 10，但更新操作是基于当前实际库存（2）进行扣减，即 2 - 6 = -4&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;T₇&lt;/td&gt;
+          &lt;td&gt;——&lt;/td&gt;
+          &lt;td&gt;提交事务&lt;/td&gt;
+          &lt;td&gt;最终库存变为 -4，出现库存不足但仍被扣减的问题&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;这种问题通常需要使用悲观锁（例如 &lt;code&gt;SELECT ... FOR UPDATE&lt;/code&gt;）, 即使用显式加锁可以解决这个问题：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 开启事务保证多个操作的原子性(数据一致性)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;BEGIN&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;-- 手工显式加x锁，防止其他事务在判断和扣减期间修改库存
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; stock &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; products &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; product_id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FOR&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;-- 根据读取的库存进行判断
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;IF&lt;/span&gt; (stock &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;THEN&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; products &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; stock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; stock &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; product_id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;END&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;IF&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COMMIT&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这里我们在事务开始前显式添加了 x锁, 这意味着若其它事务想修改 &lt;code&gt;product_id = 100&lt;/code&gt; 这行数据, &lt;strong&gt;必须先拿到这一行的 x锁&lt;/strong&gt;, 而此时若事务 A 已经显式拿到了  &lt;code&gt;product_id = 100&lt;/code&gt; 这一行数据的 x锁, 意味着事务 A 不结束, 该锁永远不会被释放, 也就是其它事务永远不可能拿到这行数据的x锁, 也就无法执行下面的流程 (比如: 查询编号为100的商品的剩余, 更新该行数据),&lt;/p&gt;
+&lt;p&gt;注意这里添加事务是为了保留显式添加的锁直到整个事务结束,&lt;/p&gt;
+&lt;p&gt;可以看出, 使用悲观锁（通过 &lt;code&gt;SELECT ... FOR UPDATE&lt;/code&gt; 显示加 X 锁）的主要目的就是在执行更新前，确保读取到的数据是最新且不会被其他并发事务修改，从而&lt;strong&gt;保证基于该数据做出的判断是可靠的&lt;/strong&gt;。如果判断通过，再执行更新操作，而这整个过程都在同一个事务内执行，确保了原子性和隔离性，避免数据竞争和不一致的问题。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;小贴士&lt;/strong&gt;:  &lt;strong&gt;&lt;code&gt;X锁&lt;/code&gt; 的加锁方式有两种&lt;/strong&gt;，第一种是自动加锁，在对数据进行&lt;strong&gt;增删改&lt;/strong&gt;的时候，都会默认加上一个&lt;code&gt;X锁&lt;/code&gt;。还有一种是手工加锁，我们用一个&lt;code&gt;FOR UPDATE&lt;/code&gt;给一行数据加上一个&lt;code&gt;X锁&lt;/code&gt;, &lt;code&gt;X锁&lt;/code&gt;在同一时刻只能被一个事务持有, 其它事务想获得, 必须等待&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;数据一致性:&lt;/strong&gt; 数据一致性问题分为好多种, 比如上面用户A, B同时点赞, 导致点赞数丢失的问题, 还有个常见的例子(库存扣减、银行转账等操)比如多个人给一个账户转 100 块钱,  A事务读取到此时账户余额为 100, B事务 也读取到账户余额为 100, 所以 A: 余额= 100 + 100 = 200, B事务 也是这样, 最后账户余额仅为 200 而不是 300, 导致数据一致性问题, &lt;strong&gt;这种数据一致性问题可以通过 x 锁来解决,&lt;/strong&gt; 当然 MySQL 数据库默认加上了 x 锁, 我们不必担心&lt;/p&gt;
+&lt;p&gt;数据一致性问题还有其他类型, 比如假设你在银行 A 账户有 1000 元，你想转账 200 元到银行 B 账户, 正常情况下 从 A 账户扣除 200 元（余额变成 800）, 向 B 账户增加 200 元（余额变成 1200）, 假设在步骤 1 之后（A 账户变成 800），系统崩溃或网络异常，导致步骤 2 没有执行, 这就导致 A 账户已经减少了 200 元（800），但 B 账户仍然是 1000, 这也是数据一致性问题, &lt;strong&gt;这种数据一致性问题我们可以添加事务 利用事务的原子性来解决&lt;/strong&gt;,&lt;/p&gt;
+&lt;p&gt;还有另一种常见的数据一致性问题, 缓存与数据库不一致, 用户 A 购买商品&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;读取缓存，库存为 10&lt;/li&gt;
+&lt;li&gt;购买 2 个，库存变成 8，更新数据库&lt;/li&gt;
+&lt;li&gt;更新缓存（库存改为 8）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;用户 B 也购买商品&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;读取缓存，发现库存仍然是 10（因为缓存可能未及时更新）&lt;/li&gt;
+&lt;li&gt;购买 3 个，库存变成 7，更新数据库&lt;/li&gt;
+&lt;li&gt;更新缓存（库存改为 7）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;用户 A 的库存更新在数据库执行后，但缓存还没更新时，用户 B 读取的库存数据是错误的，导致超卖问题, 这种问题可以通过&lt;strong&gt;写回数据库后删除缓存&lt;/strong&gt;或&lt;strong&gt;使用事务机制&lt;/strong&gt;, 确保数据库和缓存的同步&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;24-悲观锁和乐观锁常见实现&#34;&gt;2.4. 悲观锁和乐观锁常见实现&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 方案1：事务 + 悲观锁
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;BEGIN;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FOR&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt;;  &lt;span style=&#34;color:#75715e&#34;&gt;-- 悲观锁
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;INSERT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INTO&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_likes&lt;/span&gt; (post_id, user_id) &lt;span style=&#34;color:#66d9ef&#34;&gt;VALUES&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;COMMIT;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 方案2：事务 + 乐观锁
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 优点: 并没有加实际意义上的锁, 其它用户插入也不用等待
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 缺点: 需要重试机制, 如果更新失败版本号检查不匹配，需要重试
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;BEGIN;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;INSERT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INTO&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_likes&lt;/span&gt; (post_id, user_id) &lt;span style=&#34;color:#66d9ef&#34;&gt;VALUES&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;-- 更新时检查版本号
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; posts 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        version &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; version &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; version &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;;  &lt;span style=&#34;color:#75715e&#34;&gt;-- 乐观锁通过版本号检查, 如果版本号不匹配，说明数据被其他人修改过
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;COMMIT;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;因为帖子系统, 查询点赞和回复数非常的频繁, 比如用户刷新主页, 进入帖子, 都会引起查询, 这也是论坛的主要功能, 所以还是帖子表和评论表还是应该放点赞和回复数的, 对于中小型系统, 上面的问题通过悲观锁+事务其实就可以解决了, 因为并发量并不会特别高, 又不是微博, X那种高互动的网站,&lt;/p&gt;
+&lt;h2 id=&#34;3-帖子表放点赞和回复数-高并发系统怎么优化&#34;&gt;3. 帖子表放点赞和回复数 高并发系统怎么优化&lt;/h2&gt;
+&lt;h3 id=&#34;31-使用缓存redis&#34;&gt;3.1. 使用缓存（Redis）&lt;/h3&gt;
+&lt;p&gt;做法：点赞和评论操作先更新缓存（如 Redis 中的计数器），并采用原子操作保证计数准确；然后通过后台任务定期将缓存数据同步到 MySQL 中&lt;/p&gt;
+&lt;p&gt;优点：利用内存数据库的高性能，可以应对高并发写入；同时减少数据库直接写操作，降低锁竞争&lt;/p&gt;
+&lt;p&gt;缺点：增加了系统架构复杂度，需要额外处理缓存同步和可能的数据不一致问题&lt;/p&gt;
+&lt;h3 id=&#34;32-异步更新延迟更新批量更新&#34;&gt;3.2. 异步更新（延迟更新/批量更新）&lt;/h3&gt;
+&lt;p&gt;做法：点赞和评论的原始数据依然记录在 &lt;code&gt;post_likes&lt;/code&gt; 和 &lt;code&gt;comments&lt;/code&gt; 表中；而 &lt;code&gt;posts&lt;/code&gt; 表中的统计字段不是实时更新，而是通过定时任务或异步消息队列，定时聚合计算后批量更新&lt;/p&gt;
+&lt;p&gt;优点：降低了对 &lt;code&gt;posts&lt;/code&gt; 表的实时写入压力，能够平滑高并发下的更新流量，减少锁竞争问题&lt;/p&gt;
+&lt;p&gt;缺点：数据实时性降低（&lt;strong&gt;存在延迟&lt;/strong&gt;），对实时数据展示要求较高的场景可能不适用&lt;/p&gt;
+</content>
+    </item>
+    
     <item>
       <title>Java 基础八股文</title>
       <link>https://blog.jiyi27.com/posts/interview/002-nuggets-java-basic/</link>
@@ -459,227 +1007,6 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; dummy&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;next
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
-    </item>
-    
-    <item>
-      <title>数据库设计 - 悲观锁/乐观锁 缓存</title>
-      <link>https://blog.jiyi27.com/posts/database/mysql/004-design-tables/</link>
-      <pubDate>Sun, 02 Feb 2025 19:20:35 +0000</pubDate>
-      
-      <guid>https://blog.jiyi27.com/posts/database/mysql/004-design-tables/</guid>
-      <description>&lt;p&gt;一个帖子系统, 用户可以发帖, 点赞帖子, 给帖子发表评论, 点赞评论, 回复评论&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 用户表
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;users&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    username &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户名&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    email &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;邮箱&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    password_hash &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;密码哈希&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    updated_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;更新时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_username&lt;/span&gt; (username),
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_email&lt;/span&gt; (email)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户表&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 帖子表
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;posts&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;作者ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    title &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;200&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;标题&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    content &lt;span style=&#34;color:#66d9ef&#34;&gt;TEXT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;内容&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    likes_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞数&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    comments_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论数&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    status &lt;span style=&#34;color:#66d9ef&#34;&gt;TINYINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;状态:1-正常,2-已删除&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    updated_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;更新时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    version &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;乐观锁版本号&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的帖子列表&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_created_at&lt;/span&gt; (created_at) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间索引,用于按时间排序&amp;#39;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子表&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 帖子点赞表
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_likes&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    post_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_post_user&lt;/span&gt; (post_id, user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子用户联合唯一索引,防止重复点赞&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的点赞列表&amp;#39;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子点赞表&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 评论表
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;comments&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    post_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论者ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    parent_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;父评论ID,回复评论时使用&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    content &lt;span style=&#34;color:#66d9ef&#34;&gt;TEXT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论内容&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    likes_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞数&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    replies_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;回复数&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    status &lt;span style=&#34;color:#66d9ef&#34;&gt;TINYINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;状态:1-正常,2-已删除&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    updated_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;更新时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    version &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;乐观锁版本号&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_post_id&lt;/span&gt; (post_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID索引,用于查询帖子的评论列表&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的评论列表&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_parent_id&lt;/span&gt; (parent_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;父评论ID索引,用于查询评论的回复列表&amp;#39;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论表&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 评论点赞表
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;comment_likes&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    comment_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_comment_user&lt;/span&gt; (comment_id, user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论用户联合唯一索引,防止重复点赞&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的点赞列表&amp;#39;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论点赞表&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;1-帖子中应该放点赞数和回复数吗&#34;&gt;1. 帖子中应该放点赞数和回复数吗&lt;/h2&gt;
-&lt;p&gt;优点是读取性能好, 减少数据库压力 , 显示帖子列表时无需连表统计,&lt;/p&gt;</description>
-      <content>&lt;p&gt;一个帖子系统, 用户可以发帖, 点赞帖子, 给帖子发表评论, 点赞评论, 回复评论&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 用户表
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;users&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    username &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户名&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    email &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;邮箱&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    password_hash &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;密码哈希&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    updated_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;更新时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_username&lt;/span&gt; (username),
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_email&lt;/span&gt; (email)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户表&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 帖子表
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;posts&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;作者ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    title &lt;span style=&#34;color:#66d9ef&#34;&gt;VARCHAR&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;200&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;标题&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    content &lt;span style=&#34;color:#66d9ef&#34;&gt;TEXT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;内容&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    likes_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞数&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    comments_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论数&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    status &lt;span style=&#34;color:#66d9ef&#34;&gt;TINYINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;状态:1-正常,2-已删除&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    updated_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;更新时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    version &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;乐观锁版本号&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的帖子列表&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_created_at&lt;/span&gt; (created_at) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间索引,用于按时间排序&amp;#39;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子表&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 帖子点赞表
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_likes&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    post_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_post_user&lt;/span&gt; (post_id, user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子用户联合唯一索引,防止重复点赞&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的点赞列表&amp;#39;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子点赞表&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 评论表
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;comments&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    post_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论者ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    parent_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;父评论ID,回复评论时使用&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    content &lt;span style=&#34;color:#66d9ef&#34;&gt;TEXT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论内容&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    likes_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞数&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    replies_count &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;回复数&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    status &lt;span style=&#34;color:#66d9ef&#34;&gt;TINYINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;状态:1-正常,2-已删除&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    updated_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;更新时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    version &lt;span style=&#34;color:#66d9ef&#34;&gt;INT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;乐观锁版本号&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_post_id&lt;/span&gt; (post_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;帖子ID索引,用于查询帖子的评论列表&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的评论列表&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_parent_id&lt;/span&gt; (parent_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;父评论ID索引,用于查询评论的回复列表&amp;#39;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论表&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 评论点赞表
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;comment_likes&lt;/span&gt; (
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AUTO_INCREMENT&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;点赞ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    comment_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id &lt;span style=&#34;color:#66d9ef&#34;&gt;BIGINT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    created_at &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DEFAULT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;CURRENT_TIMESTAMP&lt;/span&gt; COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;创建时间&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UNIQUE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_comment_user&lt;/span&gt; (comment_id, user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论用户联合唯一索引,防止重复点赞&amp;#39;&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;idx_user_id&lt;/span&gt; (user_id) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;用户ID索引,用于查询用户的点赞列表&amp;#39;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) COMMENT &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;评论点赞表&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;1-帖子中应该放点赞数和回复数吗&#34;&gt;1. 帖子中应该放点赞数和回复数吗&lt;/h2&gt;
-&lt;p&gt;优点是读取性能好, 减少数据库压力 , 显示帖子列表时无需连表统计,&lt;/p&gt;
-&lt;p&gt;缺点是会有&lt;strong&gt;写入一致性问题&lt;/strong&gt;,&lt;/p&gt;
-&lt;p&gt;假设用户点赞一个帖子，我们需要做两件事：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;在 post_likes 表插入一条点赞记录&lt;/li&gt;
-&lt;li&gt;在 posts 表把这个帖子的 likes_count 加1&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;如果不使用事务，可能出现以下问题：&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 第一步：插入点赞记录成功
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;INSERT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INTO&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_likes&lt;/span&gt; (post_id, user_id) &lt;span style=&#34;color:#66d9ef&#34;&gt;VALUES&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 第二步：更新帖子点赞数
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 假设在这时候数据库突然崩溃了或者网络中断了
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这就导致了数据不一致：post_likes 表显示用户点赞了, 但是 posts 表的点赞数没有增加,&lt;/p&gt;
-&lt;p&gt;还会有&lt;strong&gt;并发问题&lt;/strong&gt;, 想象一个具体的场景：帖子当前有100个赞，两个用户 A 和 B 同时点赞:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 用户A的操作
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 用户B的操作(同时进行)
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可能出现的问题：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;A读取到 likes_count = 100&lt;/li&gt;
-&lt;li&gt;B读取到 likes_count = 100&lt;/li&gt;
-&lt;li&gt;A更新 likes_count = 101&lt;/li&gt;
-&lt;li&gt;B更新 likes_count = 101&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;最终结果是 likes_count = 101，但实际上应该是102，因为发生了两次点赞。这些问题可以通过悲观锁和乐观锁解决, 但是也会引入额外的消耗:&lt;/p&gt;
-&lt;p&gt;此时有一个简单的解决办法, 使用事务 + 悲观锁:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;BEGIN;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;-- 1. 锁住这行数据,其他事务无法修改
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FOR&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt;;  
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;-- 2. 插入点赞记录
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;INSERT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INTO&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_likes&lt;/span&gt; (post_id, user_id) &lt;span style=&#34;color:#66d9ef&#34;&gt;VALUES&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;-- 3. 更新点赞数
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;COMMIT;  &lt;span style=&#34;color:#75715e&#34;&gt;-- 提交事务时才释放锁
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;综上, 添加计数字段(likes_count, comments_count)带来的问题：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;并发问题：多人同时操作导致计数不准确&lt;/li&gt;
-&lt;li&gt;数据一致性问题：计数更新和实际操作需要同时成功或失败&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;解决方案必须同时使用事务和锁：&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;事务：保证关联操作的原子性（要么都成功，要么都失败）&lt;/li&gt;
-&lt;li&gt;锁：防止并发冲突&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;两种锁的选择：&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 方案1：事务 + 悲观锁
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;BEGIN;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FOR&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt;;  &lt;span style=&#34;color:#75715e&#34;&gt;-- 悲观锁
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;INSERT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INTO&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_likes&lt;/span&gt; (post_id, user_id) &lt;span style=&#34;color:#66d9ef&#34;&gt;VALUES&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; posts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;COMMIT;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 方案2：事务 + 乐观锁
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 优点: 并没有加实际意义上的锁, 其它用户插入也不用等待
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 缺点: 需要重试机制, 如果更新失败版本号检查不匹配，需要重试
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;BEGIN;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;INSERT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INTO&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;post_likes&lt;/span&gt; (post_id, user_id) &lt;span style=&#34;color:#66d9ef&#34;&gt;VALUES&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;-- 更新时检查版本号
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; posts 
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; likes_count &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;,
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        version &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; version &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; 
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; version &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;;  &lt;span style=&#34;color:#75715e&#34;&gt;-- 乐观锁通过版本号检查, 如果版本号不匹配，说明数据被其他人修改过
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;COMMIT;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;因为帖子系统, 查询点赞和回复数非常的频繁, 比如用户刷新主页, 进入帖子, 都会引起查询, 这也是论坛的主要功能, 所以还是帖子表和评论表还是应该放点赞和回复数的, 对于中小型系统, 上面的问题通过悲观锁+事务其实就可以解决了, 因为并发量并不会特别高, 又不是微博, X那种高互动的网站,&lt;/p&gt;
-&lt;h2 id=&#34;2-帖子表放点赞和回复数-高并发系统怎么优化&#34;&gt;2. 帖子表放点赞和回复数 高并发系统怎么优化&lt;/h2&gt;
-&lt;h3 id=&#34;21-使用缓存redis&#34;&gt;2.1. 使用缓存（Redis）&lt;/h3&gt;
-&lt;p&gt;做法：点赞和评论操作先更新缓存（如 Redis 中的计数器），并采用原子操作保证计数准确；然后通过后台任务定期将缓存数据同步到 MySQL 中。&lt;/p&gt;
-&lt;p&gt;优点：利用内存数据库的高性能，可以应对高并发写入；同时减少数据库直接写操作，降低锁竞争。&lt;/p&gt;
-&lt;p&gt;缺点：增加了系统架构复杂度，需要额外处理缓存同步和可能的数据不一致问题。&lt;/p&gt;
-&lt;h3 id=&#34;22-异步更新延迟更新批量更新&#34;&gt;2.2. 异步更新（延迟更新/批量更新）&lt;/h3&gt;
-&lt;p&gt;做法：点赞和评论的原始数据依然记录在 &lt;code&gt;post_likes&lt;/code&gt; 和 &lt;code&gt;comments&lt;/code&gt; 表中；而 &lt;code&gt;posts&lt;/code&gt; 表中的统计字段不是实时更新，而是通过定时任务或异步消息队列，定时聚合计算后批量更新。&lt;/p&gt;
-&lt;p&gt;优点：降低了对 &lt;code&gt;posts&lt;/code&gt; 表的实时写入压力，能够平滑高并发下的更新流量，减少锁竞争问题。&lt;/p&gt;
-&lt;p&gt;缺点：数据实时性降低（&lt;strong&gt;存在延迟&lt;/strong&gt;），对实时数据展示要求较高的场景可能不适用。&lt;/p&gt;
-</content>
     </item>
     
     <item>
