@@ -8,32 +8,124 @@
     <language>en</language>
     <lastBuildDate>Mon, 17 Feb 2025 20:39:22 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>MySQL 事务 悲观锁 乐观锁 数据一致性</title>
+      <title>MySQL 事务 数据一致性 悲观锁 乐观锁</title>
       <link>https://blog.jiyi27.com/posts/database/mysql/005-transaction-locks/</link>
       <pubDate>Mon, 17 Feb 2025 20:39:22 +0000</pubDate>
       
       <guid>https://blog.jiyi27.com/posts/database/mysql/005-transaction-locks/</guid>
-      <description>&lt;h2 id=&#34;1-事务&#34;&gt;1. 事务&lt;/h2&gt;
-&lt;h3 id=&#34;11-事务的概念&#34;&gt;1.1. 事务的概念&lt;/h3&gt;
-&lt;p&gt;事务是一组要么全部成功，要么全部失败的数据库操作，保证数据的一致性。&lt;/p&gt;
-&lt;p&gt;假设你要从 A 账户转 100 元到 B 账户，这个过程涉及两个操作：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;从 A 账户扣 100 元&lt;/li&gt;
-&lt;li&gt;给 B 账户加 100 元&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;如果第一步执行了，但第二步失败了，就会导致 A 的钱少了，但 B 没收到钱，这导致了数据一致性问题。事务可以防止这种情况。&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;START TRANSACTION;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 从 A 账户扣 100 元
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; accounts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 给 B 账户加 100 元
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; accounts &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;B&amp;#39;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;COMMIT;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果在执行过程中出现错误（比如 B 账户不存在），可以执行回滚，撤销已经执行的操作。&lt;/p&gt;
+      <description>&lt;h2 id=&#34;1-脏读-脏写-幻读---事务隔离级别&#34;&gt;1. 脏读 脏写 幻读 - 事务隔离级别&lt;/h2&gt;
+&lt;h3 id=&#34;11-脏读---事务隔离级别较低&#34;&gt;1.1. 脏读 - 事务隔离级别较低&lt;/h3&gt;
+&lt;p&gt;脏读是指一个事务读取到了另一个事务尚未提交的数据。若后者发生回滚，则前者读取的数据实际上并不存在。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;事务 A 修改了一条记录，但尚未提交。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;事务 B 读取这条记录，看到 A 的修改。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;如果 A 后续回滚，那么 B 读到了不存在的数据，这就是脏读问题。&lt;/p&gt;
+&lt;p&gt;根本原因在于事务隔离级别较低，允许一个事务读取另一个事务未提交的修改数据，缺少对数据一致性的保证。&lt;/p&gt;
+&lt;h3 id=&#34;12-脏写&#34;&gt;1.2. 脏写&lt;/h3&gt;
+&lt;p&gt;脏写指的是：事务 B 在事务 A 尚未提交的更新基础上又进行了更新并提交。如果随后事务 A 回滚，但 B 已经基于 A 的“未提交更新”写入了数据库，就会导致数据库中出现了一份基于“从未真正生效的数据”所写进去的值。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;如果 B 的更新逻辑要判断某个字段是否满足条件（例如库存是否 &amp;gt; 0 才扣减），而这个字段恰恰是由 A 更新的&lt;strong&gt;未提交&lt;/strong&gt;数据。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存根本没增加（或者没变化），最终 B 却“凭空”把库存扣了。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这些例子都说明了：&lt;strong&gt;脏写本质上是写操作基于了一份并不存在（或不确定会不会存在）的中间状态&lt;/strong&gt;，进而可能对数据一致性和业务逻辑造成破坏。这就是为什么数据库&lt;strong&gt;禁止&lt;/strong&gt;脏写的原因。&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;&lt;strong&gt;拓展:&lt;/strong&gt; 在 MySQL（InnoDB 存储引擎）中，单个 DML 语句（INSERT, UPDATE, DELETE）本身就是一个事务，如果 &lt;code&gt;AUTOCOMMIT&lt;/code&gt; 处于默认开启状态，它会自动提交，不需要手动 &lt;code&gt;COMMIT&lt;/code&gt;。&lt;/p&gt;
-&lt;p&gt;在数据修改操作（Update、Delete、Insert）中, MySQL InnoDB 会&lt;strong&gt;自动&lt;/strong&gt;对受影响的行加上 x 锁, 事务提交的时候(语句执行完成), x锁会被自动释放。&lt;/p&gt;</description>
-      <content>&lt;h2 id=&#34;1-事务&#34;&gt;1. 事务&lt;/h2&gt;
-&lt;h3 id=&#34;11-事务的概念&#34;&gt;1.1. 事务的概念&lt;/h3&gt;
+&lt;p&gt;在多数主流数据库(例如 MySQL InnoDB)的默认配置下，这种情况&lt;strong&gt;通常不会发生&lt;/strong&gt;，因为对同一行记录的并发写操作自动会被加 x锁序列化：只有前一个写操作提交或回滚后，后一个事务才能对这行数据进行新的写。因此，脏写往往只在极其宽松/非常低的隔离级别（或人为关闭了某些并发控制）下，才可能被“模拟”或“测试”出来。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;13-不可重复读-幻读&#34;&gt;1.3. 不可重复读 幻读&lt;/h3&gt;
+&lt;p&gt;不可重复读: 在一个事务执行过程中，读取到其它事务已提交的数据，导致两次读取的结果不一致。&lt;/p&gt;
+&lt;p&gt;幻读: 在一个事务执行过程中，读取到了其他事务新插入数据，导致两次读取的结果不一致。&lt;/p&gt;
+&lt;h3 id=&#34;14-四种隔离级别&#34;&gt;1.4. 四种隔离级别&lt;/h3&gt;
+&lt;p&gt;在&lt;code&gt;SQL&lt;/code&gt;标准中设立了4种隔离级别, 用来解决上面的读一致性问题, 不同的隔离级别可以解决不同的读一致性问题&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-脏读-脏写-幻读---事务隔离级别&#34;&gt;1. 脏读 脏写 幻读 - 事务隔离级别&lt;/h2&gt;
+&lt;h3 id=&#34;11-脏读---事务隔离级别较低&#34;&gt;1.1. 脏读 - 事务隔离级别较低&lt;/h3&gt;
+&lt;p&gt;脏读是指一个事务读取到了另一个事务尚未提交的数据。若后者发生回滚，则前者读取的数据实际上并不存在。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;事务 A 修改了一条记录，但尚未提交。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;事务 B 读取这条记录，看到 A 的修改。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;如果 A 后续回滚，那么 B 读到了不存在的数据，这就是脏读问题。&lt;/p&gt;
+&lt;p&gt;根本原因在于事务隔离级别较低，允许一个事务读取另一个事务未提交的修改数据，缺少对数据一致性的保证。&lt;/p&gt;
+&lt;h3 id=&#34;12-脏写&#34;&gt;1.2. 脏写&lt;/h3&gt;
+&lt;p&gt;脏写指的是：事务 B 在事务 A 尚未提交的更新基础上又进行了更新并提交。如果随后事务 A 回滚，但 B 已经基于 A 的“未提交更新”写入了数据库，就会导致数据库中出现了一份基于“从未真正生效的数据”所写进去的值。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;如果 B 的更新逻辑要判断某个字段是否满足条件（例如库存是否 &amp;gt; 0 才扣减），而这个字段恰恰是由 A 更新的&lt;strong&gt;未提交&lt;/strong&gt;数据。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存根本没增加（或者没变化），最终 B 却“凭空”把库存扣了。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这些例子都说明了：&lt;strong&gt;脏写本质上是写操作基于了一份并不存在（或不确定会不会存在）的中间状态&lt;/strong&gt;，进而可能对数据一致性和业务逻辑造成破坏。这就是为什么数据库&lt;strong&gt;禁止&lt;/strong&gt;脏写的原因。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;在多数主流数据库(例如 MySQL InnoDB)的默认配置下，这种情况&lt;strong&gt;通常不会发生&lt;/strong&gt;，因为对同一行记录的并发写操作自动会被加 x锁序列化：只有前一个写操作提交或回滚后，后一个事务才能对这行数据进行新的写。因此，脏写往往只在极其宽松/非常低的隔离级别（或人为关闭了某些并发控制）下，才可能被“模拟”或“测试”出来。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;13-不可重复读-幻读&#34;&gt;1.3. 不可重复读 幻读&lt;/h3&gt;
+&lt;p&gt;不可重复读: 在一个事务执行过程中，读取到其它事务已提交的数据，导致两次读取的结果不一致。&lt;/p&gt;
+&lt;p&gt;幻读: 在一个事务执行过程中，读取到了其他事务新插入数据，导致两次读取的结果不一致。&lt;/p&gt;
+&lt;h3 id=&#34;14-四种隔离级别&#34;&gt;1.4. 四种隔离级别&lt;/h3&gt;
+&lt;p&gt;在&lt;code&gt;SQL&lt;/code&gt;标准中设立了4种隔离级别, 用来解决上面的读一致性问题, 不同的隔离级别可以解决不同的读一致性问题&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;READ UNCOMMITTED&lt;/code&gt;：未提交读&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;READ COMMITTED&lt;/code&gt;：已提交读&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;REPEATABLE READ&lt;/code&gt;：可重复读&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;SERIALIZABLE&lt;/code&gt;：串行化&lt;/li&gt;
+&lt;/ul&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;隔离级别 (Isolation Level)&lt;/th&gt;
+          &lt;th&gt;脏读 (Dirty Read)&lt;/th&gt;
+          &lt;th&gt;不可重复读 (Non-repeatable Read)&lt;/th&gt;
+          &lt;th&gt;幻读 (Phantom Read)&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;未提交读 (READ UNCOMMITTED)&lt;/td&gt;
+          &lt;td&gt;可能 (Yes)&lt;/td&gt;
+          &lt;td&gt;可能 (Yes)&lt;/td&gt;
+          &lt;td&gt;可能 (Yes)&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;已提交读 (READ COMMITTED)&lt;/td&gt;
+          &lt;td&gt;不可能 (No)&lt;/td&gt;
+          &lt;td&gt;可能 (Yes)&lt;/td&gt;
+          &lt;td&gt;可能 (Yes)&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;可重复读 (REPEATABLE READ)&lt;/td&gt;
+          &lt;td&gt;不可能 (No)&lt;/td&gt;
+          &lt;td&gt;不可能 (No)&lt;/td&gt;
+          &lt;td&gt;可能 (Yes)（对 InnoDB 不可能）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;串行化 (SERIALIZABLE)&lt;/td&gt;
+          &lt;td&gt;不可能 (No)&lt;/td&gt;
+          &lt;td&gt;不可能 (No)&lt;/td&gt;
+          &lt;td&gt;不可能 (No)&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;blockquote&gt;
+&lt;p&gt;脏写的问题严重, 数据库设计上通过增删改操作默认加 x锁, 实现脏写在任何隔离级别都会避免&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;InnoDB&lt;/code&gt;支持四个隔离级别（和&lt;code&gt;SQL&lt;/code&gt;标准定义的基本一致）。隔离级别越高，事务的并发度就越低。唯一的区别就在于，&lt;code&gt;InnoDB&lt;/code&gt; 在&lt;code&gt;可重复读（REPEATABLE READ）&lt;/code&gt;的级别就解决了幻读的问题。这也是&lt;code&gt;InnoDB&lt;/code&gt;使用&lt;code&gt;可重复读&lt;/code&gt; 作为事务默认隔离级别的原因。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;此节部分参考: &lt;a href=&#34;https://juejin.cn/post/6855129007336521741&#34;&gt;mysql事务和锁 - 掘金&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-事务&#34;&gt;2. 事务&lt;/h2&gt;
+&lt;h3 id=&#34;21-事务的概念&#34;&gt;2.1. 事务的概念&lt;/h3&gt;
 &lt;p&gt;事务是一组要么全部成功，要么全部失败的数据库操作，保证数据的一致性。&lt;/p&gt;
 &lt;p&gt;假设你要从 A 账户转 100 元到 B 账户，这个过程涉及两个操作：&lt;/p&gt;
 &lt;ol&gt;
@@ -65,7 +157,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
-&lt;h3 id=&#34;12-事务不是导致错误的原因而是处理错误的机制&#34;&gt;1.2. 事务不是导致错误的原因，而是处理错误的机制&lt;/h3&gt;
+&lt;h3 id=&#34;22-事务不是导致错误的原因而是处理错误的机制&#34;&gt;2.2. 事务不是导致错误的原因，而是处理错误的机制&lt;/h3&gt;
 &lt;p&gt;连接类错误, 语法错误, 系统资源相关错误, 数据完整性和约束错误, 事务和锁相关错误, 前几种没什么好说的, 看一下最后两种:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;违反完整性约束的错误: 数据库自身的机制, 比如：主键重复、外键不存在、唯一约束冲突、&lt;code&gt;CHECK&lt;/code&gt; 约束失败等&lt;/li&gt;
@@ -113,7 +205,7 @@
 &lt;li&gt;事务不会主动报错，报错的原因是 SQL 语句违反数据库的完整性约束&lt;/li&gt;
 &lt;li&gt;事务的作用是确保错误发生时，数据不会进入不一致的状态, 事务只是处理数据库错误的工具, 并不是开启事务就万事大吉了&lt;/li&gt;
 &lt;/ol&gt;
-&lt;h3 id=&#34;13-事务的特性&#34;&gt;1.3. 事务的特性&lt;/h3&gt;
+&lt;h3 id=&#34;23-事务的特性&#34;&gt;2.3. 事务的特性&lt;/h3&gt;
 &lt;p&gt;&lt;strong&gt;原子性（Atomicity）&lt;/strong&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;事务是一个不可分割的最小操作单元，要么全部执行成功，要么全部回滚&lt;/li&gt;
@@ -134,8 +226,8 @@
 &lt;p&gt;&lt;strong&gt;一致性并不是事务本身的固有属性, 而更像是一种外在要求,&lt;/strong&gt; 不难发现其他三个都是实打实的特征, 唯独一致性, 无法理解, 这里的一致性更像是一种外在要求, 而不是事务本身的固有的属性, 即是一种需要依赖业务层逻辑来实现的状态,&lt;/p&gt;
 &lt;p&gt;举个不恰当的例子, 我们说一个苹果, 苹果是圆的, 苹果可以为我们提供维生素C, 这都是苹果的特征, 可是你却说, 苹果也有生吃性, 苹果必须生吃才能最大化的提供营养价值, WTF? 生不生吃苹果取决于个人啊, 这怎么能是苹果的特性呢?&lt;/p&gt;
 &lt;p&gt;同理, 数据库是不是保持一致性, 这取决于业务逻辑啊, 比如需要结合锁来实现, 什么悲观锁, 乐观锁, 这怎么能是事务的特性呢?&lt;/p&gt;
-&lt;h2 id=&#34;2-数据一致性问题&#34;&gt;2. 数据一致性问题&lt;/h2&gt;
-&lt;h3 id=&#34;21-直接修改操作---隐式-x-锁&#34;&gt;2.1. 直接修改操作 - 隐式 x 锁&lt;/h3&gt;
+&lt;h2 id=&#34;3-数据一致性问题&#34;&gt;3. 数据一致性问题&lt;/h2&gt;
+&lt;h3 id=&#34;31-直接修改操作---隐式-x-锁&#34;&gt;3.1. 直接修改操作 - 隐式 x 锁&lt;/h3&gt;
 &lt;p&gt;比如常见的转账例子多个人给同一个账户转 100 块钱,  系统可能会有下面的命令:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-mysql&#34; data-lang=&#34;mysql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; account &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; balance &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; account_id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;002&lt;/span&gt;;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;高并发状态下, A事务读取到此时账户余额为 100, B事务 也读取到账户余额为 100,&lt;/p&gt;
@@ -148,7 +240,7 @@
 &lt;blockquote&gt;
 &lt;p&gt;在数据修改操作（Update、Delete、Insert）中, 事务会先尝试获得受影响行的 X 锁, 若得到, 才能进行更新, 否则只能等待, 不要忘了单个语句, 也默认属于一个事务&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h3 id=&#34;22-检查--修改操作----显式-x锁-悲观锁-或乐观锁&#34;&gt;2.2. 检查 + 修改操作 -  显式 x锁 (悲观锁) 或乐观锁&lt;/h3&gt;
+&lt;h3 id=&#34;32-检查--修改操作----显式-x锁-悲观锁-或乐观锁&#34;&gt;3.2. 检查 + 修改操作 -  显式 x锁 (悲观锁) 或乐观锁&lt;/h3&gt;
 &lt;p&gt;这种属于多个事务中基于过时数据进行判断后再写入更新的场景, 读取数据与更新操作之间缺乏必要的锁机制保护, 导致多个事务基于同一份数据进行判断并更新, 从而引发数据不一致,&lt;/p&gt;
 &lt;p&gt;上面的例子过于简化了, 实际系统肯定不会直接给账户加钱, 还有很多考虑, 比如检查收账人是否存在, 检查转账人的余额是不是足够, 然后进行扣款,&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;步骤 1：同时读取余额&lt;/strong&gt;&lt;/p&gt;
@@ -182,7 +274,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; version &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt;;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 判断 UPDATE 是否成功, 否则重试或抛出异常返回给客户端执行失败, 通过业务代码实现
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;COMMIT;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;23-多表操作---事务原子性&#34;&gt;2.3. 多表操作 - 事务原子性&lt;/h3&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;33-多表操作---事务原子性&#34;&gt;3.3. 多表操作 - 事务原子性&lt;/h3&gt;
 &lt;p&gt;除此之外还要确保转账人的账户 -100, 收款人的账户 +100, 不能出现后者操作失败了, 导致收款人账户余额没变, 转账人账户的钱却少了 100, 这也是属于数据不一致,&lt;/p&gt;
 &lt;p&gt;这种很简单, 把更新两张表的语句放到同一个事务里就行了, 因为可以利用事务的回滚保证, 若有一个操作失败, 则同时都失败,&lt;/p&gt;
 </content>
