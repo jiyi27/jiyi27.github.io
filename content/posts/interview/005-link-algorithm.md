@@ -34,7 +34,20 @@ def removeElements(self, head, val):
     return dummy.next
 ```
 
-## 2. 实现链表
+## 2. 交叉点
+
+```python
+def getIntersectionNode(self, headA: ListNode, headB: ListNode) -> ListNode:
+    ta, tb = headA, headB
+    while ta != tb:
+        ta = ta.next if ta else headB
+        tb = tb.next if tb else headA
+    return tb
+```
+
+`ta = ta.next if ta else headB` 并不会报错, 即使 `ta` 为 None, 因为这语句先执行 `if ta`, 所以不会出现, None 不存在 next 属性的异常, 
+
+## 3. 实现链表
 
 在做涉及到 index 和 size 相关的问题时, 一定要考虑清楚,  index 是从 0 开始 还是从 1 开始, 这很重要, 它告诉了我们 index 是不是 可以等于 size, 还是 size = index + 1
 
