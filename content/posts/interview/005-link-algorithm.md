@@ -61,7 +61,7 @@ class MyLinkedList:
 
     def __init__(self):
         self.head = None
-        self.size = 0  # 维护链表长度
+        self.size = 0
 
     def get(self, index):
         if index < 0 or index >= self.size:
@@ -117,9 +117,7 @@ class MyLinkedList:
         cur = dummy
         for _ in range(index):
             cur = cur.next
-        
-        if cur.next:
-            cur.next = cur.next.next
+        cur.next = cur.next.next
         self.head = dummy.next
         self.size -= 1  # 更新长度
 ```
