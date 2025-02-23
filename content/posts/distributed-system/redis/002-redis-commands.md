@@ -2,9 +2,10 @@
 title: Useful Redis Commands
 date: 2023-09-30 16:40:58
 categories:
- - 数据库
+ - 分布式
 tags:
- - 数据库
+ - 分布式
+ - 面试
  - redis
 ---
 

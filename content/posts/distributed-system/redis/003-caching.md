@@ -2,11 +2,11 @@
 title: Caching Strategies and What should be Cached
 date: 2023-10-01 17:56:58
 categories:
- - 数据库
+ - 分布式
 tags:
- - 数据库
+ - 分布式
+ - 面试
  - redis
- - 缓存
 ---
 
 > “The real problem is that programmers have spent far too much time worrying about efficiency in the wrong places and at the wrong times; **premature optimization** is the root of all evil (or at least most of it) in programming.” - [Donald Knuth](https://en.wikipedia.org/wiki/Donald_Knuth)
