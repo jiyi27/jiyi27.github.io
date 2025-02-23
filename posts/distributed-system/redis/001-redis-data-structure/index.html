@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Redis 数据结构 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Redis 仅仅是缓存吗 Redis 最广为人知的用途是缓存（Caching），它通过内存存储提供超高的读写性能，常用于减轻数据库压力（如 MySQL），尤其在以下场景：
+缓存热点数据 会话存储（Session Storage） 页面缓存 但 Redis 的功能远不止缓存：
+数据结构存储：支持字符串、列表、集合、哈希等，类似一个内存数据库 消息队列：通过 Pub/Sub 或 List 实现轻量级消息传递 分布式锁：在分布式系统中用于同步 高可用与分布式：通过主从复制、哨兵模式、集群模式支持分布式架构 2. String &amp; Set 注意这里的 String 就是一个数据结构, 而不是一个值的类型, Redis 中 Set 只能用来存储 String 类型的值, 这里的 String 指的只是单纯的字符串, 而不是数据结构,
+2.1. String SET user:001 &#34;Alice&#34; SET user:001 &#39;{&#34;name&#34;: &#34;Alice&#34;, &#34;age&#34;: 25}&#39; SET counter 10 注意看上面的这些, 都是 String 数据结构, 其中 user:001 和 counter 是 Key, 后面的 字符串 &ldquo;Alice&rdquo;, JSON 数据, 还有数字 是 Value,
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/distributed-system/redis/001-redis-data-structure/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Redis 数据结构">
+<meta property="og:description" content="1. Redis 仅仅是缓存吗 Redis 最广为人知的用途是缓存（Caching），它通过内存存储提供超高的读写性能，常用于减轻数据库压力（如 MySQL），尤其在以下场景：
+缓存热点数据 会话存储（Session Storage） 页面缓存 但 Redis 的功能远不止缓存：
+数据结构存储：支持字符串、列表、集合、哈希等，类似一个内存数据库 消息队列：通过 Pub/Sub 或 List 实现轻量级消息传递 分布式锁：在分布式系统中用于同步 高可用与分布式：通过主从复制、哨兵模式、集群模式支持分布式架构 2. String &amp; Set 注意这里的 String 就是一个数据结构, 而不是一个值的类型, Redis 中 Set 只能用来存储 String 类型的值, 这里的 String 指的只是单纯的字符串, 而不是数据结构,
+2.1. String SET user:001 &#34;Alice&#34; SET user:001 &#39;{&#34;name&#34;: &#34;Alice&#34;, &#34;age&#34;: 25}&#39; SET counter 10 注意看上面的这些, 都是 String 数据结构, 其中 user:001 和 counter 是 Key, 后面的 字符串 &ldquo;Alice&rdquo;, JSON 数据, 还有数字 是 Value,
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/distributed-system/redis/001-redis-data-structure/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="分布式" />
+
+
+  <meta property="article:published_time" content="2025-02-21 11:28:58 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/distributed-system/redis/001-redis-data-structure/">Redis 数据结构</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-02-21</time><span class="post-reading-time">2 分钟阅读 (292 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%88%86%E5%B8%83%E5%BC%8F/">分布式</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/redis/">redis</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-redis--仅仅是缓存吗">1. Redis  仅仅是缓存吗<a href="#1-redis--仅仅是缓存吗" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Redis 最广为人知的用途是<strong>缓存</strong>（Caching），它通过内存存储提供超高的读写性能，常用于减轻数据库压力（如 MySQL），尤其在以下场景：</p>
+<ul>
+<li>缓存热点数据</li>
+<li>会话存储（Session Storage）</li>
+<li>页面缓存</li>
+</ul>
+<p>但 Redis 的功能远不止缓存：</p>
+<ul>
+<li>数据结构存储：支持字符串、列表、集合、哈希等，类似一个内存数据库</li>
+<li>消息队列：通过 Pub/Sub 或 List 实现轻量级消息传递</li>
+<li>分布式锁：在分布式系统中用于同步</li>
+<li>高可用与分布式：通过主从复制、哨兵模式、集群模式支持分布式架构</li>
+</ul>
+<h2 id="2-string--set">2. String &amp; Set<a href="#2-string--set" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>注意这里的 String 就是一个数据结构, 而不是一个值的类型, Redis 中 Set 只能用来存储 String 类型的值, 这里的 String 指的只是单纯的字符串, 而不是数据结构,</p>
+<h3 id="21-string">2.1. String<a href="#21-string" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<pre tabindex="0"><code>SET user:001 &#34;Alice&#34;
+SET user:001 &#39;{&#34;name&#34;: &#34;Alice&#34;, &#34;age&#34;: 25}&#39;
+SET counter 10
+</code></pre><p>注意看上面的这些, 都是 String 数据结构, 其中 <code>user:001</code> 和 <code>counter</code> 是 Key, 后面的 字符串 &ldquo;Alice&rdquo;, JSON 数据, 还有数字 是 Value,</p>
+<p>可以看出, Redis 中的 String 有点像哈希表, 但不是, 因为它有一些更方便的操作, 比如:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>GET user:001 <span style="color:#75715e"># 获取 key user:001 值</span>
+</span></span><span style="display:flex;"><span>INCR counter <span style="color:#75715e"># 自增1</span>
+</span></span><span style="display:flex;"><span>DECR counter <span style="color:#75715e"># 自减1</span>
+</span></span><span style="display:flex;"><span>INCRBY counter <span style="color:#ae81ff">5</span> <span style="color:#75715e"># 自增5</span>
+</span></span></code></pre></div><h3 id="22-set">2.2. Set<a href="#22-set" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Set 只能存储字符串, 且字符串不能重复:</p>
+<pre tabindex="0"><code>[&#34;123&#34;, &#34;456&#34;, &#34;Jack&#34;, &#34;Alice&#34;, ...]
+</code></pre><h2 id="3-string-使用场景">3. String 使用场景<a href="#3-string-使用场景" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-缓存热点数据">3.1. 缓存热点数据<a href="#31-缓存热点数据" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><code>SET user:1001:name &quot;Shaowen Zhu&quot; EX 3600</code> （存储用户名称，设置过期时间 1 小时）</p>
+<p><code>GET user:1001:name</code>（获取用户名称）</p>
+<p>通过 <code>EX</code> 选项设置过期时间，自动过期释放内存，避免缓存雪崩</p>
+<h3 id="32-分布式锁">3.2. 分布式锁<a href="#32-分布式锁" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>场景：</strong> 在分布式系统中，多个进程可能会同时访问和修改共享资源，因此需要一个锁机制来避免并发冲突。</p>
+<p><strong>实现方式：</strong></p>
+<ul>
+<li><code>SETNX lock:order:12345 &quot;locked&quot;</code>（如果 key 不存在，则设置成功，表示获取到锁）</li>
+<li><code>EXPIRE lock:order:12345 10</code>（设置超时时间，防止死锁）</li>
+<li>操作完成后 <code>DEL lock:order:12345</code>（释放锁）</li>
+</ul>
+<blockquote>
+<p>在 Redis 中，大部分<strong>单个命令</strong>都是原子操作，像 <code>SET</code>、<code>INCR</code>、<code>SETNX</code>、<code>DEL</code> 是绝对原子的，因为 Redis 是单线程执行命令的，这意味着 不会有其他操作在命令执行的过程中打断它。当然也有不是原子操作: <code>GETSET</code>, <code>MGET / MSET</code>,</p>
+</blockquote>
+<h3 id="33-计数器">3.3. 计数器<a href="#33-计数器" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>场景：</strong> 需要对某个值进行频繁的递增或递减操作，比如访问量统计、点赞数、库存管理等。</p>
+<p><strong>实现方式：</strong></p>
+<ul>
+<li><code>INCR page:view:article:1001</code>（文章 1001 的浏览量 +1）</li>
+<li><code>DECR product:stock:2001</code>（商品 2001 的库存 -1）</li>
+<li><code>INCRBY user:1001:points 50</code>（用户 1001 的积分增加 50）</li>
+</ul>
+<h3 id="34-短链接存储">3.4. 短链接存储<a href="#34-短链接存储" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>场景：</strong> 实现短链接功能，如 <code>https://tinyurl.com/abcd</code> 映射到 <code>https://example.com/long-url</code>。</p>
+<p><strong>实现方式：</strong></p>
+<ul>
+<li><code>SET short:abcd &quot;https://example.com/long-url&quot;</code></li>
+<li><code>GET short:abcd</code>（通过短链接获取原始 URL）</li>
+</ul>
+<blockquote>
+<p>可以发现 Redis 中习惯在 KEY 中通过 <code>:</code> 连接字符串, 这样可以清晰的表达出含义, 如: <code>page:view:article:1001</code>, 这就是一个字符串, 不是什么高级的东西,</p>
+</blockquote>
+<h2 id="4-set-使用场景">4. Set 使用场景<a href="#4-set-使用场景" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="41-数据去重与快速查重">4.1. 数据去重与快速查重<a href="#41-数据去重与快速查重" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>利用 Set 元素不允许重复的特性，可以用来存储用户访问记录、去重 URL、或防止重复投票等场景。</p>
+<p>例如：记录某个用户访问过的页面，避免重复统计。</p>
+<pre tabindex="0"><code class="language-redis" data-lang="redis"># 添加用户访问记录（每个页面仅记录一次）
+SADD user:123:visited &#34;page1&#34;
+SADD user:123:visited &#34;page2&#34;
+SADD user:123:visited &#34;page1&#34;  # 重复添加不会生效
+
+# 判断用户是否已访问某个页面
+SISMEMBER user:123:visited &#34;page1&#34;  # 返回 1 表示存在，0 表示不存在
+
+# 获取该用户所有访问过的页面
+SMEMBERS user:123:visited
+</code></pre><h3 id="42-标签管理和推荐系统">4.2. 标签管理和推荐系统<a href="#42-标签管理和推荐系统" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>在内容推荐场景中，可以使用 Set 来存储用户或内容的标签，然后利用集合的交集或并集进行推荐匹配。例如，根据用户关注的标签推荐相似内容。</p>
+<pre tabindex="0"><code class="language-redis" data-lang="redis"># 给文章添加标签
+SADD article:100:tags &#34;tech&#34; &#34;ai&#34; &#34;redis&#34;
+
+# 用户兴趣标签
+SADD user:123:tags &#34;ai&#34; &#34;machine learning&#34; &#34;tech&#34;
+
+# 计算用户与文章标签的交集，判断兴趣匹配度
+SINTER article:100:tags user:123:tags
+</code></pre><p><code>SINTER</code> 可计算出用户与文章之间的标签交集，判断用户对该文章的兴趣匹配情况，从而辅助推荐算法。</p>
+<h3 id="43-黑名单白名单管理">4.3. 黑名单/白名单管理<a href="#43-黑名单白名单管理" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Set 常用于存储黑名单或白名单数据，由于其快速的查找特性，可以高效判断某个元素是否被列入名单，适用于安全控制、IP 屏蔽、广告过滤等场景。</p>
+<pre tabindex="0"><code class="language-redis" data-lang="redis"># 添加IP到黑名单
+SADD blacklist:ips &#34;192.168.1.100&#34; &#34;10.0.0.5&#34;
+
+# 检查IP是否在黑名单中
+SISMEMBER blacklist:ips &#34;192.168.1.100&#34;  # 返回 1 表示IP被屏蔽
+
+# 移除IP
+SREM blacklist:ips &#34;10.0.0.5&#34;
+</code></pre>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/bugs/013-kafka-connection/" class="button inline prev">
+        Kafka 链接失败
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/database/mysql/005-transaction-locks/" class="button inline next">
+        MySQL 事务 数据一致性 悲观锁 乐观锁
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
