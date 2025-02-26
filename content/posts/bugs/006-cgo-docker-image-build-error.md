@@ -9,6 +9,7 @@ tags:
  - 交叉编译
 ---
 
+
 I choose a sqilte3 library which uses cgo, the Dockerfile:
 
 ```dockerfile
@@ -22,7 +23,9 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server .
 CMD ["./server"]
 ```
 
-> The `CGO_ENABLED=0` is to disable cgo. `GOOS=linux` and `GOARCH=amd64` is used for cross compilation in Go. Because I build this on my macOS arm64 machine, and I want build for Ubuntu amd64 machine, so I choose `GOOS=linux` `GOARCH=amd64`. 
+> 在使用 docker 运行 golang 相关的程序的时候, 我们需要先选择基础镜像, 比如: `FROM golang:alpine`, 编译 golang 源码的时候, 需要指定构建的目的系统和CPU架构, 比如: `GOOS=linux`, 此时 选择 GOOS=linux 是因为我们选择基础镜像是 `golang:alpine` 是 Linux 系统, 而 `GOARCH=amd64` 是因为宿主机 CPU 架构是 amd64, 容器里的程序只能跑在与宿主机 CPU 架构兼容的环境上, 
+>
+> When cgo is enabled, the binary may link dynamically to C libraries, which can add dependencies on system-specific libraries. Disabling cgo (by setting `CGO_ENABLED=0`) helps produce a more self-contained binary, making cross-platform deployment easier.
 >
 > Learn more: 
 >
