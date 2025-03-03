@@ -8,7 +8,8 @@
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="I choose a sqilte3 library which uses cgo, the Dockerfile:
-FROM golang:alpine WORKDIR /app COPY ./ ./ RUN go mod download RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server . CMD [&#34;./server&#34;] The CGO_ENABLED=0 is to disable cgo. GOOS=linux and GOARCH=amd64 is used for cross compilation in Go. Because I build this on my macOS arm64 machine, and I want build for Ubuntu amd64 machine, so I choose GOOS=linux GOARCH=amd64.
+FROM golang:alpine WORKDIR /app COPY ./ ./ RUN go mod download RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server . CMD [&#34;./server&#34;] 在使用 docker 运行 golang 相关的程序的时候, 我们需要先选择基础镜像, 比如: FROM golang:alpine, 编译 golang 源码的时候, 需要指定构建的目的系统和CPU架构, 比如: GOOS=linux, 此时 选择 GOOS=linux 是因为我们选择基础镜像是 golang:alpine 是 Linux 系统, 而 GOARCH=amd64 是因为宿主机 CPU 架构是 amd64, 容器里的程序只能跑在与宿主机 CPU 架构兼容的环境上,
+When cgo is enabled, the binary may link dynamically to C libraries, which can add dependencies on system-specific libraries. Disabling cgo (by setting CGO_ENABLED=0) helps produce a more self-contained binary, making cross-platform deployment easier.
 " />
 <meta name="keywords" content="" />
 
@@ -85,7 +86,8 @@ FROM golang:alpine WORKDIR /app COPY ./ ./ RUN go mod download RUN CGO_ENABLED=0
 <meta property="og:type" content="article" />
 <meta property="og:title" content="CGO Compile Error Building Docker Image">
 <meta property="og:description" content="I choose a sqilte3 library which uses cgo, the Dockerfile:
-FROM golang:alpine WORKDIR /app COPY ./ ./ RUN go mod download RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server . CMD [&#34;./server&#34;] The CGO_ENABLED=0 is to disable cgo. GOOS=linux and GOARCH=amd64 is used for cross compilation in Go. Because I build this on my macOS arm64 machine, and I want build for Ubuntu amd64 machine, so I choose GOOS=linux GOARCH=amd64.
+FROM golang:alpine WORKDIR /app COPY ./ ./ RUN go mod download RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server . CMD [&#34;./server&#34;] 在使用 docker 运行 golang 相关的程序的时候, 我们需要先选择基础镜像, 比如: FROM golang:alpine, 编译 golang 源码的时候, 需要指定构建的目的系统和CPU架构, 比如: GOOS=linux, 此时 选择 GOOS=linux 是因为我们选择基础镜像是 golang:alpine 是 Linux 系统, 而 GOARCH=amd64 是因为宿主机 CPU 架构是 amd64, 容器里的程序只能跑在与宿主机 CPU 架构兼容的环境上,
+When cgo is enabled, the binary may link dynamically to C libraries, which can add dependencies on system-specific libraries. Disabling cgo (by setting CGO_ENABLED=0) helps produce a more self-contained binary, making cross-platform deployment easier.
 " />
 <meta property="og:url" content="https://blog.jiyi27.com/posts/bugs/006-cgo-docker-image-build-error/" />
 <meta property="og:site_name" content="为霜的博客" />
@@ -127,7 +129,7 @@ FROM golang:alpine WORKDIR /app COPY ./ ./ RUN go mod download RUN CGO_ENABLED=0
   <h1 class="post-title">
     <a href="https://blog.jiyi27.com/posts/bugs/006-cgo-docker-image-build-error/">CGO Compile Error Building Docker Image</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2023-10-21</time><span class="post-reading-time">2 分钟阅读 (333 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2023-10-21</time><span class="post-reading-time">2 分钟阅读 (361 字数)</span></div>
 
   
     <span class="post-tags">
@@ -156,7 +158,8 @@ FROM golang:alpine WORKDIR /app COPY ./ ./ RUN go mod download RUN CGO_ENABLED=0
 </span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
 </span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;./server&#34;</span>]<span style="color:#960050;background-color:#1e0010">
 </span></span></span></code></pre></div><blockquote>
-<p>The <code>CGO_ENABLED=0</code> is to disable cgo. <code>GOOS=linux</code> and <code>GOARCH=amd64</code> is used for cross compilation in Go. Because I build this on my macOS arm64 machine, and I want build for Ubuntu amd64 machine, so I choose <code>GOOS=linux</code> <code>GOARCH=amd64</code>.</p>
+<p>在使用 docker 运行 golang 相关的程序的时候, 我们需要先选择基础镜像, 比如: <code>FROM golang:alpine</code>, 编译 golang 源码的时候, 需要指定构建的目的系统和CPU架构, 比如: <code>GOOS=linux</code>, 此时 选择 GOOS=linux 是因为我们选择基础镜像是 <code>golang:alpine</code> 是 Linux 系统, 而 <code>GOARCH=amd64</code> 是因为宿主机 CPU 架构是 amd64, 容器里的程序只能跑在与宿主机 CPU 架构兼容的环境上,</p>
+<p>When cgo is enabled, the binary may link dynamically to C libraries, which can add dependencies on system-specific libraries. Disabling cgo (by setting <code>CGO_ENABLED=0</code>) helps produce a more self-contained binary, making cross-platform deployment easier.</p>
 <p>Learn more:</p>
 <p><a href="https://davidzhu.xyz/post/golang/advance/012-statically-linking/">Static Linking Go Programs - David&rsquo;s Blog</a></p>
 <p><a href="https://davidzhu.xyz/post/golang/advance/011-cross-compilation/">Cross Compilation - Go - David&rsquo;s Blog</a></p>

@@ -139,7 +139,7 @@ JVM 不会在程序启动时一次性加载所有类, 而是按需加载, 触发
   <h1 class="post-title">
     <a href="https://blog.jiyi27.com/posts/interview/002-nuggets-java-basic/">Java 基础八股文</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2025-02-15</time><span class="post-reading-time">3 分钟阅读 (476 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2025-02-15</time><span class="post-reading-time">5 分钟阅读 (928 字数)</span></div>
 
   
     <span class="post-tags">
@@ -230,11 +230,12 @@ JVM 不会在程序启动时一次性加载所有类, 而是按需加载, 触发
 <p>创建类的实例（<code>new</code> 操作）</p>
 </li>
 <li>
-<p>访问类的静态成员（静态变量、静态方法）</p>
-<ul>
-<li>静态变量/方法属于<strong>类级别</strong>，JVM 在访问它之前必须确保类已经被加载</li>
+<p>访问类的静态成员（静态变量、静态方法 类级别）</p>
+</li>
 </ul>
 </li>
+</ol>
+<ul>
 <li>
 <p>调用 Class.forName(&ldquo;类名&rdquo;) 反射加载: <code>Class.forName()</code> 直接强制 JVM 加载并初始化该类</p>
 </li>
@@ -242,24 +243,8 @@ JVM 不会在程序启动时一次性加载所有类, 而是按需加载, 触发
 <p>子类初始化时，父类会先被初始化</p>
 </li>
 </ul>
-</li>
-</ol>
 <p>引用类的静态常量（<code>static final</code>）：不会触发类的加载, 因为 <code>static final</code> 常量在编译时已确定, 编译器会直接替换值</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">A</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">int</span> CONST <span style="color:#f92672">=</span> 100;  <span style="color:#75715e">// 常量</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> value <span style="color:#f92672">=</span> 10;         <span style="color:#75715e">// 静态变量</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> {
-</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;A 类初始化&#34;</span>);
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>}
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Test</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String<span style="color:#f92672">[]</span> args) {
-</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(A.<span style="color:#a6e22e">CONST</span>);  <span style="color:#75715e">// 不会触发 A 的加载</span>
-</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(A.<span style="color:#a6e22e">value</span>);  <span style="color:#75715e">// 触发 A 的加载</span>
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><h3 id="22-过程">2.2. 过程<a href="#22-过程" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<h3 id="22-过程">2.2. 过程<a href="#22-过程" class="hanchor" ariaLabel="Anchor">#</a> </h3>
 <h4 id="221-加载">2.2.1. 加载<a href="#221-加载" class="hanchor" ariaLabel="Anchor">#</a> </h4>
 <ul>
 <li>
@@ -367,7 +352,181 @@ JVM 不会在程序启动时一次性加载所有类, 而是按需加载, 触发
 </span></span><span style="display:flex;"><span>First: Age, Second: 25
 </span></span><span style="display:flex;"><span>First: 3.<span style="color:#a6e22e">14</span>, Second: <span style="color:#66d9ef">true</span>
 </span></span><span style="display:flex;"><span>First: A, Second: Apple
-</span></span></code></pre></div>
+</span></span></code></pre></div><h2 id="6-lambda-表达式">6. Lambda 表达式<a href="#6-lambda-表达式" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>把一个字符串转成整数，正常情况下可能要写一个完整的函数：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">Converter</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">convert</span>(String s);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MyConverter</span> <span style="color:#66d9ef">implements</span> Converter {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">convert</span>(String s) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> Integer.<span style="color:#a6e22e">parseInt</span>(s);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>但用 Lambda 表达式，可以简化为一行：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>Converter converter <span style="color:#f92672">=</span> (s) <span style="color:#f92672">-&gt;</span> Integer.<span style="color:#a6e22e">parseInt</span>(s);
+</span></span></code></pre></div><blockquote>
+<p>为什么 <code>(s) -&gt; Integer.parseInt(s)</code> 可以赋值给 <code>Converter</code>?</p>
+<p>Converter 是一个接口，里面有一个方法叫 convert, 任何实现这个接口的东西，都必须实现这个方法, Lambda 表达式 <code>(s) -&gt; Integer.parseInt(s)</code> 正好匹配 Converter 接口里 convert 方法的签名, 因为这个 Lambda 表达式完全符合 Converter 接口的要求，Java 允许把它直接赋值给 Converter 类型的变量。换句话说，<code>(s) -&gt; Integer.parseInt(s)</code> 就像是一个临时的、匿名的 Converter 实现</p>
+</blockquote>
+<h2 id="7-函数式接口">7. 函数式接口<a href="#7-函数式接口" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Java 中有两种接口,  普通接口 和 函数式接口, 普通接口用于定义<strong>一组</strong>相关的行为规范, 通常用于面向对象编程中的抽象和多态, 通过 implements 关键字由类显式实现, 函数式接口专为函数式编程设计, 表示<strong>单一</strong>功能的抽象, 通常通过 Lambda 表达式、方法引用或匿名内部类实现, 不需要显式定义一个完整的类</p>
+<p>假设我们定义一个简单的函数式接口 Calculator，用于表示两个数的计算操作：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@FunctionalInterface</span> <span style="color:#75715e">// 可选注解，确保接口只有一个抽象方法</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">Calculator</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">calculate</span>(<span style="color:#66d9ef">int</span> a, <span style="color:#66d9ef">int</span> b);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>使用 Lambda 表达式实现:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>Calculator addition <span style="color:#f92672">=</span> (a, b) <span style="color:#f92672">-&gt;</span> a <span style="color:#f92672">+</span> b;
+</span></span><span style="display:flex;"><span>System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;加法结果: &#34;</span> <span style="color:#f92672">+</span> addition.<span style="color:#a6e22e">calculate</span>(5, 3)); <span style="color:#75715e">// 输出: 加法结果: 8</span>
+</span></span></code></pre></div><p>使用方法引用实现:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Main</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">add</span>(<span style="color:#66d9ef">int</span> a, <span style="color:#66d9ef">int</span> b) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> a <span style="color:#f92672">+</span> b;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String<span style="color:#f92672">[]</span> args) {
+</span></span><span style="display:flex;"><span>        Calculator addition <span style="color:#f92672">=</span> Main::add;
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;加法结果: &#34;</span> <span style="color:#f92672">+</span> addition.<span style="color:#a6e22e">calculate</span>(5, 3)); <span style="color:#75715e">// 输出: 加法结果: 8</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>使用匿名内部类实现:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Main</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String<span style="color:#f92672">[]</span> args) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 使用匿名内部类实现减法</span>
+</span></span><span style="display:flex;"><span>        Calculator subtraction <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Calculator() {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">calculate</span>(<span style="color:#66d9ef">int</span> a, <span style="color:#66d9ef">int</span> b) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> a <span style="color:#f92672">-</span> b;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        };
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;减法结果: &#34;</span> <span style="color:#f92672">+</span> subtraction.<span style="color:#a6e22e">calculate</span>(5, 3)); <span style="color:#75715e">// 输出: 减法结果: 2</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Java 8 提供了一些常用的内置函数式接口，主要在 <code>java.util.function</code> 包中：</p>
+<table>
+  <thead>
+      <tr>
+          <th>函数式接口</th>
+          <th>抽象方法</th>
+          <th>作用</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>Consumer&lt;T&gt;</code></td>
+          <td><code>void accept(T t)</code></td>
+          <td>只接收参数，没有返回值</td>
+      </tr>
+      <tr>
+          <td><code>Supplier&lt;T&gt;</code></td>
+          <td><code>T get()</code></td>
+          <td>不接收参数，返回一个值</td>
+      </tr>
+      <tr>
+          <td><code>Function&lt;T, R&gt;</code></td>
+          <td><code>R apply(T t)</code></td>
+          <td>接收一个参数，返回一个结果</td>
+      </tr>
+      <tr>
+          <td><code>Predicate&lt;T&gt;</code></td>
+          <td><code>boolean test(T t)</code></td>
+          <td>进行条件判断，返回 <code>true</code> 或 <code>false</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><code>Function&lt;T, R&gt;</code> 也是函数式接口, 并不是什么高级的东西, 只不过添加了泛型, 定义如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@FunctionalInterface</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">Function</span><span style="color:#f92672">&lt;</span>T, R<span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 唯一抽象方法</span>
+</span></span><span style="display:flex;"><span>    R <span style="color:#a6e22e">apply</span>(T t);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 默认方法：函数组合</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">default</span> <span style="color:#f92672">&lt;</span>V<span style="color:#f92672">&gt;</span> Function<span style="color:#f92672">&lt;</span>V, R<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">compose</span>(Function<span style="color:#f92672">&lt;?</span> <span style="color:#66d9ef">super</span> V, <span style="color:#f92672">?</span> <span style="color:#66d9ef">extends</span> T<span style="color:#f92672">&gt;</span> before) {
+</span></span><span style="display:flex;"><span>        Objects.<span style="color:#a6e22e">requireNonNull</span>(before);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> (V v) <span style="color:#f92672">-&gt;</span> apply(before.<span style="color:#a6e22e">apply</span>(v));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>可以看到 <code>Function&lt;T, R&gt;</code> 只有一个抽象方法 <code>R apply(T t)</code>, 也就是说实现了这个方法的 lambda 或者其他类, 都算是实现了该接口, 比如:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>Function<span style="color:#f92672">&lt;</span>Double, Double<span style="color:#f92672">&gt;</span> addTax <span style="color:#f92672">=</span> price <span style="color:#f92672">-&gt;</span> price <span style="color:#f92672">*</span> 1.<span style="color:#a6e22e">13</span>; <span style="color:#75715e">// 加13%的税</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">double</span> priceWithTax <span style="color:#f92672">=</span> addTax.<span style="color:#a6e22e">apply</span>(discountedPrice);
+</span></span><span style="display:flex;"><span>System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;折扣后加税价: &#34;</span> <span style="color:#f92672">+</span> priceWithTax); <span style="color:#75715e">// 输出: 90.4</span>
+</span></span></code></pre></div><blockquote>
+<p>泛型在 java 中有三种情况可以用: 类, 接口, 方法</p>
+</blockquote>
+<h2 id="8-方法引用">8. 方法引用<a href="#8-方法引用" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>当你的 Lambda 表达式只是调用一个<strong>已经存在的方法</strong>时，可以用方法引用来代替，简单来说，方法引用是 Lambda 表达式的“快捷方式”</p>
+<pre tabindex="0"><code>类名::静态方法
+对象名::实例方法
+类名::实例方法（特殊情况）
+类名::new（构造方法引用）
+</code></pre><p>类名::静态方法</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 使用 Lambda 表达式</span>
+</span></span><span style="display:flex;"><span>Function<span style="color:#f92672">&lt;</span>String, Integer<span style="color:#f92672">&gt;</span> lambdaFunc <span style="color:#f92672">=</span> s <span style="color:#f92672">-&gt;</span> Integer.<span style="color:#a6e22e">parseInt</span>(s);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 使用方法引用, 类名::静态方法</span>
+</span></span><span style="display:flex;"><span>Function<span style="color:#f92672">&lt;</span>String, Integer<span style="color:#f92672">&gt;</span> methodRefFunc <span style="color:#f92672">=</span> Integer::parseInt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 测试</span>
+</span></span><span style="display:flex;"><span>System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(lambdaFunc.<span style="color:#a6e22e">apply</span>(<span style="color:#e6db74">&#34;100&#34;</span>)); <span style="color:#75715e">// 输出 100</span>
+</span></span><span style="display:flex;"><span>System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(methodRefFunc.<span style="color:#a6e22e">apply</span>(<span style="color:#e6db74">&#34;200&#34;</span>)); <span style="color:#75715e">// 输出 200</span>
+</span></span></code></pre></div><p>对象名::实例方法</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>String str <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;hello&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 使用 Lambda 表达式</span>
+</span></span><span style="display:flex;"><span>Runnable lambda <span style="color:#f92672">=</span> () <span style="color:#f92672">-&gt;</span> System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(str.<span style="color:#a6e22e">toUpperCase</span>());
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 使用方法引用, 对象名::实例方法</span>
+</span></span><span style="display:flex;"><span>Runnable methodRef <span style="color:#f92672">=</span> str::toUpperCase;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 执行</span>
+</span></span><span style="display:flex;"><span>lambda.<span style="color:#a6e22e">run</span>(); <span style="color:#75715e">// 输出 HELLO</span>
+</span></span><span style="display:flex;"><span>methodRef.<span style="color:#a6e22e">run</span>(); <span style="color:#75715e">// 输出 HELLO</span>
+</span></span></code></pre></div><h2 id="9-项目中哪里用到了泛型">9. 项目中哪里用到了泛型?<a href="#9-项目中哪里用到了泛型" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PageDTO</span><span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> List<span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span> content;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> pageNumber;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">long</span> totalElements;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">boolean</span> hasNext;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PageConverter</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#f92672">&lt;</span>T, DTO<span style="color:#f92672">&gt;</span> PageDTO<span style="color:#f92672">&lt;</span>DTO<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">convertToPageDTO</span>(Page<span style="color:#f92672">&lt;</span>T<span style="color:#f92672">&gt;</span> entityPage, Function<span style="color:#f92672">&lt;</span>T, DTO<span style="color:#f92672">&gt;</span> converter) {
+</span></span><span style="display:flex;"><span>        List<span style="color:#f92672">&lt;</span>DTO<span style="color:#f92672">&gt;</span> dtoList <span style="color:#f92672">=</span> entityPage.<span style="color:#a6e22e">getContent</span>().<span style="color:#a6e22e">stream</span>()
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">map</span>(converter)
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">collect</span>(Collectors.<span style="color:#a6e22e">toList</span>());
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        PageDTO<span style="color:#f92672">&lt;</span>DTO<span style="color:#f92672">&gt;</span> pageDTO <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> PageDTO<span style="color:#f92672">&lt;&gt;</span>();
+</span></span><span style="display:flex;"><span>        pageDTO.<span style="color:#a6e22e">setContent</span>(dtoList);
+</span></span><span style="display:flex;"><span>        pageDTO.<span style="color:#a6e22e">setPageNumber</span>(entityPage.<span style="color:#a6e22e">getNumber</span>());
+</span></span><span style="display:flex;"><span>        pageDTO.<span style="color:#a6e22e">setTotalElements</span>(entityPage.<span style="color:#a6e22e">getTotalElements</span>());
+</span></span><span style="display:flex;"><span>        pageDTO.<span style="color:#a6e22e">setHasNext</span>(entityPage.<span style="color:#a6e22e">hasNext</span>());
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> pageDTO;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这段代码的作用是：</p>
+<ul>
+<li>从 <code>entityPage</code> 中获取当前页的实体列表（<code>List&lt;T&gt;</code>）</li>
+<li>使用 <code>converter</code> 函数将每个实体 <code>T</code> 转换为对应的 <code>DTO</code> 对象</li>
+<li>将转换后的结果收集到一个新的 <code>List&lt;DTO&gt;</code> 中</li>
+</ul>
+<p>假设：</p>
+<ul>
+<li><code>T</code> 是 <code>User</code>（实体类），有字段 <code>id</code> 和 <code>name</code></li>
+<li><code>DTO</code> 是 <code>UserDTO</code>（数据传输对象），有字段 <code>userId</code> 和 <code>fullName</code></li>
+<li><code>converter</code> 定义为：<code>user -&gt; new UserDTO(user.getId(), user.getName())</code></li>
+</ul>
+<p>如果 <code>entityPage.getContent()</code> 返回 <code>[User(1, &quot;Alice&quot;), User(2, &quot;Bob&quot;)]</code>：</p>
+<ol>
+<li><code>stream()</code> 创建一个流：<code>[User(1, &quot;Alice&quot;), User(2, &quot;Bob&quot;)]</code></li>
+<li><code>map(converter)</code> 转换为：<code>[UserDTO(1, &quot;Alice&quot;), UserDTO(2, &quot;Bob&quot;)]</code></li>
+<li><code>collect(Collectors.toList())</code> 得到：<code>List&lt;UserDTO&gt;</code>，包含 <code>[UserDTO(1, &quot;Alice&quot;), UserDTO(2, &quot;Bob&quot;)]</code></li>
+</ol>
+<p>最终，<code>dtoList</code> 是一个包含转换后 <code>UserDTO</code> 对象的列表</p>
+
       </div></div>
 
   
