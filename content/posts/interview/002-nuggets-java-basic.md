@@ -38,32 +38,13 @@ tags:
 
    - 创建类的实例（`new` 操作）
 
-   - 访问类的静态成员（静态变量、静态方法）
-     - 静态变量/方法属于**类级别**，JVM 在访问它之前必须确保类已经被加载
-
-   - 调用 Class.forName("类名") 反射加载: `Class.forName()` 直接强制 JVM 加载并初始化该类
-
-   - 子类初始化时，父类会先被初始化
+   - 访问类的静态成员（静态变量、静态方法 类级别）
+     
+- 调用 Class.forName("类名") 反射加载: `Class.forName()` 直接强制 JVM 加载并初始化该类
+  
+- 子类初始化时，父类会先被初始化
 
 引用类的静态常量（`static final`）：不会触发类的加载, 因为 `static final` 常量在编译时已确定, 编译器会直接替换值
-
-```java
-class A {
-    static final int CONST = 100;  // 常量
-    static int value = 10;         // 静态变量
-    static {
-        System.out.println("A 类初始化");
-    }
-}
-
-public class Test {
-    public static void main(String[] args) {
-        System.out.println(A.CONST);  // 不会触发 A 的加载
-        System.out.println(A.value);  // 触发 A 的加载
-    }
-}
-
-```
 
 ### 2.2. 过程
 
@@ -210,4 +191,204 @@ First: Age, Second: 25
 First: 3.14, Second: true
 First: A, Second: Apple
 ```
+
+## 6. Lambda 表达式
+
+把一个字符串转成整数，正常情况下可能要写一个完整的函数：
+
+```java
+interface Converter {
+    int convert(String s);
+}
+
+class MyConverter implements Converter {
+    public int convert(String s) {
+        return Integer.parseInt(s);
+    }
+}
+```
+
+但用 Lambda 表达式，可以简化为一行：
+
+```java
+Converter converter = (s) -> Integer.parseInt(s);
+```
+
+> 为什么 `(s) -> Integer.parseInt(s)` 可以赋值给 `Converter`?
+>
+> Converter 是一个接口，里面有一个方法叫 convert, 任何实现这个接口的东西，都必须实现这个方法, Lambda 表达式 `(s) -> Integer.parseInt(s)` 正好匹配 Converter 接口里 convert 方法的签名, 因为这个 Lambda 表达式完全符合 Converter 接口的要求，Java 允许把它直接赋值给 Converter 类型的变量。换句话说，`(s) -> Integer.parseInt(s)` 就像是一个临时的、匿名的 Converter 实现
+
+## 7. 函数式接口
+
+Java 中有两种接口,  普通接口 和 函数式接口, 普通接口用于定义**一组**相关的行为规范, 通常用于面向对象编程中的抽象和多态, 通过 implements 关键字由类显式实现, 函数式接口专为函数式编程设计, 表示**单一**功能的抽象, 通常通过 Lambda 表达式、方法引用或匿名内部类实现, 不需要显式定义一个完整的类
+
+假设我们定义一个简单的函数式接口 Calculator，用于表示两个数的计算操作：
+
+```java
+@FunctionalInterface // 可选注解，确保接口只有一个抽象方法
+interface Calculator {
+    int calculate(int a, int b);
+}
+```
+
+使用 Lambda 表达式实现:
+
+```java
+Calculator addition = (a, b) -> a + b;
+System.out.println("加法结果: " + addition.calculate(5, 3)); // 输出: 加法结果: 8
+```
+
+使用方法引用实现:
+
+```java
+public class Main {
+    public static int add(int a, int b) {
+        return a + b;
+    }
+
+    public static void main(String[] args) {
+        Calculator addition = Main::add;
+        System.out.println("加法结果: " + addition.calculate(5, 3)); // 输出: 加法结果: 8
+    }
+}
+```
+
+使用匿名内部类实现:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        // 使用匿名内部类实现减法
+        Calculator subtraction = new Calculator() {
+            @Override
+            public int calculate(int a, int b) {
+                return a - b;
+            }
+        };
+        System.out.println("减法结果: " + subtraction.calculate(5, 3)); // 输出: 减法结果: 2
+    }
+}
+```
+
+Java 8 提供了一些常用的内置函数式接口，主要在 `java.util.function` 包中：
+
+| 函数式接口       | 抽象方法            | 作用                                 |
+| ---------------- | ------------------- | ------------------------------------ |
+| `Consumer<T>`    | `void accept(T t)`  | 只接收参数，没有返回值               |
+| `Supplier<T>`    | `T get()`           | 不接收参数，返回一个值               |
+| `Function<T, R>` | `R apply(T t)`      | 接收一个参数，返回一个结果           |
+| `Predicate<T>`   | `boolean test(T t)` | 进行条件判断，返回 `true` 或 `false` |
+
+`Function<T, R>` 也是函数式接口, 并不是什么高级的东西, 只不过添加了泛型, 定义如下:
+
+```java
+@FunctionalInterface
+public interface Function<T, R> {
+    // 唯一抽象方法
+    R apply(T t);
+
+    // 默认方法：函数组合
+    default <V> Function<V, R> compose(Function<? super V, ? extends T> before) {
+        Objects.requireNonNull(before);
+        return (V v) -> apply(before.apply(v));
+    }
+
+    ...
+}
+```
+
+可以看到 `Function<T, R>` 只有一个抽象方法 `R apply(T t)`, 也就是说实现了这个方法的 lambda 或者其他类, 都算是实现了该接口, 比如:
+
+```java
+Function<Double, Double> addTax = price -> price * 1.13; // 加13%的税
+double priceWithTax = addTax.apply(discountedPrice);
+System.out.println("折扣后加税价: " + priceWithTax); // 输出: 90.4
+```
+
+> 泛型在 java 中有三种情况可以用: 类, 接口, 方法
+
+## 8. 方法引用
+
+当你的 Lambda 表达式只是调用一个**已经存在的方法**时，可以用方法引用来代替，简单来说，方法引用是 Lambda 表达式的“快捷方式”
+
+```
+类名::静态方法
+对象名::实例方法
+类名::实例方法（特殊情况）
+类名::new（构造方法引用）
+```
+
+类名::静态方法
+
+```java
+// 使用 Lambda 表达式
+Function<String, Integer> lambdaFunc = s -> Integer.parseInt(s);
+
+// 使用方法引用, 类名::静态方法
+Function<String, Integer> methodRefFunc = Integer::parseInt;
+
+// 测试
+System.out.println(lambdaFunc.apply("100")); // 输出 100
+System.out.println(methodRefFunc.apply("200")); // 输出 200
+```
+
+对象名::实例方法
+
+```java
+String str = "hello";
+
+// 使用 Lambda 表达式
+Runnable lambda = () -> System.out.println(str.toUpperCase());
+
+// 使用方法引用, 对象名::实例方法
+Runnable methodRef = str::toUpperCase;
+
+// 执行
+lambda.run(); // 输出 HELLO
+methodRef.run(); // 输出 HELLO
+```
+
+## 9. 项目中哪里用到了泛型?
+
+```java
+public class PageDTO<T> {
+    private List<T> content;
+    private int pageNumber;
+    private long totalElements;
+    private boolean hasNext;
+}
+
+public class PageConverter {
+    public <T, DTO> PageDTO<DTO> convertToPageDTO(Page<T> entityPage, Function<T, DTO> converter) {
+        List<DTO> dtoList = entityPage.getContent().stream()
+                .map(converter)
+                .collect(Collectors.toList());
+
+        PageDTO<DTO> pageDTO = new PageDTO<>();
+        pageDTO.setContent(dtoList);
+        pageDTO.setPageNumber(entityPage.getNumber());
+        pageDTO.setTotalElements(entityPage.getTotalElements());
+        pageDTO.setHasNext(entityPage.hasNext());
+
+        return pageDTO;
+    }
+}
+```
+
+这段代码的作用是：
+- 从 `entityPage` 中获取当前页的实体列表（`List<T>`）
+- 使用 `converter` 函数将每个实体 `T` 转换为对应的 `DTO` 对象
+- 将转换后的结果收集到一个新的 `List<DTO>` 中
+
+假设：
+- `T` 是 `User`（实体类），有字段 `id` 和 `name`
+- `DTO` 是 `UserDTO`（数据传输对象），有字段 `userId` 和 `fullName`
+- `converter` 定义为：`user -> new UserDTO(user.getId(), user.getName())`
+
+如果 `entityPage.getContent()` 返回 `[User(1, "Alice"), User(2, "Bob")]`：
+1. `stream()` 创建一个流：`[User(1, "Alice"), User(2, "Bob")]`
+2. `map(converter)` 转换为：`[UserDTO(1, "Alice"), UserDTO(2, "Bob")]`
+3. `collect(Collectors.toList())` 得到：`List<UserDTO>`，包含 `[UserDTO(1, "Alice"), UserDTO(2, "Bob")]`
+
+最终，`dtoList` 是一个包含转换后 `UserDTO` 对象的列表
 
