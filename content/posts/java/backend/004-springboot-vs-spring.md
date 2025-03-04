@@ -1,5 +1,5 @@
 ---
-title: Spring Boot, Spring Cloud 的理解
+title: 谈谈对 Spring Boot, Spring Cloud 的理解
 date: 2025-03-04 08:32:22
 categories:
  - spring boot
@@ -143,90 +143,9 @@ Spring Cloud 建立在 Spring Boot 之上, 但特殊的地方是它也有自己�
 > Spring Boot 管理自己的核心组件（Spring Security、Spring Data、Spring Web 等
 > Spring Boot 不管理 Spring Cloud 相关组件（Eureka、Feign、Gateway、Sleuth 等
 
+## 3. 基于 Spring Framework 的 Spring MVC 项目搭建
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-> Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications that you can "just run". [Spring Boot](https://spring.io/projects/spring-boot)
-
-> Spring Boot是一个基于Spring的套件，它帮我们预组装了Spring的一系列组件，以便以尽可能少的代码和配置来开发基于Spring的Java应用程序。[原文](https://www.liaoxuefeng.com/wiki/1252599548343744/1266265175882464)
-
-即 Spring Boot 是用来方便管理 Spring 相关组件的一个东西, 所以并不是说学了Spring Boot就不用学Spring, Spring Boot里面的东西就是Spring的一个个部件, 学Spring Boot的时候也是在学Spring。
-
-可以看下 Spring Boot 的maven配置文件(`pom.xml`)的内容，可能会帮助理解Spring Boot负责组装部件的本质：
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.0.5</version>
-        <relativePath/> <!-- lookup parent from repository -->
-    </parent>
-    <groupId>com.choo</groupId>
-    <artifactId>SpringDemo</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>SpringDemo</name>
-    <description>SpringDemo</description>
-    <properties>
-        <java.version>17</java.version>
-    </properties>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.32</version>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>2.3.5.RELEASE</version>
-            </plugin>
-        </plugins>
-    </build>
-
-</project>
-```
-
-## 2. 基于 Spring Framework 的 Spring MVC 项目搭建
-
-由于 Spring 主要应用于 Web 开发，下面看下 Spring Boot 出现前是如何搭建 Spring MVC 项目的。
-
-Spring MVC 项目需要引入 `spring-webmvc` 模块的依赖，因此首先要找的就是 `spring-webmvc` 的坐标，对于新手来说一般就是在网上找一些 Spring MVC 的入门文章，直接复制 `spring-webmvc` 的坐标了，此外就是在 maven 仓库 中根据关键字搜索。不管怎样找坐标吧，最终我们配置最简单的 `pom.xml` 内容如下。
+看下 Spring Boot 出现前是如何搭建 Spring MVC 项目的, Spring MVC 项目需要引入 `spring-webmvc` 模块的依赖, 最终下面是我们配置最简单的 `pom.xml` 内容:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -264,7 +183,7 @@ Spring MVC 项目需要引入 `spring-webmvc` 模块的依赖，因此首先要�
 </project>
 ```
 
-除了引入 `spring-webmvc` 的依赖，由于我们还可能会使用到一些 `Servlet` 规范中的一些类，我们还引入了 `Servlet` 的依赖。而依赖引入只是万里长征的第一步，由于 Java Web 开发中的接口都是 Servlet 提供的，我们还需要配置 `spring-webmvc` 模块提供的 Servlet 接口的实现 `DispatcherServlet`。这又是什么东西？当时作为新手我的也是一脸懵逼，配置时我还得找到这个**类的全限定名**，这对于新手来说也太不友好了，又是一波复制粘贴。最终配置出来的` web.xml` 文件内容如下。
+除了引入 `spring-webmvc` 的依赖, 由于我们还可能会使用到一些 `Servlet` 规范中的一些类, 我们还引入了 `Servlet` 的依赖, 而依赖引入只是万里长征的第一步, 由于 Java Web 开发中的接口都是 Servlet 提供的, 我们还需要配置 `spring-webmvc` 模块提供的 Servlet 接口的实现 `DispatcherServlet`, 这又是什么东西？当时作为新手我的也是一脸懵逼, 配置时我还得找到这个**类的全限定名**, 这对于新手来说也太不友好了, 又是一波复制粘贴, 最终配置出来下面的` web.xml` 文件:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
