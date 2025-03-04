@@ -373,6 +373,20 @@ public class PageConverter {
         return pageDTO;
     }
 }
+
+public PageDTO<PostDTO> getUserPosts(Long userId, int page, int size) {
+    // 按创建时间降序排序，获取分页对象
+    Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+    // 查询该用户发布的帖子
+    Page<Post> postPage = postRepository.findByUserIdAndStatus(userId, 1, pageable);
+
+    // 查询该用户点赞过的帖子 ID
+    List<Long> likedPostIds = postLikeRepository.findPostIdsByUserId(userId);
+
+    return pageConverter.convertToPageDTO(postPage,
+            post -> convertToDTO(post, likedPostIds.contains(post.getId())));
+}
 ```
 
 这段代码的作用是：
@@ -391,4 +405,6 @@ public class PageConverter {
 3. `collect(Collectors.toList())` 得到：`List<UserDTO>`，包含 `[UserDTO(1, "Alice"), UserDTO(2, "Bob")]`
 
 最终，`dtoList` 是一个包含转换后 `UserDTO` 对象的列表
+
+## 10. 反射
 
