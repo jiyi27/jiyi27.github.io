@@ -432,6 +432,20 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; pageDTO;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; PageDTO&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;PostDTO&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getUserPosts&lt;/span&gt;(Long userId, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; page, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; size) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 按创建时间降序排序，获取分页对象&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Pageable pageable &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; PageRequest.&lt;span style=&#34;color:#a6e22e&#34;&gt;of&lt;/span&gt;(page, size, Sort.&lt;span style=&#34;color:#a6e22e&#34;&gt;by&lt;/span&gt;(Sort.&lt;span style=&#34;color:#a6e22e&#34;&gt;Direction&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;DESC&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;createdAt&amp;#34;&lt;/span&gt;));
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 查询该用户发布的帖子&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Page&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; postPage &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; postRepository.&lt;span style=&#34;color:#a6e22e&#34;&gt;findByUserIdAndStatus&lt;/span&gt;(userId, 1, pageable);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 查询该用户点赞过的帖子 ID&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    List&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Long&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; likedPostIds &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; postLikeRepository.&lt;span style=&#34;color:#a6e22e&#34;&gt;findPostIdsByUserId&lt;/span&gt;(userId);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; pageConverter.&lt;span style=&#34;color:#a6e22e&#34;&gt;convertToPageDTO&lt;/span&gt;(postPage,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            post &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; convertToDTO(post, likedPostIds.&lt;span style=&#34;color:#a6e22e&#34;&gt;contains&lt;/span&gt;(post.&lt;span style=&#34;color:#a6e22e&#34;&gt;getId&lt;/span&gt;())));
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这段代码的作用是：&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;从 &lt;code&gt;entityPage&lt;/code&gt; 中获取当前页的实体列表（&lt;code&gt;List&amp;lt;T&amp;gt;&lt;/code&gt;）&lt;/li&gt;
@@ -451,6 +465,7 @@
 &lt;li&gt;&lt;code&gt;collect(Collectors.toList())&lt;/code&gt; 得到：&lt;code&gt;List&amp;lt;UserDTO&amp;gt;&lt;/code&gt;，包含 &lt;code&gt;[UserDTO(1, &amp;quot;Alice&amp;quot;), UserDTO(2, &amp;quot;Bob&amp;quot;)]&lt;/code&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;最终，&lt;code&gt;dtoList&lt;/code&gt; 是一个包含转换后 &lt;code&gt;UserDTO&lt;/code&gt; 对象的列表&lt;/p&gt;
+&lt;h2 id=&#34;10-反射&#34;&gt;10. 反射&lt;/h2&gt;
 </content>
     </item>
     

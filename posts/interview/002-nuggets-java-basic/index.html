@@ -139,7 +139,7 @@ JVM 不会在程序启动时一次性加载所有类, 而是按需加载, 触发
   <h1 class="post-title">
     <a href="https://blog.jiyi27.com/posts/interview/002-nuggets-java-basic/">Java 基础八股文</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2025-02-15</time><span class="post-reading-time">5 分钟阅读 (928 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2025-02-15</time><span class="post-reading-time">5 分钟阅读 (970 字数)</span></div>
 
   
     <span class="post-tags">
@@ -507,6 +507,20 @@ JVM 不会在程序启动时一次性加载所有类, 而是按需加载, 触发
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> pageDTO;
 </span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> PageDTO<span style="color:#f92672">&lt;</span>PostDTO<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">getUserPosts</span>(Long userId, <span style="color:#66d9ef">int</span> page, <span style="color:#66d9ef">int</span> size) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 按创建时间降序排序，获取分页对象</span>
+</span></span><span style="display:flex;"><span>    Pageable pageable <span style="color:#f92672">=</span> PageRequest.<span style="color:#a6e22e">of</span>(page, size, Sort.<span style="color:#a6e22e">by</span>(Sort.<span style="color:#a6e22e">Direction</span>.<span style="color:#a6e22e">DESC</span>, <span style="color:#e6db74">&#34;createdAt&#34;</span>));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 查询该用户发布的帖子</span>
+</span></span><span style="display:flex;"><span>    Page<span style="color:#f92672">&lt;</span>Post<span style="color:#f92672">&gt;</span> postPage <span style="color:#f92672">=</span> postRepository.<span style="color:#a6e22e">findByUserIdAndStatus</span>(userId, 1, pageable);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 查询该用户点赞过的帖子 ID</span>
+</span></span><span style="display:flex;"><span>    List<span style="color:#f92672">&lt;</span>Long<span style="color:#f92672">&gt;</span> likedPostIds <span style="color:#f92672">=</span> postLikeRepository.<span style="color:#a6e22e">findPostIdsByUserId</span>(userId);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> pageConverter.<span style="color:#a6e22e">convertToPageDTO</span>(postPage,
+</span></span><span style="display:flex;"><span>            post <span style="color:#f92672">-&gt;</span> convertToDTO(post, likedPostIds.<span style="color:#a6e22e">contains</span>(post.<span style="color:#a6e22e">getId</span>())));
+</span></span><span style="display:flex;"><span>}
 </span></span></code></pre></div><p>这段代码的作用是：</p>
 <ul>
 <li>从 <code>entityPage</code> 中获取当前页的实体列表（<code>List&lt;T&gt;</code>）</li>
@@ -526,6 +540,7 @@ JVM 不会在程序启动时一次性加载所有类, 而是按需加载, 触发
 <li><code>collect(Collectors.toList())</code> 得到：<code>List&lt;UserDTO&gt;</code>，包含 <code>[UserDTO(1, &quot;Alice&quot;), UserDTO(2, &quot;Bob&quot;)]</code></li>
 </ol>
 <p>最终，<code>dtoList</code> 是一个包含转换后 <code>UserDTO</code> 对象的列表</p>
+<h2 id="10-反射">10. 反射<a href="#10-反射" class="hanchor" ariaLabel="Anchor">#</a> </h2>
 
       </div></div>
 
