@@ -127,12 +127,14 @@
   <h1 class="post-title">
     <a href="https://blog.jiyi27.com/posts/database/mysql/002-index-primary-key/">索引和主键 - MySQL</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2023-02-02</time><span class="post-reading-time">2 分钟阅读 (371 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2023-02-02</time><span class="post-reading-time">3 分钟阅读 (429 字数)</span></div>
 
   
     <span class="post-tags">
       
       #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
       
       #<a href="https://blog.jiyi27.com/tags/mysql/">mysql</a>&nbsp;
       
@@ -185,31 +187,29 @@
   </thead>
   <tbody>
       <tr>
-          <td><strong>主键索引（聚簇索引）</strong></td>
+          <td>主键索引（聚簇索引）</td>
           <td>数据本身存储在 B+ 树的叶子节点，数据按照主键顺序存储</td>
       </tr>
       <tr>
-          <td><strong>二级索引（普通索引）</strong></td>
+          <td>二级索引（普通索引）</td>
           <td>额外的 B+ 树，只存储索引列和主键 ID，查询时需要回表</td>
       </tr>
   </tbody>
 </table>
-<p>数据实际按照主键顺序物理存储在硬盘上, <strong>主键索引</strong>的叶子节点存储的就是实际的数据行（完整数据）</p>
-<p>示例:</p>
+<p>数据实际按照主键顺序物理存储在硬盘上, 主键索引的叶子节点存储的就是实际的数据行:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> <span style="color:#a6e22e">users</span> (
 </span></span><span style="display:flex;"><span>    id <span style="color:#66d9ef">INT</span> <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span>,
 </span></span><span style="display:flex;"><span>    name <span style="color:#66d9ef">VARCHAR</span>(<span style="color:#ae81ff">50</span>),
 </span></span><span style="display:flex;"><span>    age <span style="color:#66d9ef">INT</span>
 </span></span><span style="display:flex;"><span>);
-</span></span></code></pre></div><p>存储结构:</p>
+</span></span></code></pre></div><p>数据行是按照 <code>id</code> 这个主键顺序排列的, 主键索引的叶子节点直接存储了数据:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span>B<span style="color:#f92672">+</span> <span style="color:#960050;background-color:#1e0010">树（主键索引）</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">-------------------------------</span><span style="color:#75715e">--
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">| ID=1  | Alice   | 25  |
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#f92672">|</span> ID<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span>  <span style="color:#f92672">|</span> Bob     <span style="color:#f92672">|</span> <span style="color:#ae81ff">30</span>  <span style="color:#f92672">|</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">|</span> ID<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span> <span style="color:#f92672">|</span> Charlie <span style="color:#f92672">|</span> <span style="color:#ae81ff">28</span>  <span style="color:#f92672">|</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">-------------------------------</span><span style="color:#75715e">--
-</span></span></span></code></pre></div><p>数据行是按照 <code>id</code> 这个主键顺序排列的, 主键索引的叶子节点直接存储了数据。</p>
-<p>上面我们知道 InnoDB 的数据是按照主键索引顺序存储在硬盘上的, 那建立其它索引是什么意思, 索引不会改变数据的存储顺序吗? 还是数据库会单独不同索引单独建立一个数据表按照索引排序?</p>
+</span></span></span></code></pre></div><p>上面我们知道 InnoDB 的数据是按照主键索引顺序存储在硬盘上的, 那建立其它索引是什么意思, 索引不会改变数据的存储顺序吗? 还是数据库会单独不同索引单独建立一个数据表按照索引排序?</p>
 <p><strong>二级索引</strong>是为了加快查询速度，但不会改变数据的存储顺序！ 二级索引（普通索引）是 独立于主键索引 的，它只存储 索引字段值 + 主键值。当你查询时，数据库会先通过 二级索引找到主键值，然后再去 主键索引中找到数据。</p>
 <p>示例 如果我们对 <code>name</code> 建立索引：</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">INDEX</span> idx_name <span style="color:#66d9ef">ON</span> <span style="color:#a6e22e">users</span>(name);
@@ -225,6 +225,23 @@
 <p>现在回答上面的问题: 建立索引会不会改变数据的存储顺序？数据库会不会单独为索引建立一个新表？</p>
 </blockquote>
 <p>答案是： ✅ 不会改变数据存储顺序！ ✅ 但数据库会额外维护索引结构，每个索引是独立的 B+ 树！</p>
+<h2 id="3-索引优化">3. 索引优化<a href="#3-索引优化" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<ul>
+<li>优先为选择性高（区分度大）的列建索引，比如用户 ID，而不是性别这种低选择性的字段</li>
+<li>对于多条件查询，可以用复合索引，比如 where 条件里经常出现的字段组合，按照查询频率和字段顺序优化</li>
+<li>通过创建一个复合索引，使得查询可以仅通过索引而不需要访问表数据(避免回表)，从而提高查询效率</li>
+<li>避免过多索引过多的索引会增加写操作的开销，因为每次数据更新都会导致索引更新</li>
+</ul>
+<p>复合索引指的是一个索引包含多个字段, 比如在 (age, name) 上建的索引, 就是一个复合索引, 它的作用主要是加速多条件查询（比如 WHERE age = 25 AND name = &lsquo;Tom&rsquo;），或者利用字段顺序优化排序、分组等操作。</p>
+<p>覆盖索引是指索引本身包含了查询所需的所有字段，使得查询不需要回表。复合索引可以成为覆盖索引，但前提是它“覆盖”了查询的字段。单列索引也可以是覆盖索引，只要满足条件。</p>
+<p><strong>这里解释一下回表的概念:</strong></p>
+<p>当你执行 SELECT name FROM users WHERE age = 25 时：</p>
+<ol>
+<li>如果有 age 的索引，数据库会通过这个索引查找所有 age = 25 的记录。</li>
+<li>索引里存的是 age 和对应的主键 ID，数据库先找到这些 ID。</li>
+<li>因为你查询的是 name，而 age 的索引不包含 name，数据库需要拿着这些 ID 回表，去主表中查完整的记录。</li>
+</ol>
+<p>如果是覆盖索引（比如 (age, name) 的联合索引），索引里直接有 name，就不用回表了。</p>
 
       </div></div>
 

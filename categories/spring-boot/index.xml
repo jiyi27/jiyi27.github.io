@@ -805,11 +805,10 @@ ERR_TOO_MANY_REDIRECTS
 &lt;p&gt;比如 &lt;code&gt;UserDetailsService&lt;/code&gt; 和 &lt;code&gt;PasswordEncoder&lt;/code&gt; 都不是我们定义的, 而是 Spring Security 定义的接口, 而 &lt;code&gt;@Component&lt;/code&gt; &lt;code&gt;@Service&lt;/code&gt; 这种一般都是定义某个类的时候加上去的注解, 所以我们只能写个方法, 返回 &lt;code&gt;UserDetailsService&lt;/code&gt; 和 &lt;code&gt;PasswordEncoder&lt;/code&gt; 类型的对象, 然后把这个方法标注为 &lt;code&gt;@Bean&lt;/code&gt;,&lt;/p&gt;
 &lt;p&gt;所以 &lt;code&gt;@Bean&lt;/code&gt; 只能在方法上, 那个方法应该返回一个对象, 且这个对像应该是非自己定义的类的实例,  而 &lt;code&gt;@Component&lt;/code&gt; 常常放在 自己定义的类上, 他们的意思都是说, 在启动程序的时候, Spring 会自动生成一个实例,&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;它们的作用相同：都用于告诉 Spring 在程序启动时创建一个对象（Bean）并放入 Spring 容器，以便在代码里 &lt;code&gt;@Autowired&lt;/code&gt; 自动注入使用&lt;/li&gt;
+&lt;li&gt;它们告诉 Spring 在程序启动时创建一个对象（Bean）并放入 Spring 容器，以便 &lt;code&gt;@Autowired&lt;/code&gt; 自动注入使用&lt;/li&gt;
 &lt;li&gt;Spring 会自动管理这些对象，比如在需要时创建（实例化）、在应用关闭时销毁等&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;但这里需要修正： ❌ &amp;ldquo;&lt;code&gt;@Bean&lt;/code&gt; 只能用于非自己定义的类&amp;rdquo; ✅ &lt;code&gt;@Bean&lt;/code&gt; 也可以用于自己写的类，只是一般不这么做，因为 &lt;code&gt;@Component&lt;/code&gt; 更方便。&lt;/p&gt;
-&lt;p&gt;比如，&lt;code&gt;@Component&lt;/code&gt; 和 &lt;code&gt;@Bean&lt;/code&gt; 都可以用来创建 &lt;code&gt;MyService&lt;/code&gt;：&lt;/p&gt;
+&lt;p&gt;但这里需要修正： ❌ &amp;ldquo;&lt;code&gt;@Bean&lt;/code&gt; 只能用于非自己定义的类&amp;rdquo; ✅ &lt;code&gt;@Bean&lt;/code&gt; 也可以用于自己写的类，只是一般不这么做，因为 &lt;code&gt;@Component&lt;/code&gt; 更方便, 比如，&lt;code&gt;@Component&lt;/code&gt; 和 &lt;code&gt;@Bean&lt;/code&gt; 都可以用来创建 &lt;code&gt;MyService&lt;/code&gt;：&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Component&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;MyService&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
@@ -943,8 +942,7 @@ ERR_TOO_MANY_REDIRECTS
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;UserRepository&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;extends&lt;/span&gt; JpaRepository&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User, Long&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Optional&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;findByEmail&lt;/span&gt;(String email);
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这里 &lt;code&gt;findByEmail(String email)&lt;/code&gt; 方法没有实现，为什么它还能执行数据库查询呢？这是 &lt;strong&gt;Spring Data JPA + JPA + Hibernate&lt;/strong&gt; 三者协作的结果。&lt;/p&gt;
-&lt;p&gt;当你调用：&lt;/p&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这里 &lt;code&gt;findByEmail(String email)&lt;/code&gt; 方法没有实现，为什么它还能执行数据库查询呢？这是 &lt;strong&gt;Spring Data JPA + JPA + Hibernate&lt;/strong&gt; 三者协作的结果, 当你调用：&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Optional&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;User&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; user &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; userRepository.&lt;span style=&#34;color:#a6e22e&#34;&gt;findByEmail&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;test@example.com&amp;#34;&lt;/span&gt;);
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Spring Data JPA、JPA（EntityManager）和 Hibernate 会分别执行自己的工作：&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;1️⃣ Spring Data JPA（提供 Repository 代理）&lt;/strong&gt;&lt;/p&gt;
