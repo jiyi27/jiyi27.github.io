@@ -3,15 +3,14 @@
 <head>
   
     
-    <title>Spring Boot 与 Spring 框架的对比-阅读笔记 :: 为霜的博客</title>
+    <title>Spring MVC, Spring Boot, Spring Cloud 区别和联系 :: 为霜的博客</title>
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="1. 什么是Spring Boot Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications that you can &ldquo;just run&rdquo;. Spring Boot
-Spring Boot是一个基于Spring的套件，它帮我们预组装了Spring的一系列组件，以便以尽可能少的代码和配置来开发基于Spring的Java应用程序。原文
-即 Spring Boot 是用来方便管理 Spring 相关组件的一个东西, 所以并不是说学了Spring Boot就不用学Spring, Spring Boot里面的东西就是Spring的一个个部件, 学Spring Boot的时候也是在学Spring。
-可以看下 Spring Boot 的maven配置文件(pom.xml)的内容，可能会帮助理解Spring Boot负责组装部件的本质：
-&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt; &lt;project xmlns=&#34;http://maven.apache.org/POM/4.0.0&#34; xmlns:xsi=&#34;http://www.w3.org/2001/XMLSchema-instance&#34; xsi:schemaLocation=&#34;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&#34;&gt; &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt; &lt;parent&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt; &lt;version&gt;3.0.5&lt;/version&gt; &lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt; &lt;/parent&gt; &lt;groupId&gt;com.choo&lt;/groupId&gt; &lt;artifactId&gt;SpringDemo&lt;/artifactId&gt; &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt; &lt;name&gt;SpringDemo&lt;/name&gt; &lt;description&gt;SpringDemo&lt;/description&gt; &lt;properties&gt; &lt;java.version&gt;17&lt;/java.version&gt; &lt;/properties&gt; &lt;dependencies&gt; &lt;dependency&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt; &lt;/dependency&gt; &lt;dependency&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt; &lt;/dependency&gt; &lt;dependency&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt; &lt;scope&gt;test&lt;/scope&gt; &lt;/dependency&gt; &lt;dependency&gt; &lt;groupId&gt;mysql&lt;/groupId&gt; &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt; &lt;version&gt;8.0.32&lt;/version&gt; &lt;/dependency&gt; &lt;/dependencies&gt; &lt;build&gt; &lt;plugins&gt; &lt;plugin&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt; &lt;version&gt;2.3.5.RELEASE&lt;/version&gt; &lt;/plugin&gt; &lt;/plugins&gt; &lt;/build&gt; &lt;/project&gt; 2. 基于 Spring Framework 的 Spring MVC 项目搭建 由于 Spring 主要应用于 Web 开发，下面看下 Spring Boot 出现前是如何搭建 Spring MVC 项目的。
+<meta name="description" content="1. Spring Boot 依赖管理 &lt;parent&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt; &lt;version&gt;3.1.2&lt;/version&gt; &lt;!-- 这里指定 Spring Boot 版本 --&gt; &lt;/parent&gt; &lt;dependencies&gt; &lt;dependency&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt; &lt;/dependency&gt; &lt;/dependencies&gt; 当你在使用 Spring Boot 开发项目时, 通常会在 ⁠pom.xml 文件中指定一个父 POM, 上面我们的代码 &lt;parent&gt;...&lt;/parent&gt; 就是干的这个事的,
+可以发现我们不用指定 spring-boot-starter-security 的版本, 就是因为我们引入了 Spring Boot 的父 POM, 而它又继承了spring-boot-dependencies 这个 BOM, 在这个 BOM 文件中, Spring Boot 定义了所有核心组件的版本号, 比如 Spring Security、Spring MVC、Spring Data,
+所以当我们添加一个 Spring Boot 的核心组件, 比如:
+&lt;dependency&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt; &lt;/dependency&gt; 并不需要写 &lt;version&gt;, 因为 spring-boot-dependencies 已经预先定义了与 Spring Boot 3.1.2 兼容的 Spring Security 版本(比如 6.2.1), Maven 会自动从父 POM 中读取这些版本号,
 " />
 <meta name="keywords" content="" />
 
@@ -86,12 +85,11 @@ Spring Boot是一个基于Spring的套件，它帮我们预组装了Spring的一
 
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
-<meta property="og:title" content="Spring Boot 与 Spring 框架的对比-阅读笔记">
-<meta property="og:description" content="1. 什么是Spring Boot Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications that you can &ldquo;just run&rdquo;. Spring Boot
-Spring Boot是一个基于Spring的套件，它帮我们预组装了Spring的一系列组件，以便以尽可能少的代码和配置来开发基于Spring的Java应用程序。原文
-即 Spring Boot 是用来方便管理 Spring 相关组件的一个东西, 所以并不是说学了Spring Boot就不用学Spring, Spring Boot里面的东西就是Spring的一个个部件, 学Spring Boot的时候也是在学Spring。
-可以看下 Spring Boot 的maven配置文件(pom.xml)的内容，可能会帮助理解Spring Boot负责组装部件的本质：
-&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt; &lt;project xmlns=&#34;http://maven.apache.org/POM/4.0.0&#34; xmlns:xsi=&#34;http://www.w3.org/2001/XMLSchema-instance&#34; xsi:schemaLocation=&#34;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&#34;&gt; &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt; &lt;parent&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt; &lt;version&gt;3.0.5&lt;/version&gt; &lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt; &lt;/parent&gt; &lt;groupId&gt;com.choo&lt;/groupId&gt; &lt;artifactId&gt;SpringDemo&lt;/artifactId&gt; &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt; &lt;name&gt;SpringDemo&lt;/name&gt; &lt;description&gt;SpringDemo&lt;/description&gt; &lt;properties&gt; &lt;java.version&gt;17&lt;/java.version&gt; &lt;/properties&gt; &lt;dependencies&gt; &lt;dependency&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt; &lt;/dependency&gt; &lt;dependency&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt; &lt;/dependency&gt; &lt;dependency&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt; &lt;scope&gt;test&lt;/scope&gt; &lt;/dependency&gt; &lt;dependency&gt; &lt;groupId&gt;mysql&lt;/groupId&gt; &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt; &lt;version&gt;8.0.32&lt;/version&gt; &lt;/dependency&gt; &lt;/dependencies&gt; &lt;build&gt; &lt;plugins&gt; &lt;plugin&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt; &lt;version&gt;2.3.5.RELEASE&lt;/version&gt; &lt;/plugin&gt; &lt;/plugins&gt; &lt;/build&gt; &lt;/project&gt; 2. 基于 Spring Framework 的 Spring MVC 项目搭建 由于 Spring 主要应用于 Web 开发，下面看下 Spring Boot 出现前是如何搭建 Spring MVC 项目的。
+<meta property="og:title" content="Spring MVC, Spring Boot, Spring Cloud 区别和联系">
+<meta property="og:description" content="1. Spring Boot 依赖管理 &lt;parent&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt; &lt;version&gt;3.1.2&lt;/version&gt; &lt;!-- 这里指定 Spring Boot 版本 --&gt; &lt;/parent&gt; &lt;dependencies&gt; &lt;dependency&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt; &lt;/dependency&gt; &lt;/dependencies&gt; 当你在使用 Spring Boot 开发项目时, 通常会在 ⁠pom.xml 文件中指定一个父 POM, 上面我们的代码 &lt;parent&gt;...&lt;/parent&gt; 就是干的这个事的,
+可以发现我们不用指定 spring-boot-starter-security 的版本, 就是因为我们引入了 Spring Boot 的父 POM, 而它又继承了spring-boot-dependencies 这个 BOM, 在这个 BOM 文件中, Spring Boot 定义了所有核心组件的版本号, 比如 Spring Security、Spring MVC、Spring Data,
+所以当我们添加一个 Spring Boot 的核心组件, 比如:
+&lt;dependency&gt; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt; &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt; &lt;/dependency&gt; 并不需要写 &lt;version&gt;, 因为 spring-boot-dependencies 已经预先定义了与 Spring Boot 3.1.2 兼容的 Spring Security 版本(比如 6.2.1), Maven 会自动从父 POM 中读取这些版本号,
 " />
 <meta property="og:url" content="https://blog.jiyi27.com/posts/java/backend/004-springboot-vs-spring/" />
 <meta property="og:site_name" content="为霜的博客" />
@@ -104,7 +102,7 @@ Spring Boot是一个基于Spring的套件，它帮我们预组装了Spring的一
   <meta property="article:section" content="spring boot" />
 
 
-  <meta property="article:published_time" content="2023-04-25 12:30:22 &#43;0000 UTC" />
+  <meta property="article:published_time" content="2025-03-04 08:32:22 &#43;0000 UTC" />
 
 
 
@@ -131,9 +129,9 @@ Spring Boot是一个基于Spring的套件，它帮我们预组装了Spring的一
     
 <article class="post">
   <h1 class="post-title">
-    <a href="https://blog.jiyi27.com/posts/java/backend/004-springboot-vs-spring/">Spring Boot 与 Spring 框架的对比-阅读笔记</a>
+    <a href="https://blog.jiyi27.com/posts/java/backend/004-springboot-vs-spring/">Spring MVC, Spring Boot, Spring Cloud 区别和联系</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2023-04-25</time><span class="post-reading-time">4 分钟阅读 (759 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2025-03-04</time><span class="post-reading-time">5 分钟阅读 (923 字数)</span></div>
 
   
     <span class="post-tags">
@@ -148,70 +146,118 @@ Spring Boot是一个基于Spring的套件，它帮我们预组装了Spring的一
   
 
   <div class="post-content"><div>
-        <h2 id="1-什么是spring-boot">1. 什么是Spring Boot<a href="#1-什么是spring-boot" class="hanchor" ariaLabel="Anchor">#</a> </h2>
-<blockquote>
-<p>Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications that you can &ldquo;just run&rdquo;. <a href="https://spring.io/projects/spring-boot">Spring Boot</a></p>
-</blockquote>
-<blockquote>
-<p>Spring Boot是一个基于Spring的套件，它帮我们预组装了Spring的一系列组件，以便以尽可能少的代码和配置来开发基于Spring的Java应用程序。<a href="https://www.liaoxuefeng.com/wiki/1252599548343744/1266265175882464">原文</a></p>
-</blockquote>
-<p>即 Spring Boot 是用来方便管理 Spring 相关组件的一个东西, 所以并不是说学了Spring Boot就不用学Spring, Spring Boot里面的东西就是Spring的一个个部件, 学Spring Boot的时候也是在学Spring。</p>
-<p>可以看下 Spring Boot 的maven配置文件(<code>pom.xml</code>)的内容，可能会帮助理解Spring Boot负责组装部件的本质：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#75715e">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;project</span> <span style="color:#a6e22e">xmlns=</span><span style="color:#e6db74">&#34;http://maven.apache.org/POM/4.0.0&#34;</span> <span style="color:#a6e22e">xmlns:xsi=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/XMLSchema-instance&#34;</span>
-</span></span><span style="display:flex;"><span>         <span style="color:#a6e22e">xsi:schemaLocation=</span><span style="color:#e6db74">&#34;http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd&#34;</span><span style="color:#f92672">&gt;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;modelVersion&gt;</span>4.0.0<span style="color:#f92672">&lt;/modelVersion&gt;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;parent&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-parent<span style="color:#f92672">&lt;/artifactId&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;version&gt;</span>3.0.5<span style="color:#f92672">&lt;/version&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;relativePath/&gt;</span> <span style="color:#75715e">&lt;!-- lookup parent from repository --&gt;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/parent&gt;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;groupId&gt;</span>com.choo<span style="color:#f92672">&lt;/groupId&gt;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;artifactId&gt;</span>SpringDemo<span style="color:#f92672">&lt;/artifactId&gt;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;version&gt;</span>0.0.1-SNAPSHOT<span style="color:#f92672">&lt;/version&gt;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;name&gt;</span>SpringDemo<span style="color:#f92672">&lt;/name&gt;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;description&gt;</span>SpringDemo<span style="color:#f92672">&lt;/description&gt;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;properties&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;java.version&gt;</span>17<span style="color:#f92672">&lt;/java.version&gt;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/properties&gt;</span>
+        <h2 id="1-spring-boot-依赖管理">1. Spring Boot 依赖管理<a href="#1-spring-boot-依赖管理" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;parent&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-parent<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;version&gt;</span>3.1.2<span style="color:#f92672">&lt;/version&gt;</span>  <span style="color:#75715e">&lt;!-- 这里指定 Spring Boot 版本 --&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/parent&gt;</span>
 </span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;dependencies&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-security<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/dependencies&gt;</span>
+</span></span></code></pre></div><p>当你在使用 Spring Boot 开发项目时, 通常会在 ⁠pom.xml 文件中指定一个父 POM, 上面我们的代码 <code>&lt;parent&gt;...&lt;/parent&gt;</code> 就是干的这个事的,</p>
+<p>可以发现我们不用指定 <code>spring-boot-starter-security</code> 的版本, 就是因为我们引入了 Spring Boot 的父 POM, 而它又继承了<code>spring-boot-dependencies</code> 这个 BOM, 在这个 BOM 文件中, Spring Boot 定义了所有核心组件的版本号, 比如 Spring Security、Spring MVC、Spring Data,</p>
+<p>所以当我们添加一个 Spring Boot 的核心组件, 比如:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-security<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>并不需要写 <code>&lt;version&gt;</code>, 因为 <code>spring-boot-dependencies</code> 已经预先定义了与 Spring Boot 3.1.2 兼容的 Spring Security 版本(比如 6.2.1), Maven 会自动从父 POM 中读取这些版本号,</p>
+<p>即使你不继承 ⁠spring-boot-starter-parent, 你仍然可以通过导入 ⁠spring-boot-dependencies BOM 来管理依赖版本:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;dependencyManagement&gt;</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;dependencies&gt;</span>
 </span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;dependency&gt;</span>
 </span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-data-jpa<span style="color:#f92672">&lt;/artifactId&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/dependency&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;dependency&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-web<span style="color:#f92672">&lt;/artifactId&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/dependency&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;dependency&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-test<span style="color:#f92672">&lt;/artifactId&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;scope&gt;</span>test<span style="color:#f92672">&lt;/scope&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/dependency&gt;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;dependency&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;groupId&gt;</span>mysql<span style="color:#f92672">&lt;/groupId&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;artifactId&gt;</span>mysql-connector-java<span style="color:#f92672">&lt;/artifactId&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;version&gt;</span>8.0.32<span style="color:#f92672">&lt;/version&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-dependencies<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;version&gt;</span>3.0.0<span style="color:#f92672">&lt;/version&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;type&gt;</span>pom<span style="color:#f92672">&lt;/type&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;scope&gt;</span>import<span style="color:#f92672">&lt;/scope&gt;</span>
 </span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/dependency&gt;</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/dependencies&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/dependencyManagement&gt;</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;build&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;plugins&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;plugin&gt;</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-maven-plugin<span style="color:#f92672">&lt;/artifactId&gt;</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;version&gt;</span>2.3.5.RELEASE<span style="color:#f92672">&lt;/version&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;/plugin&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/plugins&gt;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/build&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;dependencies&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-web<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/dependencies&gt;</span>
+</span></span></code></pre></div><p>在这个例子中，我们通过 ⁠<code>dependencyManagement</code> 导入了 ⁠spring-boot-dependencies，这使得我们可以在 ⁠dependencies 中添加 ⁠spring-boot-starter-web 时不需要指定版本号，因为版本已经在 BOM 中定义好了。</p>
+<blockquote>
+<p><code>&lt;dependencyManagement&gt;...&lt;/dependencyManagement&gt;</code> 和 <code>&lt;parent&gt;...&lt;/parent&gt;</code> 分别用来导入 BOM 和 POM, 他们两个导入一个就行了, Spring Boot BOM 被 Spring Boot POM 继承, 所以导入后者的目的也是导入前者,</p>
+<p><code>spring-boot-dependencies</code> 是一个巨大的依赖清单, 里面列出了所有 Spring Boot 生态中<strong>常用依赖</strong>的版本, 当 Maven 解析 <code>pom.xml</code> 时, 它会优先使用父 POM 中定义的版本号, 这样就避免了加入新的组件时手动指定版本的麻烦, 也保证了所有组件的兼容性,</p>
+</blockquote>
+<p>一般组件 artifactId 为 <code>spring-boot-starter-xxx</code> 格式, 都是 Spring Boot 核心组件, 不用再刻意指定版本号了, 而其他的组件仍需要指定, 比如:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#75715e">&lt;!-- MySQL 数据库驱动 --&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;groupId&gt;</span>mysql<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;artifactId&gt;</span>mysql-connector-java<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;version&gt;</span>8.0.33<span style="color:#f92672">&lt;/version&gt;</span> <span style="color:#75715e">&lt;!-- 确保这里是最新版本 --&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/dependency&gt;</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/project&gt;</span>
-</span></span></code></pre></div><h2 id="2-基于-spring-framework-的-spring-mvc-项目搭建">2. 基于 Spring Framework 的 Spring MVC 项目搭建<a href="#2-基于-spring-framework-的-spring-mvc-项目搭建" class="hanchor" ariaLabel="Anchor">#</a> </h2>
-<p>由于 Spring 主要应用于 Web 开发，下面看下 Spring Boot 出现前是如何搭建 Spring MVC 项目的。</p>
-<p>Spring MVC 项目需要引入 <code>spring-webmvc</code> 模块的依赖，因此首先要找的就是 <code>spring-webmvc</code> 的坐标，对于新手来说一般就是在网上找一些 Spring MVC 的入门文章，直接复制 <code>spring-webmvc</code> 的坐标了，此外就是在 maven 仓库 中根据关键字搜索。不管怎样找坐标吧，最终我们配置最简单的 <code>pom.xml</code> 内容如下。</p>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">&lt;!-- Lombok 在 编译时 生成 getter/setter，但 运行时不需要 Lombok 依赖，所以 provided 是合适的 --&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;groupId&gt;</span>org.projectlombok<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;artifactId&gt;</span>lombok<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;version&gt;</span>1.18.36<span style="color:#f92672">&lt;/version&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;scope&gt;</span>provided<span style="color:#f92672">&lt;/scope&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span></code></pre></div><h2 id="2-spring-cloud-依赖管理">2. Spring Cloud 依赖管理<a href="#2-spring-cloud-依赖管理" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Spring Cloud 建立在 Spring Boot 之上, 但特殊的地方是它也有自己的组件, 与 Spring Boot 类似, 需要引入 <code>spring-cloud-dependencies</code> 进行版本管理, <code>spring-cloud-dependencies</code> 是一个独立的 BOM 文件, 里面定义了 Spring Cloud 所有组件（比如 Eureka、Feign、Config Server 等）的版本号。</p>
+<p>当我们同时使用 Spring Boot 和 Spring Cloud 的时候, 大致的 <code>pom.xml</code> 文件:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#75715e">&lt;!-- 使用 Spring Boot 父 POM --&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;parent&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-parent<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;version&gt;</span>3.4.3<span style="color:#f92672">&lt;/version&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;relativePath/&gt;</span> <span style="color:#75715e">&lt;!-- lookup parent from repository --&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/parent&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">&lt;!-- 引入 Spring Cloud BOM 来统一管理 Spring Cloud 相关组件的版本 --&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;dependencyManagement&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;dependencies&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.cloud<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;artifactId&gt;</span>spring-cloud-dependencies<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;version&gt;</span>2024.0.0<span style="color:#f92672">&lt;/version&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;type&gt;</span>pom<span style="color:#f92672">&lt;/type&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;scope&gt;</span>import<span style="color:#f92672">&lt;/scope&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/dependencies&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/dependencyManagement&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;dependencies&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">&lt;!-- Spring Boot Web 依赖 --&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-web<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">&lt;!-- Spring Cloud Config，用于集中化配置管理 --&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.cloud<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;artifactId&gt;</span>spring-cloud-starter-config<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">&lt;!-- Spring Cloud Netflix Eureka Client，用于服务注册与发现 --&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.cloud<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;artifactId&gt;</span>spring-cloud-starter-netflix-eureka-client<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">&lt;!-- 根据需要还可以添加其他 Spring Cloud 或 Spring Boot 组件 --&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/dependencies&gt;</span>
+</span></span></code></pre></div><blockquote>
+<p>当我们说使用 Spring Boot 和 Spring Cloud 的时候, 使用的并不是他们本身, 而是他们的核心组件</p>
+<p>Spring Boot 管理自己的核心组件（Spring Security、Spring Data、Spring Web 等
+Spring Boot 不管理 Spring Cloud 相关组件（Eureka、Feign、Gateway、Sleuth 等</p>
+</blockquote>
+<h2 id="3-spring-mvc-项目搭建">3. Spring MVC 项目搭建<a href="#3-spring-mvc-项目搭建" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>看下 Spring Boot 出现前是如何搭建 Spring MVC 项目的, Spring MVC 项目需要引入 <code>spring-webmvc</code> 模块的依赖, 最终下面是我们配置最简单的 <code>pom.xml</code> 内容:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#75715e">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;project</span> <span style="color:#a6e22e">xmlns=</span><span style="color:#e6db74">&#34;http://maven.apache.org/POM/4.0.0&#34;</span> <span style="color:#a6e22e">xmlns:xsi=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/XMLSchema-instance&#34;</span>
 </span></span><span style="display:flex;"><span>         <span style="color:#a6e22e">xsi:schemaLocation=</span><span style="color:#e6db74">&#34;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&#34;</span><span style="color:#f92672">&gt;</span>
@@ -245,7 +291,7 @@ Spring Boot是一个基于Spring的套件，它帮我们预组装了Spring的一
 </span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/dependencies&gt;</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/project&gt;</span>
-</span></span></code></pre></div><p>除了引入 <code>spring-webmvc</code> 的依赖，由于我们还可能会使用到一些 <code>Servlet</code> 规范中的一些类，我们还引入了 <code>Servlet</code> 的依赖。而依赖引入只是万里长征的第一步，由于 Java Web 开发中的接口都是 Servlet 提供的，我们还需要配置 <code>spring-webmvc</code> 模块提供的 Servlet 接口的实现 <code>DispatcherServlet</code>。这又是什么东西？当时作为新手我的也是一脸懵逼，配置时我还得找到这个<strong>类的全限定名</strong>，这对于新手来说也太不友好了，又是一波复制粘贴。最终配置出来的<code> web.xml</code> 文件内容如下。</p>
+</span></span></code></pre></div><p>除了引入 <code>spring-webmvc</code> 的依赖, 由于我们还可能会使用到一些 <code>Servlet</code> 规范中的一些类, 我们还引入了 <code>Servlet</code> 的依赖, 而依赖引入只是万里长征的第一步, 由于 Java Web 开发中的接口都是 Servlet 提供的, 我们还需要配置 <code>spring-webmvc</code> 模块提供的 Servlet 接口的实现 <code>DispatcherServlet</code>, 这又是什么东西？当时作为新手我的也是一脸懵逼, 配置时我还得找到这个<strong>类的全限定名</strong>, 这对于新手来说也太不友好了, 又是一波复制粘贴, 最终配置出来下面的<code> web.xml</code> 文件:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#75715e">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;web-app</span> <span style="color:#a6e22e">xmlns=</span><span style="color:#e6db74">&#34;http://xmlns.jcp.org/xml/ns/javaee&#34;</span>
 </span></span><span style="display:flex;"><span>         <span style="color:#a6e22e">xmlns:xsi=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/XMLSchema-instance&#34;</span>
@@ -262,7 +308,7 @@ Spring Boot是一个基于Spring的套件，它帮我们预组装了Spring的一
 </span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;url-pattern&gt;</span>/<span style="color:#f92672">&lt;/url-pattern&gt;</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/servlet-mapping&gt;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/web-app&gt;</span>
-</span></span></code></pre></div><p>到这里就完了吗？显然不是，我们还没有为 Spring 配置 bean。对于 Spring MVC 来说，我们需要把 Spring 的配置文件放在<code> /WEB-INF/${servlet-name}-servlet.xml</code> 中，其中 <code>${servlet-name}</code> 为 Servelt 的名称，我们为 <code>DispatcherServlet</code> 取的名字是 dispatcher，因此我们需要创建 <code>/WEB-INF/dispatcher-servlet.xml </code>作为配置文件。这对新手又是一个挑战，还得记住命名规范，那能不能自己指定配置文件位置呢？可以，配置一个 Servlet 的初始化参数 configurationLocation 指定配置文件，好吧，还得记住参数名称。真是令人崩溃，最后看下配置文件的内容吧。</p>
+</span></span></code></pre></div><p>到这里就完了吗？显然不是, 我们还没有为 Spring 配置 bean, 对于 Spring MVC 来说, 我们需要把 Spring 的配置文件放在<code> /WEB-INF/${servlet-name}-servlet.xml</code> 中，其中 <code>${servlet-name}</code> 为 Servelt 的名称, 我们为 <code>DispatcherServlet</code> 取的名字是 dispatcher, 因此我们需要创建 <code>/WEB-INF/dispatcher-servlet.xml </code>作为配置文件, 这对新手又是一个挑战, 还得记住命名规范, 那能不能自己指定配置文件位置呢？可以, 配置一个 Servlet 的初始化参数 configurationLocation 指定配置文件, 好吧, 还得记住参数名称, 真是令人崩溃, 最后看下配置文件的内容吧:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#75715e">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;beans</span> <span style="color:#a6e22e">xmlns=</span><span style="color:#e6db74">&#34;http://www.springframework.org/schema/beans&#34;</span>
 </span></span><span style="display:flex;"><span>       <span style="color:#a6e22e">xmlns:xsi=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/XMLSchema-instance&#34;</span> <span style="color:#a6e22e">xmlns:mvc=</span><span style="color:#e6db74">&#34;http://www.springframework.org/schema/mvc&#34;</span>
@@ -313,7 +359,7 @@ Spring Boot是一个基于Spring的套件，它帮我们预组装了Spring的一
 </span></span><span style="display:flex;"><span>            └── page
 </span></span><span style="display:flex;"><span>                └── hello.jsp
 </span></span></code></pre></div><p>原文: <a href="https://blog.csdn.net/zzuhkp/article/details/123518033">https://blog.csdn.net/zzuhkp/article/details/123518033</a></p>
-<h2 id="3-基于-spring-boot-的-spring-mvc-项目搭建">3. 基于 Spring Boot 的 Spring MVC 项目搭建<a href="#3-基于-spring-boot-的-spring-mvc-项目搭建" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h2 id="4-基于-spring-boot-的-spring-mvc-项目搭建">4. 基于 Spring Boot 的 Spring MVC 项目搭建<a href="#4-基于-spring-boot-的-spring-mvc-项目搭建" class="hanchor" ariaLabel="Anchor">#</a> </h2>
 <p>总结基于 Spring Framework 的 Spring MVC 项目搭建有哪些问题呢？</p>
 <p>首先概念过多，新人需要关注 spring-webmvc 中的众多概念，如 DispatcherServlet、视图解析器 InternalResourceViewResolver。其次配置过多，新人需要关注配置文件命名规范、xml 配置文件命名空间 等。</p>
 <p>为了解决解决上述的问题，Spring Boot 遵循约定大于配置的开发原则，大大简化的 Spring 的配置。首先进行自动化配置，只要引入相关依赖就会自动进行一些默认的配置，其次如果默认的配置不满足要求还可以自定义配置覆盖默认的配置，大大降低了 Spring 应用上手的门槛。</p>
@@ -352,81 +398,22 @@ Spring Boot是一个基于Spring的套件，它帮我们预组装了Spring的一
 </span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/dependencies&gt;</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/project&gt;</span>
-</span></span></code></pre></div><p>和上述基于 Spring Framwork 的 pom 文件相比，主要有4处不同。</p>
+</span></span></code></pre></div><p>和上述基于 Spring Framwork 的 pom 文件相比，主要有3处不同:</p>
 <ul>
-<li>引入了一个名为 spring-boot-starter-parent 的 parent，这是 Spring Boot 为简化 pom 文件配置提供的一个模块，内部管理了很多依赖，我们的 pom 继承这个 parent 之后很多依赖就可以省略版本号，如下面的 spring-boot-starter-web。</li>
-<li>打包方式由 <code>war</code> 改成<code> jar</code>，Spring Boot 可内嵌 Servlet 容器，可直接使用 jar 包启动，因此无需打包为 war 再部署。</li>
-<li>引入了 <code>spring-boot-starter-web</code> 依赖，这个依赖被称为 starter，<code>spring-boot-starter</code> 会引入一些本模块相关的依赖和自动化配置，<code>spring-boot-starter-web</code> 就内嵌了 Tomcat，并自动进行 Spring MVC 的配置，如<code> DispatcherServlet</code>。</li>
-<li>引入了 <code>tomcat-embed-jasper</code> 依赖，这个依赖的作用在于支持内嵌 Tomcat 解析 jsp。
-Spring Boot 项目由于使用 jar 包启动，因此需要提供一个主类，我们定义的主类如下。</li>
+<li>Spring Boot 通过 spring-boot-starter-web 起步依赖，一次性引入所有 Web 开发相关的库（包括 Spring MVC、嵌入式 Tomcat 等），并通过 Spring Boot 的 BOM（Bill of Materials）自动管理版本兼容性</li>
+<li>在传统的 Spring MVC 项目中，你需要创建一个 web.xml 文件（Web 应用的部署描述文件），告诉 Servlet 容器如何加载和运行 Spring 的核心 Servlet（即 DispatcherServlet）。Spring MVC 项目完成后，会被打包成一个 .war 文件（Web Application Archive），然后手动放到外部 Servlet 容器（如 Tomcat）的 webapps 目录下，由容器启动运行</li>
+<li>Spring Boot 在项目中内置了 Servlet 容器（默认是 Tomcat），开发者不需要手动配置 web.xml，也不需要单独安装 Tomcat。Spring Boot 把 Servlet 容器作为依赖嵌入到项目中，DispatcherServlet 的注册和初始化由 Spring Boot 的自动配置完成，无需显式定义</li>
 </ul>
-<p><code>jar</code>和<code>war</code>的区别:</p>
 <blockquote>
-<p>These files are simply zipped files using the java jar tool. These files are created for different purposes. Here is the description of these files:</p>
-<ul>
-<li><strong>.jar files:</strong> The .jar files <strong>contain libraries, resources and accessories files</strong> like property files.</li>
-<li><strong>.war files:</strong> The war file <strong>contains the web application</strong> that can be deployed on any servlet/jsp container. The .war file <strong>contains jsp, html, javascript</strong> and other files necessary for the development of web applications. <a href="https://stackoverflow.com/a/5871102/16317008">https://stackoverflow.com/a/5871102/16317008</a></li>
-</ul>
+<p>在 Java Web 开发中，Servlet 是一种用来处理 HTTP 请求的技术规范（由 Java EE 定义）。而 Servlet 容器（比如 Tomcat、Jetty）是一个运行环境，负责加载、执行 Servlet，并管理 HTTP 请求和响应的生命周期。</p>
+<p>Spring MVC 是基于 Servlet 构建的 Web 框架，核心组件 DispatcherServlet 是一个特殊的 Servlet，负责接收所有请求并分发给对应的控制器（Controller）。Spring Boot 虽然也依赖 Spring MVC，但对这些底层机制进行了封装和简化。</p>
 </blockquote>
-<p>Spring Boot 项目由于使用 jar 包启动，因此需要提供一个主类，我们定义的主类如下:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@SpringBootApplication</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MvcApplication</span> {
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String<span style="color:#f92672">[]</span> args) {
-</span></span><span style="display:flex;"><span>        SpringApplication.<span style="color:#a6e22e">run</span>(MvcApplication.<span style="color:#a6e22e">class</span>, args);
-</span></span><span style="display:flex;"><span>    }
-</span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><p><code>@SpringBootApplication</code> 注解主要用于开启自动化配置，<code>main</code> 方法则用于启动 Spring 容器。至此一个 Spring Boot 项目其实已经搭建完成了，不再需要进行繁杂的 <code>web.xml</code> 配置及 Spring 配置。</p>
-<p>虽然引入 <code>spring-boot-starter-web </code>之后自动进行了 Web 开发相关的配置，不过由于我们需要自定义 InternalResourceViewResolver 的使用的视图前缀和后缀，我们还需要进一步的配置。Spring Boot 支持将相关配置直接添加到<code> /application.properties</code>，看下我们的配置内容。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-properties" data-lang="properties"><span style="display:flex;"><span><span style="color:#a6e22e">spring.mvc.view.prefix</span><span style="color:#f92672">=</span><span style="color:#e6db74">/WEB-INF/page</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">spring.mvc.view.suffix</span><span style="color:#f92672">=</span><span style="color:#e6db74">.jsp</span>
-</span></span></code></pre></div><p>注意, 我们配置数据库连接也是在<code>SpringDemo/src/mian/resources/application.properties</code>文件</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-properties" data-lang="properties"><span style="display:flex;"><span><span style="color:#a6e22e">spring.datasource.url</span><span style="color:#f92672">=</span><span style="color:#e6db74">jdbc:mysql://${MYSQL_HOST:localhost}:3306/greenhouse</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">spring.datasource.username</span><span style="color:#f92672">=</span><span style="color:#e6db74">root</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">spring.datasource.password</span><span style="color:#f92672">=</span><span style="color:#e6db74">778899</span>
-</span></span><span style="display:flex;"><span><span style="color:#a6e22e">spring.datasource.driver-class-name</span><span style="color:#f92672">=</span><span style="color:#e6db74">com.mysql.cj.jdbc.Driver</span>
-</span></span></code></pre></div><p>是不是很简单，JSP 文件和 Controller 未做变动，仍使用前面示例的代码。看下现在的项目结构:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>.
-</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">├──</span> pom.<span style="color:#a6e22e">xml</span>
-</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">└──</span> src
-</span></span><span style="display:flex;"><span>    <span style="color:#960050;background-color:#1e0010">└──</span> main
-</span></span><span style="display:flex;"><span>        <span style="color:#960050;background-color:#1e0010">├──</span> java
-</span></span><span style="display:flex;"><span>        <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">└──</span> com
-</span></span><span style="display:flex;"><span>        <span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">└──</span> zzuhkp
-</span></span><span style="display:flex;"><span>        <span style="color:#960050;background-color:#1e0010">│</span>           <span style="color:#960050;background-color:#1e0010">└──</span> mvc
-</span></span><span style="display:flex;"><span>        <span style="color:#960050;background-color:#1e0010">│</span>               <span style="color:#960050;background-color:#1e0010">├──</span> HelloController.<span style="color:#a6e22e">java</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#960050;background-color:#1e0010">│</span>               <span style="color:#960050;background-color:#1e0010">└──</span> MvcApplication.<span style="color:#a6e22e">java</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#960050;background-color:#1e0010">├──</span> resources
-</span></span><span style="display:flex;"><span>        <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">└──</span> application.<span style="color:#a6e22e">properties</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#960050;background-color:#1e0010">└──</span> webapp
-</span></span><span style="display:flex;"><span>            <span style="color:#960050;background-color:#1e0010">└──</span> WEB<span style="color:#f92672">-</span>INF
-</span></span><span style="display:flex;"><span>                <span style="color:#960050;background-color:#1e0010">└──</span> page
-</span></span><span style="display:flex;"><span>                    <span style="color:#960050;background-color:#1e0010">└──</span> hello.<span style="color:#a6e22e">jsp</span>
-</span></span></code></pre></div><p>总结 Spring Boot 简化应用创建的方式为：使用 <code>spring-boot-starter-parent</code> 管理依赖版本、使用 <code>spring-boot-starter</code> 自动化配置、支持用户自定义配置覆盖默认配置。</p>
-<h2 id="4-spring-boot-是如何简化应用运行的">4. Spring Boot 是如何简化应用运行的？<a href="#4-spring-boot-是如何简化应用运行的" class="hanchor" ariaLabel="Anchor">#</a> </h2>
-<p>对于应用运行的简化，主要提现在内嵌 Servlet 容器，能够将我们的应用自动打成 jar 包启动。上面的示例是我们在 IDE 中运行的，为了打成 jar 包，我们需要引入一个 Spring Boot 专有的插件。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span>    <span style="color:#f92672">&lt;build&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;plugins&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;plugin&gt;</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-maven-plugin<span style="color:#f92672">&lt;/artifactId&gt;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;/plugin&gt;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/plugins&gt;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/build&gt;</span>
-</span></span></code></pre></div><p>这个插件可以将 Spring Boot 项目依赖的所有 jar 包打包到一个 jar 包中，这个 jar 也被称为 <code>fat jar</code>。</p>
 <h2 id="5-总结">5. 总结<a href="#5-总结" class="hanchor" ariaLabel="Anchor">#</a> </h2>
-<p>Spring 官网将 Spring Boot 的核心特性总结为 6 点，在我们上述的例子中也基本有体现：</p>
-<ul>
-<li>Create stand-alone Spring applications</li>
-<li>Embed Tomcat, Jetty or Undertow directly (no need to deploy WAR files)</li>
-<li>Provide opinionated &lsquo;starter&rsquo; dependencies to simplify your build configuration</li>
-<li>Automatically configure Spring and 3rd party libraries whenever possible</li>
-<li>Provide production-ready features such as metrics, health checks, and externalized configuration</li>
-<li>Absolutely no code generation and no requirement for XML configuration</li>
-</ul>
-<p>原文:</p>
-<ul>
-<li><a href="https://blog.csdn.net/zzuhkp/article/details/123518033">https://blog.csdn.net/zzuhkp/article/details/123518033</a></li>
-</ul>
+<p>上面我们讨论了 Spring Boot 和 Spring Cloud 在配置依赖方面的区别和联系, 然后讨论了构建 Spring MVC 项目和 Spring Boot 项目各自的步骤,</p>
+<p>显然 Spring Cloud 是一个单独的框架, 有自己的组件, 我们可以在 Spring Boot 中使用 Spring Cloud, 但是 Spring Boot 的 BOM 只是管理了它自己核心组件的版本, 并不会管理 Spring Cloud 核心组件, 因此我们在使用他们两个的时候, 同时在 <code>pom.xml</code> 指定各自的 BOM 才是最佳实践, 方便他们各自管理各自组件的版本,</p>
+<p>然后通过讲解 Spring MVC 项目的构建过程, 我们发现, Spring MVC 利用 Java Servlet 规范通过 DispatcherServlet 实现前端控制器模式, 将 HTTP 请求分发给对应的 Controller 处理, 再通过视图解析器渲染最终响应, Tomcat、Jetty 等 Servlet 容器提供了运行环境和 Servlet 规范的实现, 而 Spring MVC 通过 DispatcherServlet 利用这些底层 API 来处理 Web 请求, Spring MVC 也可以与其他 Spring 模块（如 Spring Security、Spring Data 等）无缝集成, 所以Spring MVC 才是 Java Web 开发最基础最核心的东西,</p>
+<p>Spring MVC 虽然强大, 但配置复杂（ XML 文件、依赖管理、Servlet 容器 Tomcat）, 对新手不友好, 而 Spring Boot 则是构建于 Spring MVC 之上, 通过类似于 spring-boot-starter-web 的依赖包, 一次性引入所有相关库（如 Spring MVC、Tomcat、Jackson 等）, 并并保证版本兼容, 并且把 Servlet 容器嵌入到应用中, 使得项目可以打包为独立的 JAR 文件, 直接运行,</p>
+<p>所以 Spring Boot 本质就是构建于 Spring MVC 之上基于 Spring 生态的“快速开发框架”, 它帮我们集成了 Spring MVC 所有的基础配置, 包括 Servlet 路径, 视图, 以及 Servlet 容器 Tomcat, 除此之外还提前定义了 Spring 核心组件的依赖版本, 我们只要在 <code>pom.xml</code> 引入了 <code>&lt;parent&gt;...&lt;/parent&gt;</code>, 当我们使用一些依赖比如 Spring Security, Spring Data JPA 等, 直接加到 <code>pom.xml</code> 中就行, 不用指定版本号或者担心以后更新引起版本冲突,</p>
 
       </div></div>
 
@@ -439,16 +426,10 @@ Spring Boot 项目由于使用 jar 包启动，因此需要提供一个主类，
   </div>
   <div class="pagination__buttons">
     
-      <a href="https://blog.jiyi27.com/posts/java/backend/002-war-exploded/" class="button inline prev">
-        IDEA 项目中的 War 和 War Exploded 的区别
-      </a>
     
     
-      ::
-    
-    
-      <a href="https://blog.jiyi27.com/posts/bugs/004-bug-ssh-connection-refused/" class="button inline next">
-        SSH连接远程主机出现的Connection Refused问题
+      <a href="https://blog.jiyi27.com/posts/docker/004-docker-has-arch/" class="button inline next">
+        通过交叉编译理解 Docker 运行原理
       </a>
     
   </div>
