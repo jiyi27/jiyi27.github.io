@@ -212,23 +212,75 @@ COMMIT;
 > WHERE product_id = 1001 AND version = 1;
 > ```
 
-## 3. 帖子表放点赞和回复数 高并发系统怎么优化
+## 3. 帖子表放点赞数 高并发点赞 Redis + Kafka
 
-### 3.1. 使用缓存（Redis）
+首先看一下最开始的实现:
 
-做法：点赞和评论操作先更新缓存（如 Redis 中的计数器），并采用原子操作保证计数准确；然后通过后台任务定期将缓存数据同步到 MySQL 中
+```java
+@Transactional
+public void likePost(Long postId, Long userId) {
+    String likesUsersKey = "post:" + postId + ":likes_users";
+    String likesCountKey = "post:" + postId + ":likes_count";
+    // 1. 检查是否已点赞
+    if (Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(likesUsersKey, userId))) {
+        return;
+    }
 
-优点：利用内存数据库的高性能，可以应对高并发写入；同时减少数据库直接写操作，降低锁竞争
+    // 2. Redis 操作：添加用户ID到点赞集合 & 计数+1
+    redisTemplate.opsForSet().add(likesUsersKey, userId);
+    redisTemplate.opsForValue().increment(likesCountKey, 1);
 
-缺点：增加了系统架构复杂度，需要额外处理缓存同步和可能的数据不一致问题
+    // 3. 发送 Kafka 事件 (type=like)
+    String event = "like," + postId + "," + userId;
+    kafkaTemplate.send("like-topic", event);
+}
+```
 
-### 3.2. 异步更新（延迟更新/批量更新）
+可以看出我们这里检查和更新操作进行了分离, 最开始我想的是 Redis 的 Set 集合会保证点赞的唯一性, 又因为 Redis 服务是一个单线程进程, 所以即使一个用户同时进行两次点赞, 得到的检查都是 未点赞, 然后都执行数据更新操作, 也不会出现数据不一致问题, 因为在:
 
-做法：点赞和评论的原始数据依然记录在 `post_likes` 和 `comments` 表中；而 `posts` 表中的统计字段不是实时更新，而是通过定时任务或异步消息队列，定时聚合计算后批量更新
+```java
+redisTemplate.opsForSet().add(likesUsersKey, userId);
+```
 
-优点：降低了对 `posts` 表的实时写入压力，能够平滑高并发下的更新流量，减少锁竞争问题
+这一步就会失败(Set 集合天然唯一性), 下面的自增1也不可能执行, 
 
-缺点：数据实时性降低（**存在延迟**），对实时数据展示要求较高的场景可能不适用
+首先这么理解是不对的, `opsForSet().add(...);` 底层调用的是 Redis 的 SADD 命令, 如果添加的成员已经存在于集合中，Redis 不会抛出异常，而是简单地**忽略**该操作, 所以下面的代码(自增1)会继续执行, 那这就可能导致数据不一致问题:
+
+| 步骤 | 线程A操作                               | 线程B操作                               | Redis 中的实际情况                       |
+| ---- | --------------------------------------- | --------------------------------------- | ---------------------------------------- |
+| 1    | `isMember(likes_users, 888)` 返回 false |                                         | `likes_users = {}`, `likes_count = 0`    |
+| 2    |                                         | `isMember(likes_users, 888)` 返回 false | `likes_users = {}`, `likes_count = 0`    |
+| 3    | `SADD(likes_users, 888)`，返回 1        |                                         | `likes_users = {888}`, `likes_count = 0` |
+| 4    | `increment(likes_count)`，加 1          |                                         | `likes_users = {888}`, `likes_count = 1` |
+| 5    |                                         | `SADD(likes_users, 888)`，返回 0        | `likes_users = {888}`, `likes_count = 1` |
+| 6    |                                         | `increment(likes_count)`，又加 1        | `likes_users = {888}`, `likes_count = 2` |
+
+从最终结果看, Set 中只有一个用户 (888), 但 `likes_count` 变成了 2, 这就是「点赞数比实际多」的不一致情况, 
+
+要解决这个问题可以利用 Redis 命令本身返回值并在代码中加以判断:
+
+```java
+public void likePost(Long postId, Long userId) {
+    String likesUsersKey = "post:" + postId + ":likes_users";
+    String likesCountKey = "post:" + postId + ":likes_count";
+
+    // sAddRet 要么是 1（成功加入，不在集合中），要么是 0（已存在，没加入）
+    Long sAddRet = redisTemplate.opsForSet().add(likesUsersKey, userId);
+    if (sAddRet != null && sAddRet > 0) {
+        // 只有在成功新加了用户的时候才执行加1
+        redisTemplate.opsForValue().increment(likesCountKey, 1);
+        // 同时再发Kafka事件
+        String event = "like," + postId + "," + userId;
+        kafkaTemplate.send("like-topic", event);
+    }
+}
+```
+
+这样只有在成功加入到集合的时候, 才进行加1操作, 所以解决了上面的问题, 这样虽然可以解决, Redis 遇到多个操作如 检查 + 更新 这种场景的时候, 还是应该考虑**利用分布式锁或者Lua脚本保证操作原子性**来解决问题, 
+
+除此之外, 可以注意到上面的代码我们省略了先行的 `isMember` 判断, 因为我们的实现依赖 `SADD` 的返回值来判定是否是第一次点赞, 已经是判断了, 
+
+> Spring 的 `@Transactional` 注解默认只对使用了关系型数据库（如 JPA / JDBC）的事务生效。对于 RedisTemplate 的操作，除非你做了额外的配置（例如启用 Redis 事务支持，或使用了 Lua 脚本实现原子性操作），否则 Redis 并不会因为 Spring 事务回滚而自动回滚。换句话说，一般情况下，Redis 操作默认是「非事务性」的，Spring 事务并不会对它生效。
 
 ## 4. 高并发防止库存超卖
 
