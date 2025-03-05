@@ -7,8 +7,13 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="1. 导致死锁的原因 1.1. 更新相同的记录 两个事务同时试图更新相同的记录, 但它们以不同的顺序请求锁, 例如, 事务 A 锁定了记录 1 并尝试锁定记录 2, 而事务 B 锁定了记录 2 并尝试锁定记录 1。
+<meta name="description" content="1. 导致死锁的原因 1.1. 更新操作顺序不一致 在数据库中，当多个事务同时对多行或多表的数据进行更新时，如果每个事务获取锁的顺序不一致，就可能导致死锁。所谓“锁的获取顺序未标准化”，指的是没有一个固定的规则来规定所有事务必须按照相同的顺序去锁定资源（例如，先锁表 A 再锁表 B，或者先锁 id=1 再锁 id=2）。如果事务之间锁的获取顺序随意，就会出现循环等待的情况，最终形成死锁。
+比如两个事务同时试图更新相同的记录, 但它们以不同的顺序请求锁, 例如, 事务 A 锁定了记录 1 并尝试锁定记录 2, 而事务 B 锁定了记录 2 并尝试锁定记录 1。
 MySQL 进行增删改操作的时候, 会自动加上一个行级锁: x锁
+多发生在批量更新的情况, 可以标准化更新顺序，例如按 id 升序更新：
+-- 事务 A 和 B 都按 order_id 升序更新 UPDATE orders SET status = &#39;xxx&#39; WHERE order_id IN (1, 2) ORDER BY order_id; 1.2. 外键引起 假设我们有两个表：Parent 和 Child, Child 表有一个外键引用 Parent 表的主键
+事务 A：
+开始事务 尝试删除 Parent 表中的一行, 这一行是 Child 表中某一行的外键引用 由于外键约束, InnoDB 必须检查 Child 表中是否存在引用该行的记录, 如果 ⁠Child 表中存在引用 ⁠Parent 表中要删除的那一行的记录, InnoDB 会阻止删除操作并返回一个错误 事务 B：
 " />
 <meta name="keywords" content="" />
 
@@ -84,8 +89,13 @@ MySQL 进行增删改操作的时候, 会自动加上一个行级锁: x锁
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
 <meta property="og:title" content="数据库死锁以及排查">
-<meta property="og:description" content="1. 导致死锁的原因 1.1. 更新相同的记录 两个事务同时试图更新相同的记录, 但它们以不同的顺序请求锁, 例如, 事务 A 锁定了记录 1 并尝试锁定记录 2, 而事务 B 锁定了记录 2 并尝试锁定记录 1。
+<meta property="og:description" content="1. 导致死锁的原因 1.1. 更新操作顺序不一致 在数据库中，当多个事务同时对多行或多表的数据进行更新时，如果每个事务获取锁的顺序不一致，就可能导致死锁。所谓“锁的获取顺序未标准化”，指的是没有一个固定的规则来规定所有事务必须按照相同的顺序去锁定资源（例如，先锁表 A 再锁表 B，或者先锁 id=1 再锁 id=2）。如果事务之间锁的获取顺序随意，就会出现循环等待的情况，最终形成死锁。
+比如两个事务同时试图更新相同的记录, 但它们以不同的顺序请求锁, 例如, 事务 A 锁定了记录 1 并尝试锁定记录 2, 而事务 B 锁定了记录 2 并尝试锁定记录 1。
 MySQL 进行增删改操作的时候, 会自动加上一个行级锁: x锁
+多发生在批量更新的情况, 可以标准化更新顺序，例如按 id 升序更新：
+-- 事务 A 和 B 都按 order_id 升序更新 UPDATE orders SET status = &#39;xxx&#39; WHERE order_id IN (1, 2) ORDER BY order_id; 1.2. 外键引起 假设我们有两个表：Parent 和 Child, Child 表有一个外键引用 Parent 表的主键
+事务 A：
+开始事务 尝试删除 Parent 表中的一行, 这一行是 Child 表中某一行的外键引用 由于外键约束, InnoDB 必须检查 Child 表中是否存在引用该行的记录, 如果 ⁠Child 表中存在引用 ⁠Parent 表中要删除的那一行的记录, InnoDB 会阻止删除操作并返回一个错误 事务 B：
 " />
 <meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/002-%E6%AD%BB%E9%94%81/" />
 <meta property="og:site_name" content="为霜的博客" />
@@ -127,7 +137,7 @@ MySQL 进行增删改操作的时候, 会自动加上一个行级锁: x锁
   <h1 class="post-title">
     <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/002-%E6%AD%BB%E9%94%81/">数据库死锁以及排查</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2025-03-05</time><span class="post-reading-time">1 分钟阅读 (23 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2025-03-05</time><span class="post-reading-time">2 分钟阅读 (305 字数)</span></div>
 
   
     <span class="post-tags">
@@ -143,11 +153,117 @@ MySQL 进行增删改操作的时候, 会自动加上一个行级锁: x锁
 
   <div class="post-content"><div>
         <h2 id="1-导致死锁的原因">1. 导致死锁的原因<a href="#1-导致死锁的原因" class="hanchor" ariaLabel="Anchor">#</a> </h2>
-<h3 id="11-更新相同的记录">1.1. 更新相同的记录<a href="#11-更新相同的记录" class="hanchor" ariaLabel="Anchor">#</a> </h3>
-<p>两个事务同时试图更新相同的记录, 但它们以不同的顺序请求锁, 例如, 事务 A 锁定了记录 1 并尝试锁定记录 2, 而事务 B 锁定了记录 2 并尝试锁定记录 1。</p>
+<h3 id="11-更新操作顺序不一致">1.1. 更新操作顺序不一致<a href="#11-更新操作顺序不一致" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>在数据库中，当多个事务同时对多行或多表的数据进行更新时，如果每个事务获取锁的顺序不一致，就可能导致死锁。所谓“锁的获取顺序未标准化”，指的是没有一个固定的规则来规定所有事务必须按照相同的顺序去锁定资源（例如，先锁表 A 再锁表 B，或者先锁 id=1 再锁 id=2）。如果事务之间锁的获取顺序随意，就会出现循环等待的情况，最终形成死锁。</p>
+<p>比如两个事务同时试图更新相同的记录, 但它们以不同的顺序请求锁, 例如, 事务 A 锁定了记录 1 并尝试锁定记录 2, 而事务 B 锁定了记录 2 并尝试锁定记录 1。</p>
 <blockquote>
 <p>MySQL 进行增删改操作的时候, 会自动加上一个行级锁: x锁</p>
 </blockquote>
+<p>多发生在批量更新的情况, 可以标准化更新顺序，例如按 id 升序更新：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#75715e">-- 事务 A 和 B 都按 order_id 升序更新
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">UPDATE</span> orders <span style="color:#66d9ef">SET</span> status <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;xxx&#39;</span> <span style="color:#66d9ef">WHERE</span> order_id <span style="color:#66d9ef">IN</span> (<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>) <span style="color:#66d9ef">ORDER</span> <span style="color:#66d9ef">BY</span> order_id;
+</span></span></code></pre></div><h3 id="12-外键引起">1.2. 外键引起<a href="#12-外键引起" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>假设我们有两个表：Parent 和 Child, Child 表有一个外键引用 Parent 表的主键</p>
+<p><strong>事务 A</strong>：</p>
+<ul>
+<li>开始事务</li>
+<li>尝试删除 Parent 表中的一行, 这一行是 Child 表中某一行的外键引用</li>
+<li>由于外键约束, InnoDB 必须检查 Child 表中是否存在引用该行的记录, 如果 ⁠Child 表中存在引用 ⁠Parent 表中要删除的那一行的记录, InnoDB 会阻止删除操作并返回一个错误</li>
+</ul>
+<p><strong>事务 B</strong>：</p>
+<ul>
+<li>
+<p>开始事务</p>
+</li>
+<li>
+<p>尝试向 Child 表中插入一行, 该行的外键引用 Parent 表中事务 A 正在删除的那一行</p>
+</li>
+<li>
+<p>事务 B 获得了 Child 表的行锁, 但等待 Parent 表的锁释放</p>
+</li>
+</ul>
+<blockquote>
+<p>注意 当事务 A 检查 Child 表比如 id = 001, 检查该行是否存在是, 需要先获得该行的 s锁, 但此时因为 事务B先执行了 insert xxx id = 001, InnoDB 引擎默认为插入操作获得了 x锁, 而 x 锁排斥 s 锁, 所以, 事务 A 必须等待 事务 B 释放了 id = 001 行的 x 锁, 才能检查该行是否存在,</p>
+<p>事务 A 在进行外键检查需要获取 Child 表中引用该 Parent 记录的共享锁（S 锁），但由于事务 B 已经对该记录加了 X 锁，而 X 锁排斥 S 锁，所以事务 A 必须等待事务 B 释放 X 锁后才能继续检查。</p>
+</blockquote>
+<table>
+  <thead>
+      <tr>
+          <th>时间点</th>
+          <th>事务 A (删除 Parent)</th>
+          <th>锁操作</th>
+          <th>事务 B (插入 Child)</th>
+          <th>锁操作</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>T1</td>
+          <td>开始事务</td>
+          <td></td>
+          <td>开始事务</td>
+          <td></td>
+      </tr>
+      <tr>
+          <td>T2</td>
+          <td>尝试删除 Parent 表中的一行</td>
+          <td>请求 X 锁 (Parent 表) ✅ 获得</td>
+          <td></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td>T3</td>
+          <td>检查 Child 表是否存在引用</td>
+          <td>请求 S 锁 (Child 表) ⏳ 等待</td>
+          <td></td>
+          <td></td>
+      </tr>
+      <tr>
+          <td>T4</td>
+          <td></td>
+          <td></td>
+          <td>尝试插入一行到 Child 表</td>
+          <td>请求 X 锁 (Child 表) ✅ 获得</td>
+      </tr>
+      <tr>
+          <td>T5</td>
+          <td></td>
+          <td></td>
+          <td>检查 Parent 表是否存在主键</td>
+          <td>请求 S 锁 (Parent 表) ⏳ 等待</td>
+      </tr>
+      <tr>
+          <td>T6</td>
+          <td>事务 A 持有 Parent 表 X 锁，等待 Child 表 S 锁</td>
+          <td>等待 S 锁 (Child 表)</td>
+          <td>事务 B 持有 Child 表 X 锁，等待 Parent 表 S 锁</td>
+          <td>等待 S 锁 (Parent 表)</td>
+      </tr>
+      <tr>
+          <td>T7</td>
+          <td>❌ 死锁发生，InnoDB 发现循环等待</td>
+          <td></td>
+          <td>❌ 死锁发生，InnoDB 发现循环等待</td>
+          <td></td>
+      </tr>
+      <tr>
+          <td>T8</td>
+          <td>InnoDB 选择回滚事务 B</td>
+          <td>事务 B 失败，释放 Child 表 X 锁</td>
+          <td>事务 B 失败，回滚</td>
+          <td>释放 Child 表 X 锁</td>
+      </tr>
+      <tr>
+          <td>T9</td>
+          <td>事务 A 继续执行，删除成功</td>
+          <td>Parent 表 X 锁释放</td>
+          <td></td>
+          <td></td>
+      </tr>
+  </tbody>
+</table>
+<p>解决办法: 如果需要删除一行 Parent 记录，应先删除或更新对应的 Child 表中的记录，再删除 Parent 表对应的记录。这样可以避免外键约束检查时因为 Child 表中的记录而引发等待或报错。</p>
+<h3 id="13-范围冲突">1.3. 范围冲突<a href="#13-范围冲突" class="hanchor" ariaLabel="Anchor">#</a> </h3>
 
       </div></div>
 
