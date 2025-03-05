@@ -492,12 +492,10 @@ ERR_TOO_MANY_REDIRECTS
 
 所以 `@Bean` 只能在方法上, 那个方法应该返回一个对象, 且这个对像应该是非自己定义的类的实例,  而 `@Component` 常常放在 自己定义的类上, 他们的意思都是说, 在启动程序的时候, Spring 会自动生成一个实例,
 
-- 它们的作用相同：都用于告诉 Spring 在程序启动时创建一个对象（Bean）并放入 Spring 容器，以便在代码里 `@Autowired` 自动注入使用
+- 它们告诉 Spring 在程序启动时创建一个对象（Bean）并放入 Spring 容器，以便 `@Autowired` 自动注入使用
 - Spring 会自动管理这些对象，比如在需要时创建（实例化）、在应用关闭时销毁等
 
-但这里需要修正： ❌ "`@Bean` 只能用于非自己定义的类" ✅ `@Bean` 也可以用于自己写的类，只是一般不这么做，因为 `@Component` 更方便。
-
-比如，`@Component` 和 `@Bean` 都可以用来创建 `MyService`：
+但这里需要修正： ❌ "`@Bean` 只能用于非自己定义的类" ✅ `@Bean` 也可以用于自己写的类，只是一般不这么做，因为 `@Component` 更方便, 比如，`@Component` 和 `@Bean` 都可以用来创建 `MyService`：
 
 ```java
 @Component
@@ -518,8 +516,5 @@ public class AppConfig {
 ```
 
 两种方式都会让 `MyService` 变成 Spring 管理的 Bean，但一般推荐用 `@Component`，除非 `MyService` 需要复杂的初始化逻辑。
-
-
-
 
 

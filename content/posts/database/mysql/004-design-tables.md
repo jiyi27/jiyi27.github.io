@@ -1,5 +1,5 @@
 ---
-title: 数据库表设计 事务 悲观锁/乐观锁 缓存
+title: 数据库表设计 悲观锁/乐观锁 Redis 高并发场景实践
 date: 2025-02-17 19:20:35
 categories:
  - 数据库
@@ -127,9 +127,7 @@ UPDATE posts SET likes_count = likes_count + 1 WHERE id = 1;
 1. A读取到 likes_count = 100, B读取到 likes_count = 100
 3. A更新 likes_count = 101, B 更新 likes_count = 101
 
-最终结果是 likes_count = 101，但实际上应该是102。
-
-其实并不会出现这个问题, 这里需要指出两个关于事务和锁事实:
+最终结果是 likes_count = 101，但实际上应该是102, 其实并不会出现这个问题, 这里需要指出两个关于事务和锁事实:
 
 - 在 MySQL 中，默认情况下 `autocommit` 是开启的（即 `autocommit=1`）。在这个模式下，每条单独的 SQL 语句 (增删改, **除了查**) 都会被当作一个独立的事务来执行。`SELECT` 语句通常不涉及事务（除非是 `SELECT ... FOR UPDATE` 这种需要锁的语句）
 - 在数据修改操作（Update、Delete、Insert）中, InnoDB 会**自动**对受影响的行加上行级的**排它锁**（X 锁）
@@ -200,48 +198,19 @@ COMMIT;
 
 > **小贴士**:  **`X锁` 的加锁方式有两种**，第一种是自动加锁，在对数据进行**增删改**的时候，都会默认加上一个`X锁`。还有一种是手工加锁，我们用一个`FOR UPDATE`给一行数据加上一个`X锁`, `X锁`在同一时刻只能被一个事务持有, 其它事务想获得, 必须等待
 
-> **数据一致性:** 数据一致性问题分为好多种, 比如上面用户A, B同时点赞, 导致点赞数丢失的问题, 还有个常见的例子(库存扣减、银行转账等操)比如多个人给一个账户转 100 块钱,  A事务读取到此时账户余额为 100, B事务 也读取到账户余额为 100, 所以 A: 余额= 100 + 100 = 200, B事务 也是这样, 最后账户余额仅为 200 而不是 300, 导致数据一致性问题, **这种数据一致性问题可以通过 x 锁来解决,** 当然 MySQL 数据库默认加上了 x 锁, 我们不必担心
+> 最常见的数据一致性问题就是多步骤其中一个步骤失败引起的, 比如假设你在银行 A 账户有 1000 元，你想转账 200 元到银行 B 账户, 正常情况下 从 A 账户扣除 200 元（余额变成 800）, 向 B 账户增加 200 元（余额变成 1200）, 假设在步骤 1 之后（A 账户变成 800），系统崩溃或网络异常，导致步骤 2 没有执行, 这就导致 A 账户已经减少了 200 元（800），但 B 账户仍然是 1000, 这也是数据一致性问题, 这种数据一致性问题我们可以添加事务 **利用事务的原子性**来解决, 
 >
-> 数据一致性问题还有其他类型, 比如假设你在银行 A 账户有 1000 元，你想转账 200 元到银行 B 账户, 正常情况下 从 A 账户扣除 200 元（余额变成 800）, 向 B 账户增加 200 元（余额变成 1200）, 假设在步骤 1 之后（A 账户变成 800），系统崩溃或网络异常，导致步骤 2 没有执行, 这就导致 A 账户已经减少了 200 元（800），但 B 账户仍然是 1000, 这也是数据一致性问题, **这种数据一致性问题我们可以添加事务 利用事务的原子性来解决**, 
+> 数据一致性问题分为好多种, 比如上面用户A, B同时点赞, 导致点赞数丢失的问题, 比如多个人给一个账户转 100 块钱,  A事务读取到此时账户余额为 100, B事务 也读取到账户余额为 100, 所以 A: 余额= 100 + 100 = 200, B事务 也是这样, 最后账户余额仅为 200 而不是 300, 导致数据一致性问题, 这种数据一致性问题可以**通过 x 锁解决**, 当然 MySQL 数据库默认加上了 x 锁, 我们不必担心
 >
-> 还有另一种常见的数据一致性问题, 缓存与数据库不一致, 用户 A 购买商品
+> 还有一种是需要判断再进行其他增减操作的, 比如高并发防止**库存超卖**, 我们需要先判断库存是否有剩余, 再进行扣减, 这个时候就有了两个操作 判断 + 扣除, 这个时候就需要使用悲观锁直接锁定或者使用乐观锁, 需要通过锁机制来确保“判断+扣减”作为一个整体原子操作执行, 通过一个版本号标识数据的状态, 在更新时检查版本是否一致, 如果一致, 说明数据未被其他线程修改, 可以安全更新；如果不一致，说明有并发修改，需要重试或失败处理。
 >
-> - 读取缓存，库存为 10
-> - 购买 2 个，库存变成 8，更新数据库
-> - 更新缓存（库存改为 8）
->
-> 用户 B 也购买商品
->
-> - 读取缓存，发现库存仍然是 10（因为缓存可能未及时更新）
-> - 购买 3 个，库存变成 7，更新数据库
-> - 更新缓存（库存改为 7）
->
-> 用户 A 的库存更新在数据库执行后，但缓存还没更新时，用户 B 读取的库存数据是错误的，导致超卖问题, 这种问题可以通过**写回数据库后删除缓存**或**使用事务机制**, 确保数据库和缓存的同步
-
-### 2.4. 悲观锁和乐观锁常见实现
-
-```mysql
--- 方案1：事务 + 悲观锁
-BEGIN;
-    SELECT * FROM posts WHERE id = 1 FOR UPDATE;  -- 悲观锁
-    INSERT INTO post_likes (post_id, user_id) VALUES (1, 1);
-    UPDATE posts SET likes_count = likes_count + 1 WHERE id = 1;
-COMMIT;
-
--- 方案2：事务 + 乐观锁
--- 优点: 并没有加实际意义上的锁, 其它用户插入也不用等待
--- 缺点: 需要重试机制, 如果更新失败版本号检查不匹配，需要重试
-BEGIN;
-    INSERT INTO post_likes (post_id, user_id) VALUES (1, 1);
-    -- 更新时检查版本号
-    UPDATE posts 
-    SET likes_count = likes_count + 1,
-        version = version + 1 
-    WHERE id = 1 AND version = 5;  -- 乐观锁通过版本号检查, 如果版本号不匹配，说明数据被其他人修改过
-COMMIT;
-```
-
-因为帖子系统, 查询点赞和回复数非常的频繁, 比如用户刷新主页, 进入帖子, 都会引起查询, 这也是论坛的主要功能, 所以还是帖子表和评论表还是应该放点赞和回复数的, 对于中小型系统, 上面的问题通过悲观锁+事务其实就可以解决了, 因为并发量并不会特别高, 又不是微博, X那种高互动的网站, 
+> ```sql
+> SELECT quantity, version FROM stock WHERE product_id = 1001;
+> ...
+> UPDATE stock 
+> SET quantity = quantity - 2, version = version + 1 
+> WHERE product_id = 1001 AND version = 1;
+> ```
 
 ## 3. 帖子表放点赞和回复数 高并发系统怎么优化
 
@@ -261,3 +230,152 @@ COMMIT;
 
 缺点：数据实时性降低（**存在延迟**），对实时数据展示要求较高的场景可能不适用
 
+## 4. 高并发防止库存超卖
+
+### 4.1. Redis + Lua 脚本
+
+除了悲观锁和乐观锁, 还可以使用 Redis 来解决这个问题, 首先可能会想到的是利用 Redis 单线程特性, 伪代码如下:
+
+```java
+public boolean deductStock(String productId, int amount) {
+    String key = "stock:" + productId;
+    // 1. 检查库存
+    Integer stock = redis.get(key);
+    if (stock == null || stock < amount) {
+        return false; // 库存不足
+    }
+
+    // 2. 原子扣减
+    Integer newStock = redis.decrBy(key, amount);
+    if (newStock < 0) {
+        // 库存不足，手动回滚
+        redis.incrBy(key, amount);
+        return false;
+    }
+    return true; // 扣减成功
+}
+```
+
+假设初始库存为 5, 两个线程 T1 和 T2 同时尝试扣减 3 个库存:
+
+| 时间步 | 线程 T1                        | 线程 T2                        | Redis 库存 | 备注                      |
+| ------ | ------------------------------ | ------------------------------ | ---------- | ------------------------- |
+| T1     | GET 返回 5，检查 5 >= 3        |                                | 5          | T1 检查通过               |
+| T2     |                                | GET 返回 5，检查 5 >= 3        | 5          | T2 检查通过               |
+| T3     | DECRBY 3，返回 2               |                                | 2          | T1 扣减成功，newStock = 2 |
+| T4     | 检查 newStock = 2 >= 0，不回滚 |                                | 2          | T1 完成，库存合法         |
+| T5     |                                | DECRBY 3，返回 -1              | -1         | T2 扣减，newStock = -1    |
+| T6     |                                | 检查 newStock = -1 < 0，回滚 3 | 2          | T2 回滚，库存恢复到 2     |
+
+库存最终值：2（T1 扣了 3，T2 扣了又回滚）, 似乎问题解决了, 但实际上这只是表面现象, 问题依然存在:
+
+虽然 `decrBy` 本身是原子的, 但前面的检查（`get` 和判断库存是否足够）与扣减之间不是一个原子操作, 当 `decrBy` 执行后，如果结果小于 0，则会调用 `redis.incrBy` 补偿库存，并返回扣减失败。这样虽然能保证最终库存不会维持在负值，但**在短时间内可能出现库存负值的状态**，而且多个并发请求可能都进行补偿操作:
+
+- 这会导致性能问题, 大量线程尝试扣减, 最终只有少数成功, 其他回滚, 浪费资源
+- 严重的情况是由于网络延迟等原因导致补偿操作不成功, 从而引起实际上的超卖问题
+
+所以你看, 即使 Redis 是单线程, 所有发送到 Redis 服务器的指令都是一个个串行执行, 依然可能会出现并发问题,  
+
+**改进建议** 为了解决上述问题, 可以使用 Lua 脚本将库存检查和扣减操作封装成一个原子操作, 确保整个过程在 Redis 内部一次性执行, 从而消除检查与扣减之间的时间窗口, 例如, 可以使用如下 Lua 脚本来实现:
+
+```lua
+local stock = tonumber(redis.call('get', KEYS[1]))
+if stock and stock >= tonumber(ARGV[1]) then
+    return redis.call('decrby', KEYS[1], ARGV[1])
+else
+    return -1
+end
+```
+
+伪代码:
+
+```java
+public boolean deductStock(String productId, int amount) {
+    String key = "stock:" + productId;
+    String luaScript = "local stock = tonumber(redis.call('GET', KEYS[1]))\n" +
+                       "local amount = tonumber(ARGV[1])\n" +
+                       "if stock == nil then return -1 end\n" +
+                       "if stock < amount then return -2 end\n" +
+                       "local newStock = stock - amount\n" +
+                       "redis.call('SET', KEYS[1], newStock)\n" +
+                       "return newStock";
+    // Lua 脚本在 Redis 内部执行, 效率极高
+    Long result = redis.eval(luaScript, Collections.singletonList(key), Collections.singletonList(String.valueOf(amount)));
+    return result >= 0; // >= 0 表示扣减成功
+}
+```
+
+**总结** 虽然这个方案通过补偿操作在逻辑上试图防止超卖，但由于库存检查与扣减操作之间不是原子性的，仍然存在在高并发场景下出现短暂负库存（即“超卖”）的风险。使用 Lua 脚本或分布式锁来保证整个扣减过程的原子性是更为稳妥的方案。
+
+### 4.2. 分布式锁
+
+在方案二（Lua 脚本）中, 我们将“检查库存”和“扣减库存”封装成一个原子操作, **完全在 Redis 内部执行**, 效率很高, 如果业务逻辑复杂, 例如扣减库存后需要异步更新数据库, 可以用 Redis 分布式锁来控制并发,
+
+1. 获取锁： 使用 SETNX（Set if Not Exists）加锁：
+
+```
+SET lock:1001 1 EX 10 NX  # 设置锁，10秒过期
+```
+
+2. 扣减库存： 获取锁后，检查并扣减库存：
+
+```
+GET stock:1001
+DECRBY stock:1001 2
+```
+
+3. 释放锁： 操作完成后删除锁
+
+```
+DEL lock:1001
+```
+
+伪代码:
+
+```java
+public boolean deductStock(String productId, int amount) {
+    String lockKey = "lock:" + productId;
+    String stockKey = "stock:" + productId;
+    
+    // 获取分布式锁
+    boolean locked = redis.setNX(lockKey, "1", 10);
+    if (!locked) {
+        return false; // 获取锁失败, 被其他线程占用
+    }
+    
+    try {
+        // 检查库存
+        Integer stock = redis.get(stockKey);
+        if (stock == null || stock < amount) {
+            return false;
+        }
+        
+        // 扣减库存
+        Integer newStock = redis.decrBy(stockKey, amount);
+        if (newStock < 0) {
+            redis.incrBy(stockKey, amount); // 回滚
+            return false;
+        }
+        
+        // 异步更新数据库
+        asyncExecutor.submit(() -> {
+            try {
+                updateDatabase(productId, amount);
+            } catch (Exception e) {
+                // 数据库更新失败，回滚 Redis
+                redis.incrBy(stockKey, amount);
+                log.error("Database update failed, rolled back stock", e);
+            }
+        });
+        return true;
+    } finally {
+        redis.del(lockKey); // 释放锁
+    }
+}
+```
+
+### 4.3. 总结
+
+Lua 脚本适用场景: 业务逻辑简单，只涉及 Redis 数据操作, Lua 脚本只能操作 Redis 的数据, 无法直接与外部系统（如数据库、消息队列）交互, 
+
+分布式锁适用场景: 库存扣减后需要与外部系统（如数据库）保持一致性

@@ -5,6 +5,7 @@ categories:
  - spring boot
 tags:
  - spring boot
+ - 面试
 ---
 
 ## 1. JDBC vs MySQL Connector
@@ -148,9 +149,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 }
 ```
 
-这里 `findByEmail(String email)` 方法没有实现，为什么它还能执行数据库查询呢？这是 **Spring Data JPA + JPA + Hibernate** 三者协作的结果。
-
-当你调用：
+这里 `findByEmail(String email)` 方法没有实现，为什么它还能执行数据库查询呢？这是 **Spring Data JPA + JPA + Hibernate** 三者协作的结果, 当你调用：
 
 ```java
 Optional<User> user = userRepository.findByEmail("test@example.com");
