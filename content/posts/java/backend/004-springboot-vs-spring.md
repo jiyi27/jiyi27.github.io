@@ -1,5 +1,5 @@
 ---
-title: 谈谈对 Spring Boot, Spring Cloud 的理解
+title: Spring MVC, Spring Boot, Spring Cloud 区别和联系
 date: 2025-03-04 08:32:22
 categories:
  - spring boot
@@ -143,7 +143,7 @@ Spring Cloud 建立在 Spring Boot 之上, 但特殊的地方是它也有自己�
 > Spring Boot 管理自己的核心组件（Spring Security、Spring Data、Spring Web 等
 > Spring Boot 不管理 Spring Cloud 相关组件（Eureka、Feign、Gateway、Sleuth 等
 
-## 3. 基于 Spring Framework 的 Spring MVC 项目搭建
+## 3. Spring MVC 项目搭建
 
 看下 Spring Boot 出现前是如何搭建 Spring MVC 项目的, Spring MVC 项目需要引入 `spring-webmvc` 模块的依赖, 最终下面是我们配置最简单的 `pom.xml` 内容:
 
@@ -204,7 +204,7 @@ Spring Cloud 建立在 Spring Boot 之上, 但特殊的地方是它也有自己�
 </web-app>
 ```
 
-到这里就完了吗？显然不是，我们还没有为 Spring 配置 bean。对于 Spring MVC 来说，我们需要把 Spring 的配置文件放在` /WEB-INF/${servlet-name}-servlet.xml` 中，其中 `${servlet-name}` 为 Servelt 的名称，我们为 `DispatcherServlet` 取的名字是 dispatcher，因此我们需要创建 `/WEB-INF/dispatcher-servlet.xml `作为配置文件。这对新手又是一个挑战，还得记住命名规范，那能不能自己指定配置文件位置呢？可以，配置一个 Servlet 的初始化参数 configurationLocation 指定配置文件，好吧，还得记住参数名称。真是令人崩溃，最后看下配置文件的内容吧。
+到这里就完了吗？显然不是, 我们还没有为 Spring 配置 bean, 对于 Spring MVC 来说, 我们需要把 Spring 的配置文件放在` /WEB-INF/${servlet-name}-servlet.xml` 中，其中 `${servlet-name}` 为 Servelt 的名称, 我们为 `DispatcherServlet` 取的名字是 dispatcher, 因此我们需要创建 `/WEB-INF/dispatcher-servlet.xml `作为配置文件, 这对新手又是一个挑战, 还得记住命名规范, 那能不能自己指定配置文件位置呢？可以, 配置一个 Servlet 的初始化参数 configurationLocation 指定配置文件, 好吧, 还得记住参数名称, 真是令人崩溃, 最后看下配置文件的内容吧:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -273,7 +273,7 @@ Hello,Spring MVC
 
 原文: https://blog.csdn.net/zzuhkp/article/details/123518033
 
-## 3. 基于 Spring Boot 的 Spring MVC 项目搭建
+## 4. 基于 Spring Boot 的 Spring MVC 项目搭建
 
 总结基于 Spring Framework 的 Spring MVC 项目搭建有哪些问题呢？
 
@@ -320,101 +320,25 @@ Hello,Spring MVC
 </project>
 ```
 
-和上述基于 Spring Framwork 的 pom 文件相比，主要有4处不同。
+和上述基于 Spring Framwork 的 pom 文件相比，主要有3处不同:
 
-- 引入了一个名为 spring-boot-starter-parent 的 parent，这是 Spring Boot 为简化 pom 文件配置提供的一个模块，内部管理了很多依赖，我们的 pom 继承这个 parent 之后很多依赖就可以省略版本号，如下面的 spring-boot-starter-web。
-- 打包方式由 `war` 改成` jar`，Spring Boot 可内嵌 Servlet 容器，可直接使用 jar 包启动，因此无需打包为 war 再部署。
-- 引入了 `spring-boot-starter-web` 依赖，这个依赖被称为 starter，`spring-boot-starter` 会引入一些本模块相关的依赖和自动化配置，`spring-boot-starter-web` 就内嵌了 Tomcat，并自动进行 Spring MVC 的配置，如` DispatcherServlet`。
-- 引入了 `tomcat-embed-jasper` 依赖，这个依赖的作用在于支持内嵌 Tomcat 解析 jsp。
-  Spring Boot 项目由于使用 jar 包启动，因此需要提供一个主类，我们定义的主类如下。
+- Spring Boot 通过 spring-boot-starter-web 起步依赖，一次性引入所有 Web 开发相关的库（包括 Spring MVC、嵌入式 Tomcat 等），并通过 Spring Boot 的 BOM（Bill of Materials）自动管理版本兼容性
+- 在传统的 Spring MVC 项目中，你需要创建一个 web.xml 文件（Web 应用的部署描述文件），告诉 Servlet 容器如何加载和运行 Spring 的核心 Servlet（即 DispatcherServlet）。Spring MVC 项目完成后，会被打包成一个 .war 文件（Web Application Archive），然后手动放到外部 Servlet 容器（如 Tomcat）的 webapps 目录下，由容器启动运行
+- Spring Boot 在项目中内置了 Servlet 容器（默认是 Tomcat），开发者不需要手动配置 web.xml，也不需要单独安装 Tomcat。Spring Boot 把 Servlet 容器作为依赖嵌入到项目中，DispatcherServlet 的注册和初始化由 Spring Boot 的自动配置完成，无需显式定义
 
-`jar`和`war`的区别:
-
-> These files are simply zipped files using the java jar tool. These files are created for different purposes. Here is the description of these files:
+> 在 Java Web 开发中，Servlet 是一种用来处理 HTTP 请求的技术规范（由 Java EE 定义）。而 Servlet 容器（比如 Tomcat、Jetty）是一个运行环境，负责加载、执行 Servlet，并管理 HTTP 请求和响应的生命周期。
 >
-> - **.jar files:** The .jar files **contain libraries, resources and accessories files** like property files.
-> - **.war files:** The war file **contains the web application** that can be deployed on any servlet/jsp container. The .war file **contains jsp, html, javascript** and other files necessary for the development of web applications. https://stackoverflow.com/a/5871102/16317008
-
-Spring Boot 项目由于使用 jar 包启动，因此需要提供一个主类，我们定义的主类如下:
-
-```java
-@SpringBootApplication
-public class MvcApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(MvcApplication.class, args);
-    }
-}
-```
-
-`@SpringBootApplication` 注解主要用于开启自动化配置，`main` 方法则用于启动 Spring 容器。至此一个 Spring Boot 项目其实已经搭建完成了，不再需要进行繁杂的 `web.xml` 配置及 Spring 配置。
-
-虽然引入 `spring-boot-starter-web `之后自动进行了 Web 开发相关的配置，不过由于我们需要自定义 InternalResourceViewResolver 的使用的视图前缀和后缀，我们还需要进一步的配置。Spring Boot 支持将相关配置直接添加到` /application.properties`，看下我们的配置内容。
-
-```properties
-spring.mvc.view.prefix=/WEB-INF/page
-spring.mvc.view.suffix=.jsp
-```
-
-注意, 我们配置数据库连接也是在`SpringDemo/src/mian/resources/application.properties`文件
-
-```properties
-spring.datasource.url=jdbc:mysql://${MYSQL_HOST:localhost}:3306/greenhouse
-spring.datasource.username=root
-spring.datasource.password=778899
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-```
-
-是不是很简单，JSP 文件和 Controller 未做变动，仍使用前面示例的代码。看下现在的项目结构:
-
-```java
-.
-├── pom.xml
-└── src
-    └── main
-        ├── java
-        │   └── com
-        │       └── zzuhkp
-        │           └── mvc
-        │               ├── HelloController.java
-        │               └── MvcApplication.java
-        ├── resources
-        │   └── application.properties
-        └── webapp
-            └── WEB-INF
-                └── page
-                    └── hello.jsp
-```
-
-总结 Spring Boot 简化应用创建的方式为：使用 `spring-boot-starter-parent` 管理依赖版本、使用 `spring-boot-starter` 自动化配置、支持用户自定义配置覆盖默认配置。
-
-## 4. Spring Boot 是如何简化应用运行的？
-
-对于应用运行的简化，主要提现在内嵌 Servlet 容器，能够将我们的应用自动打成 jar 包启动。上面的示例是我们在 IDE 中运行的，为了打成 jar 包，我们需要引入一个 Spring Boot 专有的插件。
-
-```xml
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
-```
-
-这个插件可以将 Spring Boot 项目依赖的所有 jar 包打包到一个 jar 包中，这个 jar 也被称为 `fat jar`。
+> Spring MVC 是基于 Servlet 构建的 Web 框架，核心组件 DispatcherServlet 是一个特殊的 Servlet，负责接收所有请求并分发给对应的控制器（Controller）。Spring Boot 虽然也依赖 Spring MVC，但对这些底层机制进行了封装和简化。
 
 ## 5. 总结
 
-Spring 官网将 Spring Boot 的核心特性总结为 6 点，在我们上述的例子中也基本有体现：
+上面我们讨论了 Spring Boot 和 Spring Cloud 在配置依赖方面的区别和联系, 然后讨论了构建 Spring MVC 项目和 Spring Boot 项目各自的步骤, 
 
-- Create stand-alone Spring applications
-- Embed Tomcat, Jetty or Undertow directly (no need to deploy WAR files)
-- Provide opinionated 'starter' dependencies to simplify your build configuration
-- Automatically configure Spring and 3rd party libraries whenever possible
-- Provide production-ready features such as metrics, health checks, and externalized configuration
-- Absolutely no code generation and no requirement for XML configuration
+显然 Spring Cloud 是一个单独的框架, 有自己的组件, 我们可以在 Spring Boot 中使用 Spring Cloud, 但是 Spring Boot 的 BOM 只是管理了它自己核心组件的版本, 并不会管理 Spring Cloud 核心组件, 因此我们在使用他们两个的时候, 同时在 `pom.xml` 指定各自的 BOM 才是最佳实践, 方便他们各自管理各自组件的版本, 
 
-原文:
+然后通过讲解 Spring MVC 项目的构建过程, 我们发现, Spring MVC 利用 Java Servlet 规范通过 DispatcherServlet 实现前端控制器模式, 将 HTTP 请求分发给对应的 Controller 处理, 再通过视图解析器渲染最终响应, Tomcat、Jetty 等 Servlet 容器提供了运行环境和 Servlet 规范的实现, 而 Spring MVC 通过 DispatcherServlet 利用这些底层 API 来处理 Web 请求, Spring MVC 也可以与其他 Spring 模块（如 Spring Security、Spring Data 等）无缝集成, 所以Spring MVC 才是 Java Web 开发最基础最核心的东西, 
 
-- https://blog.csdn.net/zzuhkp/article/details/123518033
+Spring MVC 虽然强大, 但配置复杂（ XML 文件、依赖管理、Servlet 容器 Tomcat）, 对新手不友好, 而 Spring Boot 则是构建于 Spring MVC 之上, 通过类似于 spring-boot-starter-web 的依赖包, 一次性引入所有相关库（如 Spring MVC、Tomcat、Jackson 等）, 并并保证版本兼容, 并且把 Servlet 容器嵌入到应用中, 使得项目可以打包为独立的 JAR 文件, 直接运行, 
+
+所以 Spring Boot 本质就是构建于 Spring MVC 之上基于 Spring 生态的“快速开发框架”, 它帮我们集成了 Spring MVC 所有的基础配置, 包括 Servlet 路径, 视图, 以及 Servlet 容器 Tomcat, 除此之外还提前定义了 Spring 核心组件的依赖版本, 我们只要在 `pom.xml` 引入了 `<parent>...</parent>`, 当我们使用一些依赖比如 Spring Security, Spring Data JPA 等, 直接加到 `pom.xml` 中就行, 不用指定版本号或者担心以后更新引起版本冲突, 
+
