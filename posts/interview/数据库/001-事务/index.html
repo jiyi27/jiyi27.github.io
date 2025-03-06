@@ -3,7 +3,7 @@
 <head>
   
     
-    <title>MySQL 事务 数据一致性 悲观锁 乐观锁 :: 为霜的博客</title>
+    <title>MySQL 事务 数据库锁 悲观锁 乐观锁 :: 为霜的博客</title>
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -94,7 +94,7 @@ B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存
 
 <meta property="og:locale" content="en" />
 <meta property="og:type" content="article" />
-<meta property="og:title" content="MySQL 事务 数据一致性 悲观锁 乐观锁">
+<meta property="og:title" content="MySQL 事务 数据库锁 悲观锁 乐观锁">
 <meta property="og:description" content="1. 脏读 脏写 幻读 - 事务隔离级别 1.1. 脏读 - 事务隔离级别较低 脏读是指一个事务读取到了另一个事务尚未提交的数据。若后者发生回滚，则前者读取的数据实际上并不存在。
 事务 A 修改了一条记录，但尚未提交
 事务 B 读取这条记录，看到 A 的修改
@@ -147,9 +147,9 @@ B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存
     
 <article class="post">
   <h1 class="post-title">
-    <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/001-%E4%BA%8B%E5%8A%A1/">MySQL 事务 数据一致性 悲观锁 乐观锁</a>
+    <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/001-%E4%BA%8B%E5%8A%A1/">MySQL 事务 数据库锁 悲观锁 乐观锁</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2025-02-17</time><span class="post-reading-time">6 分钟阅读 (1148 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2025-02-17</time><span class="post-reading-time">6 分钟阅读 (1136 字数)</span></div>
 
   
     <span class="post-tags">
@@ -239,7 +239,7 @@ B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存
   </tbody>
 </table>
 <blockquote>
-<p>脏写的问题严重, 数据库设计上通过增删改操作默认加 x锁, 实现脏写在任何隔离级别都会避免</p>
+<p>脏写的问题严重, 数据库设计上通过删改操作默认加 x锁, 实现脏写在任何隔离级别都会避免</p>
 <p><code>InnoDB</code>支持四个隔离级别（和<code>SQL</code>标准定义的基本一致）。隔离级别越高，事务的并发度就越低。唯一的区别就在于，<code>InnoDB</code> 在<code>可重复读（REPEATABLE READ）</code>的级别就解决了幻读的问题。这也是<code>InnoDB</code>使用<code>可重复读</code> 作为事务默认隔离级别的原因。</p>
 </blockquote>
 <h2 id="2-脏读-脏写-幻读如何被解决的">2. 脏读 脏写 幻读如何被解决的<a href="#2-脏读-脏写-幻读如何被解决的" class="hanchor" ariaLabel="Anchor">#</a> </h2>
@@ -255,7 +255,7 @@ B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存
 <li>
 <p>脏写: 事务 B 在事务 A 尚未提交的更新基础上又进行了更新并提交</p>
 <ul>
-<li>脏写的问题严重, 数据库设计上通过增删改操作默认加 x锁, 实现脏写在任何隔离级别都会避免</li>
+<li>脏写的问题严重, 数据库设计上通过删改操作默认加 x锁, 实现脏写在任何隔离级别都会避免</li>
 </ul>
 </li>
 <li>
@@ -268,7 +268,7 @@ B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存
 <p>其中脏写在隔离级别下都被消除了, 方法是任何写操作都需要先获得 x 锁, 然后就剩脏读, 幻读, 不可重复读这三个问题,</p>
 <p>InnoDB 在第三级别 <code>可重复读（REPEATABLE READ）</code> 就解决了所有的问题, 前两个级别分别是 <code>未提交读</code>, <code>已提交读</code>, 根据名字就可以看出, <code>未提交读</code>就是允许修改的数据还没提交就允许其他事务读取, 这显然会造成脏读, <code>未提交读</code>也是最低级别的事务隔离, 第二级别就是<code>已提交读</code>, 显然该级别解决了脏读问题, 但是还不够, 此时还有幻读和不可重复读的问题没有解决,</p>
 <h3 id="22-不可重复读">2.2. 不可重复读<a href="#22-不可重复读" class="hanchor" ariaLabel="Anchor">#</a> </h3>
-<p>不可重复读指的是在同一个事务中，多次读取同一数据时，由于其他事务的修改并提交，导致读取结果不一致。在“读已提交”级别下，虽然避免了脏读，但因为读取时不锁定数据（或锁立即释放），其他事务可以在两次读取之间修改数据，从而导致不可重复读:</p>
+<p>不可重复读指的是在同一个事务中，多次读取同一数据时，由于其他事务的修改并提交，导致读取结果不一致:</p>
 <ul>
 <li>
 <p>事务 A：在一个事务中需要两次读取 id = 1 的余额</p>
@@ -277,15 +277,14 @@ B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存
 <p>事务 B：在事务 A 执行两次读取期间修改并提交数据</p>
 </li>
 </ul>
-<p>要解决“不可重复读”问题，需要将事务隔离级别提升到 <code>可重复读</code> 或更高的 <code>序列化</code> 级别:</p>
+<p>要解决“不可重复读”问题, 需要将事务隔离级别提升到 <code>可重复读</code> 或更高的 <code>序列化</code> 级别, 这两个级别实行默认一致性读 MVCC 来避免“不可重复读“问题:</p>
 <ul>
-<li>
-<p>锁机制：在<code>可重复读</code>隔离级别下, 数据库会对读取的数据加<strong>共享锁（S 锁）</strong>，防止其他事务修改, <strong>直到当前事务结束</strong></p>
-</li>
-<li>
-<p>多版本并发控制（MVCC）：数据库为事务维护数据的历史版本，事务读取的是某个时间点的快照，而不是最新数据</p>
-</li>
+<li>在<code>可重复读</code>隔离级别下, 读取数据操作<strong>默认使用</strong>的是一致性读, 即通过 MVCC 机制读取数据的快照, 注意默认不是加锁读取</li>
+<li>当然也可以使用 <code>Select ... LOCK IN SHARE MODE</code> 为某行添加共享s锁, 直到当前事务结束, 这样也可以防止读取的时候数据被其他事务修改,</li>
 </ul>
+<blockquote>
+<p>x锁和 s锁是互斥的, 也就是说 当事务 A 获得某行记录的 s锁后, 其他事务想要修改该行记录, 在尝试获取 x 锁的阶段就会阻塞</p>
+</blockquote>
 <p>场景：</p>
 <ul>
 <li>事务 A：在一个事务中需要两次读取 id = 1 的余额</li>
@@ -304,7 +303,7 @@ B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存
 <p>结果：balance = 100</p>
 </li>
 <li>
-<p>数据库记录事务 A 的时间点（通过 MVCC）或对 id = 1 的行加共享锁</p>
+<p>数据库记录事务 A 的时间点（通过 MVCC）<strong>或</strong>对 id = 1 的行加共享锁</p>
 </li>
 <li>
 <p>事务 B 开始</p>
@@ -313,10 +312,10 @@ B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存
 <p>执行 UPDATE account SET balance = 200 WHERE id = 1;</p>
 </li>
 <li>
-<p>如果使用锁：事务 B 被阻塞，直到事务 A 结束</p>
+<p>1 如果使用锁：事务 B 被阻塞，直到事务 A 结束</p>
 </li>
 <li>
-<p>如果使用 MVCC：事务 B 可以提交，更新 balance = 200，但事务 A 仍读取旧版本（快照）数据</p>
+<p>2 如果使用 MVCC：事务 B 可以提交，更新 balance = 200，但事务 A 仍读取旧版本（快照）数据</p>
 </li>
 <li>
 <p>事务 A 再次读取</p>
@@ -339,27 +338,16 @@ B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存
 </ul>
 <p>结果：事务 A 在整个过程中两次读取的结果都是 100, 避免了不可重复读, 但现在仍存在“幻读” 问题</p>
 <h3 id="23-幻读">2.3. 幻读<a href="#23-幻读" class="hanchor" ariaLabel="Anchor">#</a> </h3>
-<p>“可重复读”解决了不可重复读, 但无法完全解决“幻读”, 幻读是指事务读取一个范围的数据时，另一个事务插入或删除行，导致再次读取范围时结果不一致, 例如：</p>
+<p><code>可重复读</code> 解决了“不可重复读”, 但没有解决“幻读”问题, 幻读是指事务读取一个范围的数据时, 另一个事务插入或删除行, 导致再次读取范围时结果不一致 例如：</p>
 <ul>
 <li>事务 A：SELECT * FROM account WHERE balance &gt; 50;（返回 1 行）</li>
 <li>事务 B：INSERT INTO account (id, balance) VALUES (2, 60); 并提交</li>
 <li>事务 A 再次执行相同查询，可能返回 2 行（幻读）</li>
 </ul>
-<p>在 MySQL 的 InnoDB 存储引擎中, InnoDB 的默认隔离级别是 “可重复读”，在这个级别下，通过 多版本并发控制（MVCC） 和 Next-Key 锁 的组合，InnoDB 在一定程度上解决了幻读问题，但并非完全杜绝。</p>
-<p>幻读是指一个事务在多次读取某个范围的数据时，由于另一个事务插入或删除了数据并提交，导致前后两次读取的结果集不一致（多了或少了行）。它与不可重复读的区别在于，幻读涉及范围查询的结果集变化，而不可重复读针对单行数据的修改。</p>
-<p>InnoDB 在“可重复读”级别下，结合 MVCC 和一种特殊的锁机制——Next-Key 锁，来防止幻读。</p>
-<p>Next-Key 锁 = 记录锁（Record Lock） + 间隙锁（Gap Lock）</p>
-<ul>
-<li>
-<p>记录锁：锁定具体的索引记录</p>
-</li>
-<li>
-<p>间隙锁：锁定索引记录之间的间隙，防止其他事务在该范围内插入新记录</p>
-</li>
-<li>
-<p>当事务执行范围查询（如 SELECT &hellip; WHERE &hellip;）或更新操作时，InnoDB 会使用 Next-Key 锁保护查询范围，避免其他事务插入新行</p>
-</li>
-</ul>
+<p>上面我们说的是数据库上的定义, MySQL 的 InnoDB 引擎在 <code>可重复读</code> 级别下, 通过 多版本并发控制 MVCC 和 Next-Key 锁, 在一定程度上解决了幻读问题</p>
+<blockquote>
+<p>“幻读”是指一个事务在多次读取某个范围的数据时, 由于另一个事务插入或删除了数据并提交, 导致前后两次读取的结果集不一致（多了或少了行）, 它与“不可重复读”的区别在于, <strong>幻读涉及范围查询的结果集变化</strong>, 而<strong>不可重复读针对单行数据的修改</strong></p>
+</blockquote>
 <p><strong>情况 1：事务 A 使用快照读（普通 SELECT）</strong></p>
 <p>事务 A 执行：</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">START</span> <span style="color:#66d9ef">TRANSACTION</span>;
@@ -416,12 +404,6 @@ B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存
 </span></span></span></code></pre></div><p>结果：id=1, age=20、id=2, age=25 和 id=3, age=30</p>
 <p>机制：当前读读取最新提交的数据，看到事务 B 的插入。Next-Key 锁在此触发，但因插入已完成，无法阻止已存在的数据被读取</p>
 <p>结论：当前读会看到新数据，可能出现逻辑上的幻读（与第一次快照读不一致）</p>
-<blockquote>
-<p><strong>快照读（Snapshot Read）</strong>：普通的 SELECT 查询，使用 MVCC，读取事务开始时的快照数据，不会受其他事务提交的影响</p>
-<p><strong>当前读（Current Read）</strong>：如 SELECT &hellip; FOR UPDATE、UPDATE、DELETE 等操作，读取的是最新提交的数据，并可能加锁</p>
-<p><strong>Next-Key 锁</strong>：InnoDB 在“可重复读”级别下，用于范围操作时锁定记录和间隙，防止插入</p>
-<p>在 MySQL InnoDB 的“可重复读”（Repeatable Read）隔离级别下，使用 <strong>当前读（Current Read）</strong> 时，会自动触发 <strong>Next-Key 锁</strong></p>
-</blockquote>
 <h2 id="3-事务">3. 事务<a href="#3-事务" class="hanchor" ariaLabel="Anchor">#</a> </h2>
 <h3 id="31-事务的概念">3.1. 事务的概念<a href="#31-事务的概念" class="hanchor" ariaLabel="Anchor">#</a> </h3>
 <p>事务是一组要么全部成功，要么全部失败的数据库操作，保证数据的一致性。</p>
