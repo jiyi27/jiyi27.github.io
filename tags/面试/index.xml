@@ -6,11 +6,11 @@
     <description>Recent content in 面试 on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 05 Mar 2025 10:56:19 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 06 Mar 2025 12:56:19 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>数据库死锁以及排查</title>
       <link>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/003-%E6%AD%BB%E9%94%81/</link>
-      <pubDate>Wed, 05 Mar 2025 10:56:19 +0000</pubDate>
+      <pubDate>Thu, 06 Mar 2025 12:56:19 +0000</pubDate>
       
       <guid>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/003-%E6%AD%BB%E9%94%81/</guid>
       <description>&lt;h2 id=&#34;1-导致死锁的原因&#34;&gt;1. 导致死锁的原因&lt;/h2&gt;
@@ -245,6 +245,120 @@ Record lock, heap no 3 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
 &lt;li&gt;除了使用 &lt;code&gt;EXPLAIN&lt;/code&gt; 分析单条 SQL 的执行计划外，可配合开启 MySQL 慢查询日志，关注是否存在长时间占用锁的慢 SQL&lt;/li&gt;
 &lt;li&gt;如果出现大量慢查询，也意味着事务执行时间变长，更容易导致死锁和高锁等待&lt;/li&gt;
 &lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>MySQL 中的事务隔离界别和各种锁</title>
+      <link>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/002-%E5%90%84%E7%A7%8D%E9%94%81/</link>
+      <pubDate>Thu, 06 Mar 2025 09:39:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/002-%E5%90%84%E7%A7%8D%E9%94%81/</guid>
+      <description>&lt;h2 id=&#34;1-行级锁记录锁&#34;&gt;1. 行级锁/记录锁&lt;/h2&gt;
+&lt;h3 id=&#34;11-排它锁-x-锁---解决脏写&#34;&gt;1.1. 排它锁 X 锁 - 解决脏写&lt;/h3&gt;
+&lt;p&gt;相同数据行上的 X 锁会阻塞其它加共享锁或排他锁的操作&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; my_table &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FOR&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;在任何事务隔离级别下, 删改操作都需要先获得 x 锁, 目的是避免脏写, 也就是说即使没有显示使用 &lt;code&gt;SELECT ... FOR UPDATE&lt;/code&gt;, 进行删改操作时, 数据库都会自动尝试获得相应行的 x锁, 然后再进行写操作, 否则阻塞等待锁释放或当作死锁处理&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;12-共享锁-s-锁---解决不可重复读&#34;&gt;1.2. 共享锁 S 锁 - 解决不可重复读&lt;/h3&gt;
+&lt;p&gt;允许多个事务同时读取同一数据, 但不允许修改, 也就是说与 X 锁互斥&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; my_table &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;LOCK&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;IN&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;SHARE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;MODE&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;在 所有事务隔离级别 下, s锁都不会默认添加, 只有当显式使用 &lt;code&gt;SELECT ... LOCK IN SHARE MODE&lt;/code&gt; 时才会加 s锁&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;拓展&lt;/strong&gt; 在  InnoDB 可重复读 隔离级别下, 普通的 &lt;code&gt;SELECT&lt;/code&gt; 语句不会默认加 s共享锁, 它使用的是一致性读, 即通过MVCC 机制读取数据的快照, 而不是加锁读取, 来避免不可重复读问题的, 当然你也可以显示加上 s共享锁, 使用锁来避免不可重复读问题,&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-行级锁记录锁&#34;&gt;1. 行级锁/记录锁&lt;/h2&gt;
+&lt;h3 id=&#34;11-排它锁-x-锁---解决脏写&#34;&gt;1.1. 排它锁 X 锁 - 解决脏写&lt;/h3&gt;
+&lt;p&gt;相同数据行上的 X 锁会阻塞其它加共享锁或排他锁的操作&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; my_table &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FOR&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;在任何事务隔离级别下, 删改操作都需要先获得 x 锁, 目的是避免脏写, 也就是说即使没有显示使用 &lt;code&gt;SELECT ... FOR UPDATE&lt;/code&gt;, 进行删改操作时, 数据库都会自动尝试获得相应行的 x锁, 然后再进行写操作, 否则阻塞等待锁释放或当作死锁处理&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;12-共享锁-s-锁---解决不可重复读&#34;&gt;1.2. 共享锁 S 锁 - 解决不可重复读&lt;/h3&gt;
+&lt;p&gt;允许多个事务同时读取同一数据, 但不允许修改, 也就是说与 X 锁互斥&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; my_table &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;LOCK&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;IN&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;SHARE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;MODE&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;在 所有事务隔离级别 下, s锁都不会默认添加, 只有当显式使用 &lt;code&gt;SELECT ... LOCK IN SHARE MODE&lt;/code&gt; 时才会加 s锁&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;拓展&lt;/strong&gt; 在  InnoDB 可重复读 隔离级别下, 普通的 &lt;code&gt;SELECT&lt;/code&gt; 语句不会默认加 s共享锁, 它使用的是一致性读, 即通过MVCC 机制读取数据的快照, 而不是加锁读取, 来避免不可重复读问题的, 当然你也可以显示加上 s共享锁, 使用锁来避免不可重复读问题,&lt;/p&gt;
+&lt;p&gt;不可重复读: 发生在同一行数据被更新, 导致同一查询多次执行返回不同的具体数值&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-next-key-lock---解决幻读&#34;&gt;2. Next-Key Lock - 解决幻读&lt;/h2&gt;
+&lt;p&gt;注意 InnoDB &lt;code&gt;可重复读&lt;/code&gt; 或更高隔离级别才会有 Next-Key 锁, Next-Key 锁 = 记录锁 + 间隙锁,&lt;/p&gt;
+&lt;p&gt;Next-Key 锁的目的是解决幻读问题, 幻读是指事务读取一个范围的数据时, 另一个事务插入或删除行, 导致再次读取范围时结果不一致, 所以我们在进行范围查询时, 通过 &lt;code&gt;SELECT ... FOR UPDATE &lt;/code&gt; 自动添加间隙锁, 这样就可以避免在间隙锁释放之前, 其他事务在查询范围内插入新纪录, 至于如何避免的, 我们下面会讲到,&lt;/p&gt;
+&lt;h3 id=&#34;21-范围查询&#34;&gt;2.1. 范围查询&lt;/h3&gt;
+&lt;p&gt;当执行涉及范围条件的查询且使用 &lt;code&gt;SELECT ... FOR UPDATE &lt;/code&gt;时, InnoDB 会使用 Next-Key Lock 锁定查询范围内的记录及其间隙&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;table_name&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FOR&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;注意上面的 SQL 语句格式 &lt;code&gt;SELECT ... FOR UPDATE&lt;/code&gt;, 若是普通查询 &lt;code&gt;SELECT ...&lt;/code&gt;, 无论是否是范围查询 InnoDB 采用的都是 MVCC 多版本并发控制&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;22-非唯一索引上的等值查询&#34;&gt;2.2. 非唯一索引上的等值查询&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;START&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TRANSACTION&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; employees &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; salary &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4000&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FOR&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果 &lt;code&gt;salary&lt;/code&gt; 列上存在索引, 并且是&lt;strong&gt;非唯一索引&lt;/strong&gt;, InnoDB 会在查找到的记录上加锁, 同时加锁该记录与相邻记录之间的间隙, 即使这不是范围查询, 这保证了其他事务不能在锁定区间内插入新记录，从而避免幻读问题。因为若 salary 不唯一, 我们查到的结果可能是多个, 此时必须使用 Next-Key Lock 来防止其他事务插入相同的 salary 导致幻读,&lt;/p&gt;
+&lt;p&gt;如果 &lt;code&gt;salary&lt;/code&gt; 唯一, 通常不会触发间隙锁, 只会加记录锁, 因为等值查询可以精确定位到一条记录, 不需要保护范围,&lt;/p&gt;
+&lt;p&gt;如果  &lt;code&gt;salary&lt;/code&gt;  唯一, 但若是范围查询, 则需要防止其他事务在查询范围之间插入新记录, 因此仍会触发间隙锁,&lt;/p&gt;
+&lt;p&gt;如果  &lt;code&gt;salary&lt;/code&gt;   列上不存在索引（无论是唯一索引还是非唯一索引），MySQL 的 InnoDB 在执行涉及   &lt;code&gt;salary&lt;/code&gt;    的查询或修改操作时，会&lt;strong&gt;因为无法利用索引而退化为全表扫描&lt;/strong&gt;, 在这种情况下，锁的机制和范围会发生显著变化，尤其是在默认隔离级别下，可能会导致更广泛的锁范围，甚至锁住整个表。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;记录锁 Record Lock：锁定具体的索引记录, x 锁或 s 锁&lt;/p&gt;
+&lt;p&gt;间隙锁 Gap Lock：锁定索引记录之间的间隙, 防止其他事务在该范围内插入新记录, 间隙锁只在 &lt;strong&gt;可重复读&lt;/strong&gt; 和 &lt;strong&gt;串行化&lt;/strong&gt; 隔离级别下生效, 且只作用于 &lt;strong&gt;索引&lt;/strong&gt;（包括主键索引和二级索引）, 如果表没有索引（例如纯堆表）, InnoDB 会退化为锁全表&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;3-插入意向锁-insert-intention-lock&#34;&gt;3. 插入意向锁 Insert Intention Lock&lt;/h2&gt;
+&lt;p&gt;在 InnoDB 中，插入操作本身并不会直接获取行上的 X 锁, 因为插入的目标是新记录, 尚未存在于表中, 所以没有“行”可以加锁,&lt;/p&gt;
+&lt;p&gt;当执行 INSERT 操作时，InnoDB 不直接在数据行上加锁，而是先在目标 gap 上加上插入意向锁, 插入意向锁是 MySQL InnoDB 存储引擎中一种特殊的间隙锁变种, 属于意向锁的一种, 插入意向锁本身并不直接锁定具体的行, 而是表明一个事务“打算”在某个间隙中插入数据, 它会等待现有的间隙锁（如果有）释放, 从而避免冲突,&lt;/p&gt;
+&lt;p&gt;插入意向锁通常出现在使用 &lt;strong&gt;可重复读 隔离级别&lt;/strong&gt;时, 因为在这个隔离级别下, MySQL 会&lt;strong&gt;使用间隙锁来防止幻读问题&lt;/strong&gt;,&lt;/p&gt;
+&lt;p&gt;我们来看一下例子, 现在有两个事务同时尝试插入记录：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;事务 A 想插入 id = 2&lt;/li&gt;
+&lt;li&gt;事务 B 想插入 id = 3&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;假设事务 C &lt;strong&gt;先执行&lt;/strong&gt;了一条查询 &lt;code&gt;SELECT ... FOR UPDATE&lt;/code&gt;, 锁定了间隙 (1, 4)：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;事务 A 请求插入 id = 2, 发现间隙 (1, 4) 被间隙锁占用, 插入意向锁被阻塞&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;事务 A 必须等待事务 C 提交或回滚, 释放间隙锁后才能继续插入&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这就完美避免了幻读问题, 看看上面的内容, 前后呼应&lt;/p&gt;
+&lt;h2 id=&#34;4-记录锁-多版本并发控制&#34;&gt;4. 记录锁 多版本并发控制&lt;/h2&gt;
+&lt;p&gt;普通 &lt;code&gt;SELECT&lt;/code&gt; 语句：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;使用 MVCC 多版本并发控制&lt;/li&gt;
+&lt;li&gt;读取的是事务开始时的快照数据, 不会加 &lt;code&gt;S&lt;/code&gt; 锁, 也不会阻塞其他事务的更新或插入&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;SELECT ... LOCK IN SHARE MODE&lt;/code&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;会显式对读取的行加 &lt;code&gt;S&lt;/code&gt; 锁，其他事务仍可读取，但不能 &lt;code&gt;UPDATE&lt;/code&gt; 或 &lt;code&gt;DELETE&lt;/code&gt; 这些被锁的行&lt;/li&gt;
+&lt;li&gt;适用于确保数据在事务执行期间不会被修改，但仍允许读取&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;SELECT ... FOR UPDATE&lt;/code&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;会显式对读取的行加 &lt;code&gt;X&lt;/code&gt; 锁，阻止其他事务对这些行进行 &lt;code&gt;UPDATE&lt;/code&gt; 或 &lt;code&gt;DELETE&lt;/code&gt;，但仍允许读取（非锁定读）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;总结&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;记录锁 Record Lock：锁定具体的索引记录, x 锁或 s 锁&lt;/li&gt;
+&lt;li&gt;间隙锁 Gap Loc：锁定索引记录之间的间隙，防止其他事务在该范围内插入新记录&lt;/li&gt;
+&lt;li&gt;Next-Key 锁 = 记录锁 + 间隙锁&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注意上面讨论的是在 InnoDB &lt;code&gt;可重复读&lt;/code&gt; 隔离级别下的情况, InnoDB 的默认隔离级别也是 &lt;code&gt;可重复读&lt;/code&gt;, 更低级别比如 &lt;code&gt;已提交读&lt;/code&gt;, &lt;code&gt;已提交读&lt;/code&gt; 并不支持 MVCC 快照读 或者 Next-Key 锁, 它们都是 &lt;code&gt;可重复读&lt;/code&gt; 和 &lt;code&gt;序列化&lt;/code&gt; 隔离级别下的机制&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;5--快照读-vs-当前读&#34;&gt;5.  快照读 vs 当前读&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;快照读&lt;/strong&gt;: 普通的 SELECT, 不会加锁, 只依赖快照读 MVCC&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;当前读&lt;/strong&gt;: &lt;code&gt;SELECT ... FOR UPDATE&lt;/code&gt; 或 &lt;code&gt;SELECT ... LOCK IN SHARE MODE&lt;/code&gt;, 触发 x 锁 或 s 锁, 范围查询会触发 Next-Key Lock&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;无范围查询时, &lt;strong&gt;当前读&lt;/strong&gt;触发记录锁( x 锁 或 s 锁)&lt;/li&gt;
+&lt;li&gt;存在范围查询, 触发 Next-Key Lock, 也就是 记录锁 + 间隙锁&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注释上面讨论的是 InnoDB  “可重复读” 隔离级别下的情况&lt;/p&gt;
+&lt;/blockquote&gt;
 </content>
     </item>
     
