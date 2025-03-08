@@ -6,7 +6,173 @@
     <description>Recent content in 面试 on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Thu, 06 Mar 2025 12:56:19 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 08 Mar 2025 09:50:19 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Redis 和 MySQL 如何实现数据一致性</title>
+      <link>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/004-mysql-redis-%E6%95%B0%E6%8D%AE%E4%B8%80%E8%87%B4%E6%80%A7/</link>
+      <pubDate>Sat, 08 Mar 2025 09:50:19 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/004-mysql-redis-%E6%95%B0%E6%8D%AE%E4%B8%80%E8%87%B4%E6%80%A7/</guid>
+      <description>&lt;h2 id=&#34;1-mysql-的数据一致性&#34;&gt;1. MySQL 的数据一致性&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;事务（Transaction）&lt;/strong&gt;：MySQL 支持 ACID（原子性、一致性、隔离性、持久性）事务。通过 BEGIN、COMMIT 和 ROLLBACK，可以确保一组操作要么全部成功，要么全部回滚&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;锁机制&lt;/strong&gt;：MySQL 使用行锁、表锁或 MVCC（多版本并发控制）来处理并发访问，保证数据一致性。例如，InnoDB 引擎通过 MVCC 避免脏读和不可重复读&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;主从复制&lt;/strong&gt;：在主从架构中，MySQL 通过 binlog（二进制日志）记录所有写操作，主库将 binlog 同步到从库。虽然可能存在主从延迟（异步复制），可以通过配置半同步复制或同步复制来提高一致性&lt;/p&gt;
+&lt;h2 id=&#34;2-redis-的数据一致性&#34;&gt;2. Redis 的数据一致性&lt;/h2&gt;
+&lt;h3 id=&#34;21-单线程模型---天然原子性&#34;&gt;2.1. 单线程模型 - 天然原子性&lt;/h3&gt;
+&lt;p&gt;Redis 的核心特性之一是单线程执行命令, 所有命令按顺序执行, 不存在并发竞争问题, 天然保证了操作的原子性和一致性,&lt;/p&gt;
+&lt;p&gt;假设有两个客户端同时对同一个键 counter 执行 INCR（自增）操作, 由于单线程模型，Redis 会顺序处理这两个请求，最终结果一定是 counter 增加 2，而不是出现并发覆盖导致的错误值&lt;/p&gt;
+&lt;h3 id=&#34;22-超卖-秒杀系统---分布式锁--lua脚本&#34;&gt;2.2. 超卖 秒杀系统 - 分布式锁 / Lua脚本&lt;/h3&gt;
+&lt;p&gt;分布式锁 如基于 Redis 的 &lt;code&gt;SETNX&lt;/code&gt; 或 ZooKeeper, &lt;code&gt;SETNX&lt;/code&gt; 是 Redis 中的一个&lt;strong&gt;字符串操作命令&lt;/strong&gt;, 全称是 &amp;ldquo;SET if Not eXists&amp;rdquo;, 常见流程:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;获取分布式锁（比如 &lt;code&gt;Redis SETNX lock_key 1&lt;/code&gt;）&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-mysql-的数据一致性&#34;&gt;1. MySQL 的数据一致性&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;事务（Transaction）&lt;/strong&gt;：MySQL 支持 ACID（原子性、一致性、隔离性、持久性）事务。通过 BEGIN、COMMIT 和 ROLLBACK，可以确保一组操作要么全部成功，要么全部回滚&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;锁机制&lt;/strong&gt;：MySQL 使用行锁、表锁或 MVCC（多版本并发控制）来处理并发访问，保证数据一致性。例如，InnoDB 引擎通过 MVCC 避免脏读和不可重复读&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;主从复制&lt;/strong&gt;：在主从架构中，MySQL 通过 binlog（二进制日志）记录所有写操作，主库将 binlog 同步到从库。虽然可能存在主从延迟（异步复制），可以通过配置半同步复制或同步复制来提高一致性&lt;/p&gt;
+&lt;h2 id=&#34;2-redis-的数据一致性&#34;&gt;2. Redis 的数据一致性&lt;/h2&gt;
+&lt;h3 id=&#34;21-单线程模型---天然原子性&#34;&gt;2.1. 单线程模型 - 天然原子性&lt;/h3&gt;
+&lt;p&gt;Redis 的核心特性之一是单线程执行命令, 所有命令按顺序执行, 不存在并发竞争问题, 天然保证了操作的原子性和一致性,&lt;/p&gt;
+&lt;p&gt;假设有两个客户端同时对同一个键 counter 执行 INCR（自增）操作, 由于单线程模型，Redis 会顺序处理这两个请求，最终结果一定是 counter 增加 2，而不是出现并发覆盖导致的错误值&lt;/p&gt;
+&lt;h3 id=&#34;22-超卖-秒杀系统---分布式锁--lua脚本&#34;&gt;2.2. 超卖 秒杀系统 - 分布式锁 / Lua脚本&lt;/h3&gt;
+&lt;p&gt;分布式锁 如基于 Redis 的 &lt;code&gt;SETNX&lt;/code&gt; 或 ZooKeeper, &lt;code&gt;SETNX&lt;/code&gt; 是 Redis 中的一个&lt;strong&gt;字符串操作命令&lt;/strong&gt;, 全称是 &amp;ldquo;SET if Not eXists&amp;rdquo;, 常见流程:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;获取分布式锁（比如 &lt;code&gt;Redis SETNX lock_key 1&lt;/code&gt;）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;检查库存（&lt;code&gt;SELECT stock FROM inventory WHERE id = 1&lt;/code&gt;）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;如果库存足够，更新库存（&lt;code&gt;UPDATE inventory SET stock = stock - 1 WHERE id = 1 AND stock &amp;gt; 0&lt;/code&gt;）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;释放锁（&lt;code&gt;DEL lock_key&lt;/code&gt;）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;假设库存存储在 MySQL 中, 初始值为 10:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 线程 1
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;SETNX lock_key &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;-- 获取锁成功
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; stock &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; inventory &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;-- 返回 10
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; inventory &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; stock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; stock &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; stock &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;-- 更新为 9
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;DEL lock_key  &lt;span style=&#34;color:#75715e&#34;&gt;-- 释放锁
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 线程 2
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;SETNX lock_key &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;-- 获取锁失败，等待
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 锁释放后重试上述步骤
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;分布式锁是传统解决方案, 而 Lua 脚本是一种更高效的替代方案, 需要注意的是 Lua 脚本只能在 Redis 服务器内部执行, 操作的数据必须是 Redis 中的键值对, 因此, 库存数据必须存储在 Redis 中, 更新也仅发生在 Redis 层面, 如果业务需要更新 MySQL 等持久化存储, 还需要额外的同步机制（比如将 Redis 更新结果异步写入 MySQL）, 如果宕机或数据未及时同步到 MySQL, 可能丢失更新&lt;/p&gt;
+&lt;p&gt;而分布式锁的方案中, 我们只需要在业务逻辑获取分布式锁, 然后直接操作 MySQL 就行了&lt;/p&gt;
+&lt;p&gt;Lua 脚本可以实现的原因是 Redis 是单线程模型, 而 Lua 脚本在 Redis 作为一个整体执行, 所以根本不存在数据竞争问题, 每个 Lua 脚本都是按顺序执行的&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;23-lua-脚本---类似回滚&#34;&gt;2.3. Lua 脚本 - 类似回滚&lt;/h3&gt;
+&lt;p&gt;Redis 的 Lua 脚本作为一个整体在 Redis 内部执行, 中间不会被打断, 是完全原子性的, Lua 脚本没有显式的“回滚”机制, 单若 Lua 脚本失败时整个脚本不生效, 因此无需回滚&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-lua&#34; data-lang=&#34;lua&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- Lua 脚本&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;local&lt;/span&gt; key &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; KEYS[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;redis.call(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;SET&amp;#39;&lt;/span&gt;, key, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;value1&amp;#39;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;redis.call(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;SET&amp;#39;&lt;/span&gt;, key&lt;span style=&#34;color:#f92672&#34;&gt;..&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;x&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;value2&amp;#39;&lt;/span&gt;)  &lt;span style=&#34;color:#75715e&#34;&gt;-- 假设这里会失败&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;done&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果 &lt;code&gt;redis.call(&#39;SET&#39;, key..&#39;x&#39;, &#39;value2&#39;)&lt;/code&gt; 失败, 整个脚本中止, &lt;code&gt;key&lt;/code&gt; 的值不会被设置为 &lt;code&gt;value1&lt;/code&gt;, &lt;strong&gt;这不是回滚，而是脚本整体未提交&lt;/strong&gt;,&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Redis 通过 MULTI 和 EXEC 提供有限的事务支持, 仅保证一组命令原子执行, 但&lt;strong&gt;不支持回滚&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;MULTI
+DECRBY account:A 100
+INCRBY account:B 100
+EXEC
+&lt;/code&gt;&lt;/pre&gt;&lt;/blockquote&gt;
+&lt;h3 id=&#34;24-持久化-主从复制&#34;&gt;2.4. 持久化 主从复制&lt;/h3&gt;
+&lt;p&gt;Redis 支持异步主从复制, 主节点将写操作异步同步到从节点, 虽然简单高效, 但可能导致&lt;strong&gt;短暂的数据不一致&lt;/strong&gt;,&lt;/p&gt;
+&lt;p&gt;Redis 通过持久化（RDB 和 AOF）和主从复制来增强数据一致性和可靠性，虽然这更多是针对数据持久性而非实时一致性&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;RDB&lt;/strong&gt;：定期生成数据快照&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;AOF&lt;/strong&gt;：记录每条写命令，故障时可以通过重放恢复数据&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;主从复制&lt;/strong&gt;：主节点将写操作同步到从节点，保证多副本一致性（最终一致性）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-mysql-和-redis-数据不同步&#34;&gt;3. MySQL 和 Redis 数据不同步&lt;/h2&gt;
+&lt;p&gt;当 MySQL 数据更新（插入、修改、删除）时，Redis 中的缓存未及时更新或未更新，导致查询 Redis 时返回旧数据&lt;/p&gt;
+&lt;h3 id=&#34;31-缓存失效策略&#34;&gt;3.1. &lt;strong&gt;缓存失效策略&lt;/strong&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;方法&lt;/strong&gt;：在更新 MySQL 时，主动删除 Redis 中的对应缓存（而不是直接更新）&lt;/li&gt;
+&lt;li&gt;步骤
+&lt;ol&gt;
+&lt;li&gt;更新 MySQL 数据&lt;/li&gt;
+&lt;li&gt;删除 Redis 中对应的缓存键（DEL key）&lt;/li&gt;
+&lt;li&gt;下次查询时，从 MySQL 重新加载数据到 Redis&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;优点&lt;/strong&gt;：避免了更新 Redis 的复杂逻辑，适合&lt;strong&gt;读多写少&lt;/strong&gt;的场景&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;32-使用事务或消息队列&#34;&gt;3.2. &lt;strong&gt;使用事务或消息队列&lt;/strong&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;方法&lt;/strong&gt;：通过事务或消息队列（如 Kafka、RabbitMQ）确保 MySQL 和 Redis 的更新顺序一致&lt;/li&gt;
+&lt;li&gt;步骤
+&lt;ol&gt;
+&lt;li&gt;将 MySQL 更新操作写入事务&lt;/li&gt;
+&lt;li&gt;更新成功后，通过消息队列通知 Redis 更新&lt;/li&gt;
+&lt;li&gt;消费消息并更新 Redis&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;优点&lt;/strong&gt;：解耦 MySQL 和 Redis 操作，支持分布式系统，容错性高&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;33-双写一致性cache-aside-模式&#34;&gt;3.3. 双写一致性（Cache Aside 模式）&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;方法&lt;/strong&gt;：标准的缓存读写模式&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;步骤&lt;/strong&gt;：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;读数据：先查 Redis，若命中则返回；若未命中，从 MySQL 查询并写入 Redis&lt;/li&gt;
+&lt;li&gt;写数据：先更新 MySQL，再删除或更新 Redis 缓存&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;优点&lt;/strong&gt;：逻辑清晰，易于实现&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;缺点&lt;/strong&gt;：高并发下可能出现短暂不一致, 需配合锁或延迟双删&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;为什么先更新 MySQL, 再删除或更新 Redis 缓存?&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;在 MySQL 和 Redis 的组合中，MySQL 保存的是“权威数据”（source of truth），而 Redis 是缓存，用于提升性能。缓存的数据本质上是 MySQL 的副本。如果先更新 Redis 而 MySQL 更新失败（例如事务回滚、数据库宕机），会导致 Redis 中的数据是“脏数据”，与 MySQL 不一致。用户后续从缓存读取到错误数据，影响业务逻辑。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;为什么不反过来（先删除 Redis，再更新 MySQL）&lt;/strong&gt;?&lt;/p&gt;
+&lt;p&gt;如果先删除 Redis 缓存，再更新 MySQL，可能在两者之间出现短暂的“缓存穿透”问题:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;线程 A 删除 Redis 缓存&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;线程 B 查询时未命中缓存，从 MySQL 读取旧值并写回 Redis&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;线程 A 更新 MySQL 为新值&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;结果：Redis 又变成了旧值，与 MySQL 不一致&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;解决方案&lt;/strong&gt;：这就是“延迟双删”策略的由来，即先删除 Redis，更新 MySQL 后再延迟一段时间再次删除 Redis。但这种方式增加了复杂度，通常在“先更新 MySQL，再删除 Redis”已经够用的情况下不推荐。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;双写一致性 “高并发下可能出现短暂不一致, 需配合锁或延迟双删”&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;T1&lt;/strong&gt;: 线程 A 更新 MySQL，将 balance 改为 200&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;T2&lt;/strong&gt;: 线程 B 查询 Redis，发现缓存中 balance 还是 100（因为线程 A 还没来得及删除缓存）&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;T3&lt;/strong&gt;: 线程 B 返回旧值 100 给客户端&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;T4&lt;/strong&gt;: 线程 A 删除 Redis 缓存&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在 T2 到 T4 这段时间，Redis 返回的是旧值 100，而 MySQL 已经是新值 200，出现了短暂的数据不一致&lt;/li&gt;
+&lt;li&gt;不一致通常只存在于“更新 MySQL”和“删除 Redis”之间的短暂时间（通常是&lt;strong&gt;毫秒级&lt;/strong&gt;）&lt;/li&gt;
+&lt;li&gt;根本原因: 更新 MySQL 和删除 Redis 是两个独立的操作，无法保证原子性&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;解决方案1：配合锁或延迟双删&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;思路：通过锁机制（例如分布式锁）确保更新操作和读取操作不会同时发生，避免并发竞争&lt;/p&gt;
+&lt;p&gt;实现：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在更新操作时，获取一个针对该数据的锁（例如 Redis 分布式锁）&lt;/li&gt;
+&lt;li&gt;更新 MySQL 和删除 Redis 完成后释放锁&lt;/li&gt;
+&lt;li&gt;读取操作也需要检查锁，若被占用则等待&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;方法 2：延迟双删&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;思路：在“先删除 Redis，再更新 MySQL”的基础上，更新 MySQL 后再延迟一段时间再次删除 Redis 缓存，以清理可能被其他线程回写的脏数据&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;T1&lt;/strong&gt;: 线程 A 删除 Redis 缓存&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;T2&lt;/strong&gt;: 线程 B 查询，未命中缓存，从 MySQL 读取旧值 100 并写回 Redis&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;T3&lt;/strong&gt;: 线程 A 更新 MySQL 为 200&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;T4&lt;/strong&gt;: 线程 A 延迟 500ms 后再次删除 Redis 缓存&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;T5&lt;/strong&gt;: 下次查询从 MySQL 加载新值 200&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;缺点&lt;/strong&gt;：仍然存在短暂不一致的风险（T2 到 T4 的窗口）&lt;/p&gt;
+</content>
+    </item>
+    
     <item>
       <title>数据库死锁以及排查</title>
       <link>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/003-%E6%AD%BB%E9%94%81/</link>
