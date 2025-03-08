@@ -1,6 +1,6 @@
 ---
 title: Spring Cloud 核心组件和配置
-date: 2025-03-07 13:28:52
+date: 2025-03-07 08:28:52
 categories:
  - spring boot
 tags:
