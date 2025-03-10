@@ -137,7 +137,7 @@
   <h1 class="post-title">
     <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/004-mysql-redis-%E6%95%B0%E6%8D%AE%E4%B8%80%E8%87%B4%E6%80%A7/">Redis 和 MySQL 如何实现数据一致性</a>
   </h1>
-  <div class="post-meta"><time class="post-date">2025-03-08</time><span class="post-reading-time">3 分钟阅读 (521 字数)</span></div>
+  <div class="post-meta"><time class="post-date">2025-03-08</time><span class="post-reading-time">3 分钟阅读 (548 字数)</span></div>
 
   
     <span class="post-tags">
@@ -210,9 +210,23 @@ EXEC
 <p>Redis 支持异步主从复制, 主节点将写操作异步同步到从节点, 虽然简单高效, 但可能导致<strong>短暂的数据不一致</strong>,</p>
 <p>Redis 通过持久化（RDB 和 AOF）和主从复制来增强数据一致性和可靠性，虽然这更多是针对数据持久性而非实时一致性</p>
 <ul>
-<li><strong>RDB</strong>：定期生成数据快照</li>
-<li><strong>AOF</strong>：记录每条写命令，故障时可以通过重放恢复数据</li>
-<li><strong>主从复制</strong>：主节点将写操作同步到从节点，保证多副本一致性（最终一致性）</li>
+<li>
+<p><strong>RDB</strong>：通过生成数据库的快照来实现持久化, 它会将某个时间点 Redis 内存中的数据以二进制格式保存到一个 .rdb 文件中</p>
+<ul>
+<li>如果服务器在两次快照之间崩溃，可能会丢失部分数据（取决于快照频率）</li>
+<li>数据丢失可接受的场景</li>
+</ul>
+</li>
+<li>
+<p><strong>AOF</strong>：记录每条写命令, 当 Redis 宕机并重启时, 读取 AOF 文件, 从头到尾<strong>重新执行这些命令</strong>, 从而重建内存中的数据状态</p>
+<ul>
+<li>AOF 记录每条写命令，配合 appendfsync always 几乎不会丢失数据，即使是 everysec 也只可能丢失 1 秒的数据</li>
+<li>写命令需要追加到文件，同步策略（如 always）会增加磁盘 I/O，影响性能</li>
+</ul>
+</li>
+<li>
+<p><strong>主从复制</strong>：主节点将写操作同步到从节点，保证多副本一致性（最终一致性）</p>
+</li>
 </ul>
 <h2 id="3-mysql-和-redis-数据不同步">3. MySQL 和 Redis 数据不同步<a href="#3-mysql-和-redis-数据不同步" class="hanchor" ariaLabel="Anchor">#</a> </h2>
 <p>当 MySQL 数据更新（插入、修改、删除）时，Redis 中的缓存未及时更新或未更新，导致查询 Redis 时返回旧数据</p>
