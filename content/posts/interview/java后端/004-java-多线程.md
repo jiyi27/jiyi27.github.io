@@ -227,3 +227,86 @@ public class BlockExample {
 >     }
 > }
 > ```
+
+## 7. ReentrantLock vs ReadWriteLock
+
+### 7.1. ReentrantLock
+
+`ReentrantLock` Java `java.util.concurrent.locks` 包中的显式锁，提供比 `synchronized` 更灵活的功能, 
+
+在锁竞争激烈时，可以通过 `tryLock(timeout)` 避免线程无限等待:
+
+```java
+ReentrantLock lock = new ReentrantLock();
+public boolean tryMethod() throws InterruptedException {
+    if (lock.tryLock(1, TimeUnit.SECONDS)) {
+        try {
+            // 获取锁成功
+            return true;
+        } finally {
+            lock.unlock();
+        }
+    }
+    return false; // 超时未获取锁
+}
+```
+
+当需要按照线程请求顺序分配锁（避免线程饥饿）时，可以配置公平锁
+
+```java
+ReentrantLock lock = new ReentrantLock(true); // 公平锁
+```
+
+实际示例对比:
+
+```java
+public class Counter {
+    private int count = 0;
+    public synchronized void increment() {
+        count++;
+    }
+}
+
+public class Counter {
+    private int count = 0;
+    private final ReentrantLock lock = new ReentrantLock();
+    public void increment() {
+        lock.lock();
+        try {
+            count++;
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+```
+
+### 7.2. ReadWriteLock
+
+在 Java 中，ReadWriteLock（通常通过其实现类 ReentrantReadWriteLock 使用）是一种**专门为读多写少场景**设计的锁机制。与 ReentrantLock 相比，它提供了更细粒度的并发控制，允许多个线程同时读取，但写操作是独占的。
+
+```java
+ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
+Map<String, String> cache = new HashMap<>();
+
+public String get(String key) {
+    rwLock.readLock().lock();
+    try {
+        return cache.get(key);
+    } finally {
+        rwLock.readLock().unlock();
+    }
+}
+
+public void put(String key, String value) {
+    rwLock.writeLock().lock();
+    try {
+        cache.put(key, value);
+    } finally {
+        rwLock.writeLock().unlock();
+    }
+}
+```
+
+
+
