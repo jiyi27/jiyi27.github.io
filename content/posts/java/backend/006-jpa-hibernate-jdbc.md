@@ -52,9 +52,9 @@ JPA 的实现：要想让 JPA 的接口和注解真的“跑起来”，就需�
 
 **Spring Data JPA** 是 **基于 JPA 规范** 的一个 Spring 生态组件，它简化了 JPA 的使用，比如提供了 `JpaRepository` 让你不用手写 SQL 查询。Spring Data JPA 仍然需要 JPA Provider（比如 Hibernate） 来执行实际的数据库操作。Spring Data JPA 本身不是 ORM 框架，它只是对 JPA 进行了封装，使得 JPA 的使用更方便。
 
-> MyBatis 是一款半 ORM / 数据映射（Data Mapper）框架，与传统的 JDBC 相比更灵活且简化了数据访问的过程，但不像 Hibernate 那样做全量的实体与表的自动映射。
+> MyBatis 是一款半 ORM / 数据映射（Data Mapper）框架，与传统的 JDBC 相比更灵活且简化了数据访问的过程，但不像 Hibernate 那样做全量的实体与表的自动映射
 >
-> **MyBatis 不是 JPA 实现**，而是另一种独立的 ORM 方案，不能用来替代 Hibernate，但可以在项目中和 JPA 共同使用（比如复杂查询用 MyBatis，简单增删改查用 JPA）。
+> **MyBatis 不是 JPA 实现**，而是另一种独立的 ORM 方案，不能用来替代 Hibernate，但可以在项目中和 JPA 共同使用（比如复杂查询用 MyBatis，简单增删改查用 JPA）
 
 ## 3. Spring Data JPA + JPA + Hibernate 各司其职
 
@@ -80,7 +80,7 @@ public class User {
 > - `@Id`、`@GeneratedValue`：定义主键及其生成策略
 > - `@Column`：指定字段约束
 >
-> 这里 `@Entity` 和 `@Table` 等是 JPA 规范的一部分，它们只是 **告诉 JPA Provider（比如 Hibernate）**，这个类需要映射到数据库表。但真正解析这些注解并生成 SQL 语句的是 Hibernate。你写的是 JPA 代码，但实际 SQL 是 Hibernate 生成的, **JPA 只定义规则，Hibernate 负责执行。**
+> 这里 `@Entity` 和 `@Table` 等是 JPA 规范的一部分，它们只是 **告诉 JPA Provider（比如 Hibernate）**，这个类需要映射到数据库表。但真正解析这些注解并生成 SQL 语句的是 Hibernate。你写的是 JPA 代码，但实际 SQL 是 Hibernate 生成的, **JPA 只定义规则，Hibernate 负责执行**
 
 ### 3.2. Spring Data JPA（Repository 层）
 
@@ -105,9 +105,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 }
 ```
 
-> `@Query`、`@Param`、`JpaRepository`、`Pageable` 等注解和接口都是 Spring Data JPA 提供的，而不是 标准 JPA（Jakarta Persistence API） 或 Hibernate 本身的一部分。
+> `@Query`、`@Param`、`JpaRepository`、`Pageable` 等注解和接口都是 Spring Data JPA 提供的，而不是 标准 JPA（Jakarta Persistence API） 或 Hibernate 本身的一部分
 >
-> 这些方法 **不需要手动实现**，**Spring Data JPA** 会**自动**生成对应的 SQL 语句并执行，你只需要声明方法即可直接调用。
+> 这些方法 **不需要手动实现**，**Spring Data JPA** 会**自动**生成对应的 SQL 语句并执行，你只需要声明方法即可直接调用
 
 `@Query` 可以优化掉，让 Spring Data JPA 自动生成 SQL 语句, Spring Data JPA 会 **自动解析方法名** 生成 SQL 查询, 上面代码可以改成:
 

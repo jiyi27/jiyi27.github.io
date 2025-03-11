@@ -29,7 +29,7 @@ So this is the thing, then I try to access my website directly by IP address (by
 
 ## 3. VPS RAM
 
-Then I can see my file server handling the incoming request whose body larger than 100MB, I use `htop` to check the RAM usage status on my VPS, I can see the ram increase from 50MB to 100MB then 200MB, then my file server get killed by the OS. 
+Then I can see my file server handling the incoming request whose body larger than 100MB, I use `htop` to check the RAM usage status on my VPS, I can see the RAM increase from 50MB to 100MB then 200MB, then my file server get killed by the OS. 
 
 My VPS RAM is 512MB, and there is 460MB left, I don't know why the OS kill my file server program. 
 

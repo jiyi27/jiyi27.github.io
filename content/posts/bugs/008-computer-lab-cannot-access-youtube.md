@@ -12,7 +12,7 @@ tags:
 
 首先想到了是 DNS 服务器的问题, 尝试把电脑的 DNS server 改为 8.8.8.8, 可惜需要管理员权限, 失败
 
-后来无聊想着看看解析出来youtube.com的实际ip是什么, 使用 nklookup 查了一下, (大概这样, 没在实验室)
+后来无聊想着看看解析出来 youtube.com 的实际ip是什么, 使用 nklookup 查了一下, (大概这样, 没在实验室)
 
 ```shell
 ❯ nslookup youtube.com
