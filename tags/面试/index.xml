@@ -6,7 +6,17 @@
     <description>Recent content in 面试 on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 11 Mar 2025 12:30:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 16 Mar 2025 11:45:27 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Kafka vs RabbitMQ</title>
+      <link>https://blog.jiyi27.com/posts/distributed-system/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/002-kafka-rabbitmq/</link>
+      <pubDate>Sun, 16 Mar 2025 11:45:27 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/distributed-system/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/002-kafka-rabbitmq/</guid>
+      <description></description>
+      <content></content>
+    </item>
+    
     <item>
       <title>Java 多线程 并发编程</title>
       <link>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/004-java-%E5%A4%9A%E7%BA%BF%E7%A8%8B/</link>
@@ -293,7 +303,7 @@
     </item>
     
     <item>
-      <title>属性不固定如何设计 MySQL MongoDB 对比 -- 软件开发一面</title>
+      <title>属性不固定如何设计 MySQL MongoDB -- 软件开发一面</title>
       <link>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/005-%E5%B1%9E%E6%80%A7%E4%B8%8D%E5%9B%BA%E5%AE%9A%E8%A1%A8%E8%AE%BE%E8%AE%A1/</link>
       <pubDate>Mon, 10 Mar 2025 09:50:19 +0000</pubDate>
       
@@ -590,38 +600,17 @@ EXEC
 &lt;li&gt;&lt;strong&gt;优点&lt;/strong&gt;：解耦 MySQL 和 Redis 操作，支持分布式系统，容错性高&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 id=&#34;33-双写一致性cache-aside-模式&#34;&gt;3.3. 双写一致性（Cache Aside 模式）&lt;/h3&gt;
-&lt;p&gt;&lt;strong&gt;方法&lt;/strong&gt;：标准的缓存读写模式&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;步骤&lt;/strong&gt;：&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;读数据：先查 Redis，若命中则返回；若未命中，从 MySQL 查询并写入 Redis&lt;/li&gt;
-&lt;li&gt;写数据：先更新 MySQL，再删除或更新 Redis 缓存&lt;/li&gt;
+&lt;li&gt;写数据：先更新 MySQL, 再删除 Redis 缓存&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;&lt;strong&gt;优点&lt;/strong&gt;：逻辑清晰，易于实现&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;缺点&lt;/strong&gt;：高并发下可能出现短暂不一致, 需配合锁或延迟双删&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;&lt;strong&gt;为什么先更新 MySQL, 再删除或更新 Redis 缓存?&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;在 MySQL 和 Redis 的组合中，MySQL 保存的是“权威数据”（source of truth），而 Redis 是缓存，用于提升性能。缓存的数据本质上是 MySQL 的副本。如果先更新 Redis 而 MySQL 更新失败（例如事务回滚、数据库宕机），会导致 Redis 中的数据是“脏数据”，与 MySQL 不一致。用户后续从缓存读取到错误数据，影响业务逻辑。&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;为什么不反过来（先删除 Redis，再更新 MySQL）&lt;/strong&gt;?&lt;/p&gt;
-&lt;p&gt;如果先删除 Redis 缓存，再更新 MySQL，可能在两者之间出现短暂的“缓存穿透”问题:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;线程 A 删除 Redis 缓存&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;线程 B 查询时未命中缓存，从 MySQL 读取旧值并写回 Redis&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;线程 A 更新 MySQL 为新值&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;结果：Redis 又变成了旧值，与 MySQL 不一致&lt;/p&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;strong&gt;解决方案&lt;/strong&gt;：这就是“延迟双删”策略的由来，即先删除 Redis，更新 MySQL 后再延迟一段时间再次删除 Redis。但这种方式增加了复杂度，通常在“先更新 MySQL，再删除 Redis”已经够用的情况下不推荐。&lt;/p&gt;
+&lt;p&gt;在 MySQL 和 Redis 的组合中，MySQL 保存的是“权威数据”（source of truth），而 Redis 是缓存，用于提升性能。缓存的数据本质上是 MySQL 的副本。如果先更新 Redis 而 MySQL 更新失败（例如事务回滚、数据库宕机），会导致 Redis 中的数据是“脏数据”，与 MySQL 不一致。用户后续从缓存读取到错误数据，影响业务逻辑&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;&lt;strong&gt;双写一致性 “高并发下可能出现短暂不一致, 需配合锁或延迟双删”&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;T1&lt;/strong&gt;: 线程 A 更新 MySQL，将 balance 改为 200&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;T2&lt;/strong&gt;: 线程 B 查询 Redis，发现缓存中 balance 还是 100（因为线程 A 还没来得及删除缓存）&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;双写一致性可能导致的问题&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;T1&lt;/strong&gt;: 线程 A 更新 MySQL, 将 balance 改为 200&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;T2&lt;/strong&gt;: 线程 B 查询 Redis, 发现缓存中 balance 还是 100（因为线程 A 还没来得及删除缓存）&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;T3&lt;/strong&gt;: 线程 B 返回旧值 100 给客户端&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;T4&lt;/strong&gt;: 线程 A 删除 Redis 缓存&lt;/p&gt;
 &lt;ul&gt;
@@ -629,22 +618,71 @@ EXEC
 &lt;li&gt;不一致通常只存在于“更新 MySQL”和“删除 Redis”之间的短暂时间（通常是&lt;strong&gt;毫秒级&lt;/strong&gt;）&lt;/li&gt;
 &lt;li&gt;根本原因: 更新 MySQL 和删除 Redis 是两个独立的操作，无法保证原子性&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;strong&gt;解决方案1：配合锁或延迟双删&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;解决方案1：配合分布式锁&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;思路：通过锁机制（例如分布式锁）确保更新操作和读取操作不会同时发生，避免并发竞争&lt;/p&gt;
-&lt;p&gt;实现：&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;在更新操作时，获取一个针对该数据的锁（例如 Redis 分布式锁）&lt;/li&gt;
 &lt;li&gt;更新 MySQL 和删除 Redis 完成后释放锁&lt;/li&gt;
 &lt;li&gt;读取操作也需要检查锁，若被占用则等待&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;strong&gt;方法 2：延迟双删&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;思路：在“先删除 Redis，再更新 MySQL”的基础上，更新 MySQL 后再延迟一段时间再次删除 Redis 缓存，以清理可能被其他线程回写的脏数据&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;解决方案 2：先删除 Redis, 再更新 MySQL&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;可以先删除 Redis, 再更新 MySQL, 但更新 MySQL 之后 需要再删一次缓存&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;线程 A 删除 Redis 缓存&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;线程 B 查询时未命中缓存, 从 MySQL 读取旧值并写回 Redis&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;线程 A 更新 MySQL 为新值&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;结果：Redis 又变成了旧值 (与 MySQL 不一致)&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;延迟双删的目的正是为了在后续操作中纠正这种不一致, 确保系统最终达到一致性, 在 “先删除 Redis，再更新 MySQL” 的基础上, 更新 MySQL 后再延迟一段时间再次删除 Redis 缓存, 以清理可能被其他线程回写的脏数据:&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;T1&lt;/strong&gt;: 线程 A 删除 Redis 缓存&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;T2&lt;/strong&gt;: 线程 B 查询，未命中缓存，从 MySQL 读取旧值 100 并写回 Redis&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;T2&lt;/strong&gt;: 线程 B 查询, 未命中缓存, 从 MySQL 读取旧值 100 并写回 Redis&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;T3&lt;/strong&gt;: 线程 A 更新 MySQL 为 200&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;T4&lt;/strong&gt;: 线程 A 延迟 500ms 后再次删除 Redis 缓存&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;T5&lt;/strong&gt;: 下次查询从 MySQL 加载新值 200&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;缺点&lt;/strong&gt;：仍然存在短暂不一致的风险（T2 到 T4 的窗口）&lt;/p&gt;
+&lt;h2 id=&#34;4-综合实践-秒杀系统&#34;&gt;4. 综合实践 秒杀系统&lt;/h2&gt;
+&lt;p&gt;延迟双删是为了保证缓存和数据库的一致性, 而 分布式锁机制 是为了 保证数据库的数据一致性, 在秒杀系统中, 商品库存是一个核心数据, 假设某个商品初始库存为100件, 用户通过秒杀活动购买, 每次购买会减少库存, 我们需要确保:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;数据库的数据一致性：库存不会超卖, 即高并发下不会出现多个线程同时扣减库存导致负值的情况&lt;/li&gt;
+&lt;li&gt;缓存与数据库的一致性：Redis缓存中的库存数据与MySQL数据库中的库存数据最终一致&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;系统架构&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;数据库（MySQL）：存储商品的实际库存&lt;/li&gt;
+&lt;li&gt;缓存（Redis）：存储库存的缓存数据，用于快速查询&lt;/li&gt;
+&lt;li&gt;分布式锁：通过Redis（如SETNX命令）实现分布式锁，确保高并发下对数据库的操作是串行化的&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;操作流程&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;线程 A&lt;/strong&gt; 尝试获取商品 1001 的分布式锁（例如 &lt;code&gt;lock_{1001}&lt;/code&gt;），抢锁成功&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;线程 A&lt;/strong&gt; 删除 Redis 缓存（Key = &lt;code&gt;product_stock_{1001}&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;线程 A&lt;/strong&gt; 从数据库查询当前库存（假设查到的是 100），进行库存检查 → 大于 0，则更新库存为 99（&lt;code&gt;UPDATE ... SET stock = 99 WHERE product_id = 1001&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;线程 A&lt;/strong&gt; 提交事务，数据库此时真正更新为库存 99&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;线程 A&lt;/strong&gt; 处理完数据库更新后，开启一个线程或通过定时任务，&lt;strong&gt;延迟&lt;/strong&gt;一段时间（比如 500ms~1000ms）后，再执行一次“删除 Redis 缓存（Key = &lt;code&gt;product_stock_{1001}&lt;/code&gt;）”的操作&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;线程 A&lt;/strong&gt; 释放分布式锁&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;此时，如果在 A 更新完数据库与“延迟删除缓存”之间，有&lt;strong&gt;线程 B&lt;/strong&gt;进来要操作库存，会发生什么呢？&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;线程 B 试图抢锁，如果抢锁成功了（说明 A 已经释放了锁）：
+&lt;ul&gt;
+&lt;li&gt;线程 B 也会先删缓存，然后去读数据库，此时读到的已经是更新后的库存 &lt;code&gt;99&lt;/code&gt;，并做后续检查 + 更新操作&lt;/li&gt;
+&lt;li&gt;同理，B 更新完也会再延迟双删，以保证缓存后续查询一定能用到最新数据&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;由于有分布式锁的存在，在“检查 + 更新”整个过程&lt;strong&gt;都是串行化&lt;/strong&gt;的，不会出现两条并发写操作抢数据库，导致超卖或脏写。同时，“延迟双删”依然起到确保“缓存最终一致”的作用。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;当我们使用了分布式锁, 延迟双删 还有必要吗?&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;因为我的想法是, 线程A获取分布式锁, 然后检查 + 更新, 而更新由 (比如删除缓存 + 更新数据库)组成, 之后 A 释放锁, 为什么 线程B 会读取到缓存里的旧数据?&lt;/p&gt;
+&lt;p&gt;我忽略了一个情况, 我们的分布式锁一般都是在业务逻辑上实现的, 比如某个方法, 比如用户购买, 我们为了防止 检查 + 更新 操作造成的数据不一致, 可是, 我忽略了有的方法可能只是为了读数据 (读缓存, 如不存在, 读取数据库, 然后写入缓存), 这样的情况分布式锁是避免不了的, 因为我们不可能所有操作读写都加锁, 这样会限制性能, 所以为了防止 在 线程 A 删除缓存 和 更新数据库 这个时间之间, 有其他线程因 仅读取数据造成 旧数据 又重新写会 缓存, 线程 A 在执行 删除缓存 + 庚勋数据库操作之后, 需要再进行一次删除, 即延迟双删,&lt;/p&gt;
+&lt;p&gt;除此之外, 当 A 删除缓存后更新数据库 → &lt;strong&gt;与&lt;/strong&gt; → B 抢锁失败 / 等待 → &lt;strong&gt;与&lt;/strong&gt; → A 延迟再删缓存期间，假如出现一些读请求（比如线程 C），可能读到的还是旧值——如果在线程A第二次删除缓存后, 线程C才进行旧数据回写, 又出现缓存旧数据问题了, 不过这概率很小&lt;/p&gt;
 </content>
     </item>
     
@@ -1371,13 +1409,13 @@ Spring Boot 不管理 Spring Cloud 相关组件（Eureka、Feign、Gateway、Sle
     </item>
     
     <item>
-      <title>Kafka 基础概念</title>
-      <link>https://blog.jiyi27.com/posts/distributed-system/kafka/001-kafka-concepts/</link>
+      <title>Kafka 消息队列</title>
+      <link>https://blog.jiyi27.com/posts/distributed-system/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/001-kafka-concepts/</link>
       <pubDate>Sat, 22 Feb 2025 16:10:27 +0000</pubDate>
       
-      <guid>https://blog.jiyi27.com/posts/distributed-system/kafka/001-kafka-concepts/</guid>
+      <guid>https://blog.jiyi27.com/posts/distributed-system/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/001-kafka-concepts/</guid>
       <description>&lt;h2 id=&#34;1-几个重要概念&#34;&gt;1. 几个重要概念&lt;/h2&gt;
-&lt;p&gt;Kafka 几个常见概念: Producer, Consumer, Topic, Partition, Broker:&lt;/p&gt;
+&lt;p&gt;Kafka 几个常见概念: Producer, Consumer, Broker, Topic, Partition:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;在 Kafka 中, 集群里的每一台服务器都被称为 &lt;strong&gt;Broker&lt;/strong&gt;, 负责接收生产者发送的消息并存储这些消息&lt;/p&gt;
@@ -1399,7 +1437,7 @@ Spring Boot 不管理 Spring Cloud 相关组件（Eureka、Feign、Gateway、Sle
 &lt;/ul&gt;
 &lt;p&gt;副本（Replica）&lt;/p&gt;</description>
       <content>&lt;h2 id=&#34;1-几个重要概念&#34;&gt;1. 几个重要概念&lt;/h2&gt;
-&lt;p&gt;Kafka 几个常见概念: Producer, Consumer, Topic, Partition, Broker:&lt;/p&gt;
+&lt;p&gt;Kafka 几个常见概念: Producer, Consumer, Broker, Topic, Partition:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;在 Kafka 中, 集群里的每一台服务器都被称为 &lt;strong&gt;Broker&lt;/strong&gt;, 负责接收生产者发送的消息并存储这些消息&lt;/p&gt;
@@ -1429,8 +1467,167 @@ Spring Boot 不管理 Spring Cloud 相关组件（Eureka、Feign、Gateway、Sle
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;blockquote&gt;
-&lt;p&gt;在 Kafka 集群里，不是一台 Broker 扛所有活，而是多台 Broker 一起上。数据先按照 Topic 分类，每个 Topic 又被拆分成多个分区，这些分区会均匀分布到不同的 Broker 上。这样，生产者在写入数据、消费者在读取数据时，相关请求会自动分散到各个 Broker，从而实现负载均衡和高吞吐量。&lt;/p&gt;
+&lt;p&gt;在 Kafka 集群里，不是一台 Broker 扛所有活，而是多台 Broker 一起上。数据先按照 Topic 分类，每个 Topic 又被拆分成多个分区，这些分区会均匀分布到不同的 Broker 上。这样，生产者在写入数据、消费者在读取数据时，相关请求会自动分散到各个 Broker，从而实现负载均衡和高吞吐量&lt;/p&gt;
 &lt;/blockquote&gt;
+&lt;h2 id=&#34;2-异步处理&#34;&gt;2. 异步处理&lt;/h2&gt;
+&lt;p&gt;异步处理是指任务的发起和执行不要求实时同步完成, 消息队列常用于异步处理, 生产者将消息发送到队列后无需等待消费者立即处理, 可以继续执行其他任务, 从而提高系统效率,&lt;/p&gt;
+&lt;p&gt;之前讨论高并发点赞的问题, 用到了 Redis Lua 脚本保证了 &lt;code&gt;检查+更新&lt;/code&gt; 面临的数据一致性问题, 然后利用 Kafka 实现了异步更新到数据库, 这也算是消息队列异步处理常见的一个应用场景,&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;异步处理优点是解耦服务、提高响应速度和容错性；缺点可能是数据一致性难以保证（比如消费者处理失败），需要额外的错误处理机制（如重试或死信队列）&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;3-消息持久化&#34;&gt;3. 消息持久化&lt;/h2&gt;
+&lt;p&gt;我觉得至少有几个问题需要先弄明白, 我们知道消息由生产者产生发送到 Broker, 然后 Broker 存储消息, 之后的事由 消费者主动消费(拉取)消息,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;消息默认存在哪个位置的?&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;为什么需要消息持久化呢, 消息不就是为了消费的吗, 如果存在磁盘保存起来, 消费者频繁读取, 读取之后的消息应该视为无用的垃圾了吧, 难道还要分别删除, 这也太浪费性能了吧?&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;31-消息默认存在哪个位置的&#34;&gt;3.1. 消息默认存在哪个位置的?&lt;/h3&gt;
+&lt;p&gt;在 Kafka 中, 消息是按 Topic 归类的, 可以理解为一类消息放在同一个 Topic 中:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;每个 Topic 的每个分区对应一个日志文件（例如 topic-name-0.log）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;如果一个 Topic 只有 1 个分区，那么所有消息都会顺序追加到这个分区上&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;如果一个 Topic 有多个分区，那么生产者会根据一定的策略（Key 的哈希或者轮询等）把消息分散到不同的分区&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在 Kafka 的 Broker 上, 每个分区的底层都对应着一个日志文件, 这个日志并不是单独的一个物理文件，而是一系列 Segment 文件的有序集合, 形成一个“日志”概念:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;你可以把它理解成一个“顺序追加写”的结构, 每当生产者发送的消息抵达该分区时, Kafka 就将它顺序地追加到 Log 的尾部（对应 Segment 文件）&lt;/li&gt;
+&lt;li&gt;为了方便维护和查询，Kafka 会把一个分区的 Log 拆分为多个 Segment 进行管理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;32-为什么是磁盘而不是内存&#34;&gt;3.2. 为什么是磁盘而不是内存？&lt;/h3&gt;
+&lt;p&gt;简单一句话为了保证可靠性, 消息队列和 Redis 缓存还不一样, 缓存的数据丢失可以在业务逻辑上通过双写一致性保证, 毕竟缓存的数据就是为了提高速度, 权威数据 Source of Truth 还是在数据库里的, 而消息队列不同, 消息丢了就是丢了, 因为它本身就是权威数据,&lt;/p&gt;
+&lt;p&gt;在消息被消费者消费之前, 如果 Broker 宕机, 内存中的消息会丢失, 而磁盘上的消息可以恢复,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Kafka 的设计目标是高吞吐量和高可靠性，直接把消息存在内存中虽然快，但内存容量有限，且宕机后数据会丢失&lt;/li&gt;
+&lt;li&gt;Kafka 通过顺序写入磁盘（而不是随机读写）和操作系统的页面缓存（Page Cache），让磁盘的性能接近内存的读写速度&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;现代磁盘（无论是机械硬盘还是 SSD）在处理顺序写入时, 性能表现通常远优于随机写入:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;当数据是顺序写入的时候, 磁盘连续地写入数据, 不需要频繁地更换写入位置, 避免了磁头寻道（或者在SSD中内部块寻址）的开销, 从而极大地提高了写入速度, 而随机写入要求磁盘在不同位置之间不断切换, 造成额外的延时和性能下降,&lt;/li&gt;
+&lt;li&gt;Kafka 采用的是&lt;strong&gt;追加写入&lt;/strong&gt;的方式, 也就是每次都是在日志文件的末尾顺序写入数据, 从而避免了随机访问的开销&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;看完上面的不仅好奇 Kafka 还能控制操作系统的页面缓存吗? 这是怎么实现的?&lt;/p&gt;
+&lt;h4 id=&#34;321-什么是页面缓存-page-cache&#34;&gt;3.2.1. 什么是页面缓存 (Page Cache)&lt;/h4&gt;
+&lt;p&gt;页面缓存是操作系统在内存中开辟出的一块区域, 用来临时存储从磁盘读取的数据, 或者即将写入磁盘的数据, 其主要作用有：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;读缓存: 当应用再次请求已经被缓存的数据时，可以直接从内存中获取数据，大大提高读取速度&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;写缓存: 数据写入时，操作系统可以先将数据写入页面缓存，然后异步地将数据刷新（flush）到磁盘，这样应用看起来是直接在内存中写入数据&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;322-kafka-怎么利用页面缓存&#34;&gt;3.2.2. Kafka 怎么利用页面缓存&lt;/h4&gt;
+&lt;p&gt;Kafka 是一个分布式消息系统，它需要处理大量的消息读写。为了做到高吞吐量和高可靠性，Kafka 选择把消息持久化到磁盘上，而不是只保存在内存中。但磁盘很慢，怎么才能让性能接近内存呢？答案就是巧妙利用操作系统的页面缓存。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;顺序写入磁盘&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Kafka 写入数据时，不是随机跳来跳去地写（随机写很慢），而是按顺序追加到日志文件末尾&lt;/li&gt;
+&lt;li&gt;顺序写入非常快，因为磁盘读写时不需要频繁移动磁头（对于机械硬盘）或者做复杂寻址（对于 SSD）&lt;/li&gt;
+&lt;li&gt;写完之后，这些数据会被操作系统自动加载到页面缓存中&lt;/li&gt;
+&lt;li&gt;顺序追加写入可以利用操作系统对顺序数据写入的优化, 这让操作系统更容易把数据缓存到页面缓存中&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;操作系统在管理页面缓存时, 更倾向于&lt;strong&gt;缓存连续的数据块&lt;/strong&gt;, 顺序写入的数据通常会被预先加载到页面缓存中, 因为操作系统认为接下来很可能还会访问相邻的数据, 这样可以避免频繁地进行磁盘读写, 直接从内存中读取数据, 速度更快&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;依赖页面缓存加速读取&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;当消费者（Consumer）来读取消息时，Kafka 不会直接去磁盘找数据，而是让操作系统从页面缓存里拿&lt;/li&gt;
+&lt;li&gt;因为刚写入的数据还在页面缓存中（内存里），读取速度几乎和直接从内存读一样快&lt;/li&gt;
+&lt;li&gt;如果数据不在缓存中，操作系统会从磁盘加载到页面缓存，然后再给 Kafka，这样后续的读取也能变快&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;尽量少干预缓存管理&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Kafka 并不自己管理内存, 而是把缓存的工作交给操作系统, 操作系统的页面缓存机制已经很成熟, 能根据系统的内存使用情况自动调整哪些数据保留在缓存里, 哪些可以丢弃&lt;/p&gt;
+&lt;h3 id=&#34;33-消息被消费后-会被立马删除吗&#34;&gt;3.3. 消息被消费后 会被立马删除吗&lt;/h3&gt;
+&lt;p&gt;Kafka 不会在每条消息写完后就跑去删除，而是 “以 Segment 为单位” 进行清理：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;当 Segment 中所有消息都超过了保留时间（或者日志大小达到限制）时, 这个 Segment 文件就可以被删除&lt;/li&gt;
+&lt;li&gt;Kafka 会周期性地检查每个分区日志中最早的 Segment 是否已经满足删除条件, 如果满足, 就把这个 Segment 文件（以及对应的 &lt;code&gt;.index&lt;/code&gt;、&lt;code&gt;.timeindex&lt;/code&gt; 文件）从磁盘上删除&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Consumer 读取消息的时候，只需要记录自己当前消费到哪个 offset 并提交, 即使这条消息还在 Kafka 的日志文件里, 它是否被删除是由上面提到的保留策略决定, 并不因为 Consumer 读到它就删除&lt;/p&gt;
+&lt;h3 id=&#34;34-为什么不浪费性能&#34;&gt;3.4. 为什么不浪费性能&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;**顺序写Append-only + 批量处理 Batch **：消费者不是一条条读，而是批量拉取消息（比如一次拉 1000 条），减少频繁交互, 最大化磁盘吞吐，减少网络请求、磁盘刷盘次数，提升写入与读取性能&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;零拷贝技术&lt;/strong&gt;：Kafka 使用操作系统的零拷贝（Zero Copy）机制，从磁盘到网络传输消息时不经过用户态，效率极高&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;操作系统 Page Cache&lt;/strong&gt;：通过操作系统缓存机制来提升文件的读写效率，减少实际磁盘 IO；配合零拷贝进一步提升传输性能&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;自动清理&lt;/strong&gt;：消息过期后，Kafka 后台线程自动删除老日志，不需要人工干预，也不需要消费者操心&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;什么是零拷贝（Zero Copy）？&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;通常情况下，当程序（比如 Kafka 的 Broker）需要把数据从磁盘发送到网络（比如给消费者），会涉及多次数据拷贝：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;操作系统从磁盘读取数据，拷贝到内核态的缓冲区（Kernel Buffer）&lt;/li&gt;
+&lt;li&gt;从内核态缓冲区拷贝到用户态的应用程序内存（比如 Kafka 的进程内存）&lt;/li&gt;
+&lt;li&gt;应用程序处理完后，再把数据从用户态内存拷贝回内核态的网络缓冲区&lt;/li&gt;
+&lt;li&gt;最后从内核态网络缓冲区发送到网卡，传给消费者&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这个过程涉及多次数据拷贝（通常至少 4 次），而且在用户态和内核态之间切换（上下文切换），会消耗 CPU 和时间，效率不高, &lt;strong&gt;零拷贝&lt;/strong&gt;的目标是：尽量减少这些拷贝步骤，尤其是用户态和内核态之间的来回拷贝。操作系统提供了一些技术（比如 &lt;code&gt;sendfile&lt;/code&gt; 系统调用），让数据直接从磁盘（或内核缓冲区）传输到网卡，而不需要经过应用程序的内存,&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;35-总结&#34;&gt;3.5. 总结&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;生产者（Producer）发消息 -&amp;gt; Broker 收到后，找到 &lt;code&gt;TopicA&lt;/code&gt; 的分区 &lt;code&gt;Partition0&lt;/code&gt; -&amp;gt; 将消息追加写入到对应的 &lt;code&gt;.log&lt;/code&gt; 文件（假设是 &lt;code&gt;/var/lib/kafka-logs/TopicA-0/00000000000000000000.log&lt;/code&gt;）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;消费者（Consumer）读消息 -&amp;gt; 只要知道该消息所在的分区和 offset，就可以去读取对应分区的日志文件中该 offset 的位置（当然中间是由 Kafka 协调完成的）, 读完后并不影响 Kafka 对消息的保留&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Kafka 以 segment 为单位做分段 -&amp;gt; 当文件大小或时间到了，就滚动新文件&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;日志清理 -&amp;gt; 当最早的一些 segment 的消息都过了保留时间（或超了预设总大小），则 Kafka 定时删除这些 segment 文件，消息也随之被物理删除&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;结果 -&amp;gt; 消费与删除解耦，Consumer 消费并不决定是否删除数据；真正的删除取决于保留策略和 Log 目录的定期清理&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;4-消费者负载均衡&#34;&gt;4. 消费者负载均衡&lt;/h2&gt;
+&lt;p&gt;消费者负载均衡是指在消息队列系统中，当有多个消费者需要处理消息时，系统会自动将工作（消息）合理分配给这些消费者，确保每个消费者都能分担一部分任务，而不是让某个消费者超载或闲置。简单来说，就是“大家一起干活，分工要公平”, 在 Kafka 中，这种负载均衡是通过 Consumer Group 和 Partition 来实现的,&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Consumer Group&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;每个消费者都隶属于一个“消费者组”（比如 &lt;code&gt;group.id=test_group&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;在同一时间, 一个分区只能被消费者组中的一个消费者实例消费, 因为一个分区只会被一个消费者处理, 所以同一个消息不会被多个消费者重复消费, 保证了消息处理的唯一性&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;分区分配&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;假设有个 Topic 有 4 个分区（P0, P1, P2, P3），消费者组里有 2 个消费者（C1, C2）&lt;/li&gt;
+&lt;li&gt;Kafka 会自动分配：比如 C1 处理 P0 和 P1，C2 处理 P2 和 P3&lt;/li&gt;
+&lt;li&gt;这种分配是动态的，由 Kafka 的 Coordinator，一个 Broker 来决定&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;并行处理&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;C1 和 C2 各自从自己的分区读取消息并处理，互不干扰，这样可以同时处理更多消息，提高效率&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;再平衡（Rebalance）&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;如果 C2 宕机了，Kafka 检测到消费者数量变化，会重新分配任务，让 C1 接管所有 4 个分区&lt;/li&gt;
+&lt;li&gt;如果新增一个消费者 C3，Kafka 也会重新分配，比如：C1 处理 P0，C2 处理 P1，C3 处理 P2 和 P3&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;消费者组通过分工, 让每个消费者处理一部分分区, 实现并行消费, 同时, Kafka 保证每个分区只分配给一个消费者, 避免重复处理&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;消费者比分区多怎么办？&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;如果消费者数量超过分区数, 多余的消费者会闲置&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Kafka 消费者组是如何实现负载均衡的?&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;说明消费者组通过 Coordinator（Kafka Broker 中的一个角色）管理分区分配, 当消费者加入或退出时触发再平衡, 再平衡时，所有消费者会暂停处理消息, 等分配完成再继续, 如果频繁发生, 可能会影响性能&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;如果消费者处理能力跟不上生产者怎么办？&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;可以增加消费者实例（提高并行度）, 优化消费者处理逻辑, 或者调整分区数（更多分区支持更多并发）, 还可以提到背压（Backpressure）问题, 必要时限流生产者&lt;/p&gt;
 </content>
     </item>
     
@@ -2330,17 +2527,17 @@ SREM blacklist:ips &amp;#34;10.0.0.5&amp;#34;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; product_id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1001&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;version&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
 &lt;h2 id=&#34;3-帖子表放点赞数-高并发点赞-redis--kafka&#34;&gt;3. 帖子表放点赞数 高并发点赞 Redis + Kafka&lt;/h2&gt;
-&lt;p&gt;首先看一下最开始的实现:&lt;/p&gt;
+&lt;p&gt;首先看一下易错的实现:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Transactional&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;likePost&lt;/span&gt;(Long postId, Long userId) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String likesUsersKey &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post:&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; postId &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;:likes_users&amp;#34;&lt;/span&gt;;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String likesCountKey &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post:&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; postId &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;:likes_count&amp;#34;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 1. 检查是否已点赞&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 1. 检查是否已点赞, 检查和更新操作分离&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (Boolean.&lt;span style=&#34;color:#a6e22e&#34;&gt;TRUE&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;equals&lt;/span&gt;(redisTemplate.&lt;span style=&#34;color:#a6e22e&#34;&gt;opsForSet&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;isMember&lt;/span&gt;(likesUsersKey, userId))) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 2. Redis 操作：添加用户ID到点赞集合 &amp;amp; 计数+1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 2. Redis 操作：添加用户 ID 到点赞集合 &amp;amp; 计数+1&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    redisTemplate.&lt;span style=&#34;color:#a6e22e&#34;&gt;opsForSet&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;add&lt;/span&gt;(likesUsersKey, userId);
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    redisTemplate.&lt;span style=&#34;color:#a6e22e&#34;&gt;opsForValue&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;increment&lt;/span&gt;(likesCountKey, 1);
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
@@ -2348,10 +2545,9 @@ SREM blacklist:ips &amp;#34;10.0.0.5&amp;#34;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String event &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;like,&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; postId &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;,&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; userId;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    kafkaTemplate.&lt;span style=&#34;color:#a6e22e&#34;&gt;send&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;like-topic&amp;#34;&lt;/span&gt;, event);
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以看出我们这里检查和更新操作进行了分离, 最开始我想的是 Redis 的 Set 集合会保证点赞的唯一性, 又因为 Redis 服务是一个单线程进程, 所以即使一个用户同时进行两次点赞, 得到的检查都是 未点赞, 然后都执行数据更新操作, 也不会出现数据不一致问题, 因为在:&lt;/p&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;初学者可能会认为Redis 服务是一个单线程进程, 所以即使一个用户同时进行两次点赞, 也不会出现数据不一致问题, 因为在:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;redisTemplate.&lt;span style=&#34;color:#a6e22e&#34;&gt;opsForSet&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;add&lt;/span&gt;(likesUsersKey, userId);
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这一步就会失败(Set 集合天然唯一性), 下面的自增1也不可能执行,&lt;/p&gt;
-&lt;p&gt;首先这么理解是不对的, &lt;code&gt;opsForSet().add(...);&lt;/code&gt; 底层调用的是 Redis 的 SADD 命令, 如果添加的成员已经存在于集合中，Redis 不会抛出异常，而是简单地&lt;strong&gt;忽略&lt;/strong&gt;该操作, 所以下面的代码(自增1)会继续执行, 那这就可能导致数据不一致问题:&lt;/p&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这一步就会失败(Set 集合天然唯一性), 自增1也不可能执行, 首先这么理解是不对的, &lt;code&gt;opsForSet().add(...);&lt;/code&gt; 底层调用的是 Redis 的 SADD 命令, 如果添加的成员已经存在于集合中, Redis 不会抛出异常，而是简单地&lt;strong&gt;忽略&lt;/strong&gt;该操作, 所以下面的代码(自增1)会继续执行, 那这就可能导致数据不一致问题:&lt;/p&gt;
 &lt;table&gt;
   &lt;thead&gt;
       &lt;tr&gt;
@@ -2400,8 +2596,7 @@ SREM blacklist:ips &amp;#34;10.0.0.5&amp;#34;
       &lt;/tr&gt;
   &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;p&gt;从最终结果看, Set 中只有一个用户 (888), 但 &lt;code&gt;likes_count&lt;/code&gt; 变成了 2, 这就是「点赞数比实际多」的不一致情况,&lt;/p&gt;
-&lt;p&gt;要解决这个问题可以利用 Redis 命令本身返回值并在代码中加以判断:&lt;/p&gt;
+&lt;p&gt;从最终结果看, Set 中只有一个用户 (888), 但 &lt;code&gt;likes_count&lt;/code&gt; 变成了 2, 这就是「点赞数比实际多」的不一致情况, 要解决这个问题可以利用 Redis 命令本身返回值并在代码中加以判断:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;likePost&lt;/span&gt;(Long postId, Long userId) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String likesUsersKey &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post:&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; postId &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;:likes_users&amp;#34;&lt;/span&gt;;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String likesCountKey &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;post:&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; postId &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;:likes_count&amp;#34;&lt;/span&gt;;
@@ -2417,7 +2612,7 @@ SREM blacklist:ips &amp;#34;10.0.0.5&amp;#34;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这样只有在成功加入到集合的时候, 才进行加1操作, 所以解决了上面的问题, 这样虽然可以解决, Redis 遇到多个操作如 检查 + 更新 这种场景的时候, 还是应该考虑&lt;strong&gt;利用分布式锁或者Lua脚本保证操作原子性&lt;/strong&gt;来解决问题,&lt;/p&gt;
-&lt;p&gt;除此之外, 可以注意到上面的代码我们省略了先行的 &lt;code&gt;isMember&lt;/code&gt; 判断, 因为我们的实现依赖 &lt;code&gt;SADD&lt;/code&gt; 的返回值来判定是否是第一次点赞, 已经是判断了,&lt;/p&gt;
+&lt;p&gt;除此之外, 可以注意到上面的代码我们省略了 &lt;code&gt;isMember&lt;/code&gt; 判断, 因为我们的实现依赖 &lt;code&gt;SADD&lt;/code&gt; 的返回值来判定是否是第一次点赞,&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;Spring 的 &lt;code&gt;@Transactional&lt;/code&gt; 注解默认只对使用了关系型数据库（如 JPA / JDBC）的事务生效。对于 RedisTemplate 的操作，除非你做了额外的配置（例如启用 Redis 事务支持，或使用了 Lua 脚本实现原子性操作），否则 Redis 并不会因为 Spring 事务回滚而自动回滚。换句话说，一般情况下，Redis 操作默认是「非事务性」的，Spring 事务并不会对它生效。&lt;/p&gt;
 &lt;/blockquote&gt;
