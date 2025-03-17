@@ -30,6 +30,7 @@ def backspaceCompare(s, t):
 ```
 
 ```python
+# 977. Squares of a Sorted Array
 def sortedSquares(self, nums: List[int]) -> List[int]:
     n = len(nums)
     ans = [0] * n  # 初始化 方便 index 访问
@@ -46,7 +47,33 @@ def sortedSquares(self, nums: List[int]) -> List[int]:
 ```
 
 ```python
- matrix = [[0] * n for _ in range(n)]  # 初始化 n×n 矩阵
+ matrix = [[0] * n for _ in range(m)]  # 初始化 n×m 矩阵
+```
+
+```python
+# 切片 反转整个字符串, 切片和操作不会改变原字符串, 
+# 它们会返回一个新字符串, 因为字符串 immutable
+s = "abcdefg"
+print(s[::-1])  # "gfedcba"
+
+s = "abcdefg"
+print(s[::-2])  # "geca"  -> 每隔2个字符倒序取
+
+s = "abcdefg"
+print(s[:4])   # "abcd"  -> 取前4个字符
+print(s[4:])   # "efg"   -> 从索引4开始取到结尾
+
+s = "abcdefg"
+k = 3
+result = s[k:] + s[:k]  # 交换前 k 个字符和剩余部分
+print(result)  # "defgabc"
+
+# 541. 反转字符串 II
+def reverseStr(self, s: str, k: int) -> str:
+    s = list(s)
+    for i in range(0, len(s), k * 2):
+        s[i: i + k] = s[i: i + k][::-1]  # 创建该切片的反转副本
+    return ''.join(s)
 ```
 
 ## 2. 滑动窗口+暴力遍历 - 209 长度最小的子数组
@@ -55,6 +82,7 @@ def sortedSquares(self, nums: List[int]) -> List[int]:
 
 ```python
 def minSubArrayLen(s: int, nums: List[int]) -> int:
+    # float('-inf') 负无穷大
     result = float('inf')
     sum_val = 0
     sub_length = 0
@@ -87,6 +115,8 @@ def minSubArrayLen(target, nums):
 
 ## 3. 字典的使用 - 904. Fruit Into Baskets
 
+> Find the longest continuous sub array that has exactly 2 distinct elements.
+
 找出下面代码的错误:
 
 ```python
@@ -97,7 +127,7 @@ def totalFruit(self, fruits):
     for j in range(len(fruits)):
         while len(basket) <= 2:
             basket[fruits[j]] += 1
-            max_len = (max_len, j - i + 1)
+            max_len = max(max_len, j - i + 1)
             j += 1
         i += 1
         del basket[fruits[i]]
@@ -105,53 +135,35 @@ def totalFruit(self, fruits):
 ```
 
 1. **while 循环应当是用来收缩窗口的 (改变初始位置 `i`),** 如果用来扩大窗口, 会导致 `j` 不仅在 `for` 循环里被迭代，还在 `while` 里手动增加了 `j`，这会导致以下问题：无限循环或 IndexError
-2. `max_len = (max_len, j - i + 1)` 是个容易犯错的地方, 忘了加 `max`
-3. 直接 `del basket[fruits[i]]` 并不对, 想象我们的窗口是 [2, 3, 2, 2] 完整的数组是 [2, 3, 2, 2, 5], 
-4. 此时篮子里的水果种类为 2, 所以我们让 `j` 往右移动继续扩大, 我们的滑动窗口变为 [2, 3, 2, 2, 5] , 此时篮子里有 3 类水果, 
-5. 所以缩小窗口, 移动 `i`, 此时窗口为 [3, 2, 2, 5] , 若此时直接执行 `del basket[fruits[i]]`, 也就是把类别 2 的水果全部倒出, 就不合理, 因为我们有 3 个类别 2 的水果, 我们要做的应该是让 basket[2] - 1, 即丢掉一个种类为 2 的水果, 只有当 basket[2] = 0 的时候才可以删除 种类为 2 的水果, 
+3. 直接 `del basket[fruits[i]]` 并不对, 想象我们的窗口是 [2, 3, 2, 2] 完整的数组是 [2, 3, 2, 2, 5], 此时篮子里的水果种类为 2, 所以我们让 `j` 往右移动继续扩大, 我们的滑动窗口变为 [2, 3, 2, 2, 5] , 此时篮子里有 3 类水果, 因此缩小窗口, 移动 `i`, 此时窗口为 [3, 2, 2, 5] , 若此时直接执行 `del basket[fruits[i]]`, 也就是把类别 2 的水果全部倒出, 就不合理, 因为我们有 3 个类别 2 的水果, 我们要做的应该是让 basket[2] - 1, 即丢掉一个种类为 2 的水果, 只有当 basket[2] = 0 的时候才可以删除 种类为 2 的水果
 6. 然后我们继续让 i 往右移动, 刚好种类为 3 的水果就一个, 我们直接丢掉, 然后删除, 这样 篮子里就剩两个种类为 2 的元素, 此时滑动窗口为 [2, 2, 5]
-7. 此时篮子里的水果种类为 2, 因此 这也是为什么, 我们需要 while 循环, 一直让 i 往右移动, 缩小窗口, 直到 篮子里的水果种类大于 2 为 false 的时候, 窗口右侧 j 才能继续移动, 
+7. 此时篮子里的水果种类为 2, 因此 这也是为什么, 我们需要 while 循环, 一直让 i 往右移动, 缩小窗口, 直到 篮子里的水果种类大于 2 为 false 的时候, 窗口右侧 j 才能继续移动
+
+使用 `Counter()` 会造成不必要的开销, 在进行 `basket[fruits[i]] -= 1` 这种操作的时候, 会执行一些检查, 并不是直接操作, 所以我们换为 defaultdict 速度更快一些:
 
 ```python
 def totalFruit(self, fruits):
-    i = 0
-    max_len = 0
-    basket = Counter()
-    for j in range(len(fruits)):
+    i = 0  # 滑动窗口的左边界
+    max_len = 0  # 记录最大长度
+    basket = {}  # 记录当前窗口内的水果种类和数量
+
+    for j in range(len(fruits)):  # 遍历水果数组，j 是右指针
+        basket[fruits[j]] = basket.get(fruits[j], 0) + 1  # 统计当前窗口内的水果数量
+
+        # 如果窗口内的水果种类超过 2 种，移动左指针 i 缩小窗口
         while len(basket) > 2:
-            basket[fruits[i]] -= 1
-            if basket[fruits[i]] == 0:
+            basket[fruits[i]] -= 1  # 减少左边水果的个数
+            if basket[fruits[i]] == 0:  # 如果某种水果数量变为 0，则从字典中删除
                 del basket[fruits[i]]
-            i += 1
-        basket[fruits[j]] += 1
+            i += 1  # 左指针右移，缩小窗口
+        
+        # 记录当前窗口的最大长度
         max_len = max(max_len, j - i + 1)
 
     return max_len
 ```
 
-此时**仍有一处逻辑错误**, 请找出, 另外使用 `Counter()` 会造成不必要的开销, 在进行 `basket[fruits[i]] -= 1` 这种操作的时候, 会执行一些检查, 并不是直接操作, 所以我们换为 defaultdict 速度更快一些, 
-
-```python
-from collections import defaultdict
-
-def totalFruit(self, fruits):
-    i = 0
-    max_len = 0
-    basket = defaultdict(int)
-
-    for j in range(len(fruits)):
-        basket[fruits[j]] += 1  # 添加水果, 直接的整数增减
-
-        while len(basket) > 2:
-            basket[fruits[i]] -= 1
-            if basket[fruits[i]] == 0:
-                del basket[fruits[i]]
-            i += 1  # 移动窗口
-
-        max_len = max(max_len, j - i + 1)
-
-    return max_len
-```
+虽然这题也是找连续子数组长度, 都使用双指针解决问题, 但与 209 长度最小的子数组 还是不同, 不同的地方是判断条件, 也就是收放窗口的条件, 之前的那道题的条件是判断 sum 总和和target的大小关系, 若 sum 更大, 则可以持续缩放窗口(while 循环条件), 而这道题的判断条件是数组中元素种类, 而且根据题意, 我们不可以简单的直接删除一个元素, 而是元素个数为0的时候才可以删除, 因此我们不仅需要元素种类, 而且需要知道该种类对应的元素个数, 因此只能使用哈希表, 不能使用比如 Set 这种一维数组, 
 
 ## 4. 循环嵌套 58 Length of Last Word
 
