@@ -13,8 +13,160 @@
       <pubDate>Sun, 16 Mar 2025 11:45:27 +0000</pubDate>
       
       <guid>https://blog.jiyi27.com/posts/distributed-system/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/002-kafka-rabbitmq/</guid>
-      <description></description>
-      <content></content>
+      <description>&lt;h2 id=&#34;1-rabbitmq&#34;&gt;1. RabbitMQ&lt;/h2&gt;
+&lt;h3 id=&#34;11-优缺点&#34;&gt;1.1. 优缺点&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;协议与消息模型灵活&lt;/strong&gt; RabbitMQ 基于 AMQP，可以实现多种路由策略（Direct、Fanout、Topic、Headers 等），在工作队列、发布订阅、RPC 等模式下都有成熟支持, 对编程语言、协议的兼容性好（STOMP、MQTT、AMQP 等）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;低延迟&lt;/strong&gt; 对于单条消息的快速投递、即时消费，RabbitMQ 的延迟通常可以控制在微秒到毫秒级，特别适合传统应用内的即时通信或实时响应业务&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;吞吐量较难达到 Kafka 的级别&lt;/strong&gt; RabbitMQ 也支持集群，但对于大规模数据流场景，其扩展性和稳定性往往不及 Kafka（轻量级队列系统与大数据流平台设计初衷不同）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;消息持久化开销&lt;/strong&gt; 若需要实现高可用持久化（开启镜像队列、确认机制、磁盘持久化等），在吞吐量和存储成本上会有一定牺牲&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;生态对于实时计算弱&lt;/strong&gt; 相比 Kafka 自带或社区中完善的数据处理组件，RabbitMQ 主要聚焦在消息路由和队列本身，对大数据实时处理场景支持有限&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;AMQP Advanced Message Queuing Protocol, 是一种开放标准的应用层协议, AMQP 的核心目标是实现跨平台、跨语言的互操作性, AMQP 的主要组件包括：&lt;/p&gt;
+&lt;p&gt;交换机（Exchange）：负责接收生产者发送的消息，并根据路由规则将消息分发到合适的队列&lt;/p&gt;
+&lt;p&gt;队列（Queue）：存储消息的地方，消费者从队列中获取消息&lt;/p&gt;
+&lt;p&gt;绑定（Binding）：交换机和队列之间的关联，定义了消息的路由规则&lt;/p&gt;
+&lt;p&gt;路由键（Routing Key）：用于匹配消息和队列的标识&lt;/p&gt;
+&lt;p&gt;它支持多种工作模式, 简单模式, 工作队列模式, 发布/订阅模式, 路由模式等&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;12-使用场景&#34;&gt;1.2. 使用场景&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;传统应用中的异步处理&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;比如 Web 后端业务系统，需要&lt;strong&gt;快速返回请求&lt;/strong&gt;，将后续的处理放到消息队列里异步执行&lt;/li&gt;
+&lt;li&gt;场景：下单后异步扣库存、发送通知邮件、短信等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;实时通信或低延迟请求&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;需要消息在亚毫秒到毫秒级延迟内到达消费者进行处理&lt;/li&gt;
+&lt;li&gt;场景：实时消息推送、微服务 RPC、在线聊天系统等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;多种路由策略&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;RabbitMQ 丰富的交换机（Exchange）类型可以满足&lt;strong&gt;复杂业务路由&lt;/strong&gt;需求：如按不同 RoutingKey 分发给不同队列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2-kafka&#34;&gt;2. Kafka&lt;/h2&gt;
+&lt;h3 id=&#34;21-优缺点&#34;&gt;2.1. 优缺点&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;高吞吐量和可扩展性&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;核心功能是面向高吞吐量、可扩展性以及持久化的日志系统&lt;/li&gt;
+&lt;li&gt;Kafka 通过 Partition 进行横向扩展，可支持海量消息的高并发写入与读取&lt;/li&gt;
+&lt;li&gt;整体架构设计适合大规模分布式部署&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;持久化与顺序读取&lt;/strong&gt;&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-rabbitmq&#34;&gt;1. RabbitMQ&lt;/h2&gt;
+&lt;h3 id=&#34;11-优缺点&#34;&gt;1.1. 优缺点&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;协议与消息模型灵活&lt;/strong&gt; RabbitMQ 基于 AMQP，可以实现多种路由策略（Direct、Fanout、Topic、Headers 等），在工作队列、发布订阅、RPC 等模式下都有成熟支持, 对编程语言、协议的兼容性好（STOMP、MQTT、AMQP 等）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;低延迟&lt;/strong&gt; 对于单条消息的快速投递、即时消费，RabbitMQ 的延迟通常可以控制在微秒到毫秒级，特别适合传统应用内的即时通信或实时响应业务&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;吞吐量较难达到 Kafka 的级别&lt;/strong&gt; RabbitMQ 也支持集群，但对于大规模数据流场景，其扩展性和稳定性往往不及 Kafka（轻量级队列系统与大数据流平台设计初衷不同）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;消息持久化开销&lt;/strong&gt; 若需要实现高可用持久化（开启镜像队列、确认机制、磁盘持久化等），在吞吐量和存储成本上会有一定牺牲&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;生态对于实时计算弱&lt;/strong&gt; 相比 Kafka 自带或社区中完善的数据处理组件，RabbitMQ 主要聚焦在消息路由和队列本身，对大数据实时处理场景支持有限&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;AMQP Advanced Message Queuing Protocol, 是一种开放标准的应用层协议, AMQP 的核心目标是实现跨平台、跨语言的互操作性, AMQP 的主要组件包括：&lt;/p&gt;
+&lt;p&gt;交换机（Exchange）：负责接收生产者发送的消息，并根据路由规则将消息分发到合适的队列&lt;/p&gt;
+&lt;p&gt;队列（Queue）：存储消息的地方，消费者从队列中获取消息&lt;/p&gt;
+&lt;p&gt;绑定（Binding）：交换机和队列之间的关联，定义了消息的路由规则&lt;/p&gt;
+&lt;p&gt;路由键（Routing Key）：用于匹配消息和队列的标识&lt;/p&gt;
+&lt;p&gt;它支持多种工作模式, 简单模式, 工作队列模式, 发布/订阅模式, 路由模式等&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;12-使用场景&#34;&gt;1.2. 使用场景&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;传统应用中的异步处理&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;比如 Web 后端业务系统，需要&lt;strong&gt;快速返回请求&lt;/strong&gt;，将后续的处理放到消息队列里异步执行&lt;/li&gt;
+&lt;li&gt;场景：下单后异步扣库存、发送通知邮件、短信等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;实时通信或低延迟请求&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;需要消息在亚毫秒到毫秒级延迟内到达消费者进行处理&lt;/li&gt;
+&lt;li&gt;场景：实时消息推送、微服务 RPC、在线聊天系统等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;多种路由策略&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;RabbitMQ 丰富的交换机（Exchange）类型可以满足&lt;strong&gt;复杂业务路由&lt;/strong&gt;需求：如按不同 RoutingKey 分发给不同队列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2-kafka&#34;&gt;2. Kafka&lt;/h2&gt;
+&lt;h3 id=&#34;21-优缺点&#34;&gt;2.1. 优缺点&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;高吞吐量和可扩展性&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;核心功能是面向高吞吐量、可扩展性以及持久化的日志系统&lt;/li&gt;
+&lt;li&gt;Kafka 通过 Partition 进行横向扩展，可支持海量消息的高并发写入与读取&lt;/li&gt;
+&lt;li&gt;整体架构设计适合大规模分布式部署&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;持久化与顺序读取&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Kafka 中所有消息被持久化到磁盘，默认设置下也会进行副本（Replication）存储，故障恢复快、可靠性强&lt;/li&gt;
+&lt;li&gt;消费端通过 offset（偏移量）来定位消息&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;完善的生态&lt;/strong&gt; Kafka Streams、ksqlDB、Connect 等组件支持实时计算、数据管道构建，便于与大数据体系对接（例如 Spark、Flink 等）&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;消息投递不是严格的实时&lt;/strong&gt; Kafka 侧重批量、流式吞吐量，延迟（Latency）相对于某些传统消息队列来说会稍高, 通常在毫秒到秒级，适合高吞吐场景&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;消息模型相对简单&lt;/strong&gt; Kafka 更强调分区、顺序的日志模型，在交换机/路由等维度的功能相比 RabbitMQ 等 AMQP 消息队列要简单一些&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;相对复杂的运维与管理&lt;/strong&gt; 集群依赖 ZooKeeper，对运维人员有一定要求&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;为什么 RabbitMQ 低延迟, 吞吐量却没 Kafka 高?&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;吞吐量可以简单理解为每秒可以稳定处理 10 万条消息, 这就是高吞吐量, 延迟是指一条消息从 Producer 发送, 到 Consumer 收到并确认, 花了 5ms, 这就是“延迟”, 延迟更低意味着对单条消息来说, 响应更快, 低延迟通常意味着对每条消息采取“及时处理”的方式, 减少批量, 高吞吐量往往依赖批量发送、批量压缩、以及并行处理等技术手段&lt;/p&gt;
+&lt;p&gt;RabbitMQ 可能对&lt;strong&gt;单个消息进行直接的推送&lt;/strong&gt;模式，没什么额外开销，特别是如果是内存队列或者轻量持久化，所以其单条消息可在很短时间内被消费&lt;/p&gt;
+&lt;p&gt;Kafka 在架构上着重于&lt;strong&gt;分区扩展&lt;/strong&gt;、顺序写磁盘、&lt;strong&gt;批量 I/O&lt;/strong&gt;，并且往往部署在多 Broker 的&lt;strong&gt;分布式集群&lt;/strong&gt;上，能轻松承载数万至数十万甚至更高 TPS 的数据写入和消费, 对单条消息而言，可能有毫秒到秒级的等待时间，但在单位时间内可以处理非常庞大的消息总量（高吞吐量）&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;22-使用场景&#34;&gt;2.2. 使用场景&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;大数据、日志收集&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;大量日志、事件实时进入 Kafka，再对接下游 Spark、Flink、Hadoop 等进行数据分析、存储或流式处理&lt;/li&gt;
+&lt;li&gt;场景：电商订单流水、用户行为日志收集等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;实时流处理与监控&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;配合 Kafka Streams、ksqlDB 或第三方流处理框架做实时数据分析、监控报警&lt;/li&gt;
+&lt;li&gt;场景：金融实时风控、监控数据聚合等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;事件驱动架构&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;微服务之间通过 Kafka 进行解耦，可实现高吞吐的异步通信与事件广播&lt;/li&gt;
+&lt;li&gt;场景：大型互联网应用中，后端微服务之间的异步处理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-总结&#34;&gt;3. 总结&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;高吞吐量 + 大规模数据流 + 实时/离线分析场景 → Kafka&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;如果系统需要&lt;strong&gt;承受海量数据&lt;/strong&gt;的写入与消费（几十万甚至几百万级别的 TPS），并且需要对接大数据生态做后续处理，那么 Kafka 更合适&lt;/li&gt;
+&lt;li&gt;Kafka 提供 Partition 级别的横向扩展和日志存储模型，对历史消息也能回溯&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;轻量级任务队列 + 多种路由策略 + 低延迟场景 → RabbitMQ&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;如果你需要&lt;strong&gt;传统消息队列&lt;/strong&gt;（AMQP）模型，以及在微服务中实现更灵活的&lt;strong&gt;路由&lt;/strong&gt;或&lt;strong&gt;通信&lt;/strong&gt;，RabbitMQ 的实现成本更低、生态成熟&lt;/li&gt;
+&lt;li&gt;适合相对&lt;strong&gt;中等规模&lt;/strong&gt;的消息量，对延迟敏感性较高的系统&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;内部服务间的简单解耦&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;小规模场景下，RabbitMQ 足以胜任；大规模或预期未来数据量剧增，则可考虑一次性上 Kafka 以免后期大量迁移&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;从业务需求层面考虑：&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;是否需要回放消息？&lt;/strong&gt; 如果经常需要回放/重放，Kafka 的分区存储和 offset 机制十分方便&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;是否需要强大的流处理生态？&lt;/strong&gt; 如果需要针对实时数据做流计算和分析，Kafka 生态支持更完善&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;是否需要复杂路由规则？&lt;/strong&gt; RabbitMQ 的交换机模型在复杂路由上可能更具灵活性&lt;/li&gt;
+&lt;/ul&gt;
+</content>
     </item>
     
     <item>
@@ -687,6 +839,233 @@ EXEC
     </item>
     
     <item>
+      <title>Spring Cloud 核心组件和配置</title>
+      <link>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/006-spring-cloud-building/</link>
+      <pubDate>Fri, 07 Mar 2025 08:28:52 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/006-spring-cloud-building/</guid>
+      <description>&lt;h2 id=&#34;1-两个配置文件&#34;&gt;1. 两个配置文件&lt;/h2&gt;
+&lt;p&gt;在 Spring Cloud 项目中, 配置文件分为两类:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;bootstrap.yml&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;作用&lt;/strong&gt;：用于指定 Spring Cloud Config Server 的地址, 帮助服务从远程拉取具体配置&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;存放位置&lt;/strong&gt;：每个服务的本地项目中（src/main/resources 目录下）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;application.yml&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;作用&lt;/strong&gt;：包含服务的具体配置信息, 如端口、Eureka 注册地址、数据库连接等&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;存放位置&lt;/strong&gt;：集中存储在 GitHub 仓库中, 由 Config Server 管理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;一般 Config Server 只用配置 &lt;code&gt;application.yml&lt;/code&gt; 文件, 指定监听端口, 不用向 Eureka 注册, 因为它属于一个独立运行的服务, 负责为其他服务如用户认证, 订单服务, Eureka Server, Gateway 等提供配置文件,&lt;/p&gt;
+&lt;p&gt;所以 Config Server 的配置文件  &lt;code&gt;application.yml&lt;/code&gt;  内容大致如下, 不需要 &lt;code&gt;bootstrap.yml&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;application&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;skymates-config-server&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;cloud&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;config&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;git&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;https://github.com/jiyi27/skymates.git&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;search-paths&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;configs&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;default-label&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;master&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;port&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;8888&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;其他微服务&lt;strong&gt;只需要在本地配置 &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件, 用于指定 Config Server 服务器位置 和 自己需要的配置文件名字&lt;/strong&gt;, 这也是为什么 Config Server 不需要向 Eureka Server 注册的原因, 因为其他微服务已经知道他的位置, 每个微服务直接从 Config Server 动态拉取自己的配置文件, Eureka Server 的  &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件内容:&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-两个配置文件&#34;&gt;1. 两个配置文件&lt;/h2&gt;
+&lt;p&gt;在 Spring Cloud 项目中, 配置文件分为两类:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;bootstrap.yml&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;作用&lt;/strong&gt;：用于指定 Spring Cloud Config Server 的地址, 帮助服务从远程拉取具体配置&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;存放位置&lt;/strong&gt;：每个服务的本地项目中（src/main/resources 目录下）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;application.yml&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;作用&lt;/strong&gt;：包含服务的具体配置信息, 如端口、Eureka 注册地址、数据库连接等&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;存放位置&lt;/strong&gt;：集中存储在 GitHub 仓库中, 由 Config Server 管理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;一般 Config Server 只用配置 &lt;code&gt;application.yml&lt;/code&gt; 文件, 指定监听端口, 不用向 Eureka 注册, 因为它属于一个独立运行的服务, 负责为其他服务如用户认证, 订单服务, Eureka Server, Gateway 等提供配置文件,&lt;/p&gt;
+&lt;p&gt;所以 Config Server 的配置文件  &lt;code&gt;application.yml&lt;/code&gt;  内容大致如下, 不需要 &lt;code&gt;bootstrap.yml&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;application&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;skymates-config-server&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;cloud&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;config&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;git&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;https://github.com/jiyi27/skymates.git&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;search-paths&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;configs&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;default-label&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;master&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;port&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;8888&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;其他微服务&lt;strong&gt;只需要在本地配置 &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件, 用于指定 Config Server 服务器位置 和 自己需要的配置文件名字&lt;/strong&gt;, 这也是为什么 Config Server 不需要向 Eureka Server 注册的原因, 因为其他微服务已经知道他的位置, 每个微服务直接从 Config Server 动态拉取自己的配置文件, Eureka Server 的  &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;cloud&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;config&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;http://localhost:8888&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# 当你配置了 name: eureka-server 时，Config Server 会尝试加载类似于 eureka-server.yml、&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# eureka-server.properties 或其他符合命名规则的配置文件&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;eureka-server&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;profile&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;default&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;label&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;master&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Gateway  &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;cloud&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;config&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;http://localhost:8888&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# 指定 name: gateway 时, 当在 Config Server 加载配置文件的时候&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# Config Server 尝试加载类似于 gateway.yml、gateway.properties 或其他符合命名规则的配置文件&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;gateway&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;profile&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;default&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;label&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;master&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;User-Service  &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;cloud&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;config&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;http://localhost:8888&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# 指定 name: content-service 时, 当在 Config Server 加载配置文件的时候&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# Config Server 尝试加载类似于 content-service.yml、content-service.properties 或其他符合命名规则的配置文件&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;content-service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;profile&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;default&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;label&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;master&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;然后我们需要单独为这些服务创建具体的配置文件,  指定如端口、Eureka 注册地址、数据库连接, 把这些文件放到 &lt;code&gt;github.com/jiyi27/skymates/configs&lt;/code&gt; 目录下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ls configs
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;eureka-server.yml   gateway.yml         user-service.yml
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;其中 &lt;code&gt;eureka-server.yml&lt;/code&gt; 内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;application&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;skymates-eureka-server&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;port&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;8761&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;eureka&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;client&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;register-with-eureka&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;fetch-registry&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 这个 URL 不是直接在浏览器访问的页面, 直接访问地址是 http://localhost:8761&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 它是一个 RESTful API 端点, 返回的数据通常是 JSON 或 XML 格式, 供其它微服务客户端解析服务信息&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;service-url&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;defaultZone&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;http://localhost:8761/eureka/&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;gateway.yml&lt;/code&gt; 内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;application&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;skymates-gateway&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;cloud&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;gateway&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;routes&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        - &lt;span style=&#34;color:#f92672&#34;&gt;id&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;user-service-route&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;lb://skymates-user-service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;predicates&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            - &lt;span style=&#34;color:#ae81ff&#34;&gt;Path=/user/**&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;filters&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            - &lt;span style=&#34;color:#ae81ff&#34;&gt;StripPrefix=1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        - &lt;span style=&#34;color:#f92672&#34;&gt;id&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;content-service-route&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;lb://skymates-content-service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;predicates&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            - &lt;span style=&#34;color:#ae81ff&#34;&gt;Path=/content/**&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;filters&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            - &lt;span style=&#34;color:#ae81ff&#34;&gt;StripPrefix=1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;port&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;8083&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;eureka&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;client&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;service-url&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;defaultZone&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;http://localhost:8761/eureka/&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;user-service.yml&lt;/code&gt; 内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;application&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 定义当前应用程序的名, 会被发送到 Eureka 服务器, 作为服务注册时的服务名&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 这样 Eureka 就知道了有一个 skymates-user-service 服务, ip地址为 xxx, 服务端口为server.port&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# Gateway 就可以进行负载均衡路由转发: uri: lb://skymates-user-service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;skymates-user-service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;datasource&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;url&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;jdbc:mysql://localhost:3306/skymates?serverTimezone=UTC&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;username&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;root&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;password&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;778899&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;driver-class-name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;com.mysql.cj.jdbc.Driver&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;jpa&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;database-platform&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;org.hibernate.dialect.MySQL8Dialect&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;hibernate&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;ddl-auto&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;update&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;jwt&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;secret&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;MY_JWT_SECRET_KEY_EXAMPLE_123456&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;expiration&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;86400000&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;port&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;8081&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;eureka&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;client&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;service-url&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;defaultZone&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;http://localhost:8761/eureka/&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;注意一般有  &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件的服务 需要添加依赖:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- 注册 Eureka --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.cloud&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-cloud-starter-netflix-eureka-client&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- 从 Config Server 拉配置 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.cloud&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-cloud-starter-config&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- 解析 bootstrap.yml 配置文件 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.cloud&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-cloud-starter-bootstrap&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果依赖 spring-cloud-starter-netflix-eureka-client 没有加, 尽管你在 &lt;code&gt;application.yml&lt;/code&gt; 中写了 &lt;code&gt;eureka.client.service-url.defaultZone&lt;/code&gt;, 也不会真的注册&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-核心组件-启动步骤&#34;&gt;2. 核心组件 启动步骤&lt;/h2&gt;
+&lt;h3 id=&#34;21-启动步骤&#34;&gt;2.1. 启动步骤&lt;/h3&gt;
+&lt;p&gt;根据以上配置, 我们可以按照下面顺序启动各个微服务:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;启动 Config Server&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;运行 skymates-config-server 项目&lt;/li&gt;
+&lt;li&gt;Config Server 从 GitHub 仓库的 configs 目录拉取所有配置文件，监听端口 8888&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;启动 Eureka Server&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;运行 skymates-eureka-server 项目&lt;/li&gt;
+&lt;li&gt;从 Config Server 拉取 eureka-server.yml，启动服务发现功能，监听端口 8761&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;启动 Gateway&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;运行 skymates-gateway 项目&lt;/li&gt;
+&lt;li&gt;从 Config Server 拉取 gateway.yml，注册到 Eureka Server，监听端口 8080&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;启动 User Service&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;运行 skymates-user-service 项目&lt;/li&gt;
+&lt;li&gt;从 Config Server 拉取 user-service.yml，注册到 Eureka Server，监听端口 8081&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;22-gateway-运行过程&#34;&gt;2.2. Gateway 运行过程&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Gateway 启动&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;加载本地 &lt;code&gt;bootstrap.yml&lt;/code&gt;，读取 Config Server 地址 http://localhost:8888&lt;/li&gt;
+&lt;li&gt;向 Config Server 请求 &lt;code&gt;gateway.yml&lt;/code&gt;（基于 &lt;code&gt;bootstrap.yml&lt;/code&gt; 中的 &lt;code&gt;name: gateway&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;Config Server 从 GitHub 仓库的 configs 目录返回 &lt;code&gt;gateway.yml&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Gateway 加载 &lt;code&gt;gateway.yml&lt;/code&gt;, 获取路由规则和 Eureka 注册地址 http://localhost:8761/eureka/&lt;/li&gt;
+&lt;li&gt;Gateway 向 Eureka Server 注册自己, 服务名为 skymates-gateway (基于 &lt;code&gt;gateway.yml&lt;/code&gt; 中的 &lt;code&gt;name: skymates-gateway&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;Gateway 开始监听端口 8080，准备接收请求&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;请求转发&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;客户端发送请求 http://localhost:8080/user/profile&lt;/li&gt;
+&lt;li&gt;Gateway 根据  &lt;code&gt;gateway.yml&lt;/code&gt; 中定义的路由规则&lt;code&gt;Path=/user/**&lt;/code&gt; 匹配到 user-service-route&lt;/li&gt;
+&lt;li&gt;使用 lb://skymates-user-service, 从 Eureka Server 获取 User Service 的实例地址（例如 http://localhost:8081）&lt;/li&gt;
+&lt;li&gt;Gateway 将请求转发到 http://localhost:8081/profile, 完成路由&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;你可能会疑惑, Eureka Server 是怎么知道每个服务的名字的, 其实每个服务的配置文件中都有自己的名字, 当它们向 Eureka Server 注册的时候, Eureka Server 会根据他们提供的名字并解析出他们的 host ip 地址和对方提供的端口号, 比如 &lt;code&gt;user-service.yml&lt;/code&gt; 有相关定义:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;application&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;skymates-user-service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
       <title>数据库死锁以及排查</title>
       <link>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/003-%E6%AD%BB%E9%94%81/</link>
       <pubDate>Thu, 06 Mar 2025 12:56:19 +0000</pubDate>
@@ -1112,10 +1491,10 @@ Record lock, heap no 3 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
     
     <item>
       <title>Spring MVC, Spring Boot, Spring Cloud 区别和联系</title>
-      <link>https://blog.jiyi27.com/posts/java/backend/004-springboot-vs-spring/</link>
+      <link>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/005-spring-mvc-boot-cloud/</link>
       <pubDate>Tue, 04 Mar 2025 08:32:22 +0000</pubDate>
       
-      <guid>https://blog.jiyi27.com/posts/java/backend/004-springboot-vs-spring/</guid>
+      <guid>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/005-spring-mvc-boot-cloud/</guid>
       <description>&lt;h2 id=&#34;1-spring-boot-依赖管理&#34;&gt;1. Spring Boot 依赖管理&lt;/h2&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;parent&amp;gt;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
@@ -1247,164 +1626,9 @@ Record lock, heap no 3 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
 &lt;p&gt;Spring Boot 管理自己的核心组件（Spring Security、Spring Data、Spring Web 等
 Spring Boot 不管理 Spring Cloud 相关组件（Eureka、Feign、Gateway、Sleuth 等&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&#34;3-spring-mvc-项目搭建&#34;&gt;3. Spring MVC 项目搭建&lt;/h2&gt;
-&lt;p&gt;看下 Spring Boot 出现前是如何搭建 Spring MVC 项目的, Spring MVC 项目需要引入 &lt;code&gt;spring-webmvc&lt;/code&gt; 模块的依赖, 最终下面是我们配置最简单的 &lt;code&gt;pom.xml&lt;/code&gt; 内容:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;?xml version=&amp;#34;1.0&amp;#34; encoding=&amp;#34;UTF-8&amp;#34;?&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;project&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://maven.apache.org/POM/4.0.0&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns:xsi=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://www.w3.org/2001/XMLSchema-instance&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         &lt;span style=&#34;color:#a6e22e&#34;&gt;xsi:schemaLocation=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;modelVersion&amp;gt;&lt;/span&gt;4.0.0&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/modelVersion&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.zzuhkp&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;mvc-demo&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;1.0-SNAPSHOT&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;packaging&amp;gt;&lt;/span&gt;war&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/packaging&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;properties&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;project.build.sourceEncoding&amp;gt;&lt;/span&gt;UTF-8&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/project.build.sourceEncoding&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;maven.compiler.source&amp;gt;&lt;/span&gt;1.8&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/maven.compiler.source&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;maven.compiler.target&amp;gt;&lt;/span&gt;1.8&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/maven.compiler.target&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/properties&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependencies&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-webmvc&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;5.2.6.RELEASE&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;javax.servlet&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;javax.servlet-api&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;4.0.1&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;provided&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependencies&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/project&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;除了引入 &lt;code&gt;spring-webmvc&lt;/code&gt; 的依赖, 由于我们还可能会使用到一些 &lt;code&gt;Servlet&lt;/code&gt; 规范中的一些类, 我们还引入了 &lt;code&gt;Servlet&lt;/code&gt; 的依赖, 而依赖引入只是万里长征的第一步, 由于 Java Web 开发中的接口都是 Servlet 提供的, 我们还需要配置 &lt;code&gt;spring-webmvc&lt;/code&gt; 模块提供的 Servlet 接口的实现 &lt;code&gt;DispatcherServlet&lt;/code&gt;, 这又是什么东西？当时作为新手我的也是一脸懵逼, 配置时我还得找到这个&lt;strong&gt;类的全限定名&lt;/strong&gt;, 这对于新手来说也太不友好了, 又是一波复制粘贴, 最终配置出来下面的&lt;code&gt; web.xml&lt;/code&gt; 文件:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;?xml version=&amp;#34;1.0&amp;#34; encoding=&amp;#34;UTF-8&amp;#34;?&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;web-app&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://xmlns.jcp.org/xml/ns/javaee&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns:xsi=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://www.w3.org/2001/XMLSchema-instance&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         &lt;span style=&#34;color:#a6e22e&#34;&gt;xsi:schemaLocation=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://xmlns.jcp.org/xml/ns/javaee
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;          http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         &lt;span style=&#34;color:#a6e22e&#34;&gt;version=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;4.0&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;servlet&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;servlet-name&amp;gt;&lt;/span&gt;dispatcher&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/servlet-name&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;servlet-class&amp;gt;&lt;/span&gt;org.springframework.web.servlet.DispatcherServlet&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/servlet-class&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/servlet&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;servlet-mapping&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;servlet-name&amp;gt;&lt;/span&gt;dispatcher&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/servlet-name&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;url-pattern&amp;gt;&lt;/span&gt;/&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/url-pattern&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/servlet-mapping&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/web-app&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;到这里就完了吗？显然不是, 我们还没有为 Spring 配置 bean, 对于 Spring MVC 来说, 我们需要把 Spring 的配置文件放在&lt;code&gt; /WEB-INF/${servlet-name}-servlet.xml&lt;/code&gt; 中，其中 &lt;code&gt;${servlet-name}&lt;/code&gt; 为 Servelt 的名称, 我们为 &lt;code&gt;DispatcherServlet&lt;/code&gt; 取的名字是 dispatcher, 因此我们需要创建 &lt;code&gt;/WEB-INF/dispatcher-servlet.xml &lt;/code&gt;作为配置文件, 这对新手又是一个挑战, 还得记住命名规范, 那能不能自己指定配置文件位置呢？可以, 配置一个 Servlet 的初始化参数 configurationLocation 指定配置文件, 好吧, 还得记住参数名称, 真是令人崩溃, 最后看下配置文件的内容吧:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;?xml version=&amp;#34;1.0&amp;#34; encoding=&amp;#34;UTF-8&amp;#34;?&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;beans&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://www.springframework.org/schema/beans&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns:xsi=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://www.w3.org/2001/XMLSchema-instance&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns:mvc=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://www.springframework.org/schema/mvc&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns:context=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://www.springframework.org/schema/context&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       &lt;span style=&#34;color:#a6e22e&#34;&gt;xsi:schemaLocation=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;bean&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;class=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;org.springframework.web.servlet.view.InternalResourceViewResolver&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;property&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;name=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;prefix&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;value=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/WEB-INF/page&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;property&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;name=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;suffix&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;value=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;.jsp&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/bean&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;context:component-scan&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;base-package=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;com.zzuhkp.mvc&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;/&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/beans&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;最初的 Java Web 开发可没有前后端分离，为了根据视图名称查找到对应的 JSP 文件，我们配置一个 InternalResourceViewResolver 类型的视图解析器 bean，这是 Spring MVC 特有的一个 bean，又是一个新概念，视图解析器又是什么？此外，我们为了启用注解支持，我们添加了 context:compent-scan 标签指定了要 Spring 要扫描的包。bean 的配置还好，最要名的是 xml 配置的命名空间，就是最上面那一坨，除了复制粘贴谁能自己写出来呢？&lt;/p&gt;
-&lt;p&gt;写到这里，我已经近乎崩溃了，简直又经历了一次那段痛苦的历史。来个 Controller 测试下请求是否正常。&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Controller&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;HelloController&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@GetMapping&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/hello&amp;#34;&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; String &lt;span style=&#34;color:#a6e22e&#34;&gt;hello&lt;/span&gt;() {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/hello&amp;#34;&lt;/span&gt;;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Controller 方法 String 类型的返回值将作为视图名，这里我们指定的是 /hello，也就是说有一个 /hello 对应的 jsp 文件，当请求 /hello 时我们将这个文件的内容返回给前端，结合我们前面配置的 InternalResourceViewResolver，它的位置应该是 /WEB-INF/page/hello.jsp，我们定义的文件内容如下:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;%&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;@&lt;/span&gt; page contentType&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;text/html;charset=UTF-8&amp;#34;&lt;/span&gt; language&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;java&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;%&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;html&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;head&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;title&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;hello&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;title&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;head&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;body&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Hello,Spring MVC
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;body&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;html&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;最后整个项目结构如下:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── pom.xml
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;└── src
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    └── main
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        ├── java
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        │   └── com
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        │       └── zzuhkp
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        │           └── mvc
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        │               └── HelloController.java
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        └── webapp
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            ├── WEB-INF
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            │   ├── dispatcher-servlet.xml
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            │   └── web.xml
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            └── page
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                └── hello.jsp
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;原文: &lt;a href=&#34;https://blog.csdn.net/zzuhkp/article/details/123518033&#34;&gt;https://blog.csdn.net/zzuhkp/article/details/123518033&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&#34;4-基于-spring-boot-的-spring-mvc-项目搭建&#34;&gt;4. 基于 Spring Boot 的 Spring MVC 项目搭建&lt;/h2&gt;
-&lt;p&gt;总结基于 Spring Framework 的 Spring MVC 项目搭建有哪些问题呢？&lt;/p&gt;
-&lt;p&gt;首先概念过多，新人需要关注 spring-webmvc 中的众多概念，如 DispatcherServlet、视图解析器 InternalResourceViewResolver。其次配置过多，新人需要关注配置文件命名规范、xml 配置文件命名空间 等。&lt;/p&gt;
-&lt;p&gt;为了解决解决上述的问题，Spring Boot 遵循约定大于配置的开发原则，大大简化的 Spring 的配置。首先进行自动化配置，只要引入相关依赖就会自动进行一些默认的配置，其次如果默认的配置不满足要求还可以自定义配置覆盖默认的配置，大大降低了 Spring 应用上手的门槛。&lt;/p&gt;
-&lt;p&gt;将上述示例改造成基于 Spring Boot 的 Spring MVC 项目，首先看下 pom 文件内容。&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;?xml version=&amp;#34;1.0&amp;#34; encoding=&amp;#34;UTF-8&amp;#34;?&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;project&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://maven.apache.org/POM/4.0.0&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns:xsi=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://www.w3.org/2001/XMLSchema-instance&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         &lt;span style=&#34;color:#a6e22e&#34;&gt;xsi:schemaLocation=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;modelVersion&amp;gt;&lt;/span&gt;4.0.0&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/modelVersion&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;parent&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-parent&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;2.2.7.RELEASE&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/parent&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.zzuhkp&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;mvc-demo&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;1.0-SNAPSHOT&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;packaging&amp;gt;&lt;/span&gt;jar&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/packaging&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;properties&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;project.build.sourceEncoding&amp;gt;&lt;/span&gt;UTF-8&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/project.build.sourceEncoding&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;maven.compiler.source&amp;gt;&lt;/span&gt;1.8&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/maven.compiler.source&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;maven.compiler.target&amp;gt;&lt;/span&gt;1.8&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/maven.compiler.target&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/properties&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependencies&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-web&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.apache.tomcat.embed&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;tomcat-embed-jasper&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependencies&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/project&amp;gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;和上述基于 Spring Framwork 的 pom 文件相比，主要有3处不同:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Spring Boot 通过 spring-boot-starter-web 起步依赖，一次性引入所有 Web 开发相关的库（包括 Spring MVC、嵌入式 Tomcat 等），并通过 Spring Boot 的 BOM（Bill of Materials）自动管理版本兼容性&lt;/li&gt;
-&lt;li&gt;在传统的 Spring MVC 项目中，你需要创建一个 web.xml 文件（Web 应用的部署描述文件），告诉 Servlet 容器如何加载和运行 Spring 的核心 Servlet（即 DispatcherServlet）。Spring MVC 项目完成后，会被打包成一个 .war 文件（Web Application Archive），然后手动放到外部 Servlet 容器（如 Tomcat）的 webapps 目录下，由容器启动运行&lt;/li&gt;
-&lt;li&gt;Spring Boot 在项目中内置了 Servlet 容器（默认是 Tomcat），开发者不需要手动配置 web.xml，也不需要单独安装 Tomcat。Spring Boot 把 Servlet 容器作为依赖嵌入到项目中，DispatcherServlet 的注册和初始化由 Spring Boot 的自动配置完成，无需显式定义&lt;/li&gt;
-&lt;/ul&gt;
-&lt;blockquote&gt;
-&lt;p&gt;在 Java Web 开发中，Servlet 是一种用来处理 HTTP 请求的技术规范（由 Java EE 定义）。而 Servlet 容器（比如 Tomcat、Jetty）是一个运行环境，负责加载、执行 Servlet，并管理 HTTP 请求和响应的生命周期。&lt;/p&gt;
-&lt;p&gt;Spring MVC 是基于 Servlet 构建的 Web 框架，核心组件 DispatcherServlet 是一个特殊的 Servlet，负责接收所有请求并分发给对应的控制器（Controller）。Spring Boot 虽然也依赖 Spring MVC，但对这些底层机制进行了封装和简化。&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&#34;5-总结&#34;&gt;5. 总结&lt;/h2&gt;
-&lt;p&gt;上面我们讨论了 Spring Boot 和 Spring Cloud 在配置依赖方面的区别和联系, 然后讨论了构建 Spring MVC 项目和 Spring Boot 项目各自的步骤,&lt;/p&gt;
-&lt;p&gt;显然 Spring Cloud 是一个单独的框架, 有自己的组件, 我们可以在 Spring Boot 中使用 Spring Cloud, 但是 Spring Boot 的 BOM 只是管理了它自己核心组件的版本, 并不会管理 Spring Cloud 核心组件, 因此我们在使用他们两个的时候, 同时在 &lt;code&gt;pom.xml&lt;/code&gt; 指定各自的 BOM 才是最佳实践, 方便他们各自管理各自组件的版本,&lt;/p&gt;
-&lt;p&gt;然后通过讲解 Spring MVC 项目的构建过程, 我们发现, Spring MVC 利用 Java Servlet 规范通过 DispatcherServlet 实现前端控制器模式, 将 HTTP 请求分发给对应的 Controller 处理, 再通过视图解析器渲染最终响应, Tomcat、Jetty 等 Servlet 容器提供了运行环境和 Servlet 规范的实现, 而 Spring MVC 通过 DispatcherServlet 利用这些底层 API 来处理 Web 请求, Spring MVC 也可以与其他 Spring 模块（如 Spring Security、Spring Data 等）无缝集成, 所以Spring MVC 才是 Java Web 开发最基础最核心的东西,&lt;/p&gt;
-&lt;p&gt;Spring MVC 虽然强大, 但配置复杂（ XML 文件、依赖管理、Servlet 容器 Tomcat）, 对新手不友好, 而 Spring Boot 则是构建于 Spring MVC 之上, 通过类似于 spring-boot-starter-web 的依赖包, 一次性引入所有相关库（如 Spring MVC、Tomcat、Jackson 等）, 并并保证版本兼容, 并且把 Servlet 容器嵌入到应用中, 使得项目可以打包为独立的 JAR 文件, 直接运行,&lt;/p&gt;
-&lt;p&gt;所以 Spring Boot 本质就是构建于 Spring MVC 之上基于 Spring 生态的“快速开发框架”, 它帮我们集成了 Spring MVC 所有的基础配置, 包括 Servlet 路径, 视图, 以及 Servlet 容器 Tomcat, 除此之外还提前定义了 Spring 核心组件的依赖版本, 我们只要在 &lt;code&gt;pom.xml&lt;/code&gt; 引入了 &lt;code&gt;&amp;lt;parent&amp;gt;...&amp;lt;/parent&amp;gt;&lt;/code&gt;, 当我们使用一些依赖比如 Spring Security, Spring Data JPA 等, 直接加到 &lt;code&gt;pom.xml&lt;/code&gt; 中就行, 不用指定版本号或者担心以后更新引起版本冲突,&lt;/p&gt;
+&lt;h2 id=&#34;3-总结&#34;&gt;3. 总结&lt;/h2&gt;
+&lt;p&gt;上面我们讨论了 Spring Boot 和 Spring Cloud 在配置依赖方面的区别和联系, 显然 Spring Cloud 是一个单独的框架, 有自己的组件, 我们可以在 Spring Boot 中使用 Spring Cloud, 但是 Spring Boot 的 BOM 只是管理了它自己核心组件的版本, 并不会管理 Spring Cloud 核心组件, 因此我们在使用他们两个的时候, 同时在 &lt;code&gt;pom.xml&lt;/code&gt; 指定各自的 BOM 才是最佳实践, 方便他们各自管理各自组件的版本,&lt;/p&gt;
+&lt;p&gt;所以 Spring Boot 本质就是构建于 Spring MVC 之上基于 Spring 生态的“快速开发框架”, 它帮我们集成了 Spring MVC 所有的基础配置, 包括 Servlet 路径, 视图, 以及 Servlet 容器 Tomcat, 除此之外还提前定义了 Spring 核心组件的依赖版本, 我们只要在 &lt;code&gt;pom.xml&lt;/code&gt; 引入了 &lt;code&gt;&amp;lt;parent&amp;gt;...&amp;lt;/parent&amp;gt;&lt;/code&gt;, 当我们使用一些依赖比如 Spring Security, Spring Data JPA 等, 直接加到 &lt;code&gt;pom.xml&lt;/code&gt; 中就行, 不用指定版本号或者担心以后更新引起版本冲突&lt;/p&gt;
 </content>
     </item>
     
@@ -3658,7 +3882,8 @@ DECRBY stock:1001 2
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;elif&lt;/span&gt; t_arr:
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            t_arr&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pop()
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; t_arr &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; s_arr &lt;span style=&#34;color:#75715e&#34;&gt;# 直接比较列表即里面的字符是否顺序全部相同&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sortedSquares&lt;/span&gt;(self, nums: List[int]) &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; List[int]:
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 977. Squares of a Sorted Array&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sortedSquares&lt;/span&gt;(self, nums: List[int]) &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; List[int]:
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    n &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; len(nums)
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ans &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; n  &lt;span style=&#34;color:#75715e&#34;&gt;# 初始化 方便 index 访问&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    start, end &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, n &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
@@ -3671,7 +3896,30 @@ DECRBY stock:1001 2
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            ans[i] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; nums[end] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; nums[end]
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            end &lt;span style=&#34;color:#f92672&#34;&gt;-=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ans
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; matrix &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; n &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; _ &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(n)]  &lt;span style=&#34;color:#75715e&#34;&gt;# 初始化 n×n 矩阵&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; matrix &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; n &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; _ &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(m)]  &lt;span style=&#34;color:#75715e&#34;&gt;# 初始化 n×m 矩阵&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 切片 反转整个字符串, 切片和操作不会改变原字符串, &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 它们会返回一个新字符串, 因为字符串 immutable&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;abcdefg&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(s[::&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;])  &lt;span style=&#34;color:#75715e&#34;&gt;# &amp;#34;gfedcba&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;abcdefg&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(s[::&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;])  &lt;span style=&#34;color:#75715e&#34;&gt;# &amp;#34;geca&amp;#34;  -&amp;gt; 每隔2个字符倒序取&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;abcdefg&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(s[:&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;])   &lt;span style=&#34;color:#75715e&#34;&gt;# &amp;#34;abcd&amp;#34;  -&amp;gt; 取前4个字符&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(s[&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;:])   &lt;span style=&#34;color:#75715e&#34;&gt;# &amp;#34;efg&amp;#34;   -&amp;gt; 从索引4开始取到结尾&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;abcdefg&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;k &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; s[k:] &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; s[:k]  &lt;span style=&#34;color:#75715e&#34;&gt;# 交换前 k 个字符和剩余部分&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(result)  &lt;span style=&#34;color:#75715e&#34;&gt;# &amp;#34;defgabc&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 541. 反转字符串 II&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;reverseStr&lt;/span&gt;(self, s: str, k: int) &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; str:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; list(s)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, len(s), k &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        s[i: i &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; k] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; s[i: i &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; k][::&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;]  &lt;span style=&#34;color:#75715e&#34;&gt;# 创建该切片的反转副本&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;join(s)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-滑动窗口暴力遍历---209-长度最小的子数组&#34;&gt;2. 滑动窗口+暴力遍历 - 209 长度最小的子数组&lt;/h2&gt;
 &lt;p&gt;注意子数组的意思是从一个数组任意截取连续的一段子数组, 不是从里面任取数字然后组合, 子序列也是这个概念,&lt;/p&gt;</description>
       <content>&lt;h2 id=&#34;1-列表常用操作&#34;&gt;1. 列表常用操作&lt;/h2&gt;
@@ -3691,7 +3939,8 @@ DECRBY stock:1001 2
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;elif&lt;/span&gt; t_arr:
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            t_arr&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;pop()
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; t_arr &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; s_arr &lt;span style=&#34;color:#75715e&#34;&gt;# 直接比较列表即里面的字符是否顺序全部相同&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sortedSquares&lt;/span&gt;(self, nums: List[int]) &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; List[int]:
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 977. Squares of a Sorted Array&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sortedSquares&lt;/span&gt;(self, nums: List[int]) &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; List[int]:
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    n &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; len(nums)
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ans &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; n  &lt;span style=&#34;color:#75715e&#34;&gt;# 初始化 方便 index 访问&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    start, end &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, n &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
@@ -3704,10 +3953,34 @@ DECRBY stock:1001 2
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            ans[i] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; nums[end] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; nums[end]
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            end &lt;span style=&#34;color:#f92672&#34;&gt;-=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; ans
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; matrix &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; n &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; _ &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(n)]  &lt;span style=&#34;color:#75715e&#34;&gt;# 初始化 n×n 矩阵&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; matrix &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; n &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; _ &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(m)]  &lt;span style=&#34;color:#75715e&#34;&gt;# 初始化 n×m 矩阵&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 切片 反转整个字符串, 切片和操作不会改变原字符串, &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 它们会返回一个新字符串, 因为字符串 immutable&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;abcdefg&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(s[::&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;])  &lt;span style=&#34;color:#75715e&#34;&gt;# &amp;#34;gfedcba&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;abcdefg&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(s[::&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;])  &lt;span style=&#34;color:#75715e&#34;&gt;# &amp;#34;geca&amp;#34;  -&amp;gt; 每隔2个字符倒序取&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;abcdefg&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(s[:&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;])   &lt;span style=&#34;color:#75715e&#34;&gt;# &amp;#34;abcd&amp;#34;  -&amp;gt; 取前4个字符&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(s[&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;:])   &lt;span style=&#34;color:#75715e&#34;&gt;# &amp;#34;efg&amp;#34;   -&amp;gt; 从索引4开始取到结尾&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;abcdefg&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;k &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; s[k:] &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; s[:k]  &lt;span style=&#34;color:#75715e&#34;&gt;# 交换前 k 个字符和剩余部分&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(result)  &lt;span style=&#34;color:#75715e&#34;&gt;# &amp;#34;defgabc&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 541. 反转字符串 II&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;reverseStr&lt;/span&gt;(self, s: str, k: int) &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; str:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; list(s)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, len(s), k &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        s[i: i &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; k] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; s[i: i &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; k][::&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;]  &lt;span style=&#34;color:#75715e&#34;&gt;# 创建该切片的反转副本&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;join(s)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-滑动窗口暴力遍历---209-长度最小的子数组&#34;&gt;2. 滑动窗口+暴力遍历 - 209 长度最小的子数组&lt;/h2&gt;
 &lt;p&gt;注意子数组的意思是从一个数组任意截取连续的一段子数组, 不是从里面任取数字然后组合, 子序列也是这个概念,&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;minSubArrayLen&lt;/span&gt;(s: int, nums: List[int]) &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; int:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# float(&amp;#39;-inf&amp;#39;) 负无穷大&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; float(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;inf&amp;#39;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    sum_val &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    sub_length &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
@@ -3734,6 +4007,9 @@ DECRBY stock:1001 2
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            i &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# python 不支持 i++, 精髓动态更新初始位置, 不断收缩窗口&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; min_len &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; min_len &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; float(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;inf&amp;#39;&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# 常用语法&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-字典的使用---904-fruit-into-baskets&#34;&gt;3. 字典的使用 - 904. Fruit Into Baskets&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Find the longest continuous sub array that has exactly 2 distinct elements.&lt;/p&gt;
+&lt;/blockquote&gt;
 &lt;p&gt;找出下面代码的错误:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;totalFruit&lt;/span&gt;(self, fruits):
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
@@ -3742,55 +4018,39 @@ DECRBY stock:1001 2
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; j &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(len(fruits)):
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; len(basket) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;:
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            basket[fruits[j]] &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            max_len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (max_len, j &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            max_len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; max(max_len, j &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            j &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        i &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;del&lt;/span&gt; basket[fruits[i]]
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; max_len
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ol&gt;
 &lt;li&gt;&lt;strong&gt;while 循环应当是用来收缩窗口的 (改变初始位置 &lt;code&gt;i&lt;/code&gt;),&lt;/strong&gt; 如果用来扩大窗口, 会导致 &lt;code&gt;j&lt;/code&gt; 不仅在 &lt;code&gt;for&lt;/code&gt; 循环里被迭代，还在 &lt;code&gt;while&lt;/code&gt; 里手动增加了 &lt;code&gt;j&lt;/code&gt;，这会导致以下问题：无限循环或 IndexError&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;max_len = (max_len, j - i + 1)&lt;/code&gt; 是个容易犯错的地方, 忘了加 &lt;code&gt;max&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;直接 &lt;code&gt;del basket[fruits[i]]&lt;/code&gt; 并不对, 想象我们的窗口是 [2, 3, 2, 2] 完整的数组是 [2, 3, 2, 2, 5],&lt;/li&gt;
-&lt;li&gt;此时篮子里的水果种类为 2, 所以我们让 &lt;code&gt;j&lt;/code&gt; 往右移动继续扩大, 我们的滑动窗口变为 [2, 3, 2, 2, 5] , 此时篮子里有 3 类水果,&lt;/li&gt;
-&lt;li&gt;所以缩小窗口, 移动 &lt;code&gt;i&lt;/code&gt;, 此时窗口为 [3, 2, 2, 5] , 若此时直接执行 &lt;code&gt;del basket[fruits[i]]&lt;/code&gt;, 也就是把类别 2 的水果全部倒出, 就不合理, 因为我们有 3 个类别 2 的水果, 我们要做的应该是让 basket[2] - 1, 即丢掉一个种类为 2 的水果, 只有当 basket[2] = 0 的时候才可以删除 种类为 2 的水果,&lt;/li&gt;
+&lt;li&gt;直接 &lt;code&gt;del basket[fruits[i]]&lt;/code&gt; 并不对, 想象我们的窗口是 [2, 3, 2, 2] 完整的数组是 [2, 3, 2, 2, 5], 此时篮子里的水果种类为 2, 所以我们让 &lt;code&gt;j&lt;/code&gt; 往右移动继续扩大, 我们的滑动窗口变为 [2, 3, 2, 2, 5] , 此时篮子里有 3 类水果, 因此缩小窗口, 移动 &lt;code&gt;i&lt;/code&gt;, 此时窗口为 [3, 2, 2, 5] , 若此时直接执行 &lt;code&gt;del basket[fruits[i]]&lt;/code&gt;, 也就是把类别 2 的水果全部倒出, 就不合理, 因为我们有 3 个类别 2 的水果, 我们要做的应该是让 basket[2] - 1, 即丢掉一个种类为 2 的水果, 只有当 basket[2] = 0 的时候才可以删除 种类为 2 的水果&lt;/li&gt;
 &lt;li&gt;然后我们继续让 i 往右移动, 刚好种类为 3 的水果就一个, 我们直接丢掉, 然后删除, 这样 篮子里就剩两个种类为 2 的元素, 此时滑动窗口为 [2, 2, 5]&lt;/li&gt;
-&lt;li&gt;此时篮子里的水果种类为 2, 因此 这也是为什么, 我们需要 while 循环, 一直让 i 往右移动, 缩小窗口, 直到 篮子里的水果种类大于 2 为 false 的时候, 窗口右侧 j 才能继续移动,&lt;/li&gt;
+&lt;li&gt;此时篮子里的水果种类为 2, 因此 这也是为什么, 我们需要 while 循环, 一直让 i 往右移动, 缩小窗口, 直到 篮子里的水果种类大于 2 为 false 的时候, 窗口右侧 j 才能继续移动&lt;/li&gt;
 &lt;/ol&gt;
+&lt;p&gt;使用 &lt;code&gt;Counter()&lt;/code&gt; 会造成不必要的开销, 在进行 &lt;code&gt;basket[fruits[i]] -= 1&lt;/code&gt; 这种操作的时候, 会执行一些检查, 并不是直接操作, 所以我们换为 defaultdict 速度更快一些:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;totalFruit&lt;/span&gt;(self, fruits):
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    max_len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    basket &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Counter()
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; j &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(len(fruits)):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;# 滑动窗口的左边界&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    max_len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;# 记录最大长度&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    basket &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {}  &lt;span style=&#34;color:#75715e&#34;&gt;# 记录当前窗口内的水果种类和数量&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; j &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(len(fruits)):  &lt;span style=&#34;color:#75715e&#34;&gt;# 遍历水果数组，j 是右指针&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        basket[fruits[j]] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; basket&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;get(fruits[j], &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;# 统计当前窗口内的水果数量&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;# 如果窗口内的水果种类超过 2 种，移动左指针 i 缩小窗口&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; len(basket) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;:
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            basket[fruits[i]] &lt;span style=&#34;color:#f92672&#34;&gt;-=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; basket[fruits[i]] &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            basket[fruits[i]] &lt;span style=&#34;color:#f92672&#34;&gt;-=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;# 减少左边水果的个数&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; basket[fruits[i]] &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;:  &lt;span style=&#34;color:#75715e&#34;&gt;# 如果某种水果数量变为 0，则从字典中删除&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;del&lt;/span&gt; basket[fruits[i]]
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            i &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        basket[fruits[j]] &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            i &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;# 左指针右移，缩小窗口&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;# 记录当前窗口的最大长度&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        max_len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; max(max_len, j &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; max_len
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;此时&lt;strong&gt;仍有一处逻辑错误&lt;/strong&gt;, 请找出, 另外使用 &lt;code&gt;Counter()&lt;/code&gt; 会造成不必要的开销, 在进行 &lt;code&gt;basket[fruits[i]] -= 1&lt;/code&gt; 这种操作的时候, 会执行一些检查, 并不是直接操作, 所以我们换为 defaultdict 速度更快一些,&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;from&lt;/span&gt; collections &lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; defaultdict
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;totalFruit&lt;/span&gt;(self, fruits):
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    max_len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    basket &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; defaultdict(int)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; j &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; range(len(fruits)):
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        basket[fruits[j]] &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;# 添加水果, 直接的整数增减&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; len(basket) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;:
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            basket[fruits[i]] &lt;span style=&#34;color:#f92672&#34;&gt;-=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; basket[fruits[i]] &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;:
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;del&lt;/span&gt; basket[fruits[i]]
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            i &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;# 移动窗口&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        max_len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; max(max_len, j &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; max_len
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;4-循环嵌套-58-length-of-last-word&#34;&gt;4. 循环嵌套 58 Length of Last Word&lt;/h2&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;虽然这题也是找连续子数组长度, 都使用双指针解决问题, 但与 209 长度最小的子数组 还是不同, 不同的地方是判断条件, 也就是收放窗口的条件, 之前的那道题的条件是判断 sum 总和和target的大小关系, 若 sum 更大, 则可以持续缩放窗口(while 循环条件), 而这道题的判断条件是数组中元素种类, 而且根据题意, 我们不可以简单的直接删除一个元素, 而是元素个数为0的时候才可以删除, 因此我们不仅需要元素种类, 而且需要知道该种类对应的元素个数, 因此只能使用哈希表, 不能使用比如 Set 这种一维数组,&lt;/p&gt;
+&lt;h2 id=&#34;4-循环嵌套-58-length-of-last-word&#34;&gt;4. 循环嵌套 58 Length of Last Word&lt;/h2&gt;
 &lt;p&gt;找出下面代码的逻辑问题, 最开始的解决思路, len 记录单词的长度, 每次遇到空格就会跳出 while 循环, 然后更新重新计算新的单词的长度,&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;lengthOfLastWord&lt;/span&gt;(self, s):
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;

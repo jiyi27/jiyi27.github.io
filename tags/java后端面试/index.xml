@@ -1,0 +1,1207 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Java后端面试 on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/java%E5%90%8E%E7%AB%AF%E9%9D%A2%E8%AF%95/</link>
+    <description>Recent content in Java后端面试 on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Tue, 11 Mar 2025 12:30:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/java%E5%90%8E%E7%AB%AF%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Java 多线程 并发编程</title>
+      <link>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/004-java-%E5%A4%9A%E7%BA%BF%E7%A8%8B/</link>
+      <pubDate>Tue, 11 Mar 2025 12:30:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/004-java-%E5%A4%9A%E7%BA%BF%E7%A8%8B/</guid>
+      <description>&lt;h2 id=&#34;1-并行-并发&#34;&gt;1. 并行 并发&lt;/h2&gt;
+&lt;p&gt;并行：多核 CPU 上的多任务处理，多个任务在同一时间真正地同时执行&lt;/p&gt;
+&lt;p&gt;并发：单核 CPU 上的多任务处理，多个任务在同一时间段内交替执行，通过时间片轮转实现交替执行&lt;/p&gt;
+&lt;h2 id=&#34;2-进程和线程&#34;&gt;2. 进程和线程&lt;/h2&gt;
+&lt;p&gt;线程是进程的一个执行单位, 进程就是启用的一个程序, 比如本地启动 MySQL 服务, MySQL 服务创建和管理多个线程来分别处理客户端连接、查询解析、后端IO操作、缓存管理等，借此提升性能和响应能力&lt;/p&gt;
+&lt;h2 id=&#34;3-线程安全的理解&#34;&gt;3. 线程安全的理解&lt;/h2&gt;
+&lt;p&gt;线程安全主要涉及到多个线程同时尝试访问同一个共享数据, 能否正确处理共享数据的问题, 就是线程安全的关键:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;首先通过的就是锁机制, 互斥锁, 保证同一时刻只有一个线程修改共享数据&lt;/li&gt;
+&lt;li&gt;而锁机制就会引起锁的强占, 所以要确保线程不会因为死锁问题导致无法继续执行&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;协程更轻量, 不属于操作系统级别, 而是属于更高一层对线程的包装, 不涉及系统调用, 因此等待到执行状态也不需要上下文切换, 或者说很代价很小, 因此也不用使用线程池这种东西了&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;4-java-线程间通信方式---共享内存&#34;&gt;4. Java 线程间通信方式 - 共享内存&lt;/h2&gt;
+&lt;p&gt;线程之间想要进行通信, 可以通过消息传递和共享内存两种方法来完成, 那 Java 采用的是共享内存的并发模型, 而 Golang 使用的就是前者 CSP, 利用 Channel 传递消息, 正如他的 Slogan: Don&amp;rsquo;t communicate by sharing memory, share memory by communicating.&lt;/p&gt;
+&lt;p&gt;各有优缺点吧, 前者不需要锁机制了, 所有消息数据串行发送, 后者则需要锁来控制&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;CSP 避免了共享内存带来的竞争条件, 天然线程安全, 缺点是 Channel 通信需要额外的同步和数据拷贝, 在某些低延迟场景下可能不如共享内存高效&lt;/li&gt;
+&lt;li&gt;CSP 适合 适合高并发、事件驱动的场景, 如 Web 服务器、微服务, 用 goroutine 处理 HTTP 请求，通过 Channel 传递任务结果&lt;/li&gt;
+&lt;li&gt;共享内存模型数据不一致的风险较高, 需要使用锁来实现线程安全问题, 比较复杂, 容易出 bug&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;共享内存模型如何保证线程安全:&lt;/strong&gt; Java 的并发主要依赖线程和共享内存, 线程通过访问共享对象（如变量、集合等）来进行通信, 为了避免竞争条件和数据不一致问题, Java 提供了同步机制 ,如 synchronized 关键字、锁（Lock）、以及并发工具类（java.util.concurrent 包，例如 ConcurrentHashMap、ExecutorService 等）&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-并行-并发&#34;&gt;1. 并行 并发&lt;/h2&gt;
+&lt;p&gt;并行：多核 CPU 上的多任务处理，多个任务在同一时间真正地同时执行&lt;/p&gt;
+&lt;p&gt;并发：单核 CPU 上的多任务处理，多个任务在同一时间段内交替执行，通过时间片轮转实现交替执行&lt;/p&gt;
+&lt;h2 id=&#34;2-进程和线程&#34;&gt;2. 进程和线程&lt;/h2&gt;
+&lt;p&gt;线程是进程的一个执行单位, 进程就是启用的一个程序, 比如本地启动 MySQL 服务, MySQL 服务创建和管理多个线程来分别处理客户端连接、查询解析、后端IO操作、缓存管理等，借此提升性能和响应能力&lt;/p&gt;
+&lt;h2 id=&#34;3-线程安全的理解&#34;&gt;3. 线程安全的理解&lt;/h2&gt;
+&lt;p&gt;线程安全主要涉及到多个线程同时尝试访问同一个共享数据, 能否正确处理共享数据的问题, 就是线程安全的关键:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;首先通过的就是锁机制, 互斥锁, 保证同一时刻只有一个线程修改共享数据&lt;/li&gt;
+&lt;li&gt;而锁机制就会引起锁的强占, 所以要确保线程不会因为死锁问题导致无法继续执行&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;协程更轻量, 不属于操作系统级别, 而是属于更高一层对线程的包装, 不涉及系统调用, 因此等待到执行状态也不需要上下文切换, 或者说很代价很小, 因此也不用使用线程池这种东西了&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;4-java-线程间通信方式---共享内存&#34;&gt;4. Java 线程间通信方式 - 共享内存&lt;/h2&gt;
+&lt;p&gt;线程之间想要进行通信, 可以通过消息传递和共享内存两种方法来完成, 那 Java 采用的是共享内存的并发模型, 而 Golang 使用的就是前者 CSP, 利用 Channel 传递消息, 正如他的 Slogan: Don&amp;rsquo;t communicate by sharing memory, share memory by communicating.&lt;/p&gt;
+&lt;p&gt;各有优缺点吧, 前者不需要锁机制了, 所有消息数据串行发送, 后者则需要锁来控制&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;CSP 避免了共享内存带来的竞争条件, 天然线程安全, 缺点是 Channel 通信需要额外的同步和数据拷贝, 在某些低延迟场景下可能不如共享内存高效&lt;/li&gt;
+&lt;li&gt;CSP 适合 适合高并发、事件驱动的场景, 如 Web 服务器、微服务, 用 goroutine 处理 HTTP 请求，通过 Channel 传递任务结果&lt;/li&gt;
+&lt;li&gt;共享内存模型数据不一致的风险较高, 需要使用锁来实现线程安全问题, 比较复杂, 容易出 bug&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;共享内存模型如何保证线程安全:&lt;/strong&gt; Java 的并发主要依赖线程和共享内存, 线程通过访问共享对象（如变量、集合等）来进行通信, 为了避免竞争条件和数据不一致问题, Java 提供了同步机制 ,如 synchronized 关键字、锁（Lock）、以及并发工具类（java.util.concurrent 包，例如 ConcurrentHashMap、ExecutorService 等）&lt;/p&gt;
+&lt;p&gt;线程间同步实现方式: 各种锁, 互斥锁, 读写锁, 信号量, 注意互斥锁和读写锁不同,&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;5-线程创建方式&#34;&gt;5. 线程创建方式&lt;/h2&gt;
+&lt;p&gt;Java 中创建线程主要有三种方式，分别为继承 Thread 类、实现 Runnable 接口、实现 Callable 接口&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ThreadTask&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;extends&lt;/span&gt; Thread {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;run&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;看完二哥的 Java 进阶之路，上岸了!&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String&lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt; args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        ThreadTask task &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; ThreadTask();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        task.&lt;span style=&#34;color:#a6e22e&#34;&gt;start&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;RunnableTask&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;implements&lt;/span&gt; Runnable {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;run&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;看完二哥的 Java 进阶之路，上岸了!&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String&lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt; args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        RunnableTask task &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; RunnableTask();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Thread thread &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Thread(task);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        thread.&lt;span style=&#34;color:#a6e22e&#34;&gt;start&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;调用 start()方法时会执行 run()方法，那怎么不直接调用 run()方法？&lt;/p&gt;
+&lt;p&gt;当调用&lt;code&gt;start()&lt;/code&gt;方法时, 会&lt;strong&gt;启动一个新的线程&lt;/strong&gt;, 并让这个新线程调用&lt;code&gt;run()&lt;/code&gt;方法, 如果直接调用&lt;code&gt;run()&lt;/code&gt;方法, 那么&lt;code&gt;run()&lt;/code&gt;方法就在当前线程中运行, 没有新的线程被创建, 也就没有实现多线程的效果&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;6-java-线程安全如何实现&#34;&gt;6. Java 线程安全如何实现&lt;/h2&gt;
+&lt;p&gt;使用共享对象, 多个线程可以访问和修改同一个对象, 从而实现信息的传递, 但是我们需要有锁的机制来保证线程安全, 在多线程编程中, 线程之间共享变量时可能会出现问题：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;可见性问题：一个线程改了变量，其他线程看不到最新值&lt;/li&gt;
+&lt;li&gt;原子性问题：多个线程同时改变量，导致结果出错&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;61-volatile&#34;&gt;6.1. &lt;code&gt;volatile&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;在 Java 中, 为了优化性能, 编译器和 CPU 可能会对代码的指令进行重排序, 也就是说, 代码的实际执行顺序可能与你写的顺序不同, volatile 关键字的一个重要作用是&lt;strong&gt;禁止指令重排序&lt;/strong&gt;, 并确保变量的读写操作按照程序员预期的顺序执行, 同时保证内存可见性 (一个线程改了变量，其他线程立刻能看到)&lt;/p&gt;
+&lt;p&gt;禁止指令重排序的场景单例模式的双重检查锁:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Singleton&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; Singleton instance;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Singleton&lt;/span&gt;() {}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; Singleton &lt;span style=&#34;color:#a6e22e&#34;&gt;getInstance&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (instance &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;) { &lt;span style=&#34;color:#75715e&#34;&gt;// 第一次检查&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;synchronized&lt;/span&gt; (Singleton.&lt;span style=&#34;color:#a6e22e&#34;&gt;class&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (instance &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;) { &lt;span style=&#34;color:#75715e&#34;&gt;// 第二次检查&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    instance &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Singleton(); &lt;span style=&#34;color:#75715e&#34;&gt;// 创建实例&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; instance;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在上面的代码中，instance = new Singleton(); 看似是一行简单的赋值，但实际上 JVM 会将其分解为以下步骤：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;分配内存空间&lt;/li&gt;
+&lt;li&gt;初始化对象（调用构造方法）&lt;/li&gt;
+&lt;li&gt;将 instance 引用指向这块内存&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;由于指令重排序的存在，JVM 和 CPU 可能会将步骤 3（赋值）提前到步骤 2（初始化）之前。假设有两个线程 A 和 B：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;线程 A 执行 getInstance()，进入同步块，开始创建对象&lt;/li&gt;
+&lt;li&gt;线程 A 执行到“分配内存并赋值”（步骤 1 和 3），但还未完成初始化（步骤 2）&lt;/li&gt;
+&lt;li&gt;此时线程 B 调用 getInstance()，看到 instance 不为 null（因为已经被赋值），直接返回未初始化的对象&lt;/li&gt;
+&lt;li&gt;结果：线程 B 拿到了一个未完全初始化的 Singleton 对象，可能导致空指针异常或逻辑错误&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Singleton&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;volatile&lt;/span&gt; Singleton instance; &lt;span style=&#34;color:#75715e&#34;&gt;// 添加 volatile&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Singleton&lt;/span&gt;() {}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; Singleton &lt;span style=&#34;color:#a6e22e&#34;&gt;getInstance&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (instance &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;synchronized&lt;/span&gt; (Singleton.&lt;span style=&#34;color:#a6e22e&#34;&gt;class&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (instance &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    instance &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Singleton();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; instance;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;volatile 如何解决问题？&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;禁止指令重排序&lt;/strong&gt;：volatile 确保 instance = new Singleton(); 的三个步骤（分配内存、初始化、赋值）按照代码顺序执行，不会将赋值提前到初始化之前&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;内存可见性&lt;/strong&gt;：线程 A 修改 instance 后，线程 B 能立即看到最新的值，而不是缓存中的旧值&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;结果：线程 B 要么看到 instance 是 null（等待初始化），要么看到一个完全初始化的对象，不会出现“半初始化”状态,&lt;/p&gt;
+&lt;p&gt;虽然 &lt;code&gt;volatile&lt;/code&gt; 可以禁止指令重排序，但它不能保证操作的原子性，比如 &lt;code&gt;++&lt;/code&gt; 操作仍然不是线程安全的：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;volatile&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; counter &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 0;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;threadFunc&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    counter&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// 这个操作不是原子的&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;62-synchronized&#34;&gt;6.2. &lt;code&gt;synchronized&lt;/code&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;保证&lt;strong&gt;互斥性&lt;/strong&gt;：同一时间只有一个线程能执行锁住的代码&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;保证&lt;strong&gt;可见性&lt;/strong&gt;：进入锁时加载最新值，退出锁时刷新修改&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;保证&lt;strong&gt;原子性&lt;/strong&gt;：锁内的操作不会被打断&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;CounterExample&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 0;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;synchronized&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;increment&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// 线程安全&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;synchronized&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getCount&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; count; &lt;span style=&#34;color:#75715e&#34;&gt;// 线程安全&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;两种用法&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;同步方法&lt;/strong&gt;：锁住整个方法（例子如上）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;同步块&lt;/strong&gt;：锁住部分代码，灵活性更高&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;BlockExample&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 0;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;final&lt;/span&gt; Object lock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Object();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;increment&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;synchronized&lt;/span&gt; (lock) { &lt;span style=&#34;color:#75715e&#34;&gt;// 只锁关键部分&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;前面说到 进入 &lt;code&gt;synchronized&lt;/code&gt; 块时, 线程会从主内存加载变量的最新值, 退出时，会将修改后的值刷新回主内存, 为什么有时需要一起用？&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;因为 synchronized 只保证锁内代码的可见性，而锁外的代码仍然可能依赖线程本地缓存的旧值&lt;/li&gt;
+&lt;li&gt;volatile 可以确保即使在无锁的情况下，读线程也能立即看到变量的最新值&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;TaskQueue&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; taskCount &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 0; &lt;span style=&#34;color:#75715e&#34;&gt;// 任务计数&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;boolean&lt;/span&gt; hasNewTask &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// 是否有新任务&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;final&lt;/span&gt; Object lock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Object();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 生产者：添加任务&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;produceTask&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;synchronized&lt;/span&gt; (lock) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            taskCount&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// 增加任务数&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            hasNewTask &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// 标记有新任务&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 消费者：检查是否有新任务&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;boolean&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;hasNewTask&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; hasNewTask; &lt;span style=&#34;color:#75715e&#34;&gt;// 无锁读取，可能看不到最新值&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 消费者：获取任务数并处理&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;consumeTask&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;synchronized&lt;/span&gt; (lock) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (hasNewTask) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                hasNewTask &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// 重置标志&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; taskCount; &lt;span style=&#34;color:#75715e&#34;&gt;// 返回任务数&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; 0;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;h2 id=&#34;7-reentrantlock-vs-readwritelock&#34;&gt;7. ReentrantLock vs ReadWriteLock&lt;/h2&gt;
+&lt;h3 id=&#34;71-reentrantlock&#34;&gt;7.1. ReentrantLock&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;ReentrantLock&lt;/code&gt; Java &lt;code&gt;java.util.concurrent.locks&lt;/code&gt; 包中的显式锁，提供比 &lt;code&gt;synchronized&lt;/code&gt; 更灵活的功能,&lt;/p&gt;
+&lt;p&gt;在锁竞争激烈时，可以通过 &lt;code&gt;tryLock(timeout)&lt;/code&gt; 避免线程无限等待:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ReentrantLock lock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; ReentrantLock();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;boolean&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;tryMethod&lt;/span&gt;() &lt;span style=&#34;color:#66d9ef&#34;&gt;throws&lt;/span&gt; InterruptedException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (lock.&lt;span style=&#34;color:#a6e22e&#34;&gt;tryLock&lt;/span&gt;(1, TimeUnit.&lt;span style=&#34;color:#a6e22e&#34;&gt;SECONDS&lt;/span&gt;)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 获取锁成功&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        } &lt;span style=&#34;color:#66d9ef&#34;&gt;finally&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            lock.&lt;span style=&#34;color:#a6e22e&#34;&gt;unlock&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// 超时未获取锁&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;当需要按照线程请求顺序分配锁（避免线程饥饿）时，可以配置公平锁&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ReentrantLock lock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; ReentrantLock(&lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;// 公平锁&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;实际示例对比:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Counter&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 0;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;synchronized&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;increment&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Counter&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 0;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;final&lt;/span&gt; ReentrantLock lock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; ReentrantLock();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;increment&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        lock.&lt;span style=&#34;color:#a6e22e&#34;&gt;lock&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        } &lt;span style=&#34;color:#66d9ef&#34;&gt;finally&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            lock.&lt;span style=&#34;color:#a6e22e&#34;&gt;unlock&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;72-readwritelock&#34;&gt;7.2. ReadWriteLock&lt;/h3&gt;
+&lt;p&gt;在 Java 中，ReadWriteLock（通常通过其实现类 ReentrantReadWriteLock 使用）是一种&lt;strong&gt;专门为读多写少场景&lt;/strong&gt;设计的锁机制。与 ReentrantLock 相比，它提供了更细粒度的并发控制，允许多个线程同时读取，但写操作是独占的。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ReentrantReadWriteLock rwLock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; ReentrantReadWriteLock();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Map&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;String, String&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; cache &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; HashMap&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; String &lt;span style=&#34;color:#a6e22e&#34;&gt;get&lt;/span&gt;(String key) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    rwLock.&lt;span style=&#34;color:#a6e22e&#34;&gt;readLock&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;lock&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; cache.&lt;span style=&#34;color:#a6e22e&#34;&gt;get&lt;/span&gt;(key);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;finally&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        rwLock.&lt;span style=&#34;color:#a6e22e&#34;&gt;readLock&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;unlock&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;put&lt;/span&gt;(String key, String value) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    rwLock.&lt;span style=&#34;color:#a6e22e&#34;&gt;writeLock&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;lock&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        cache.&lt;span style=&#34;color:#a6e22e&#34;&gt;put&lt;/span&gt;(key, value);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;finally&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        rwLock.&lt;span style=&#34;color:#a6e22e&#34;&gt;writeLock&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;unlock&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+    </item>
+    
+    <item>
+      <title>Spring Cloud 核心组件和配置</title>
+      <link>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/006-spring-cloud-building/</link>
+      <pubDate>Fri, 07 Mar 2025 08:28:52 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/006-spring-cloud-building/</guid>
+      <description>&lt;h2 id=&#34;1-两个配置文件&#34;&gt;1. 两个配置文件&lt;/h2&gt;
+&lt;p&gt;在 Spring Cloud 项目中, 配置文件分为两类:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;bootstrap.yml&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;作用&lt;/strong&gt;：用于指定 Spring Cloud Config Server 的地址, 帮助服务从远程拉取具体配置&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;存放位置&lt;/strong&gt;：每个服务的本地项目中（src/main/resources 目录下）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;application.yml&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;作用&lt;/strong&gt;：包含服务的具体配置信息, 如端口、Eureka 注册地址、数据库连接等&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;存放位置&lt;/strong&gt;：集中存储在 GitHub 仓库中, 由 Config Server 管理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;一般 Config Server 只用配置 &lt;code&gt;application.yml&lt;/code&gt; 文件, 指定监听端口, 不用向 Eureka 注册, 因为它属于一个独立运行的服务, 负责为其他服务如用户认证, 订单服务, Eureka Server, Gateway 等提供配置文件,&lt;/p&gt;
+&lt;p&gt;所以 Config Server 的配置文件  &lt;code&gt;application.yml&lt;/code&gt;  内容大致如下, 不需要 &lt;code&gt;bootstrap.yml&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;application&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;skymates-config-server&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;cloud&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;config&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;git&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;https://github.com/jiyi27/skymates.git&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;search-paths&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;configs&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;default-label&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;master&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;port&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;8888&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;其他微服务&lt;strong&gt;只需要在本地配置 &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件, 用于指定 Config Server 服务器位置 和 自己需要的配置文件名字&lt;/strong&gt;, 这也是为什么 Config Server 不需要向 Eureka Server 注册的原因, 因为其他微服务已经知道他的位置, 每个微服务直接从 Config Server 动态拉取自己的配置文件, Eureka Server 的  &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件内容:&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-两个配置文件&#34;&gt;1. 两个配置文件&lt;/h2&gt;
+&lt;p&gt;在 Spring Cloud 项目中, 配置文件分为两类:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;bootstrap.yml&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;作用&lt;/strong&gt;：用于指定 Spring Cloud Config Server 的地址, 帮助服务从远程拉取具体配置&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;存放位置&lt;/strong&gt;：每个服务的本地项目中（src/main/resources 目录下）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;application.yml&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;作用&lt;/strong&gt;：包含服务的具体配置信息, 如端口、Eureka 注册地址、数据库连接等&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;存放位置&lt;/strong&gt;：集中存储在 GitHub 仓库中, 由 Config Server 管理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;一般 Config Server 只用配置 &lt;code&gt;application.yml&lt;/code&gt; 文件, 指定监听端口, 不用向 Eureka 注册, 因为它属于一个独立运行的服务, 负责为其他服务如用户认证, 订单服务, Eureka Server, Gateway 等提供配置文件,&lt;/p&gt;
+&lt;p&gt;所以 Config Server 的配置文件  &lt;code&gt;application.yml&lt;/code&gt;  内容大致如下, 不需要 &lt;code&gt;bootstrap.yml&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;application&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;skymates-config-server&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;cloud&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;config&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;git&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;https://github.com/jiyi27/skymates.git&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;search-paths&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;configs&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;default-label&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;master&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;port&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;8888&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;其他微服务&lt;strong&gt;只需要在本地配置 &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件, 用于指定 Config Server 服务器位置 和 自己需要的配置文件名字&lt;/strong&gt;, 这也是为什么 Config Server 不需要向 Eureka Server 注册的原因, 因为其他微服务已经知道他的位置, 每个微服务直接从 Config Server 动态拉取自己的配置文件, Eureka Server 的  &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;cloud&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;config&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;http://localhost:8888&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# 当你配置了 name: eureka-server 时，Config Server 会尝试加载类似于 eureka-server.yml、&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# eureka-server.properties 或其他符合命名规则的配置文件&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;eureka-server&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;profile&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;default&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;label&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;master&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Gateway  &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;cloud&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;config&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;http://localhost:8888&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# 指定 name: gateway 时, 当在 Config Server 加载配置文件的时候&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# Config Server 尝试加载类似于 gateway.yml、gateway.properties 或其他符合命名规则的配置文件&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;gateway&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;profile&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;default&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;label&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;master&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;User-Service  &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;cloud&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;config&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;http://localhost:8888&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# 指定 name: content-service 时, 当在 Config Server 加载配置文件的时候&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;# Config Server 尝试加载类似于 content-service.yml、content-service.properties 或其他符合命名规则的配置文件&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;content-service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;profile&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;default&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;label&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;master&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;然后我们需要单独为这些服务创建具体的配置文件,  指定如端口、Eureka 注册地址、数据库连接, 把这些文件放到 &lt;code&gt;github.com/jiyi27/skymates/configs&lt;/code&gt; 目录下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ls configs
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;eureka-server.yml   gateway.yml         user-service.yml
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;其中 &lt;code&gt;eureka-server.yml&lt;/code&gt; 内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;application&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;skymates-eureka-server&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;port&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;8761&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;eureka&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;client&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;register-with-eureka&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;fetch-registry&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 这个 URL 不是直接在浏览器访问的页面, 直接访问地址是 http://localhost:8761&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 它是一个 RESTful API 端点, 返回的数据通常是 JSON 或 XML 格式, 供其它微服务客户端解析服务信息&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;service-url&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;defaultZone&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;http://localhost:8761/eureka/&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;gateway.yml&lt;/code&gt; 内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;application&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;skymates-gateway&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;cloud&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;gateway&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;routes&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        - &lt;span style=&#34;color:#f92672&#34;&gt;id&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;user-service-route&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;lb://skymates-user-service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;predicates&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            - &lt;span style=&#34;color:#ae81ff&#34;&gt;Path=/user/**&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;filters&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            - &lt;span style=&#34;color:#ae81ff&#34;&gt;StripPrefix=1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        - &lt;span style=&#34;color:#f92672&#34;&gt;id&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;content-service-route&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;uri&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;lb://skymates-content-service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;predicates&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            - &lt;span style=&#34;color:#ae81ff&#34;&gt;Path=/content/**&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#f92672&#34;&gt;filters&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            - &lt;span style=&#34;color:#ae81ff&#34;&gt;StripPrefix=1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;port&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;8083&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;eureka&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;client&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;service-url&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;defaultZone&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;http://localhost:8761/eureka/&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;user-service.yml&lt;/code&gt; 内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;application&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 定义当前应用程序的名, 会被发送到 Eureka 服务器, 作为服务注册时的服务名&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 这样 Eureka 就知道了有一个 skymates-user-service 服务, ip地址为 xxx, 服务端口为server.port&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# Gateway 就可以进行负载均衡路由转发: uri: lb://skymates-user-service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;skymates-user-service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;datasource&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;url&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;jdbc:mysql://localhost:3306/skymates?serverTimezone=UTC&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;username&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;root&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;password&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;778899&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;driver-class-name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;com.mysql.cj.jdbc.Driver&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;jpa&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;database-platform&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;org.hibernate.dialect.MySQL8Dialect&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;hibernate&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;ddl-auto&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;update&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;jwt&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;secret&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;MY_JWT_SECRET_KEY_EXAMPLE_123456&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;expiration&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;86400000&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;server&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;port&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;8081&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;eureka&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;client&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;service-url&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;defaultZone&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;http://localhost:8761/eureka/&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;注意一般有  &lt;code&gt;bootstrap.yml&lt;/code&gt; 文件的服务 需要添加依赖:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- 注册 Eureka --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.cloud&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-cloud-starter-netflix-eureka-client&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- 从 Config Server 拉配置 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.cloud&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-cloud-starter-config&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- 解析 bootstrap.yml 配置文件 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.cloud&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-cloud-starter-bootstrap&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果依赖 spring-cloud-starter-netflix-eureka-client 没有加, 尽管你在 &lt;code&gt;application.yml&lt;/code&gt; 中写了 &lt;code&gt;eureka.client.service-url.defaultZone&lt;/code&gt;, 也不会真的注册&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-核心组件-启动步骤&#34;&gt;2. 核心组件 启动步骤&lt;/h2&gt;
+&lt;h3 id=&#34;21-启动步骤&#34;&gt;2.1. 启动步骤&lt;/h3&gt;
+&lt;p&gt;根据以上配置, 我们可以按照下面顺序启动各个微服务:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;启动 Config Server&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;运行 skymates-config-server 项目&lt;/li&gt;
+&lt;li&gt;Config Server 从 GitHub 仓库的 configs 目录拉取所有配置文件，监听端口 8888&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;启动 Eureka Server&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;运行 skymates-eureka-server 项目&lt;/li&gt;
+&lt;li&gt;从 Config Server 拉取 eureka-server.yml，启动服务发现功能，监听端口 8761&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;启动 Gateway&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;运行 skymates-gateway 项目&lt;/li&gt;
+&lt;li&gt;从 Config Server 拉取 gateway.yml，注册到 Eureka Server，监听端口 8080&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;启动 User Service&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;运行 skymates-user-service 项目&lt;/li&gt;
+&lt;li&gt;从 Config Server 拉取 user-service.yml，注册到 Eureka Server，监听端口 8081&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;22-gateway-运行过程&#34;&gt;2.2. Gateway 运行过程&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Gateway 启动&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;加载本地 &lt;code&gt;bootstrap.yml&lt;/code&gt;，读取 Config Server 地址 http://localhost:8888&lt;/li&gt;
+&lt;li&gt;向 Config Server 请求 &lt;code&gt;gateway.yml&lt;/code&gt;（基于 &lt;code&gt;bootstrap.yml&lt;/code&gt; 中的 &lt;code&gt;name: gateway&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;Config Server 从 GitHub 仓库的 configs 目录返回 &lt;code&gt;gateway.yml&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Gateway 加载 &lt;code&gt;gateway.yml&lt;/code&gt;, 获取路由规则和 Eureka 注册地址 http://localhost:8761/eureka/&lt;/li&gt;
+&lt;li&gt;Gateway 向 Eureka Server 注册自己, 服务名为 skymates-gateway (基于 &lt;code&gt;gateway.yml&lt;/code&gt; 中的 &lt;code&gt;name: skymates-gateway&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;Gateway 开始监听端口 8080，准备接收请求&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;请求转发&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;客户端发送请求 http://localhost:8080/user/profile&lt;/li&gt;
+&lt;li&gt;Gateway 根据  &lt;code&gt;gateway.yml&lt;/code&gt; 中定义的路由规则&lt;code&gt;Path=/user/**&lt;/code&gt; 匹配到 user-service-route&lt;/li&gt;
+&lt;li&gt;使用 lb://skymates-user-service, 从 Eureka Server 获取 User Service 的实例地址（例如 http://localhost:8081）&lt;/li&gt;
+&lt;li&gt;Gateway 将请求转发到 http://localhost:8081/profile, 完成路由&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;你可能会疑惑, Eureka Server 是怎么知道每个服务的名字的, 其实每个服务的配置文件中都有自己的名字, 当它们向 Eureka Server 注册的时候, Eureka Server 会根据他们提供的名字并解析出他们的 host ip 地址和对方提供的端口号, 比如 &lt;code&gt;user-service.yml&lt;/code&gt; 有相关定义:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;spring&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;application&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;name&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;skymates-user-service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Spring MVC, Spring Boot, Spring Cloud 区别和联系</title>
+      <link>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/005-spring-mvc-boot-cloud/</link>
+      <pubDate>Tue, 04 Mar 2025 08:32:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/005-spring-mvc-boot-cloud/</guid>
+      <description>&lt;h2 id=&#34;1-spring-boot-依赖管理&#34;&gt;1. Spring Boot 依赖管理&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;parent&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-parent&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;3.1.2&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- 这里指定 Spring Boot 版本 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/parent&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-security&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;当你在使用 Spring Boot 开发项目时, 通常会在 ⁠pom.xml 文件中指定一个父 POM, 上面我们的代码 &lt;code&gt;&amp;lt;parent&amp;gt;...&amp;lt;/parent&amp;gt;&lt;/code&gt; 就是干的这个事的,&lt;/p&gt;
+&lt;p&gt;可以发现我们不用指定 &lt;code&gt;spring-boot-starter-security&lt;/code&gt; 的版本, 就是因为我们引入了 Spring Boot 的父 POM, 而它又继承了&lt;code&gt;spring-boot-dependencies&lt;/code&gt; 这个 BOM, 在这个 BOM 文件中, Spring Boot 定义了所有核心组件的版本号, 比如 Spring Security、Spring MVC、Spring Data,&lt;/p&gt;
+&lt;p&gt;所以当我们添加一个 Spring Boot 的核心组件, 比如:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-security&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;并不需要写 &lt;code&gt;&amp;lt;version&amp;gt;&lt;/code&gt;, 因为 &lt;code&gt;spring-boot-dependencies&lt;/code&gt; 已经预先定义了与 Spring Boot 3.1.2 兼容的 Spring Security 版本(比如 6.2.1), Maven 会自动从父 POM 中读取这些版本号,&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-spring-boot-依赖管理&#34;&gt;1. Spring Boot 依赖管理&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;parent&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-parent&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;3.1.2&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- 这里指定 Spring Boot 版本 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/parent&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-security&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;当你在使用 Spring Boot 开发项目时, 通常会在 ⁠pom.xml 文件中指定一个父 POM, 上面我们的代码 &lt;code&gt;&amp;lt;parent&amp;gt;...&amp;lt;/parent&amp;gt;&lt;/code&gt; 就是干的这个事的,&lt;/p&gt;
+&lt;p&gt;可以发现我们不用指定 &lt;code&gt;spring-boot-starter-security&lt;/code&gt; 的版本, 就是因为我们引入了 Spring Boot 的父 POM, 而它又继承了&lt;code&gt;spring-boot-dependencies&lt;/code&gt; 这个 BOM, 在这个 BOM 文件中, Spring Boot 定义了所有核心组件的版本号, 比如 Spring Security、Spring MVC、Spring Data,&lt;/p&gt;
+&lt;p&gt;所以当我们添加一个 Spring Boot 的核心组件, 比如:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-security&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;并不需要写 &lt;code&gt;&amp;lt;version&amp;gt;&lt;/code&gt;, 因为 &lt;code&gt;spring-boot-dependencies&lt;/code&gt; 已经预先定义了与 Spring Boot 3.1.2 兼容的 Spring Security 版本(比如 6.2.1), Maven 会自动从父 POM 中读取这些版本号,&lt;/p&gt;
+&lt;p&gt;即使你不继承 ⁠spring-boot-starter-parent, 你仍然可以通过导入 ⁠spring-boot-dependencies BOM 来管理依赖版本:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependencyManagement&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-dependencies&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;3.0.0&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;type&amp;gt;&lt;/span&gt;pom&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/type&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;import&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependencyManagement&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-web&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在这个例子中，我们通过 ⁠&lt;code&gt;dependencyManagement&lt;/code&gt; 导入了 ⁠spring-boot-dependencies，这使得我们可以在 ⁠dependencies 中添加 ⁠spring-boot-starter-web 时不需要指定版本号，因为版本已经在 BOM 中定义好了。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;dependencyManagement&amp;gt;...&amp;lt;/dependencyManagement&amp;gt;&lt;/code&gt; 和 &lt;code&gt;&amp;lt;parent&amp;gt;...&amp;lt;/parent&amp;gt;&lt;/code&gt; 分别用来导入 BOM 和 POM, 他们两个导入一个就行了, Spring Boot BOM 被 Spring Boot POM 继承, 所以导入后者的目的也是导入前者,&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;spring-boot-dependencies&lt;/code&gt; 是一个巨大的依赖清单, 里面列出了所有 Spring Boot 生态中&lt;strong&gt;常用依赖&lt;/strong&gt;的版本, 当 Maven 解析 &lt;code&gt;pom.xml&lt;/code&gt; 时, 它会优先使用父 POM 中定义的版本号, 这样就避免了加入新的组件时手动指定版本的麻烦, 也保证了所有组件的兼容性,&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;一般组件 artifactId 为 &lt;code&gt;spring-boot-starter-xxx&lt;/code&gt; 格式, 都是 Spring Boot 核心组件, 不用再刻意指定版本号了, 而其他的组件仍需要指定, 比如:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- MySQL 数据库驱动 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;mysql&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;mysql-connector-java&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;8.0.33&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- 确保这里是最新版本 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- Lombok 在 编译时 生成 getter/setter，但 运行时不需要 Lombok 依赖，所以 provided 是合适的 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.projectlombok&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;lombok&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;1.18.36&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;provided&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-spring-cloud-依赖管理&#34;&gt;2. Spring Cloud 依赖管理&lt;/h2&gt;
+&lt;p&gt;Spring Cloud 建立在 Spring Boot 之上, 但特殊的地方是它也有自己的组件, 与 Spring Boot 类似, 需要引入 &lt;code&gt;spring-cloud-dependencies&lt;/code&gt; 进行版本管理, &lt;code&gt;spring-cloud-dependencies&lt;/code&gt; 是一个独立的 BOM 文件, 里面定义了 Spring Cloud 所有组件（比如 Eureka、Feign、Config Server 等）的版本号。&lt;/p&gt;
+&lt;p&gt;当我们同时使用 Spring Boot 和 Spring Cloud 的时候, 大致的 &lt;code&gt;pom.xml&lt;/code&gt; 文件:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- 使用 Spring Boot 父 POM --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;parent&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-parent&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;3.4.3&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;relativePath/&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- lookup parent from repository --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/parent&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- 引入 Spring Cloud BOM 来统一管理 Spring Cloud 相关组件的版本 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependencyManagement&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.cloud&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-cloud-dependencies&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;2024.0.0&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;type&amp;gt;&lt;/span&gt;pom&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/type&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;scope&amp;gt;&lt;/span&gt;import&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/scope&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependencyManagement&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- Spring Boot Web 依赖 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.boot&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-boot-starter-web&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- Spring Cloud Config，用于集中化配置管理 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.cloud&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-cloud-starter-config&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- Spring Cloud Netflix Eureka Client，用于服务注册与发现 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;org.springframework.cloud&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;spring-cloud-starter-netflix-eureka-client&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- 根据需要还可以添加其他 Spring Cloud 或 Spring Boot 组件 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;当我们说使用 Spring Boot 和 Spring Cloud 的时候, 使用的并不是他们本身, 而是他们的核心组件&lt;/p&gt;
+&lt;p&gt;Spring Boot 管理自己的核心组件（Spring Security、Spring Data、Spring Web 等
+Spring Boot 不管理 Spring Cloud 相关组件（Eureka、Feign、Gateway、Sleuth 等&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;3-总结&#34;&gt;3. 总结&lt;/h2&gt;
+&lt;p&gt;上面我们讨论了 Spring Boot 和 Spring Cloud 在配置依赖方面的区别和联系, 显然 Spring Cloud 是一个单独的框架, 有自己的组件, 我们可以在 Spring Boot 中使用 Spring Cloud, 但是 Spring Boot 的 BOM 只是管理了它自己核心组件的版本, 并不会管理 Spring Cloud 核心组件, 因此我们在使用他们两个的时候, 同时在 &lt;code&gt;pom.xml&lt;/code&gt; 指定各自的 BOM 才是最佳实践, 方便他们各自管理各自组件的版本,&lt;/p&gt;
+&lt;p&gt;所以 Spring Boot 本质就是构建于 Spring MVC 之上基于 Spring 生态的“快速开发框架”, 它帮我们集成了 Spring MVC 所有的基础配置, 包括 Servlet 路径, 视图, 以及 Servlet 容器 Tomcat, 除此之外还提前定义了 Spring 核心组件的依赖版本, 我们只要在 &lt;code&gt;pom.xml&lt;/code&gt; 引入了 &lt;code&gt;&amp;lt;parent&amp;gt;...&amp;lt;/parent&amp;gt;&lt;/code&gt;, 当我们使用一些依赖比如 Spring Security, Spring Data JPA 等, 直接加到 &lt;code&gt;pom.xml&lt;/code&gt; 中就行, 不用指定版本号或者担心以后更新引起版本冲突&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Java 基础八股文</title>
+      <link>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/002-nuggets-java-basic/</link>
+      <pubDate>Sat, 15 Feb 2025 10:30:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/002-nuggets-java-basic/</guid>
+      <description>&lt;h2 id=&#34;1-访问控制修饰符&#34;&gt;1. 访问控制修饰符&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;访问修饰符&lt;/th&gt;
+          &lt;th&gt;同一个类&lt;/th&gt;
+          &lt;th&gt;同一个包&lt;/th&gt;
+          &lt;th&gt;子类（不同包）&lt;/th&gt;
+          &lt;th&gt;其他包&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;private&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;default&lt;/strong&gt;（无修饰符）&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;protected&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;public&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;2-java-类的生命周期&#34;&gt;2. Java 类的生命周期&lt;/h2&gt;
+&lt;h3 id=&#34;21-基本概念&#34;&gt;2.1. 基本概念&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;类的生命周期包括: 加载 &amp;ndash;&amp;gt; 验证 &amp;ndash;&amp;gt; 准备 &amp;ndash;&amp;gt; 解析 &amp;ndash;&amp;gt; 初始化 &amp;ndash;&amp;gt; 使用 &amp;ndash;&amp;gt; 卸载&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;类只会被加载一次&lt;/strong&gt;, 即使 &lt;code&gt;new&lt;/code&gt; 了多个对象, 也不会重复加载,&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;类的加载是个连续的过程, 加载完就会进入验证, 准备等阶段&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;类的初始化 vs 对象的初始化&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;类初始化是 JVM 处理静态变量和静态代码块的过程, 发生在类的生命周期中, 类的初始化只执行一次（类第一次被加载时）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;对象初始化是创建对象并赋值实例变量的过程, 发生在实例化阶段（&lt;code&gt;new&lt;/code&gt; 关键字）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;JVM 不会在程序启动时一次性加载所有类, 而是按需加载, 触发类加载的条件：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;创建类的实例（&lt;code&gt;new&lt;/code&gt; 操作）&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-访问控制修饰符&#34;&gt;1. 访问控制修饰符&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;访问修饰符&lt;/th&gt;
+          &lt;th&gt;同一个类&lt;/th&gt;
+          &lt;th&gt;同一个包&lt;/th&gt;
+          &lt;th&gt;子类（不同包）&lt;/th&gt;
+          &lt;th&gt;其他包&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;private&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;default&lt;/strong&gt;（无修饰符）&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;protected&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;❌&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;public&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+          &lt;td&gt;✅&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;2-java-类的生命周期&#34;&gt;2. Java 类的生命周期&lt;/h2&gt;
+&lt;h3 id=&#34;21-基本概念&#34;&gt;2.1. 基本概念&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;类的生命周期包括: 加载 &amp;ndash;&amp;gt; 验证 &amp;ndash;&amp;gt; 准备 &amp;ndash;&amp;gt; 解析 &amp;ndash;&amp;gt; 初始化 &amp;ndash;&amp;gt; 使用 &amp;ndash;&amp;gt; 卸载&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;类只会被加载一次&lt;/strong&gt;, 即使 &lt;code&gt;new&lt;/code&gt; 了多个对象, 也不会重复加载,&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;类的加载是个连续的过程, 加载完就会进入验证, 准备等阶段&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;类的初始化 vs 对象的初始化&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;类初始化是 JVM 处理静态变量和静态代码块的过程, 发生在类的生命周期中, 类的初始化只执行一次（类第一次被加载时）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;对象初始化是创建对象并赋值实例变量的过程, 发生在实例化阶段（&lt;code&gt;new&lt;/code&gt; 关键字）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;JVM 不会在程序启动时一次性加载所有类, 而是按需加载, 触发类加载的条件：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;创建类的实例（&lt;code&gt;new&lt;/code&gt; 操作）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;访问类的静态成员（静态变量、静态方法 类级别）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;调用 Class.forName(&amp;ldquo;类名&amp;rdquo;) 反射加载: &lt;code&gt;Class.forName()&lt;/code&gt; 直接强制 JVM 加载并初始化该类&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;子类初始化时，父类会先被初始化&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;引用类的静态常量（&lt;code&gt;static final&lt;/code&gt;）：不会触发类的加载, 因为 &lt;code&gt;static final&lt;/code&gt; 常量在编译时已确定, 编译器会直接替换值&lt;/p&gt;
+&lt;h3 id=&#34;22-过程&#34;&gt;2.2. 过程&lt;/h3&gt;
+&lt;h4 id=&#34;221-加载&#34;&gt;2.2.1. 加载&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;JVM 通过类的全限定名找到 &lt;code&gt;.class&lt;/code&gt; 文件，并读取字节码&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;创建 &lt;code&gt;java.lang.Class&lt;/code&gt; 对象（这只是一个描述类的对象，而不是类的实例！）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;222-验证&#34;&gt;2.2.2. 验证&lt;/h4&gt;
+&lt;h4 id=&#34;223-准备&#34;&gt;2.2.3. 准备&lt;/h4&gt;
+&lt;p&gt;为类的静态变量（&lt;code&gt;static&lt;/code&gt; 变量）分配内存，并赋默认值（不会执行具体的赋值操作）, 这里的 &amp;ldquo;默认值&amp;rdquo; 不是程序员写的值，而是 JVM 规定的默认初值&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Test&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 10;  &lt;span style=&#34;color:#75715e&#34;&gt;// 在 &amp;#34;准备&amp;#34; 阶段 a = 0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;final&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; b &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 20; &lt;span style=&#34;color:#75715e&#34;&gt;// b 是编译期常量，直接在 class 文件常量池中存储&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;224-解析-动态链接&#34;&gt;2.2.4. 解析 动态链接&lt;/h4&gt;
+&lt;p&gt;在 Java 中，类、方法、变量等在 &lt;code&gt;.class&lt;/code&gt; 文件中以符号引用的形式&lt;strong&gt;存储在常量池&lt;/strong&gt;中。当 JVM 运行到 解析阶段 时，JVM 会&lt;strong&gt;根据符号引用找到实际的内存地址&lt;/strong&gt;，并替换掉符号引用。&lt;/p&gt;
+&lt;p&gt;符号引用 是 &lt;code&gt;.class&lt;/code&gt; 文件中使用的逻辑地址，用于表示：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;类和接口（如 &lt;code&gt;&amp;quot;java/lang/String&amp;quot;&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;字段（静态变量、实例变量）（如 &lt;code&gt;java/lang/System.out&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;方法（实例方法、静态方法）（如 &lt;code&gt;java/lang/String.length()&lt;/code&gt;）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;String s &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; s.&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在 &lt;code&gt;.class&lt;/code&gt; 文件的常量池中：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#1 = Class              #2 // java/lang/String
+#2 = Utf8               java/lang/String
+#3 = Methodref          #1.#4 // String.length()I
+#4 = NameAndType        #5:#6 // length:()I
+#5 = Utf8               length
+#6 = Utf8               ()I
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这里的 &lt;code&gt;#3 = Methodref&lt;/code&gt; 代表 &lt;code&gt;&amp;quot;java/lang/String.length()&amp;quot;&lt;/code&gt; 方法的符号引用&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;为什么要用符号引用，而不是一开始就存储内存地址？&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;如果一开始就存储内存地址, 就意味着 &lt;strong&gt;编译时&lt;/strong&gt;（而非运行时）就已经确定了一些关键的信息,&lt;/p&gt;
+&lt;p&gt;函数、变量地址已经确定, 无法加载动态库（DLL、so）, 不同操作系统的 &lt;code&gt;syscall&lt;/code&gt; 地址不同也会导致兼容性问题。&lt;/p&gt;
+&lt;p&gt;那 Java 还怎么实现跨平台呢? 就连 C, 大部分时候都是采用动态链接, 即一些标准库函数在编译后也只是符号连接, 在执行的时候动态链接阶段才会把符号引用换成内存地址,&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;C 语言的静态编译：地址是否确定？&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;在 C 语言的静态编译 过程中，编译器和链接器（linker）会对程序进行地址分配，但这些地址是 相对地址（Relative Address），并不是 物理地址（Physical Address）。具体来说：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;编译阶段（Compilation）
+&lt;ul&gt;
+&lt;li&gt;C 源代码（&lt;code&gt;.c&lt;/code&gt;）转换成 目标文件（&lt;code&gt;.o&lt;/code&gt; 或 &lt;code&gt;.obj&lt;/code&gt;），此时变量和函数的地址是 符号引用（Symbolic Reference），还没有实际地址。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;链接阶段（Linking）
+&lt;ul&gt;
+&lt;li&gt;静态编译 时，链接器（Linker）会分配相对地址，并替换符号引用。&lt;/li&gt;
+&lt;li&gt;可执行文件（&lt;code&gt;.exe&lt;/code&gt; / ELF）中的地址是 虚拟地址（Virtual Address），而非物理地址。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;加载（Loading）
+&lt;ul&gt;
+&lt;li&gt;操作系统（OS） 在运行 C 语言程序时，会使用 内存管理单元（MMU） 将虚拟地址映射到 实际物理地址。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;所以若程序编译后直接存储物理地址, 是不现实的, 除非一个机器只运行特定的一个程序,&lt;/p&gt;
+&lt;h2 id=&#34;3-java-基本类型和包装类型的区别&#34;&gt;3. Java 基本类型和包装类型的区别&lt;/h2&gt;
+&lt;p&gt;包装类型 (也叫引用类型) 就是把基础值包装成一个类然后添加一些常用工具方法, 基础类型就是最基本的, 告诉编译器分配多大内存空间&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注意：&lt;strong&gt;基本数据类型存放在栈中是一个常见的误区！&lt;/strong&gt; 基本数据类型的存储位置取决于它们的作用域和声明方式。如果它们是局部变量，那么它们会存放在栈中；如果它们是成员变量，那么它们会存放在堆/方法区/元空间中。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;4-自动装箱与拆箱&#34;&gt;4. 自动装箱与拆箱&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;装箱&lt;/strong&gt;：将基本类型用它们对应的引用类型包装起来；&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;拆箱&lt;/strong&gt;：将包装类型转换为基本数据类型；调用包装类型对象的 &lt;code&gt;valueOf()&lt;/code&gt;方法&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Integer i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; 10;  &lt;span style=&#34;color:#75715e&#34;&gt;//装箱&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; n &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; i;   &lt;span style=&#34;color:#75715e&#34;&gt;//拆箱&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;5-泛型&#34;&gt;5. 泛型&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;泛型类（需要显式声明）&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Box&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; T value;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Box&lt;/span&gt;(T value) { &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;value&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; value; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 使用时必须写 &amp;lt;Integer&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Box&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Integer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; box &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Box&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt;(123);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;泛型方法（自动推断）&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(T value) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(value);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(123);      &lt;span style=&#34;color:#75715e&#34;&gt;// 自动推断 T = Integer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello&amp;#34;&lt;/span&gt;);  &lt;span style=&#34;color:#75715e&#34;&gt;// 自动推断 T = String&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;上面的函数声明也可以改写为:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; T &lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;(T value) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(value);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;意思是, 函数 print 接受的参数值类型为 T, 返回值类型也是 T,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;String str &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; print(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello, Generics!&amp;#34;&lt;/span&gt;);  &lt;span style=&#34;color:#75715e&#34;&gt;// 传入 String&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Integer num &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; print(100);                &lt;span style=&#34;color:#75715e&#34;&gt;// 传入 Integer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Double decimal &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; print(99.&lt;span style=&#34;color:#a6e22e&#34;&gt;99&lt;/span&gt;);           &lt;span style=&#34;color:#75715e&#34;&gt;// 传入 Double&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;泛型方法可以定义多个类型参数&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 泛型方法可以定义多个类型参数&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T, U&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;showPair&lt;/span&gt;(T first, U second) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;First: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; first &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;, Second: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; second);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;showPair(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Age&amp;#34;&lt;/span&gt;, 25);     &lt;span style=&#34;color:#75715e&#34;&gt;// String 和 Integer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;showPair(3.&lt;span style=&#34;color:#a6e22e&#34;&gt;14&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;);    &lt;span style=&#34;color:#75715e&#34;&gt;// Double 和 Boolean&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;showPair(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;A&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Apple&amp;#34;&lt;/span&gt;);  &lt;span style=&#34;color:#75715e&#34;&gt;// Character 和 String&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 输出&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;First: Age, Second: 25
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;First: 3.&lt;span style=&#34;color:#a6e22e&#34;&gt;14&lt;/span&gt;, Second: &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;First: A, Second: Apple
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;6-lambda-表达式&#34;&gt;6. Lambda 表达式&lt;/h2&gt;
+&lt;p&gt;把一个字符串转成整数，正常情况下可能要写一个完整的函数：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Converter&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;convert&lt;/span&gt;(String s);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;MyConverter&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;implements&lt;/span&gt; Converter {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;convert&lt;/span&gt;(String s) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; Integer.&lt;span style=&#34;color:#a6e22e&#34;&gt;parseInt&lt;/span&gt;(s);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;但用 Lambda 表达式，可以简化为一行：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Converter converter &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (s) &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; Integer.&lt;span style=&#34;color:#a6e22e&#34;&gt;parseInt&lt;/span&gt;(s);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;为什么 &lt;code&gt;(s) -&amp;gt; Integer.parseInt(s)&lt;/code&gt; 可以赋值给 &lt;code&gt;Converter&lt;/code&gt;?&lt;/p&gt;
+&lt;p&gt;Converter 是一个接口，里面有一个方法叫 convert, 任何实现这个接口的东西，都必须实现这个方法, Lambda 表达式 &lt;code&gt;(s) -&amp;gt; Integer.parseInt(s)&lt;/code&gt; 正好匹配 Converter 接口里 convert 方法的签名, 因为这个 Lambda 表达式完全符合 Converter 接口的要求，Java 允许把它直接赋值给 Converter 类型的变量。换句话说，&lt;code&gt;(s) -&amp;gt; Integer.parseInt(s)&lt;/code&gt; 就像是一个临时的、匿名的 Converter 实现&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;7-函数式接口&#34;&gt;7. 函数式接口&lt;/h2&gt;
+&lt;p&gt;Java 中有两种接口,  普通接口 和 函数式接口, 普通接口用于定义&lt;strong&gt;一组&lt;/strong&gt;相关的行为规范, 通常用于面向对象编程中的抽象和多态, 通过 implements 关键字由类显式实现, 函数式接口专为函数式编程设计, 表示&lt;strong&gt;单一&lt;/strong&gt;功能的抽象, 通常通过 Lambda 表达式、方法引用或匿名内部类实现, 不需要显式定义一个完整的类&lt;/p&gt;
+&lt;p&gt;假设我们定义一个简单的函数式接口 Calculator，用于表示两个数的计算操作：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@FunctionalInterface&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;// 可选注解，确保接口只有一个抽象方法&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Calculator&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;calculate&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; b);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;使用 Lambda 表达式实现:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Calculator addition &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (a, b) &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; a &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; b;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;加法结果: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; addition.&lt;span style=&#34;color:#a6e22e&#34;&gt;calculate&lt;/span&gt;(5, 3)); &lt;span style=&#34;color:#75715e&#34;&gt;// 输出: 加法结果: 8&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;使用方法引用实现:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Main&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;add&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; b) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; a &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; b;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String&lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt; args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Calculator addition &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Main::add;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;加法结果: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; addition.&lt;span style=&#34;color:#a6e22e&#34;&gt;calculate&lt;/span&gt;(5, 3)); &lt;span style=&#34;color:#75715e&#34;&gt;// 输出: 加法结果: 8&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;使用匿名内部类实现:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Main&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String&lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt; args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 使用匿名内部类实现减法&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Calculator subtraction &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Calculator() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#a6e22e&#34;&gt;@Override&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;calculate&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; b) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; a &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; b;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;减法结果: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; subtraction.&lt;span style=&#34;color:#a6e22e&#34;&gt;calculate&lt;/span&gt;(5, 3)); &lt;span style=&#34;color:#75715e&#34;&gt;// 输出: 减法结果: 2&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Java 8 提供了一些常用的内置函数式接口，主要在 &lt;code&gt;java.util.function&lt;/code&gt; 包中：&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;函数式接口&lt;/th&gt;
+          &lt;th&gt;抽象方法&lt;/th&gt;
+          &lt;th&gt;作用&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;code&gt;Consumer&amp;lt;T&amp;gt;&lt;/code&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;void accept(T t)&lt;/code&gt;&lt;/td&gt;
+          &lt;td&gt;只接收参数，没有返回值&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;code&gt;Supplier&amp;lt;T&amp;gt;&lt;/code&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;T get()&lt;/code&gt;&lt;/td&gt;
+          &lt;td&gt;不接收参数，返回一个值&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;code&gt;Function&amp;lt;T, R&amp;gt;&lt;/code&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;R apply(T t)&lt;/code&gt;&lt;/td&gt;
+          &lt;td&gt;接收一个参数，返回一个结果&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;code&gt;Predicate&amp;lt;T&amp;gt;&lt;/code&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;boolean test(T t)&lt;/code&gt;&lt;/td&gt;
+          &lt;td&gt;进行条件判断，返回 &lt;code&gt;true&lt;/code&gt; 或 &lt;code&gt;false&lt;/code&gt;&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;code&gt;Function&amp;lt;T, R&amp;gt;&lt;/code&gt; 也是函数式接口, 并不是什么高级的东西, 只不过添加了泛型, 定义如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@FunctionalInterface&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Function&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T, R&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 唯一抽象方法&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    R &lt;span style=&#34;color:#a6e22e&#34;&gt;apply&lt;/span&gt;(T t);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 默认方法：函数组合&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;default&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;V&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; Function&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;V, R&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;compose&lt;/span&gt;(Function&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;?&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;super&lt;/span&gt; V, &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;extends&lt;/span&gt; T&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; before) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Objects.&lt;span style=&#34;color:#a6e22e&#34;&gt;requireNonNull&lt;/span&gt;(before);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; (V v) &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; apply(before.&lt;span style=&#34;color:#a6e22e&#34;&gt;apply&lt;/span&gt;(v));
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以看到 &lt;code&gt;Function&amp;lt;T, R&amp;gt;&lt;/code&gt; 只有一个抽象方法 &lt;code&gt;R apply(T t)&lt;/code&gt;, 也就是说实现了这个方法的 lambda 或者其他类, 都算是实现了该接口, 比如:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Function&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Double, Double&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; addTax &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; price &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; price &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; 1.&lt;span style=&#34;color:#a6e22e&#34;&gt;13&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// 加13%的税&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;double&lt;/span&gt; priceWithTax &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; addTax.&lt;span style=&#34;color:#a6e22e&#34;&gt;apply&lt;/span&gt;(discountedPrice);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;折扣后加税价: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; priceWithTax); &lt;span style=&#34;color:#75715e&#34;&gt;// 输出: 90.4&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;泛型在 java 中有三种情况可以用: 类, 接口, 方法&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;8-方法引用&#34;&gt;8. 方法引用&lt;/h2&gt;
+&lt;p&gt;当你的 Lambda 表达式只是调用一个&lt;strong&gt;已经存在的方法&lt;/strong&gt;时，可以用方法引用来代替，简单来说，方法引用是 Lambda 表达式的“快捷方式”&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;类名::静态方法
+对象名::实例方法
+类名::实例方法（特殊情况）
+类名::new（构造方法引用）
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;类名::静态方法&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 使用 Lambda 表达式&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Function&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;String, Integer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; lambdaFunc &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; s &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; Integer.&lt;span style=&#34;color:#a6e22e&#34;&gt;parseInt&lt;/span&gt;(s);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 使用方法引用, 类名::静态方法&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Function&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;String, Integer&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; methodRefFunc &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Integer::parseInt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 测试&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(lambdaFunc.&lt;span style=&#34;color:#a6e22e&#34;&gt;apply&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;100&amp;#34;&lt;/span&gt;)); &lt;span style=&#34;color:#75715e&#34;&gt;// 输出 100&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(methodRefFunc.&lt;span style=&#34;color:#a6e22e&#34;&gt;apply&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;200&amp;#34;&lt;/span&gt;)); &lt;span style=&#34;color:#75715e&#34;&gt;// 输出 200&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;对象名::实例方法&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;String str &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;hello&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 使用 Lambda 表达式&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Runnable lambda &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; () &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(str.&lt;span style=&#34;color:#a6e22e&#34;&gt;toUpperCase&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 使用方法引用, 对象名::实例方法&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Runnable methodRef &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; str::toUpperCase;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 执行&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;lambda.&lt;span style=&#34;color:#a6e22e&#34;&gt;run&lt;/span&gt;(); &lt;span style=&#34;color:#75715e&#34;&gt;// 输出 HELLO&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;methodRef.&lt;span style=&#34;color:#a6e22e&#34;&gt;run&lt;/span&gt;(); &lt;span style=&#34;color:#75715e&#34;&gt;// 输出 HELLO&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;9-项目中哪里用到了泛型&#34;&gt;9. 项目中哪里用到了泛型?&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;PageDTO&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; List&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; content;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; pageNumber;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;long&lt;/span&gt; totalElements;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;boolean&lt;/span&gt; hasNext;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;PageConverter&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T, DTO&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; PageDTO&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;DTO&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;convertToPageDTO&lt;/span&gt;(Page&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; entityPage, Function&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;T, DTO&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; converter) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        List&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;DTO&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; dtoList &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; entityPage.&lt;span style=&#34;color:#a6e22e&#34;&gt;getContent&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;stream&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                .&lt;span style=&#34;color:#a6e22e&#34;&gt;map&lt;/span&gt;(converter)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                .&lt;span style=&#34;color:#a6e22e&#34;&gt;collect&lt;/span&gt;(Collectors.&lt;span style=&#34;color:#a6e22e&#34;&gt;toList&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        PageDTO&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;DTO&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; pageDTO &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; PageDTO&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        pageDTO.&lt;span style=&#34;color:#a6e22e&#34;&gt;setContent&lt;/span&gt;(dtoList);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        pageDTO.&lt;span style=&#34;color:#a6e22e&#34;&gt;setPageNumber&lt;/span&gt;(entityPage.&lt;span style=&#34;color:#a6e22e&#34;&gt;getNumber&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        pageDTO.&lt;span style=&#34;color:#a6e22e&#34;&gt;setTotalElements&lt;/span&gt;(entityPage.&lt;span style=&#34;color:#a6e22e&#34;&gt;getTotalElements&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        pageDTO.&lt;span style=&#34;color:#a6e22e&#34;&gt;setHasNext&lt;/span&gt;(entityPage.&lt;span style=&#34;color:#a6e22e&#34;&gt;hasNext&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; pageDTO;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; PageDTO&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;PostDTO&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getUserPosts&lt;/span&gt;(Long userId, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; page, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; size) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 按创建时间降序排序，获取分页对象&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Pageable pageable &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; PageRequest.&lt;span style=&#34;color:#a6e22e&#34;&gt;of&lt;/span&gt;(page, size, Sort.&lt;span style=&#34;color:#a6e22e&#34;&gt;by&lt;/span&gt;(Sort.&lt;span style=&#34;color:#a6e22e&#34;&gt;Direction&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;DESC&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;createdAt&amp;#34;&lt;/span&gt;));
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 查询该用户发布的帖子&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Page&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Post&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; postPage &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; postRepository.&lt;span style=&#34;color:#a6e22e&#34;&gt;findByUserIdAndStatus&lt;/span&gt;(userId, 1, pageable);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 查询该用户点赞过的帖子 ID&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    List&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;Long&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; likedPostIds &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; postLikeRepository.&lt;span style=&#34;color:#a6e22e&#34;&gt;findPostIdsByUserId&lt;/span&gt;(userId);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; pageConverter.&lt;span style=&#34;color:#a6e22e&#34;&gt;convertToPageDTO&lt;/span&gt;(postPage,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            post &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; convertToDTO(post, likedPostIds.&lt;span style=&#34;color:#a6e22e&#34;&gt;contains&lt;/span&gt;(post.&lt;span style=&#34;color:#a6e22e&#34;&gt;getId&lt;/span&gt;())));
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这段代码的作用是：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;从 &lt;code&gt;entityPage&lt;/code&gt; 中获取当前页的实体列表（&lt;code&gt;List&amp;lt;T&amp;gt;&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;使用 &lt;code&gt;converter&lt;/code&gt; 函数将每个实体 &lt;code&gt;T&lt;/code&gt; 转换为对应的 &lt;code&gt;DTO&lt;/code&gt; 对象&lt;/li&gt;
+&lt;li&gt;将转换后的结果收集到一个新的 &lt;code&gt;List&amp;lt;DTO&amp;gt;&lt;/code&gt; 中&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;假设：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;T&lt;/code&gt; 是 &lt;code&gt;User&lt;/code&gt;（实体类），有字段 &lt;code&gt;id&lt;/code&gt; 和 &lt;code&gt;name&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;DTO&lt;/code&gt; 是 &lt;code&gt;UserDTO&lt;/code&gt;（数据传输对象），有字段 &lt;code&gt;userId&lt;/code&gt; 和 &lt;code&gt;fullName&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;converter&lt;/code&gt; 定义为：&lt;code&gt;user -&amp;gt; new UserDTO(user.getId(), user.getName())&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;如果 &lt;code&gt;entityPage.getContent()&lt;/code&gt; 返回 &lt;code&gt;[User(1, &amp;quot;Alice&amp;quot;), User(2, &amp;quot;Bob&amp;quot;)]&lt;/code&gt;：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;stream()&lt;/code&gt; 创建一个流：&lt;code&gt;[User(1, &amp;quot;Alice&amp;quot;), User(2, &amp;quot;Bob&amp;quot;)]&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;map(converter)&lt;/code&gt; 转换为：&lt;code&gt;[UserDTO(1, &amp;quot;Alice&amp;quot;), UserDTO(2, &amp;quot;Bob&amp;quot;)]&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;collect(Collectors.toList())&lt;/code&gt; 得到：&lt;code&gt;List&amp;lt;UserDTO&amp;gt;&lt;/code&gt;，包含 &lt;code&gt;[UserDTO(1, &amp;quot;Alice&amp;quot;), UserDTO(2, &amp;quot;Bob&amp;quot;)]&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;最终，&lt;code&gt;dtoList&lt;/code&gt; 是一个包含转换后 &lt;code&gt;UserDTO&lt;/code&gt; 对象的列表&lt;/p&gt;
+&lt;h2 id=&#34;10-反射&#34;&gt;10. 反射&lt;/h2&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>后端八股文</title>
+      <link>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/003-nuggets-backend/</link>
+      <pubDate>Wed, 22 Jan 2025 15:30:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/003-nuggets-backend/</guid>
+      <description>&lt;h2 id=&#34;1-sessions-状态管理&#34;&gt;1. Sessions 状态管理&lt;/h2&gt;
+&lt;p&gt;JWT由三部分组成, Header, Payload, Signature, JWT 的 Header 和 Payload 部分是经过 Base64 URL 编码的, 本质上是“明文”的, 不适合在Payload中存储敏感信息, 只有Signature部分是经过加密的, 用于验证数据的完整性. 了解更多: &lt;a href=&#34;https://jwt.io/&#34;&gt;https://jwt.io/&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;JWTs provide a means of maintaining session state on the client instead of doing it on the server.&lt;/p&gt;
+&lt;p&gt;With server-side sessions, you will either have to &lt;strong&gt;store the session identifier in a database&lt;/strong&gt;, or else &lt;strong&gt;keep it in memory&lt;/strong&gt; and make sure that the client always hits the same server.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-sessions-状态管理&#34;&gt;1. Sessions 状态管理&lt;/h2&gt;
+&lt;p&gt;JWT由三部分组成, Header, Payload, Signature, JWT 的 Header 和 Payload 部分是经过 Base64 URL 编码的, 本质上是“明文”的, 不适合在Payload中存储敏感信息, 只有Signature部分是经过加密的, 用于验证数据的完整性. 了解更多: &lt;a href=&#34;https://jwt.io/&#34;&gt;https://jwt.io/&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;JWTs provide a means of maintaining session state on the client instead of doing it on the server.&lt;/p&gt;
+&lt;p&gt;With server-side sessions, you will either have to &lt;strong&gt;store the session identifier in a database&lt;/strong&gt;, or else &lt;strong&gt;keep it in memory&lt;/strong&gt; and make sure that the client always hits the same server.&lt;/p&gt;
+&lt;p&gt;Moving the session to the client means that you remove the dependency on a server-side session, but it imposes its own set of challenges.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Storing the token securely. (禁止 客户端 JS 代码访问 token, 可以把 token 放到 cookie 中, 然后设置该 cookie 为 HTTP only)&lt;/li&gt;
+&lt;li&gt;Transporting it securely. (后端设置 cookie, 只允许通过 HTTPS 传输)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;[Stackoverflow][https://stackoverflow.com/a/45214431/16317008]&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-ab-压测-大部分请求失败&#34;&gt;2. AB 压测 大部分请求失败&lt;/h2&gt;
+&lt;p&gt;有时候测试会遇到大部分请求都显示失败, 可是实际服务端却是执行成功了,  可能一个原因是 &lt;code&gt;ab&lt;/code&gt; 运行负载测试时，它默认会检查所有响应的长度是否一致。如果服务器返回的响应长度不一致，&lt;code&gt;ab&lt;/code&gt; 会报错，认为测试结果不可靠。&lt;code&gt;-l&lt;/code&gt; 选项允许 &lt;code&gt;ab&lt;/code&gt; 忽略这些长度变化。&lt;a href=&#34;https://stackoverflow.com/a/28435814/16317008&#34;&gt;了解更多&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>QPS TPS PV 等概念</title>
+      <link>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/001-qps-pv/</link>
+      <pubDate>Tue, 21 Jan 2025 18:20:10 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/java%E5%90%8E%E7%AB%AF/001-qps-pv/</guid>
+      <description>&lt;p&gt;&lt;strong&gt;PV（Page View，页面浏览量）：&lt;/strong&gt; 指的是页面被浏览的总次数。用户每次打开一个页面，就算作一次 PV。同一个用户多次访问同一页面，PV 也会累加。PV 是衡量网站流量的重要指标，但它不能反映实际访问的用户数量。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;QPS（Query Per Second，每秒查询数）：&lt;/strong&gt; 指的是系统每秒能够处理的请求数量。QPS 是衡量系统吞吐能力的重要指标。比如说某 API 支持 200 QPS，就是说这个接口可以做到每秒查寻 200 次。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;TPS（Transactions Per Second，每秒事务数）&lt;/strong&gt;: TPS 指的是每秒钟系统能够处理的事务数量, 一个事务通常包含多个操作, 例如一次完整的订单提交、一次银行转账等, 在一些简单的系统中，一个请求就是一个事务，此时 QPS 和 TPS 相等。但在复杂的系统中，一个事务可能包含多次查询，此时 TPS 通常小于 QPS.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;并发数：&lt;/strong&gt; 指的是系统同时能够处理的请求数量, 假设一个系统的 QPS 是 1000, 平均每个请求的处理时间是 100 毫秒, 那么这个系统的并发数大约为 1000 * 0.1 = 100 (1 s 处理 1000 个请求, 那 0.1 秒可以处理 100 个)&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;想象一个水龙头（请求入口），水流速度是每秒 1000 毫升（QPS）。水流到一个水管（系统），水管的长度决定了水在里面停留的时间，假设水在水管中需要 0.1 秒才能流出（平均处理时间）。&lt;/p&gt;
+&lt;p&gt;那么在任何时刻，水管中都存有多少水呢？答案是 1000 毫升/秒 * 0.1 秒 = 100 毫升。这 100 毫升水就相当于并发数。&lt;/p&gt;</description>
+      <content>&lt;p&gt;&lt;strong&gt;PV（Page View，页面浏览量）：&lt;/strong&gt; 指的是页面被浏览的总次数。用户每次打开一个页面，就算作一次 PV。同一个用户多次访问同一页面，PV 也会累加。PV 是衡量网站流量的重要指标，但它不能反映实际访问的用户数量。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;QPS（Query Per Second，每秒查询数）：&lt;/strong&gt; 指的是系统每秒能够处理的请求数量。QPS 是衡量系统吞吐能力的重要指标。比如说某 API 支持 200 QPS，就是说这个接口可以做到每秒查寻 200 次。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;TPS（Transactions Per Second，每秒事务数）&lt;/strong&gt;: TPS 指的是每秒钟系统能够处理的事务数量, 一个事务通常包含多个操作, 例如一次完整的订单提交、一次银行转账等, 在一些简单的系统中，一个请求就是一个事务，此时 QPS 和 TPS 相等。但在复杂的系统中，一个事务可能包含多次查询，此时 TPS 通常小于 QPS.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;并发数：&lt;/strong&gt; 指的是系统同时能够处理的请求数量, 假设一个系统的 QPS 是 1000, 平均每个请求的处理时间是 100 毫秒, 那么这个系统的并发数大约为 1000 * 0.1 = 100 (1 s 处理 1000 个请求, 那 0.1 秒可以处理 100 个)&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;想象一个水龙头（请求入口），水流速度是每秒 1000 毫升（QPS）。水流到一个水管（系统），水管的长度决定了水在里面停留的时间，假设水在水管中需要 0.1 秒才能流出（平均处理时间）。&lt;/p&gt;
+&lt;p&gt;那么在任何时刻，水管中都存有多少水呢？答案是 1000 毫升/秒 * 0.1 秒 = 100 毫升。这 100 毫升水就相当于并发数。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;p&gt;可以通过 PV 来估算网站的峰值 QPS, 根据 28 定理, 80%的请求发生在20%的时间内:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;峰值 QPS ≈ (总 PV 数 * 80%) / (每天秒数 * 20%)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;假设一个网站每天的 PV 是 100 万，那么它的峰值 QPS 大约为 (1000000 * 0.8) / (86400 * 0.2) ≈ 46。这意味着&lt;strong&gt;在访问高峰期(20%的时间)&lt;/strong&gt;，网站需要每秒处理约 46 个请求,&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;我说下我目前接触下来比较合理的 QPS 范围：带了数据库的服务一般写性能在 5k 以下，读性能一般在 10k 以下，能到 10k 以上的话，那很可能是在数据库前面加了层缓存。&lt;/p&gt;
+&lt;p&gt;比如候选人上来就说服务单实例 API 读写性能都有上万 QPS, 那我可以大概猜到这&lt;strong&gt;应该&lt;/strong&gt;是个纯 cpu+内存的 API 链路。但如果候选人还说这里面没做缓存且有数据库调用，那我可能会追问这里头用的是哪款数据库，底层是什么&lt;a href=&#34;https://zhida.zhihu.com/search?content_id=239847572&amp;amp;content_type=Article&amp;amp;match_order=1&amp;amp;q=%e5%ad%98%e5%82%a8%e5%bc%95%e6%93%8e&amp;amp;zhida_source=entity&#34;&gt;存储引擎&lt;/a&gt;？&lt;/p&gt;
+&lt;p&gt;此段摘自: &lt;a href=&#34;https://zhuanlan.zhihu.com/p/682728083&#34;&gt;https://zhuanlan.zhihu.com/p/682728083&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;注意我们可以通过一个网站的 PV 来估算它需要的 QPS, 一般网站都是一百以内的 QPS, 因为 100 QPS 就意味着  216万 PV 了, 反推：总 PV 数 = (峰值 QPS * 每天秒数 * 20%) / 80%&lt;/p&gt;
+&lt;p&gt;但是这只是估算一天 20% 时间的 QPS, 实际比这复杂, 比如淘宝那种, 某个时间点, 很多人冲进直播间买东西, 这就不能通过上面的方式来计算网站需要的 QPS 了, 这个时候就要看我们服务器最多可以支持多大 QPS, 和网站每天峰值 QPS 估算不是一个场景了,&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;上面我们已经提到: &lt;code&gt;并发数 = QPS / RT(响应时间)&lt;/code&gt;, 因此: &lt;code&gt;QPS = 并发数 * RT&lt;/code&gt;, 这是不是说, 并发数越高, 我们的 QPS 就会越高呢, 从公式可以看出：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;在平均响应时间不变的情况下，并发数越高，QPS越高&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;如果并发数不变，平均响应时间越短，QPS越高&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;可是不要忽略: &lt;strong&gt;并发数和平均响应时间是相互影响的&lt;/strong&gt;, 在并发数设置过大时, API 同时要处理很多请求, 我们知道每个请求, 服务器都会开启一个新的线程或者协程, 用线程的时候一般都会用线程池, 因为频繁创建删除线程也是有代价的, 另外线程池可以用来控制线程总数: 并发度.&lt;/p&gt;
+&lt;p&gt;不要忘了, 线程是有时间片的, 并不是说我们开启 1000 个线程, 就真的是 1000 个线程在同时运行, 所以当并发 HTTP 请求增加时, 就会导致大量线程在 READY 队列等待 CPU, 每个线程分配到的CPU时间片减少, 这个时候就会导致大量的上下文切换, 也就是线程实际干活的时间越来越短, 时间都浪费在了上下文切换上,&lt;/p&gt;
+&lt;p&gt;所以并发数过大时，API 同时要处理很多请求，会频繁切换上下文，而真正用于处理请求的时间变少，请求响应时间也会变长, 反而使得 QPS 会降低, 一般 API 会有一个合适的并发数，在该并发数下，API 的 QPS 可以达到最大，但该并发数不一定是最佳并发数，还要参考该并发数下的平均请求响应时间。&lt;/p&gt;
+&lt;p&gt;比如下面这个API压测数据，并发50至并发300的QPS都是220左右，但是并发2000的平均请求响应时间是60ms，平均QPS下降到33，那么我们可以理解为并发2000下API处于不可用状态了。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/8dbc603d578987e024070cdad7b84227.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;来源: &lt;a href=&#34;https://zhuanlan.zhihu.com/p/609348456&#34;&gt;https://zhuanlan.zhihu.com/p/609348456&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>
