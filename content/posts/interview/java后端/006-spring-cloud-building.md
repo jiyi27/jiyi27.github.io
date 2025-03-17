@@ -2,9 +2,10 @@
 title: Spring Cloud 核心组件和配置
 date: 2025-03-07 08:28:52
 categories:
- - spring boot
+ - 面试
 tags:
- - spring boot
+ - 面试
+ - java后端面试
 ---
 
 ## 1. 两个配置文件
