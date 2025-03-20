@@ -6,15 +6,226 @@
     <description>Recent content in 面试 on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Thu, 20 Mar 2025 22:21:39 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/categories/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 20 Mar 2025 18:08:52 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/categories/%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>数据结构八股文</title>
-      <link>https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/005-%E5%B8%B8%E8%A7%81%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</link>
-      <pubDate>Thu, 20 Mar 2025 22:21:39 +0000</pubDate>
+      <title>二叉树和堆</title>
+      <link>https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/005-%E4%BA%8C%E5%8F%89%E6%A0%91-%E5%A0%86/</link>
+      <pubDate>Thu, 20 Mar 2025 18:08:52 +0000</pubDate>
       
-      <guid>https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/005-%E5%B8%B8%E8%A7%81%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</guid>
-      <description></description>
-      <content></content>
+      <guid>https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/005-%E4%BA%8C%E5%8F%89%E6%A0%91-%E5%A0%86/</guid>
+      <description>&lt;h2 id=&#34;1-二叉树&#34;&gt;1. 二叉树&lt;/h2&gt;
+&lt;h3 id=&#34;11-表达式树-expression-tree&#34;&gt;1.1. 表达式树 Expression Tree&lt;/h3&gt;
+&lt;p&gt;树的叶子节点通常是操作数（例如数字或变量）, 而非叶子节点是运算符（例如 +、-、*、/）, 通过遍历表达式树（例如前序、中序或后序遍历），可以重新生成表达式或计算其结果, 表达式 (3 + 5) * 2 可以表示为：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;    *
+   / \
+  +   2
+ / \
+3   5
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;计算器程序：实现复杂数学计算时，表达式树可以帮助按正确的顺序执行运算（尊重运算优先级和括号）&lt;/li&gt;
+&lt;li&gt;数据库查询优化：在 SQL 查询引擎中，表达式树可以表示查询条件，帮助优化执行计划&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;12-决策树-decision-tree&#34;&gt;1.2. 决策树 Decision Tree&lt;/h3&gt;
+&lt;p&gt;决策树是一种树形结构, 用于表示决策过程或分类/回归问题, 树的每个节点代表一个决策点（基于某个条件）, 分支代表可能的决策路径, 叶子节点通常表示最终的决策结果或类别:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;       [天气]
+      /      \
+  [晴天]    [下雨]
+  /           \
+[外出]      [待在家]
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;机器学习：决策树是经典的监督学习算法，用于分类和回归任务。例如，判断用户是否会购买某产品（基于年龄、收入等特征）&lt;/li&gt;
+&lt;li&gt;游戏开发：在 AI 行为设计中，决策树用于控制 NPC（非玩家角色）的行为，例如决定是否攻击或逃跑&lt;/li&gt;
+&lt;li&gt;医疗诊断：基于症状、体征等条件，决策树可以帮助医生判断疾病类型&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2-遍历二叉树---dfs&#34;&gt;2. 遍历二叉树 - DFS&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Recursion 三步:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;确定终止条件&lt;/li&gt;
+&lt;li&gt;确定单层逻辑&lt;/li&gt;
+&lt;li&gt;确定返回值和参数&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;其实&lt;strong&gt;首先要确定的应该是遍历顺序&lt;/strong&gt;, 因为遍历顺序决定了递归的顺序, 递归的顺序决定了返回值和参数, 且听我慢慢说来&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Solution104&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; __init__(self):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;max_depth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;maxDepth&lt;/span&gt;(self, root):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;preorder&lt;/span&gt;(node):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; node:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;# 前序遍历 中左右&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;max_depth &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;max_depth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; node&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;left:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                preorder(node&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;left)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth &lt;span style=&#34;color:#f92672&#34;&gt;-=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; node&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;right:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                preorder(node&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;right)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth &lt;span style=&#34;color:#f92672&#34;&gt;-=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        preorder(root)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;前序遍历使用场景: 函数处理当前节点再进行递归处理其他子节点 中左右 递归函数的单层逻辑都是处理当前节点, 一般我们通过一个&lt;strong&gt;全局变量&lt;/strong&gt; (比如上面的 &lt;code&gt;max_depth&lt;/code&gt;) 来作为参数来传递 (积累) 每次 recursion 的影响&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-二叉树&#34;&gt;1. 二叉树&lt;/h2&gt;
+&lt;h3 id=&#34;11-表达式树-expression-tree&#34;&gt;1.1. 表达式树 Expression Tree&lt;/h3&gt;
+&lt;p&gt;树的叶子节点通常是操作数（例如数字或变量）, 而非叶子节点是运算符（例如 +、-、*、/）, 通过遍历表达式树（例如前序、中序或后序遍历），可以重新生成表达式或计算其结果, 表达式 (3 + 5) * 2 可以表示为：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;    *
+   / \
+  +   2
+ / \
+3   5
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;计算器程序：实现复杂数学计算时，表达式树可以帮助按正确的顺序执行运算（尊重运算优先级和括号）&lt;/li&gt;
+&lt;li&gt;数据库查询优化：在 SQL 查询引擎中，表达式树可以表示查询条件，帮助优化执行计划&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;12-决策树-decision-tree&#34;&gt;1.2. 决策树 Decision Tree&lt;/h3&gt;
+&lt;p&gt;决策树是一种树形结构, 用于表示决策过程或分类/回归问题, 树的每个节点代表一个决策点（基于某个条件）, 分支代表可能的决策路径, 叶子节点通常表示最终的决策结果或类别:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;       [天气]
+      /      \
+  [晴天]    [下雨]
+  /           \
+[外出]      [待在家]
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;机器学习：决策树是经典的监督学习算法，用于分类和回归任务。例如，判断用户是否会购买某产品（基于年龄、收入等特征）&lt;/li&gt;
+&lt;li&gt;游戏开发：在 AI 行为设计中，决策树用于控制 NPC（非玩家角色）的行为，例如决定是否攻击或逃跑&lt;/li&gt;
+&lt;li&gt;医疗诊断：基于症状、体征等条件，决策树可以帮助医生判断疾病类型&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2-遍历二叉树---dfs&#34;&gt;2. 遍历二叉树 - DFS&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Recursion 三步:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;确定终止条件&lt;/li&gt;
+&lt;li&gt;确定单层逻辑&lt;/li&gt;
+&lt;li&gt;确定返回值和参数&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;其实&lt;strong&gt;首先要确定的应该是遍历顺序&lt;/strong&gt;, 因为遍历顺序决定了递归的顺序, 递归的顺序决定了返回值和参数, 且听我慢慢说来&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Solution104&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; __init__(self):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;max_depth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;maxDepth&lt;/span&gt;(self, root):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;preorder&lt;/span&gt;(node):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; node:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;# 前序遍历 中左右&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth &lt;span style=&#34;color:#f92672&#34;&gt;+=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;max_depth &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;max_depth &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; node&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;left:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                preorder(node&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;left)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth &lt;span style=&#34;color:#f92672&#34;&gt;-=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; node&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;right:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                preorder(node&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;right)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth &lt;span style=&#34;color:#f92672&#34;&gt;-=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        preorder(root)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;current_depth
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;前序遍历使用场景: 函数处理当前节点再进行递归处理其他子节点 中左右 递归函数的单层逻辑都是处理当前节点, 一般我们通过一个&lt;strong&gt;全局变量&lt;/strong&gt; (比如上面的 &lt;code&gt;max_depth&lt;/code&gt;) 来作为参数来传递 (积累) 每次 recursion 的影响&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;而后序遍历适合通过返回值的方式来传递信息, 因为当前节点最后处理, 通过下面的例子可以看出:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;maxDepth&lt;/span&gt;(root):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; root:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 后序遍历 左右中&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    left &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;maxDepth(root&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;left)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    right &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; self&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;maxDepth(root&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;right)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; max(left, right) &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;DFS 是 &amp;ldquo;Depth-First Search&amp;rdquo; 的缩写，中文翻译为“深度优先搜索”&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;深度优先：指的是在搜索过程中，优先沿着一条路径尽可能深入，直到无法继续深入为止（到达尽头或满足某个条件），然后回溯到上一个节点，再探索其他路径&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;搜索过程：从起点开始，选择一个方向深入探索，访问完一个节点后，继续访问它的子节点，而不是立即访问同一层的其他节点&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在二叉树遍历的上下文中，DFS 通常表现为递归调用，因为递归天然具有“深入到底再回溯”的特性:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;前序遍历：先访问根节点，然后深度优先遍历左子树，再遍历右子树&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;中序遍历：先深度优先遍历左子树，然后访问根节点，再遍历右子树&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;后序遍历：先深度优先遍历左子树，再遍历右子树，最后访问根节点&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;DFS 的特点&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;可以用递归&lt;/li&gt;
+&lt;li&gt;也可以用栈&lt;/li&gt;
+&lt;li&gt;空间复杂度：O(h)，h 是树的高度或图的最大深度，因为需要存储递归调用栈或显式栈&lt;/li&gt;
+&lt;li&gt;时间复杂度：O(n)，n 是节点数，因为每个节点都会被访问一次&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;BFS（广度优先搜索，Breadth-First Search）：一层一层地探索，先访问所有同一层的节点&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;3-二叉树&#34;&gt;3. 二叉树&lt;/h2&gt;
+&lt;h3 id=&#34;31-二叉搜索树-binary-search-tree-bst&#34;&gt;3.1. 二叉搜索树 Binary Search Tree, BST&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;利用 BST 的性质：若目标值小于当前节点，向左子树查找；若大于，向右子树查找&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;时间复杂度：平均 O(log n)，最坏 O(n)（退化为链表时）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Node find(Node root, int value) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (root &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; null &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; root&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;value &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; value) &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; root;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (value &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; root&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;value) &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; find(root&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;left, value);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; find(root&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;right, value);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;延伸&lt;/strong&gt;：提到退化问题，并引出平衡树（如 AVL 或红黑树）&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;如何判断一棵树是否是二叉搜索树？&lt;/p&gt;
+&lt;p&gt;中序遍历检查是否升序&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;bool isBST(Node root, int min, int max) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (root &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; null) &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; true;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (root&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;value &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;=&lt;/span&gt; min &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; root&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;value &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;=&lt;/span&gt; max) &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; false;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; isBST(root&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;left, min, root&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;value) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; isBST(root&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;right, root&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;value, max);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;h3 id=&#34;32-平衡二叉树-balanced-binary-tree如-avl-树红黑树&#34;&gt;3.2. 平衡二叉树 Balanced Binary Tree，如 AVL 树、红黑树&lt;/h3&gt;
+&lt;p&gt;如何平衡一棵二叉搜索树？&lt;strong&gt;问题变种&lt;/strong&gt;：AVL 树和红黑树的区别？&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;AVL 树：通过旋转（左旋、右旋）保持高度差 ≤ 1，插入/删除后严格平衡，适合读多写少的场景&lt;/li&gt;
+&lt;li&gt;红黑树：通过颜色规则和旋转维持近似平衡，插入/删除效率更高，适合写多读少的场景（如标准库实现）&lt;/li&gt;
+&lt;li&gt;区别：AVL 树更严格，查找更快（O(log n) 更稳定）；红黑树更宽松，插入/删除更快&lt;/li&gt;
+&lt;li&gt;延伸：可以提到自底向上或自顶向下的平衡过程&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;33-堆heap&#34;&gt;3.3. 堆Heap&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;定义: 完全二叉树，分为最大堆(父节点 ≥ 子节点)和最小堆 (父节点 ≤ 子节点)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;使用场景: 优先级队列、任务调度&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;如何实现一个堆？&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;构建堆：从数组构造堆时，从最后一个非叶子节点开始调整（Heapify），时间复杂度 O(n)&lt;/li&gt;
+&lt;li&gt;插入：将元素加到末尾，上浮调整，O(log n)&lt;/li&gt;
+&lt;li&gt;删除顶部：将末尾元素移到顶部，下沉调整，O(log n)&lt;/li&gt;
+&lt;/ul&gt;
+</content>
     </item>
     
     <item>
