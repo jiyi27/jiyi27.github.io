@@ -1,6 +1,6 @@
 ---
 title: Tomcat Nginx Gateway LoadBalancer
-date: 2025-03-17 20:28:20
+date: 2025-03-17 12:08:20
 categories:
  - 面试
 tags:

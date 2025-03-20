@@ -276,7 +276,7 @@ public void likePost(Long postId, Long userId) {
 
 除此之外, 可以注意到上面的代码我们省略了 `isMember` 判断, 因为我们的实现依赖 `SADD` 的返回值来判定是否是第一次点赞,
 
-> Spring 的 `@Transactional` 注解默认只对使用了关系型数据库（如 JPA / JDBC）的事务生效。对于 RedisTemplate 的操作，除非你做了额外的配置（例如启用 Redis 事务支持，或使用了 Lua 脚本实现原子性操作），否则 Redis 并不会因为 Spring 事务回滚而自动回滚。换句话说，一般情况下，Redis 操作默认是「非事务性」的，Spring 事务并不会对它生效。
+> Spring 的 `@Transactional` 注解默认只对使用了关系型数据库（如 JPA / JDBC）的事务生效, 对于 RedisTemplate 的操作，除非你做了额外的配置（例如启用 Redis 事务支持，或使用了 Lua 脚本实现原子性操作），否则 Redis 并不会因为 Spring 事务回滚而自动回滚, 换句话说，一般情况下，Redis 操作默认是「非事务性」的，Spring 事务并不会对它生效。
 
 ## 4. 高并发防止库存超卖
 
@@ -357,7 +357,7 @@ public boolean deductStock(String productId, int amount) {
 
 ### 4.2. 分布式锁
 
-在方案二（Lua 脚本）中, 我们将“检查库存”和“扣减库存”封装成一个原子操作, **完全在 Redis 内部执行**, 效率很高, 如果业务逻辑复杂, 例如扣减库存后需要异步更新数据库, 可以用 Redis 分布式锁来控制并发,
+在方案二（Lua 脚本）中, 我们将“检查库存”和“扣减库存”封装成一个原子操作, **完全在 Redis 内部执行**, 效率很高, 如果业务逻辑复杂, 例如扣减库存后需要异步更新数据库, 可以用 Redis 分布式锁来控制并发
 
 1. 获取锁： 使用 SETNX（Set if Not Exists）加锁：
 

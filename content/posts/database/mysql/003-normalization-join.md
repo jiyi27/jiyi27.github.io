@@ -38,7 +38,7 @@ JOIN操作经常利用外键来连接两个表, 虽然 JOIN 操作不一定要�
 - **Users表** 存储用户信息：UserID (用户ID，主键), UserName (用户名)
 - **Orders表** 存储订单信息：OrderID (订单ID，主键) OrderDate (订单日期) UserID (用户ID，外键)
 
-在这个情况下，`Orders.UserID` 是一个外键，它指向`Users.UserID`。这意味着每个订单都与一个特定的用户相关联，外键保证了每个订单中的UserID都对应于一个有效的用户。假设我们想获取订单信息以及下单的用户的名称。我们可以使用以下SQL查询：
+在这个情况下，`Orders.UserID` 是一个外键, 它指向`Users.UserID`, 这意味着每个订单都与一个特定的用户相关联，外键保证了每个订单中的UserID都对应于一个有效的用户, 假设我们想获取订单信息以及下单的用户的名称。我们可以使用以下SQL查询：
 
 ```sql
 SELECT Users.UserName, Orders.OrderID, Orders.OrderDate

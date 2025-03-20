@@ -5,6 +5,7 @@ categories:
  - 面试
 tags:
  - 面试
+ - 数据库面试
 ---
 
 ## 1. MySQL 的数据一致性
