@@ -67,7 +67,7 @@ On `fixbug` branch:
 |     fixbug: Fri 15 Sep 2023 11:48:27 ADT
 | 
 * commit 2220b67f9c8ccf5f47e51bff7bd3a3fca6e141b6
-      main: Fri 15 Sep 2023 11:47:54 AD
+      main: Fri 15 Sep 2023 11:47:54 ADT
 ```
 
 Now the **commit history of all branches** looks like this:
@@ -118,14 +118,14 @@ And note that the `F'` mean it's a copy of original commit `F` (git will do this
 
 ## 3. git rebase vs merge
 
-- Merge preserves commit history. 
-  - Use merge on a **public branch**. 
-- Rebase rewrites (makes copy) history.
-  - Use rebase on a **private branch** to catch up update form remote. 
+- Merge preserves commit history
+  - Use merge on a **public branch**
+- Rebase rewrites (makes copy) history
+  - Use rebase on a **private branch** to catch up update form remote
   - Why rebase rewrite commit history: https://youtu.be/zOnwgxiC0OA?si=CwbvoPI35pHgJ1pn&t=401
-- `git push --force` on shared branches is an absolute no-no. 
+- `git push --force` on shared branches is an **absolute no-no**
 
-> Note that we say use rebase on a private branch means we can use the command`git rebase master` on a private, please don't use `git rebase fixissue` on `master` branch which apparently is a publick branch. 
+> Note that we say use rebase on a private branch means we can use the command `git rebase master` on a private, please don't use `git rebase fixissue` on `master` branch which apparently is a publick branch
 >
 > Learn more: https://youtu.be/zOnwgxiC0OA?si=CwbvoPI35pHgJ1pn&t=401
 
