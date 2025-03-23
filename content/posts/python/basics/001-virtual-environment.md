@@ -103,11 +103,11 @@ python3 -m main.py // warning remove '.py'
 > This is useful because you **do not** want this code block to run when importing into other files, but you **do** want it to run when invoked from the command line.
 
 ```python
-//cat.py:
+# cat.py:
 if __name__ == "__main__":
     print('mow~')
 
-//main.py:
+# main.py:
 import cat
 print('hello')
 ```

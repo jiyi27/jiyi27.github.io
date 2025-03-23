@@ -46,7 +46,9 @@ When you call a function that contains a `yield` statement, you get a generator 
 >
 > https://www.reddit.com/r/learnpython/comments/rzukrb/comment/hrxhm46/?utm_source=share&utm_medium=web2x&context=3
 
-## 3. Example - read large file
+## 3. Example
+
+### 3.1.  Read Large File
 
 The files range between 1Gb and ~20Gb in length which is too big to read into RAM. So I would like to read the lines in chunks/bins of say 10000 lines at a time so that I can perform calculations on the final column in these bin sizes.
 
@@ -72,7 +74,7 @@ with open(path) as file_handler:
 
 Learn more: [using a python generator to process large text files - Stack Overflow](https://stackoverflow.com/questions/49752452/using-a-python-generator-to-process-large-text-files)
 
-## 4. Example - async
+### 3.2. async
 
 ```python
 from typing import Iterator, Any, cast
