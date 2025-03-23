@@ -38,13 +38,15 @@ git branch -a     # 查看所有本地/远程分支
 git switch develop
 ```
 
+> 如果是开源项目, 直接 fork 仓库, 然后 克隆自己 Forked 的仓库
+
 ### 2.2. 创建本地功能分支（Feature Branch）并开发
 
 开始做一个新功能或需求，按团队约定应该基于 `develop` 分支拉出一个 feature 分支，比如 `feature/user-auth`:
 
 ```shell
 git switch develop         # 确保当前在 develop 分支
-git pull origin develop      # 再次确认 develop 是最新的
+git pull origin develop    # 再次确认 develop 是最新的
 git switch -c feature/user-auth
 ```
 
@@ -88,7 +90,67 @@ git merge origin/develop
 
 - 为什么不用 `git pull`: `git pull` 是 `git fetch` 和 `git merge` 的组合，会直接合并远程分支到本地分支
 
-### 2.4. rebase vs merge
+> **开源项目场景**
+>
+> - origin 默认指向你自己 Forked 的仓库（例如 https://github.com/your-username/original-repo.git）
+> - 因此 `git fetch origin` 只会拉取你自己仓库的更新
+> - 但在开源协作中，你通常需要获取**原始仓库**（别人的仓库）的最新更新，而不是自己仓库的更新, 问题在于，你还没有设置一个指向原始仓库的远程仓库（通常命名为 upstream）, 因此，单纯使用 fetch origin 无法达到拉取更新的目的
+>
+> ```shell
+> # 添加原始仓库作为 upstream
+> git remote add upstream https://github.com/original-owner/original-repo.git
+> 
+> # 使用 fetch 从 upstream 获取最新更改
+> git fetch upstream
+> 
+> git checkout feature-branch
+> git rebase/merage upstream/main
+> ```
+
+> 我们知道 在拉取更新的时候 一般会拉取某个特定的远程分支, 然后把它与我们的本地分支合并, 以便让自己的分支保持最新状态, 可是我们应该合并哪个分支？main 还是 develop 还是其他分支？
+>
+> - 查看项目文档：大多数开源项目会在 README 或 CONTRIBUTING.md 中说明分支使用规则，例如新特性应该基于 develop，bug 修复基于 main
+> - 分支基础：创建本地分支时，通常是从某个远程分支（如 main 或 develop）拉取的, 保持与这个“基础分支”一致即可
+> - 默认情况：如果项目没有明确说明，通常与 main（或 master）保持同步，因为它是默认的主分支
+>
+> 不是所有开发分支都合并到主分支，直接合并主分支就行？
+>
+> 不一定, 不同的项目有不同的分支管理策略：
+>
+> - 单一主分支模型：只有一个 main 分支，所有开发分支最终合并到 main, 这种情况下，直接与 main 保持同步即可
+> - 多分支模型：例如有 main（稳定分支）和 develop（开发分支），新特性先合并到 develop，然后定期将 develop 合并到 main, 这种情况下，需要根据分支目的选择同步对象
+
+### 2.4. git stash
+
+在上一步确保自己分支最新, 通常的流程是:
+
+- 使用 git fetch upstream 获取更新
+- 使用 git merge upstream/main 或 git rebase upstream/main 将更新应用到本地分支
+
+但是否需要使用 git stash 和 git stash pop，取决于你的**工作目录状态**, git stash 的作用是临时保存当前工作目录和暂存区的未提交更改, 并将工作目录恢复到干净状态, 它的必要性取决于以下情况:
+
+如果你在 feature-branch 上修改了文件但尚未提交（即 git status 显示有改动）, 直接执行 git merge 或 git rebase 会失败, Git 会提示你先提交或处理这些更改, 因为合并操作需要一个干净的工作目录
+
+**解决方法**：使用 git stash 保存未提交更改，拉取并合并更新后再恢复
+
+```shell
+# 隐藏更改
+git stash
+# 拉取更新
+git fetch upstream
+# 合并更新
+git merge upstream/main
+# 弹出更改 继续工作
+git stash pop
+```
+
+> 注意一般只有参加开源项目才会使用 `upstream`
+>
+> - 尽量在合并前提交更改 commit，保持工作目录干净，减少使用 git stash 的需求
+>
+> - 如果使用 git stash，注意合并后的冲突处理
+
+### 2.5. rebase vs merge
 
 ```shell
 git fetch origin
@@ -130,7 +192,7 @@ D' 和 E' 是 D 和 E 的新版本, 基于 C
 
 `develop` 是公共分支, `feature/user-auth` 是你自己的分支, 不要在 公共 分支上做 rebase, 只可以在自己的私有分支做 rebase, 就是记住一句话, 不要随便用 rebase, 用之前确认好, `git rebase origin/develop` 的意思是在 `feature/user-auth` 做 rebase, 不要理解错了
 
-### 2.5. 推送
+### 2.6. 推送
 
 **用 merge 后的推送**
 
@@ -152,7 +214,7 @@ git push --force-with-lease
 - 普通 `git push` 会被拒绝（因为不是快进更新），需要用 `--force-with-lease` 强制覆盖远程分支
 - `rebase`  推送需要强制（git push --force-with-lease），会覆盖远程历史，仅适合个人分支或提前沟通好的团队
 
-### 2.6. PR
+### 2.7. PR
 
 - 登录 Git 仓库平台（GitHub / GitLab），找到 `feature/user-auth` 分支，发起 Merge Request / Pull Request 到 `develop`
 
