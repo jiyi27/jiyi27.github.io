@@ -1,0 +1,47 @@
+---
+title: git 22 端口被禁用
+date: 2025-03-25 12:05:20
+categories:
+  - git
+tags:
+  - git
+---
+
+有时后开了 VPN, 导致 22 端口无法使用, 因此通过终端提交文件时会出现失败的问题:
+
+```shell
+$ ssh -T git@github.com
+git@ssh.github.com: Permission denied (publickey).
+```
+
+修改 ssh 配置文件 `~/.ssh/config`, 强制 Git 使用 443 端口连接 GitHub, 而不是默认的 22 端口
+
+```
+Host github.com
+    Hostname ssh.github.com
+    User git
+    Port 443
+    IdentityFile ~/.ssh/id_rsa
+```
+
+查看当前 SSH 代理是否已加载 SSH Key
+
+```shell
+$ ssh-add -l
+```
+
+如果输出 `The agent has no identities.`, 说明 SSH Key 没有加载, 手动添加 SSH Key
+
+```shell
+$ ssh-add ~/.ssh/id_rsa
+```
+
+> 同时别忘了在 github 账户添加这个 SSH Public Key
+
+ 重新测试 SSH 连接
+
+```shell
+$ ssh -T git@github.com
+Hi jiyi27! You've successfully authenticated, but GitHub does not provide shell access.
+```
+
