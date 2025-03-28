@@ -7,6 +7,10 @@ tags:
   - git
 ---
 
+> 每次 commit 前都要看一下当前分支, 确认是不是要在这个分支提交修改, 避免在 main 分支直接修改
+>
+> 同理, 每次 push 代码的时候, 再三确认 push 的分支, 永远不要直接 push 到 main 分支, 而应该 push 到功能分支或其他分支
+
 ## 1. 准备的事
 
 一般入职后, 应该了解公司的开发要求, 一般会有文档, 大致内容有:
@@ -137,7 +141,7 @@ git merge origin/develop
 # 隐藏更改
 git stash
 # 拉取更新
-git fetch upstream
+git fetch upstream main
 # 合并更新
 git merge upstream/main
 # 弹出更改 继续工作
@@ -252,3 +256,90 @@ git push --force-with-lease
 - `origin`：你自己 fork 的仓库地址（你有写权限）
 - `upstream`：原始官方仓库地址（你没有写权限，只有读权限）
 - 你会不定期执行 `git pull upstream main` (或 master, 或 develop) 来保持和官方仓库同步
+
+## 4. 实践
+
+现在的情况, 有下面这几个分支:
+
+```shell
+  deps/update-requirements
+  feature/add-redis-client
+  feature/file-upload
+  fix/fk-reference-cycle
+  fix/init-data-migration
+* main
+  remotes/origin/HEAD -> origin/main
+```
+
+- 我在本地创建了新分支 deps/update-requirements 做了修改并提交, 推送到了远程仓库, 然后创建了 PR, 注意此时 PR 暂时没被接受
+
+- 期间远程仓库有其他人做了提交
+
+- 之后我又在本地创建了新分支 fix/fk-reference-cycle, 然后做了修改并提交, 然后推送到远程仓库, 然后创建了 PR, 注意此时 PR 暂时没被接受
+
+- 期间远程仓库有其他人做了提交
+- 之后相同, 创建提交推送 fix/init-data-migration, 创建 PR, 依然暂时没被接受
+- 期间远程仓库有其他人做了提交
+
+- 之后相同, 创建提交推送 feature/file-upload, 创建 PR, 依然暂时没被接受
+
+- 期间远程仓库有其他人做了提交
+- 此时之前所有的分支的 PR 都被合并到了 origin main 分支
+- 然后我在本地创建新分支 feature/add-redis-client, fetch origin main, 然后 merge origin/mian, 所以此时 feature/add-redis-client 应该是最新的
+- 然后我又转到了本地 main 分支, 执行 fetch origin main, 然后 merge origin/mian, 
+
+> 此时, 我想知道的是, 我打算删除 deps/update-requirements, fix/fk-reference-cycle, fix/init-data-migration 分支, 因为我可以确定以后不会使用他们了, 请问在一般的开发工作流中, 我应该怎么删除这些分支, 我应该同时删除本地和远程分支吗? 给出理由
+
+- 是的, 应该同时删除本地和远程分支
+- 远程分支删除后，本地保留分支可能会导致误解，比如误以为这些分支还有未完成的工作
+- 删除远程分支可以避免其他开发者误用这些已合并的分支，保持远程仓库的整洁和清晰
+- 在 Git 工作流（如 Git Flow）中，已合并的分支通常会在 PR 完成后被删除，这是标准实践
+
+**删除本地分支**
+
+```shell
+git branch -d deps/update-requirements
+git branch -d fix/fk-reference-cycle
+git branch -d fix/init-data-migration
+```
+
+- `git branch -d` 是删除本地分支的安全方式, 它会检查这些分支是否已合并到当前分支, 通常是 main
+- 因为这些分支的 PR 已被合并到 `origin/main`，而你已经将本地的 `main` 分支更新到 `origin/main` 的最新状态（通过 fetch 和 merge），所以这些分支的更改已经包含在本地 main 中，Git 会允许删除它们
+
+**删除远程分支**
+
+```shell
+git push origin --delete deps/update-requirements
+git push origin --delete fix/fk-reference-cycle
+git push origin --delete fix/init-data-migration
+```
+
+- `git push origin --delete <branch_name>` 会删除远程仓库中的对应分支
+
+- 这些分支的 PR 已经合并到 `origin/main`，远程分支已无保留必要，删除它们是常见做法
+
+> 另外此时我想回到本地的 feature/file-upload 分支进行一些新的修改, 可是我在本地分支  feature/file-upload  还没有进行 merge 远程最新提交, 此时我应该怎么做? 
+
+**首先, 切换到这个分支 并 合并 `main` 分支到 `feature/file-upload`:**
+
+```shell
+git checkout feature/file-upload
+git merge main
+```
+
+- 因为你的本地 `main` 分支已经通过 `fetch` 和 `merge` 更新到了 `origin/main` 的最新状态，你可以直接将 `main` 合并到 `feature/file-upload`
+
+**进行新的修改** 合并完成后, `feature/file-upload` 分支就处于最新状态, 你可以开始进行新的修改并提交:
+
+```shell
+# 进行修改后
+git add .
+git commit -m "添加新的修改"
+```
+
+我在 main 分支上做了修改和提交, 其实我应该在 另外一个功能分支做 commit, 因此, 我应该撤销刚刚的提交:
+
+```shell
+ git reset --soft HEAD^1
+```
+
