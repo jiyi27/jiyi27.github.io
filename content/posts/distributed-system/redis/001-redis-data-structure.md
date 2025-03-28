@@ -36,9 +36,7 @@ SET user:001 '{"name": "Alice", "age": 25}'
 SET counter 10
 ```
 
-注意看上面的这些, 都是 String 数据结构, 其中 `user:001` 和 `counter` 是 Key, 后面的 字符串 "Alice", JSON 数据, 还有数字 是 Value,
-
-可以看出, Redis 中的 String 有点像哈希表, 但不是, 因为它有一些更方便的操作, 比如:
+注意看上面的这些, 都是 String 数据结构, 其中 `user:001` 和 `counter` 是 Key, 后面的 字符串 "Alice", JSON 数据, 还有数字 是 Value, 可以看出, **Redis 中的 String 有点像哈希表**, 但不是, 因为它有一些更方便的操作, 比如:
 
 ```shell
 GET user:001 # 获取 key user:001 值
@@ -89,7 +87,7 @@ Set 只能存储字符串, 且字符串不能重复:
 
 ### 3.4. 短链接存储
 
-**场景：** 实现短链接功能，如 `https://tinyurl.com/abcd` 映射到 `https://example.com/long-url`。
+**场景：** 实现短链接功能，如 `https://tinyurl.com/abcd` 映射到 `https://example.com/long-url`
 
 **实现方式：**
 

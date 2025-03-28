@@ -130,18 +130,23 @@ $ conda create -n ENV_NAME python=3.9
 
 > Conda 会先检查你的系统中是否已经存在 Python 3.9（比如在 base 环境或其他地方）, 如果没有, Conda 会尝试从默认的包仓库下载 Python 3.9 的安装包, 下载完成后，Conda 会在新环境（ENV_NAME）中安装 Python 3.9, 这个 Python 解释器是独立的, 位于 `/path/to/anaconda3/envs/ENV_NAME/bin/python`, 不会影响系统中的其他 Python 版本
 
+激活虚拟环境:
+
+```shell
+$ conda activate env_name
+```
+
+> 我们使用 conda activate env_name  激活一个虚拟环境,  我们怎么把这个环境绑定到一个项目上呢, 比如我在项目 A 目录下启动了 环境 env1, 此时切换到另一个项目目录下, 会发生什么?
+>
+> 在使用 Conda 的虚拟环境时, conda activate ENV_NAME 的作用是将你的终端切换到指定的虚拟环境（例如 env1）, 从而让这个环境中的 Python 解释器、依赖包和其他工具成为当前活跃的配置, 也就是说, 只要你在这个终端中，env1 就会一直生效，无论你切换到哪个目录
+
 列出当前环境中的所有包:
 
 ```shell
 $ conda list
 ```
 
-
-
-
-
 ```shell
-conda activate ENV_NAME
 conda deactivate
 conda env remove -n ENV_NAME
 conda install PACKAGE_NAME
