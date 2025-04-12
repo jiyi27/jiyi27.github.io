@@ -84,3 +84,56 @@ export function middleware(request) {
 
 ## 3. Next.js 中间件漏洞
 
+首先和 Vercel 架构有关系, 刚开始使用 Next.js 的时候就觉得很方便, 直接免费部署到 Vercel 平台, CI CD 一键部署, 很是方便, 你以为你的中间件运行在 Node.js 服务器上? 并不是, Next.js 定义的中间件通常被 Vercel 抽取出来运行在边缘节点, 这时候就会出现一个问题, 就是上面我们说的:
+
+用户访问一个受保护的资源(需要登录访问), 可是中间件发现用户没有登录, 因此返回重定向到登录页面, 这都没问题, 可是用户请求 `\login` 时依然请求会先到中间件, 而中间件运行在 边缘节点 上, 这就导致一个死循环, 因此 Next.js 需要区分“内部请求”和“外部请求”, CVE-2025-29927 的核心问题在于 Next.js 中间件处理 **内部请求头 x-middleware-subrequest** 的方式存在设计缺陷, 
+
+### 3.1. **漏洞的触发机制**
+
+- Next.js 使用 `x-middleware-subrequest` 头来标记“内部子请求”, 以防止中间件在处理同一请求时陷入无限循环
+  - 例如, 当中间件重写路径（如将 /dashboard 重写为 /internal/dashboard）时, Next.js 会添加 `x-middleware-subrequest` 头, 告诉框架这是内部请求, 不需要再次运行中间件
+- **漏洞点**：这个头原本设计为内部使用, 但 Next.js 没有验证它的来源, 允许外部请求伪造该头
+
+攻击者只需在 HTTP 请求中添加:
+
+```
+x-middleware-subrequest: middleware:middleware:middleware
+```
+
+这会欺骗 Next.js, 认为这是一个内部请求, 直接**跳过中间件执行, 绕过所有认证、授权**或其他检查, 这就很严重了:
+
+- 一个电商网站可能用中间件检查用户是否登录才能访问订单页面
+
+- 一个 SaaS 平台可能用中间件限制只有管理员才能访问 `/admin`
+
+### 3.2. 后果分析
+
+一旦中间件被绕过, 所有依赖中间件的安全逻辑失效, 导致受保护资源完全暴露, 但是这里有个疑问 即使攻击者通过伪造 x-middleware-subrequest 头绕过了中间件的认证检查, 为什么后续的控制器（controller）层逻辑没有阻止未授权访问？
+
+- 许多应用依赖中间件作为唯一的认证入口，控制器层可能不做重复验证
+- 即使控制器层检查用户 ID, 攻击者可能通过其他方式（如缓存投毒、默认行为）利用绕过后的访问权限
+- 某些资源直接暴露, 无需额外验证即可访问
+
+许多开发者仅依赖中间件进行认证，没有实施多层防御:
+
+```js
+// 许多开发者的实际实现
+export function middleware(request) {
+  // 只在中间件中进行认证，没有在页面组件中重复验证
+  if (request.nextUrl.pathname.startsWith('/admin') && !isAuthenticated(request)) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+}
+
+// 页面组件可能缺乏二次验证
+export async function getStaticProps() {
+  // 假设中间件已经处理了认证，这里直接获取数据
+  return {
+    props: { data: await fetchSensitiveData() },
+    revalidate: 60 // 使用ISR进行缓存
+  };
+}
+```
+
+参考: [Understanding CVE-2025-29927: The Next.js middleware authorization bypass vulnerability](https://securitylabs.datadoghq.com/articles/nextjs-middleware-auth-bypass/#understanding-cve-2025-29927-the-nextjs-middleware-authorization-bypass-vulnerability)
+
