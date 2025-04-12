@@ -7,90 +7,131 @@ tags:
  - c#
 ---
 
-## 1. Auto-implemented Properties
+## 1. 属性和 Backing Field
 
-There are many ways to define the property of class, one basic pattern is using a private **backing field** for setting and retrieving the property value. 
+### 1.1. Backing Field
+
+在 C# 中, 当你创建一个类的**属性**时, 你实际上是在创建一种访问类内部数据的方式, 而这个内部数据就存储在 backing field 中:
+
 ```c#
-public class TimePeriod
-{
-    private double _seconds;
+public class Person {
+    // 这是 backing field
+    private string _name;
+    
+    // 这是属性
+    public string Name {
+        get { return _name; }
+        set { _name = value; }
+    }
+}
+```
 
-    public double Hours
-    {
-        get { return _seconds / 3600; }
-        set
-        {
-            if (value < 0 || value > 24)
-                throw new ArgumentOutOfRangeException(nameof(value),
-                      "The valid range is between 0 and 24.");
+对于backing field的命名, C#中有几种常见的约定:
 
-            _seconds = value * 3600;
+```c#
+private string _name; // 对应 Name 属性
+private string m_name; // 对应 Name 属性, m 代表 member
+private string name; // 对应 Name 属性
+```
+
+微软官方推荐使用下划线前缀（⁠_name）的命名方式，这也是.NET社区中最广泛采用的规范。
+
+### 1.2. Auto-implemented Properties
+
+C# 3.0引入了自动实现的属性, 编译器会自动生成 backing field:
+
+```c#
+public class Person {
+    // 编译器会自动为属性 Name 生成一个 backing field
+    public string Name { get; set; }
+}
+```
+
+常见的例子:
+
+```c#
+public class Person {
+    private int _age;
+    
+    public int Age {
+        get { return _age; }
+        set { 
+            if (value < 0)
+                throw new ArgumentException("Age cannot be negative");
+            _age = value; 
         }
     }
 }
 ```
 
-But some simple properties we don't want complex task, just to retrive its value and set it, here comes the auto-implemented properties:
+> Backing Field 是一个私有字段, 用于存储属性的实际数据
+>
+> `⁠value` 是 C# 中的一个特殊关键字, 它只能在属性或索引器的 ⁠`set` 访问器中使用, 它代表调用者尝试分配给属性的值
+>
+> ```c#
+> Person person = new Person();
+> person.Name = "John"; // 这里的 "John" 就是 set 访问器中的 value
+> ```
+
+### 1.3. 只声明 get 访问器
+
+> Declare only the [get] accessor, which makes the property immutable everywhere except in the type's constructor.
 
 ```c#
-public class Genre
+public class Person
 {
+    public string Name { get; } // 只声明 get
+
+    public Person(string name)
+    {
+        Name = name; // 只能在构造函数中设置
+    }
+}
+
+var person = new Person("Alice");
+// person.Name = "Bob"; // 错误！无法修改，因为没有 set
+Console.WriteLine(person.Name); // 输出: Alice
+```
+
+这种方式适合需要保护数据不被外部修改的场景, 比如表示一个对象的固有属性（例如身份证号）
+
+## 2. 构造函数
+
+### 2.1. 对象初始化器
+
+在 C# 中, 如果一个类没有显式定义任何构造函数, 编译器会自动为该类提供一个 **无参的默认构造函数**, 这个默认构造函数的作用是创建一个类的实例, 并将所有字段或属性初始化为它们的默认值（例如，string 初始化为 null，int 初始化为 0）
+
+```c#
+class Person {
     public string Name { get; set; }
-}
-```
+    public int Age { get; set; }
 
-Equals to:
-```c#
-public class Genre
-{
-    private string name; // backing field created auto by compiler
-    public string Name
-    {
-        get => name;
-        set => name = value;
+    public void SayHello() {
+        Console.WriteLine($"Hello, I am {Name}, {Age} years old.");
     }
 }
+
+Person p = new Person { Name = "Bob", Age = 30 };
 ```
 
-> - Declare only the [get](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/get) accessor, which makes the property immutable everywhere except in the type's constructor.
-> - Declare an [init](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/init) accessor instead of a `set` accessor, which makes the property settable only in the constructor or by using an [object initializer](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/object-and-collection-initializers).
-> - Declare the [set](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/set) accessor to be [private](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/private). The property is settable within the type, but it's immutable to consumers.
+> 可是这里是什么意思呢, 创建实例的时候不是传了参数吗?
+>
+> `new Person()` 确实调用了默认构造函数, 创建一个 Person 对象, 此时 `Name` 是 `null`, `Age` 是 `0`, 但紧随其后的 `{ Name = "Bob", Age = 30 }` 是 **对象初始化器** 的语法, 它允许你在对象创建后立即设置属性的值, 这实际上是 C# 提供的一种简洁写法, 相当于以下代码:
+>
+> ```c#
+> Person p = new Person(); // 调用默认构造函数
+> p.Name = "Bob";          // 设置 Name 属性
+> p.Age = 30;              // 设置 Age 属性
+> ```
 
-## 2. Field vs Property
+对象初始化器的工作原理是:
 
-If a class in C# has fields without explicit get and set accessors, they are fields:
+1. 先调用类的构造函数（这里是隐式的默认构造函数）
+2. 然后按照初始化器中指定的顺序, 依次设置对象的公共属性或字段
 
-```c#
-public class Cat
-{
-    public string Name;
-    public int Age;
-}
-```
 
-Fields: A field is a variable declared directly in a class. It's typically used for storing data.
 
-```c#
-public class Person
-{
-    public string name; // This is a field
-    private int age; // This is also a field, but private
-}
-```
 
-Properties:A property is a member that provides a flexible mechanism to read, write, or compute the value of a private field.
 
-```c#
-public class Person
-{
-    private string _name; // Backing field
-    public string Name   // This is a property
-    {
-        get { return _name; }
-        set { _name = value; }
-    }
 
-    public int Age { get; set; } // Auto-implemented property
-}
-```
 

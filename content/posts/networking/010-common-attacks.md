@@ -85,3 +85,10 @@ Learn more: [GFW and DNS Poisoning - David's Blog](https://davidzhu.xyz/post/net
 3. **Use of ICMP Redirects in Man-in-the-Middle Attacks**:
    - An attacker sends forged "ICMP redirect messages" to mislead a host into changing its routing table, diverting traffic through the attacker's machine.
 
+## 6. XSS Attack
+
+可以到 [XSS 攻击](https://jiyi27.com/post/networking/009-xss-attack/) 查看
+
+## 7. 缓存投毒
+
+可以到 [缓存投毒](https://jiyi27.com/post/networking/010-缓存投毒/) 查看
