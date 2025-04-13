@@ -103,3 +103,27 @@ SISMEMBER blacklist:ips "192.168.1.100"  # 返回 1 表示IP被屏蔽
 # 移除IP
 SREM blacklist:ips "10.0.0.5"
 ```
+
+
+
+```
+https://clashverge.org/
+https://github.com/zzzgydi/clash-verge/releases
+https://wiki.metacubex.one/config/rules/
+
+
+
+https://github.com/2dust/v2rayN/releases/tag/7.10.5
+
+https://v2rayn.org/
+
+https://github.com/2dust/v2rayN/wiki/Description-of-proxy-chain
+
+
+
+
+https://api.xmancdn.net/osubscribe.php?sid=168989&token=ahbIP2qyCIxs&sip002=1
+
+https://api-huacloud.net/sub?target=clash&insert=true&emoji=true&udp=true&clash.doh=true&new_name=true&filename=Flower_SS&url=https%3A%2F%2Fapi.xmancdn.net%2Fosubscribe.php%3Fsid%3D168989%26token%3DahbIP2qyCIxs%26sip002%3D1
+```
+
