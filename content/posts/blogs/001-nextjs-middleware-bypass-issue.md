@@ -59,7 +59,7 @@ tags:
 +--------+    响应     +-------------+    +-------------+    +-----------+
 ```
 
-一般中间件的常见作用都是和认证日志相关, 比如最常见的问题 跨域, 我们会单独写个中间件, 处理 来自 前端的 preflight 请求, 告诉前端浏览器我们的跨域规则(通过一些响应头), 又或者是处理认证, 检查 cookie 中的 JWT token, 若不存在 重定向到 `/login`, 或者根据预定义的路径 检查当前用户的权限, 是否可以访问, 返回 403 无权限:
+一般中间件的常见作用都是和认证日志相关, 比如最常见的问题 跨域, 我们会单独写个中间件, 处理 来自 前端的 preflight 请求, 告诉前端浏览器我们的跨域规则(通过一些响应头), 还可以写个 hsts, 把 http重定向为 https, 还有 cors, 又或者是处理认证, 检查 cookie 中的 JWT token, 若不存在 重定向到 `/login`, 或者根据预定义的路径 检查当前用户的权限, 是否可以访问, 返回 403 无权限:
 
 ```js
 export function middleware(request) {
@@ -135,5 +135,8 @@ export async function getStaticProps() {
 }
 ```
 
-参考: [Understanding CVE-2025-29927: The Next.js middleware authorization bypass vulnerability](https://securitylabs.datadoghq.com/articles/nextjs-middleware-auth-bypass/#understanding-cve-2025-29927-the-nextjs-middleware-authorization-bypass-vulnerability)
+参考: 
+
+- [Understanding CVE-2025-29927: The Next.js middleware authorization bypass vulnerability](https://securitylabs.datadoghq.com/articles/nextjs-middleware-auth-bypass/#understanding-cve-2025-29927-the-nextjs-middleware-authorization-bypass-vulnerability)
+- [最致命的漏洞，来自最低级的错误](https://www.bilibili.com/video/BV1uCdUYPE6R/?share_source=copy_web&vd_source=2c27ff6d58b80e3c8454f835acc72392)
 

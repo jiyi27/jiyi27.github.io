@@ -77,6 +77,52 @@ $ conda install pandas seaborn
 
 > 在使用 Conda 时, 建议不要混用 conda install 和 pip install 来安装 Python 的依赖包, 因为 Python 解释器自带 pip 工具，而 Conda 也有自己的包管理机制，二者虽然都能安装依赖，但管理方式和环境隔离的实现有所不同，混用可能会导致依赖冲突或环境不一致的问题, Conda 官方建议优先使用 conda install, 如果 Conda 无法满足需求, 再使用 pip install, 但要确保在 Conda 安装所有基础依赖后再用 pip
 
+### 2.3. uv
+
+**pip**:
+
+- 核心功能是安装、卸载和升级 Python 包
+- 本身不管理虚拟环境, 需配合 venv 或 virtualenv 使用, 使用时需要手动激活虚拟环境, 流程稍显繁琐
+- 依赖解析有时会出错, 尤其在依赖冲突时, 错误信息不够友好
+- 主要依赖 requirements.txt 文件，格式简单，但功能有限
+
+```shell
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python script.py
+```
+
+**uv**:
+
+- **包管理**：类似 pip，支持安装、卸载、升级包
+- **虚拟环境**：内置虚拟环境管理, 安装包时自动创建并使用虚拟环境, 无需手动激活, 无需单独使用 venv 或 virtualenv
+- **脚本运行**：可以直接运行 Python 脚本或命令（如 uv run）
+- 支持 requirements.txt，但更推荐使用锁文件和 pyproject.toml
+
+```shell
+$ uv sync  # 自动创建虚拟环境并安装依赖
+$ uv run script.py  # 自动使用虚拟环境
+```
+
+上面是使用别人的项目, 如果是从零创建项目:
+
+```shell
+# Create a new directory for our project
+uv init weather
+cd weather
+
+# Create virtual environment and activate it
+uv venv
+source .venv/bin/activate
+
+# Install dependencies
+uv add "mcp[cli]" httpx
+
+# Create our server file
+touch weather.py
+```
+
 ## 3. Conda 管理机制
 
 ### 3.1. 虚拟环境存储位置
