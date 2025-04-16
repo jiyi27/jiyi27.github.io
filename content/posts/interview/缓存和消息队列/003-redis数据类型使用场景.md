@@ -214,9 +214,9 @@ record_edit("user123", "delete:char:5")
 undo_edit("user123")  # 输出: Undoing: delete:char:5
 ```
 
-### 4.3. 排行榜或时间线
+### 4.3. 时间线
 
-一个社交平台需要展示用户最新的 10 条动态（如朋友圈或微博），按发布时间倒序排列, 优点：
+一个社交平台需要展示用户**最新的 10 条动态**（如朋友圈或微博），按发布时间倒序排列, 优点：
 
 - LPUSH 保证最新动态在列表头部，天然按时间倒序
 
@@ -251,3 +251,5 @@ recent_posts = get_recent_posts()
 for post in recent_posts:
     print(post)
 ```
+
+> 注意 List 不适合排行榜, 因为他不会排序, 可以考虑使用堆来实现
