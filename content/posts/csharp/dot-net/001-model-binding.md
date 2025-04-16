@@ -13,7 +13,7 @@ tags:
 By default, model binding gets data in the form of key-value pairs from the following sources in an HTTP request:
 
 1. Form fields (case insensitive)
-2. The request body (For [controllers that have the [ApiController\] attribute](https://learn.microsoft.com/en-us/aspnet/core/web-api/?view=aspnetcore-8.0#binding-source-parameter-inference).)
+2. The request body (For [controllers that have the ApiController attribute](https://learn.microsoft.com/en-us/aspnet/core/web-api/?view=aspnetcore-8.0#binding-source-parameter-inference).)
 3. Route data
 4. Query string parameters
 5. Uploaded files
