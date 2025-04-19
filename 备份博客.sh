@@ -2,16 +2,16 @@
 
 # Required parameters:
 # @raycast.schemaVersion 1
-# @raycast.title Backup Blog
+# @raycast.title 备份博客
 # @raycast.mode fullOutput
 
 # Optional parameters:
 # @raycast.icon 🤖
 
 # Documentation:
-# @raycast.author jiyi27
+# @raycast.author David
+# @raycast.authorURL https://raycast.com/shwezhu
 
-git switch hugo-blog
 git add .
 git commit -m "$(date)"
 git push origin hugo-blog
