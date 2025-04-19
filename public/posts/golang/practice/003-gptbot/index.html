@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Golang Web - A Simple gptbot with Openai API :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Introduction Source Code: gptbot
+2. Database - gorm Don&rsquo;t Open db connection for each request, initialize a global DB and use it for all requests.
+Close is one of the most misused methods, most application don&rsquo;t need it, be sure you really need it.
+it is not necessary to close when crash, and you can still Close DB connection in V2.
+jinzhu - creator of gorm
+func main() { db, _ := gorm.Open(sqlite.Open(&#34;gpt_bot.db&#34;), &amp;gorm.Config{}) store, _ := redistore.NewRediStore(10, &#34;tcp&#34;, &#34;:6379&#34;, &#34;&#34;, []byte(os.Getenv(&#34;SESSION_KEY&#34;))) ... http.Handle(&#34;/login&#34;, LoginHandler(db, store)) } As you can see, we use a global database connection here accross all handler, and it&rsquo;s worth noticing that every HTTP request that comes in to the server gets its own goroutine. Therefore, you have to consider data race in the handers.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/practice/003-gptbot/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Golang Web - A Simple gptbot with Openai API">
+<meta property="og:description" content="1. Introduction Source Code: gptbot
+2. Database - gorm Don&rsquo;t Open db connection for each request, initialize a global DB and use it for all requests.
+Close is one of the most misused methods, most application don&rsquo;t need it, be sure you really need it.
+it is not necessary to close when crash, and you can still Close DB connection in V2.
+jinzhu - creator of gorm
+func main() { db, _ := gorm.Open(sqlite.Open(&#34;gpt_bot.db&#34;), &amp;gorm.Config{}) store, _ := redistore.NewRediStore(10, &#34;tcp&#34;, &#34;:6379&#34;, &#34;&#34;, []byte(os.Getenv(&#34;SESSION_KEY&#34;))) ... http.Handle(&#34;/login&#34;, LoginHandler(db, store)) } As you can see, we use a global database connection here accross all handler, and it&rsquo;s worth noticing that every HTTP request that comes in to the server gets its own goroutine. Therefore, you have to consider data race in the handers.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/practice/003-gptbot/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="golang" />
+
+
+  <meta property="article:published_time" content="2023-08-18 09:20:57 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/practice/003-gptbot/">Golang Web - A Simple gptbot with Openai API</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-08-18</time><span class="post-reading-time">6 分钟阅读 (1095 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-introduction">1. Introduction<a href="#1-introduction" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Source Code: <a href="https://github.com/shwezhu/gptbot">gptbot</a></p>
+<h2 id="2-database---gorm">2. Database - gorm<a href="#2-database---gorm" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<blockquote>
+<p>Don&rsquo;t <code>Open</code> db connection for each request, initialize a global DB and use it for all requests.</p>
+<p><code>Close</code> is one of the most misused methods, most application don&rsquo;t need it, be sure you really need it.</p>
+<p>it is not necessary to close when crash, and you can still <code>Close</code> DB connection in V2.</p>
+<p><a href="https://github.com/go-gorm/gorm/issues/3145">jinzhu - creator of gorm</a></p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">db</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gorm</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#a6e22e">sqlite</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#e6db74">&#34;gpt_bot.db&#34;</span>), <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">gorm</span>.<span style="color:#a6e22e">Config</span>{})
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">store</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">redistore</span>.<span style="color:#a6e22e">NewRediStore</span>(<span style="color:#ae81ff">10</span>, <span style="color:#e6db74">&#34;tcp&#34;</span>, <span style="color:#e6db74">&#34;:6379&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>, []byte(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Getenv</span>(<span style="color:#e6db74">&#34;SESSION_KEY&#34;</span>)))
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handle</span>(<span style="color:#e6db74">&#34;/login&#34;</span>, <span style="color:#a6e22e">LoginHandler</span>(<span style="color:#a6e22e">db</span>, <span style="color:#a6e22e">store</span>))
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>As you can see, we use a global database connection here accross all handler, and it&rsquo;s worth noticing that <strong>every HTTP request that comes in to the server gets its own goroutine</strong>. Therefore, you have to consider data race in the handers.</p>
+<p>Because we share the <code>db</code> across all handlers, we have to consider that if <code>db</code> is thread-safe. I find <a href="https://stackoverflow.com/questions/61822921/does-gorm-open-create-a-new-connection-pool-every-time-its-called">some answers</a> on stack overflow which explains well:</p>
+<p>Does gorm.Open() create a new connection pool every time it&rsquo;s called?</p>
+<p>yes, try to reuse the returned DB object.</p>
+<p><a href="https://github.com/jinzhu/gorm/blob/v1.9.12/main.go#L58">gorm.Open</a> does the following: (more or less):</p>
+<ol>
+<li>lookup the driver for the given dialect</li>
+<li>call <code>sql.Open</code> to return a <code>DB</code> object</li>
+<li>call <code>DB.Ping()</code> to force it to talk to the database</li>
+</ol>
+<p>This means that the recommendations for <a href="https://golang.org/pkg/database/sql/#Open">sql.Open</a> apply to <code>gorm.Open</code>:</p>
+<blockquote>
+<p><strong>The returned DB is safe for concurrent</strong> use by multiple goroutines and maintains its own pool of idle connections. Thus, the Open function should be called just once. It is rarely necessary to close a DB.</p>
+</blockquote>
+<p>Also note that the connection pool can be configured as such, in both GORM v1 and v2:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">DB</span>().<span style="color:#a6e22e">SetMaxIdleConns</span>(<span style="color:#ae81ff">10</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// SetMaxOpenConns sets the maximum number of open connections to the database.</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">DB</span>().<span style="color:#a6e22e">SetMaxOpenConns</span>(<span style="color:#ae81ff">100</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// SetConnMaxLifetime sets the maximum amount of time a connection may be reused.</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">DB</span>().<span style="color:#a6e22e">SetConnMaxLifetime</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Hour</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// d, err := db.DB()</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// d.SetMaxIdleConns(10)</span>
+</span></span></code></pre></div><h2 id="3-session---gorillasession">3. Session - gorilla/session<a href="#3-session---gorillasession" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-encode-before-save">3.1. encode before save<a href="#31-encode-before-save" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>When try to save data in session, we usually use the <code>Values</code> field of session, for example,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">Values</span>[<span style="color:#e6db74">&#34;username&#34;</span>] = <span style="color:#e6db74">&#34;Jack&#34;</span>
+</span></span></code></pre></div><p>The first problem I came across is that, you can save <code>int</code>, <code>bool</code>, <code>string</code> and other basic value into <code>session.Values[]</code> directly, but when you try to assign other type value, custom object, array to <code>session.Values[&quot;xxx&quot;]</code> for example, you have to encode the value before assignment, so that <code>gorilla/session can</code> save data to Redis and read correctly for later request . Otherwise, you cannot get the value corrctly, I mean, after you <strong>restart your server</strong>, you cannot get the session stored in the Redis, <strong>the <code>IsNew</code> will be always <code>true</code>,</strong> this is because the encoing issues,</p>
+<p>I want to save a slice into session, which is chat history, so I have to encode it before assign it to <code>session.Values[&quot;messages&quot;]</code>, I&rsquo;ll choose <code>encoding/json</code> here, you can choose other encoding tech, <code>encoding/gob </code>for example,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// chatHistory == []openai.ChatCompletionMessage</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">json</span>.<span style="color:#a6e22e">Marshal</span>(<span style="color:#a6e22e">chatHistory</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">Values</span>[<span style="color:#e6db74">&#34;messages&#34;</span>] = <span style="color:#a6e22e">data</span>
+</span></span></code></pre></div><p>Bacause <code>json.Marshal(chatHistory)</code> encodes the object I passed in and return as a <code>[]byte</code>, so the type of the variable <code>data</code> above is <code>[]byte</code>, so I set <code>session.Values[&quot;messages&quot;]</code> as a emtpy byte slice at begining, when login,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">initSession</span>(<span style="color:#a6e22e">session</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">sessions</span>.<span style="color:#a6e22e">Session</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">Options</span>.<span style="color:#a6e22e">MaxAge</span> = <span style="color:#ae81ff">20</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">Values</span>[<span style="color:#e6db74">&#34;authenticated&#34;</span>] = <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">Values</span>[<span style="color:#e6db74">&#34;messages&#34;</span>] = []<span style="color:#66d9ef">byte</span>{}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>When you want get message that stored in session, you just need to get the encoded value which is  <code>[]byte</code>, and pass it to <code>json.Unmarshal()</code>, this function will convert the encoded value back to golang object,</p>
+<p><a href="https://stackoverflow.com/questions/45196950/gorilla-sessions-persistent-between-server-restarts">go - gorilla/sessions persistent between server restarts? - Stack Overflow</a></p>
+<h3 id="32-reset-maxage-whenever-call-sessionsave">3.2. reset MaxAge whenever call <code>session.Save</code><a href="#32-reset-maxage-whenever-call-sessionsave" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>I don&rsquo;t know if I did it wrong, or it&rsquo;s a bug in <code>gorilla/sessions</code>, for example, I set the <code>MaxAge</code> of the session to 60 seconds when user first logged in I create session, and for later request, for example, user will send request for talking with chatGPT, and during this process, the server will update the history message which stored in <code>session.Values[&quot;messages&quot;]</code>, after update the value of  <code>session.Values[&quot;messages&quot;]</code>, we should call <code>session.Save()</code> so that this update can be saved for later request,</p>
+<p>But this will make <code>session.Options.MaxAge</code> back to its defalult value, which is 30 days, so you should set it again when you call  <code>session.Save()</code>,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">Values</span>[<span style="color:#e6db74">&#34;messages&#34;</span>] = <span style="color:#a6e22e">data</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// set MaxAge whenever you call session.Save(r, w)</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">Options</span>.<span style="color:#a6e22e">MaxAge</span> = <span style="color:#ae81ff">24</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">3600</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">r</span>, <span style="color:#a6e22e">w</span>)
+</span></span></code></pre></div><p>Otherwise, the session stored in Redis won&rsquo;t be deleted until 30 days later, and your user will keep logged in satus for 30 days,</p>
+<p><a href="https://stackoverflow.com/questions/21865681/sessions-variables-in-golang-not-saved-while-using-gorilla-sessions">go - Sessions variables in golang not saved while using gorilla sessions - Stack Overflow</a></p>
+<p>Return and wrap error in low layer function (try to provide more context info), only handle errors and log info on the top of the function call stack.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">parseUsernamePassword</span>(<span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) (<span style="color:#f92672">*</span><span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">string</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">userInfo</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">string</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">ParseForm</span>(); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// wrap error which can provide more context info</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// usually, say: &#34;failed to&#34; + &#34;function name&#34; + &#34;error&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// but not always</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;falied to parse username and password: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">updateMessage</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>, <span style="color:#a6e22e">store</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">redistore</span>.<span style="color:#a6e22e">RediStore</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">session</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">store</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#a6e22e">r</span>, <span style="color:#e6db74">&#34;session_id&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;cannot update message: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">Save</span>(<span style="color:#a6e22e">r</span>, <span style="color:#a6e22e">w</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;cannot update message: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Learn more: <a href="https://davidzhu.xyz/post/golang/basics/008-error-handling/">Error handling - Go - David&rsquo;s Blog</a></p>
+<h2 id="4-session-or-redis-cache">4. Session or redis cache<a href="#4-session-or-redis-cache" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>I did some experiments , found that a query with gorm for sqlite3 takes about 380us, it&rsquo;s not that much, and there will no that many users can overwhelm my server, so I finally decide query the <code>tokens</code> value from database everytime when user make a request to chat with ChatGPT,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// https://stackoverflow.com/a/45791377/16317008</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">start</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">Limit</span>(<span style="color:#ae81ff">1</span>).<span style="color:#a6e22e">Find</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">user</span>, <span style="color:#e6db74">&#34;username = ?&#34;</span>, (<span style="color:#f92672">*</span><span style="color:#a6e22e">userInfo</span>)[<span style="color:#e6db74">&#34;username&#34;</span>]).<span style="color:#a6e22e">Error</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">t</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Sub</span>(<span style="color:#a6e22e">start</span>))
+</span></span><span style="display:flex;"><span><span style="color:#f92672">--------------------------------</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1.514166</span><span style="color:#a6e22e">ms</span> <span style="color:#75715e">// first time</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">542.125</span><span style="color:#a6e22e">µs</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">387.625</span><span style="color:#a6e22e">µs</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">484.958</span><span style="color:#a6e22e">µs</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">477.417</span><span style="color:#a6e22e">µs</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">377.959</span><span style="color:#a6e22e">µs</span>
+</span></span><span style="display:flex;"><span>..
+</span></span></code></pre></div><h2 id="5-session-store">5. Session store<a href="#5-session-store" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>sessions need a place to store, in-memory, file or Redis, package <a href="https://github.com/gorilla/sessions">gorilla/sessions</a> provides two way to save sessions, one is file, another is in-memory,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">store</span> = <span style="color:#a6e22e">sessions</span>.<span style="color:#a6e22e">NewCookieStore</span>([]byte(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Getenv</span>(<span style="color:#e6db74">&#34;SESSION_KEY&#34;</span>)))
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// or </span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">store</span> =  <span style="color:#a6e22e">NewFilesytemStore</span>(<span style="color:#e6db74">&#34;path/to/file&#34;</span>, []byte(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Getenv</span>(<span style="color:#e6db74">&#34;SESSION_KEY&#34;</span>)))
+</span></span></code></pre></div><p>I choose redis to save sessions with <a href="https://github.com/boj/redistore">redistore</a> library, which implements a redis store based on <a href="https://github.com/gorilla/sessions">gorilla/sessions</a>,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">store</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">redistore</span>.<span style="color:#a6e22e">NewRediStore</span>(<span style="color:#ae81ff">10</span>, <span style="color:#e6db74">&#34;tcp&#34;</span>, <span style="color:#e6db74">&#34;:6379&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>, []byte(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Getenv</span>(<span style="color:#e6db74">&#34;SESSION_KEY&#34;</span>)))
+</span></span></code></pre></div><p>You can use <a href="https://github.com/gorilla/sessions">gorilla/sessions</a> which help you save session in-memory, if you want save sessions on a redis server too, you have to install Redis on your computer, learn more about session and Redis:</p>
+<ul>
+<li><a href="https://davidzhu.xyz/2023/08/18/Database/Redis/001-intro-redis/">Introduce Redis | 橘猫小八的鱼</a></li>
+<li><a href="https://davidzhu.xyz/2023/08/17/CS-Basics/005-session-cookie/">Cookie &amp; Session | 橘猫小八的鱼</a></li>
+<li><a href="https://darjun.github.io/2021/07/25/godailylib/gorilla/sessions/">Go 每日一库之 gorilla/sessions - 大俊的博客</a></li>
+<li><a href="https://github.com/karankumarshreds/GoAuthentication/blob/master/readme.md">GoAuthentication/readme.md at master · karankumarshreds/GoAuthentication</a></li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/git/practice/002-pushed-wrong-files/" class="button inline prev">
+        Pushed a Wrong File to Github - Solved
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/cs-basics/005-session-cookie/" class="button inline next">
+        Session, JWT &amp; Cookie
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>NextAuth V5 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="NextAuth v5 配置通常分为两个文件(在根目录)：auth.config.ts 和 auth.ts
+当有新的请求进来时，Next.js 首先会检查 middleware.ts 中的 config 配置：
+// middleware.ts export default NextAuth(authConfig).auth; // 不匹配 /api 路径, 不匹配 /_next/static 路径... export const config = { matcher: [&#39;/((?!api|_next/static|_next/image|.*\\.png$).*)&#39;], }; 如果请求路径匹配上述规则，Next.js 就会执行 middleware.ts 中默认导出的函数, 也就是上面的 export default NextAuth(authConfig).auth
+注意, 这里的 NextAuth(authConfig).auth 函数和 auth.ts 导出的那个 auth 函数是一样的, 但他们并不是同一个函数, 可以看到 auth.ts 和 middleware.ts 都用到了 auth.config.ts, 就是通过 NextAuth(authConfig) 来导出 auth 函数.
+// auth.ts export const { auth, signIn, signOut } = NextAuth({ ...authConfig, providers: [...] }) 这个 auth 函数主要就是会执行 authConfig 中的 authorized 回调, 也就是auth.config.ts 中的 authorized callback, 根据 authorized 的返回值决定是否允许访问:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/frontend/next-js/004-next-auth/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="NextAuth V5">
+<meta property="og:description" content="NextAuth v5 配置通常分为两个文件(在根目录)：auth.config.ts 和 auth.ts
+当有新的请求进来时，Next.js 首先会检查 middleware.ts 中的 config 配置：
+// middleware.ts export default NextAuth(authConfig).auth; // 不匹配 /api 路径, 不匹配 /_next/static 路径... export const config = { matcher: [&#39;/((?!api|_next/static|_next/image|.*\\.png$).*)&#39;], }; 如果请求路径匹配上述规则，Next.js 就会执行 middleware.ts 中默认导出的函数, 也就是上面的 export default NextAuth(authConfig).auth
+注意, 这里的 NextAuth(authConfig).auth 函数和 auth.ts 导出的那个 auth 函数是一样的, 但他们并不是同一个函数, 可以看到 auth.ts 和 middleware.ts 都用到了 auth.config.ts, 就是通过 NextAuth(authConfig) 来导出 auth 函数.
+// auth.ts export const { auth, signIn, signOut } = NextAuth({ ...authConfig, providers: [...] }) 这个 auth 函数主要就是会执行 authConfig 中的 authorized 回调, 也就是auth.config.ts 中的 authorized callback, 根据 authorized 的返回值决定是否允许访问:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/frontend/next-js/004-next-auth/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="前端开发" />
+
+
+  <meta property="article:published_time" content="2024-12-08 17:13:20 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/frontend/next-js/004-next-auth/">NextAuth V5</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2024-12-08</time><span class="post-reading-time">2 分钟阅读 (296 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91/">前端开发</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/next.js/">next.js</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>NextAuth v5 配置通常分为两个文件(在根目录)：<code>auth.config.ts</code> 和 <code>auth.ts</code></p>
+<p>当有新的请求进来时，Next.js 首先会检查 middleware.ts 中的 config 配置：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#75715e">// middleware.ts
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#a6e22e">NextAuth</span>(<span style="color:#a6e22e">authConfig</span>).<span style="color:#a6e22e">auth</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 不匹配 /api 路径, 不匹配 /_next/static 路径...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">config</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">matcher</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#39;/((?!api|_next/static|_next/image|.*\\.png$).*)&#39;</span>],
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>如果请求路径匹配上述规则，Next.js 就会执行 <code>middleware.ts</code> 中默认导出的函数, 也就是上面的 <code>export default NextAuth(authConfig).auth</code></p>
+<p>注意, 这里的 <code>NextAuth(authConfig).auth</code> 函数和 <code>auth.ts</code> 导出的那个 auth 函数是一样的, 但他们并不是同一个函数, 可以看到 <code>auth.ts</code> 和 <code>middleware.ts</code> 都用到了 <code>auth.config.ts</code>, 就是通过 <code>NextAuth(authConfig)</code> 来导出 auth 函数.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#75715e">// auth.ts
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">auth</span>, <span style="color:#a6e22e">signIn</span>, <span style="color:#a6e22e">signOut</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">NextAuth</span>({
+</span></span><span style="display:flex;"><span>  ...<span style="color:#a6e22e">authConfig</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">providers</span><span style="color:#f92672">:</span> [...]
+</span></span><span style="display:flex;"><span>})
+</span></span></code></pre></div><p>这个 auth 函数主要就是会执行 <code>authConfig</code> 中的 authorized 回调, 也就是<code>auth.config.ts</code> 中的 authorized callback, 根据 authorized 的返回值决定是否允许访问:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#75715e">// auth.config.ts
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">authConfig</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pages</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">signIn</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;/login&#39;</span>,
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">callbacks</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">authorized</span>(...) {...},
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">providers</span><span style="color:#f92672">:</span> [],
+</span></span><span style="display:flex;"><span>} <span style="color:#a6e22e">satisfies</span> <span style="color:#a6e22e">NextAuthConfig</span>;
+</span></span></code></pre></div><p>可以看出, 在 <code>auth.ts</code> 中我们只是将 <code>auth.config.ts</code> 的 <code>authConfig</code> 展开了, 其实可以不需要 <code>auth.config.ts</code> 文件, 直接把这个配置写到 <code>auth.ts</code> 中就行, 但是不推荐这么做, 如果合并的话, 那 <code>middleware.ts</code> 只能通过导入 <code>auth.ts</code> 来使用 <code>auth</code> 函数, 可是 <code>auth.ts</code>  中还有其他东西, 比如 providers, 这样的话 中间件会导入整个 <code>auth.ts</code> 文件, 数据库客户端 (prisma)所有认证提供商 (GitHub 等), 这样的话, 中间件就会变的很大,</p>
+<p>当我们登录的时候, 基本上可以看到的执行顺序是:</p>
+<pre tabindex="0"><code>1. auth.config.ts 文件被加载
+2. middleware.ts 文件被加载 (仅在初始编译项目后执行一次, 之后不会被重复加载)
+3. auth.ts 文件被加载
+4. authorized callback 被执行 { url: &#39;/dashboard&#39;, isLoggedIn: false }
+4. authorized callback 被执行 { url: &#39;/login&#39;, isLoggedIn: false }
+4. authorized callback 被执行 { url: &#39;/dashboard&#39;, isLoggedIn: false }
+4. authorized callback 被执行 { url: &#39;/login&#39;, isLoggedIn: false }
+4. authorized callback 被执行 { url: &#39;/login&#39;, isLoggedIn: false }
+5. authorize callback 被执行 (仅在登录时)
+</code></pre><p>可以看出, 只要访问符合 middleware 规则的 url, 那 authorized callback 就会被执行一次, 也就是我们导出的 <code>export default NextAuth(authConfig).auth;</code></p>
+<hr>
+<p><strong>Error <code>headers()</code> should be awaited</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Error:  In route /login a cookie property was accessed directly with <span style="color:#e6db74">`</span>cookies<span style="color:#f92672">()</span>.set<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;authjs.session-token&#39;</span>, ...<span style="color:#f92672">)</span><span style="color:#e6db74">`</span>. <span style="color:#e6db74">`</span>cookies<span style="color:#f92672">()</span><span style="color:#e6db74">`</span> should be awaited before using its value.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Error:  In route /login headers were iterated over. <span style="color:#e6db74">`</span>headers<span style="color:#f92672">()</span><span style="color:#e6db74">`</span> should be awaited before using its value.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>.....
+</span></span></code></pre></div><p>This is due to updating to Next15. Headers, Page/Layout Params and cookies are now asynchronous. <a href="https://nextjs.org/docs/messages/sync-dynamic-apis">click to learn more</a></p>
+<p><a href="https://www.reddit.com/r/nextjs/comments/1g9l35r/comment/lu4d2ik/?utm_source=share&amp;utm_medium=web3x&amp;utm_name=web3xcss&amp;utm_term=1&amp;utm_content=share_button">Solution</a>: try <code>$pnpm i next-auth@beta</code></p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/next-js/007-hooks-react/" class="button inline prev">
+        Hooks React - Next.js
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/next-js/001-npm-npx-pnpm/" class="button inline next">
+        npm vs npx vs pnpm
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

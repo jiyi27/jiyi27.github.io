@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>二叉树和堆 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 表达式树 Expression Tree 树的叶子节点通常是操作数（例如数字或变量）, 而非叶子节点是运算符（例如 &#43;、-、*、/）, 通过遍历表达式树（例如前序、中序或后序遍历），可以重新生成表达式或计算其结果, 表达式 (3 &#43; 5) * 2 可以表示为：
+* / \ &#43; 2 / \ 3 5 计算器程序：实现复杂数学计算时，表达式树可以帮助按正确的顺序执行运算（尊重运算优先级和括号） 数据库查询优化：在 SQL 查询引擎中，表达式树可以表示查询条件，帮助优化执行计划 2. 决策树 Decision Tree 决策树是一种树形结构, 用于表示决策过程或分类/回归问题, 树的每个节点代表一个决策点（基于某个条件）, 分支代表可能的决策路径, 叶子节点通常表示最终的决策结果或类别:
+[天气] / \ [晴天] [下雨] / \ [外出] [待在家] 机器学习：决策树是经典的监督学习算法，用于分类和回归任务。例如，判断用户是否会购买某产品（基于年龄、收入等特征） 游戏开发：在 AI 行为设计中，决策树用于控制 NPC（非玩家角色）的行为，例如决定是否攻击或逃跑 医疗诊断：基于症状、体征等条件，决策树可以帮助医生判断疾病类型 3. 二叉搜索树 Binary Search Tree, BST 利用 BST 的性质：若目标值小于当前节点，向左子树查找；若大于，向右子树查找
+时间复杂度：平均 O(log n)，最坏 O(n)（退化为链表时）
+Node find(Node root, int value) { if (root == null || root.value == value) return root; if (value &lt; root.value) return find(root.left, value); return find(root.right, value); } 延伸：提到退化问题，并引出平衡树（如 AVL 或红黑树）
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/005-%E4%BA%8C%E5%8F%89%E6%A0%91/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="二叉树和堆">
+<meta property="og:description" content="1. 表达式树 Expression Tree 树的叶子节点通常是操作数（例如数字或变量）, 而非叶子节点是运算符（例如 &#43;、-、*、/）, 通过遍历表达式树（例如前序、中序或后序遍历），可以重新生成表达式或计算其结果, 表达式 (3 &#43; 5) * 2 可以表示为：
+* / \ &#43; 2 / \ 3 5 计算器程序：实现复杂数学计算时，表达式树可以帮助按正确的顺序执行运算（尊重运算优先级和括号） 数据库查询优化：在 SQL 查询引擎中，表达式树可以表示查询条件，帮助优化执行计划 2. 决策树 Decision Tree 决策树是一种树形结构, 用于表示决策过程或分类/回归问题, 树的每个节点代表一个决策点（基于某个条件）, 分支代表可能的决策路径, 叶子节点通常表示最终的决策结果或类别:
+[天气] / \ [晴天] [下雨] / \ [外出] [待在家] 机器学习：决策树是经典的监督学习算法，用于分类和回归任务。例如，判断用户是否会购买某产品（基于年龄、收入等特征） 游戏开发：在 AI 行为设计中，决策树用于控制 NPC（非玩家角色）的行为，例如决定是否攻击或逃跑 医疗诊断：基于症状、体征等条件，决策树可以帮助医生判断疾病类型 3. 二叉搜索树 Binary Search Tree, BST 利用 BST 的性质：若目标值小于当前节点，向左子树查找；若大于，向右子树查找
+时间复杂度：平均 O(log n)，最坏 O(n)（退化为链表时）
+Node find(Node root, int value) { if (root == null || root.value == value) return root; if (value &lt; root.value) return find(root.left, value); return find(root.right, value); } 延伸：提到退化问题，并引出平衡树（如 AVL 或红黑树）
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/005-%E4%BA%8C%E5%8F%89%E6%A0%91/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-03-20 18:08:52 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/005-%E4%BA%8C%E5%8F%89%E6%A0%91/">二叉树和堆</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-03-20</time><span class="post-reading-time">2 分钟阅读 (267 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E7%AE%97%E6%B3%95%E9%9D%A2%E8%AF%95/">算法面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-表达式树-expression-tree">1. 表达式树 Expression Tree<a href="#1-表达式树-expression-tree" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>树的叶子节点通常是操作数（例如数字或变量）, 而非叶子节点是运算符（例如 +、-、*、/）, 通过遍历表达式树（例如前序、中序或后序遍历），可以重新生成表达式或计算其结果, 表达式 (3 + 5) * 2 可以表示为：</p>
+<pre tabindex="0"><code>    *
+   / \
+  +   2
+ / \
+3   5
+</code></pre><ul>
+<li>计算器程序：实现复杂数学计算时，表达式树可以帮助按正确的顺序执行运算（尊重运算优先级和括号）</li>
+<li>数据库查询优化：在 SQL 查询引擎中，表达式树可以表示查询条件，帮助优化执行计划</li>
+</ul>
+<h2 id="2-决策树-decision-tree">2. 决策树 Decision Tree<a href="#2-决策树-decision-tree" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>决策树是一种树形结构, 用于表示决策过程或分类/回归问题, 树的每个节点代表一个决策点（基于某个条件）, 分支代表可能的决策路径, 叶子节点通常表示最终的决策结果或类别:</p>
+<pre tabindex="0"><code>       [天气]
+      /      \
+  [晴天]    [下雨]
+  /           \
+[外出]      [待在家]
+</code></pre><ul>
+<li>机器学习：决策树是经典的监督学习算法，用于分类和回归任务。例如，判断用户是否会购买某产品（基于年龄、收入等特征）</li>
+<li>游戏开发：在 AI 行为设计中，决策树用于控制 NPC（非玩家角色）的行为，例如决定是否攻击或逃跑</li>
+<li>医疗诊断：基于症状、体征等条件，决策树可以帮助医生判断疾病类型</li>
+</ul>
+<h2 id="3-二叉搜索树-binary-search-tree-bst">3. 二叉搜索树 Binary Search Tree, BST<a href="#3-二叉搜索树-binary-search-tree-bst" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<ul>
+<li>
+<p>利用 BST 的性质：若目标值小于当前节点，向左子树查找；若大于，向右子树查找</p>
+</li>
+<li>
+<p>时间复杂度：平均 O(log n)，最坏 O(n)（退化为链表时）</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>Node find(Node root, int value) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (root <span style="color:#f92672">==</span> null <span style="color:#f92672">||</span> root<span style="color:#f92672">.</span>value <span style="color:#f92672">==</span> value) <span style="color:#66d9ef">return</span> root;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (value <span style="color:#f92672">&lt;</span> root<span style="color:#f92672">.</span>value) <span style="color:#66d9ef">return</span> find(root<span style="color:#f92672">.</span>left, value);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> find(root<span style="color:#f92672">.</span>right, value);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<p><strong>延伸</strong>：提到退化问题，并引出平衡树（如 AVL 或红黑树）</p>
+</blockquote>
+<blockquote>
+<p>如何判断一棵树是否是二叉搜索树？</p>
+<p>中序遍历检查是否升序</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>bool isBST(Node root, int min, int max) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (root <span style="color:#f92672">==</span> null) <span style="color:#66d9ef">return</span> true;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (root<span style="color:#f92672">.</span>value <span style="color:#f92672">&lt;=</span> min <span style="color:#f92672">||</span> root<span style="color:#f92672">.</span>value <span style="color:#f92672">&gt;=</span> max) <span style="color:#66d9ef">return</span> false;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> isBST(root<span style="color:#f92672">.</span>left, min, root<span style="color:#f92672">.</span>value) <span style="color:#f92672">&amp;&amp;</span> isBST(root<span style="color:#f92672">.</span>right, root<span style="color:#f92672">.</span>value, max);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></blockquote>
+<h2 id="4-遍历二叉树---dfs">4. 遍历二叉树 - DFS<a href="#4-遍历二叉树---dfs" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<blockquote>
+<p>Recursion 三步</p>
+<ul>
+<li>确定终止条件</li>
+<li>确定单层逻辑</li>
+<li>确定返回值和参数</li>
+</ul>
+<p>其实<strong>首先要确定的应该是遍历顺序</strong>, 因为遍历顺序决定了递归的顺序, 递归的顺序决定了返回值和参数, 且听我慢慢说来</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Solution104</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self):
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>current_depth <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>max_depth <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">maxDepth</span>(self, root):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">preorder</span>(node):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> node:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># 前序遍历 中左右</span>
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>current_depth <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> self<span style="color:#f92672">.</span>max_depth <span style="color:#f92672">&lt;</span> self<span style="color:#f92672">.</span>current_depth:
+</span></span><span style="display:flex;"><span>                self<span style="color:#f92672">.</span>max_depth <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>current_depth
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> node<span style="color:#f92672">.</span>left:
+</span></span><span style="display:flex;"><span>                preorder(node<span style="color:#f92672">.</span>left)
+</span></span><span style="display:flex;"><span>                self<span style="color:#f92672">.</span>current_depth <span style="color:#f92672">-=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> node<span style="color:#f92672">.</span>right:
+</span></span><span style="display:flex;"><span>                preorder(node<span style="color:#f92672">.</span>right)
+</span></span><span style="display:flex;"><span>                self<span style="color:#f92672">.</span>current_depth <span style="color:#f92672">-=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        preorder(root)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> self<span style="color:#f92672">.</span>current_depth
+</span></span></code></pre></div><blockquote>
+<p>前序遍历使用场景: 函数处理当前节点再进行递归处理其他子节点 中左右 递归函数的单层逻辑都是处理当前节点, 一般我们通过一个<strong>全局变量</strong> (比如上面的 <code>max_depth</code>) 来作为参数来传递 (积累) 每次 recursion 的影响</p>
+</blockquote>
+<p>而后序遍历适合通过返回值的方式来传递信息, 因为当前节点最后处理, 通过下面的例子可以看出:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">maxDepth</span>(root):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> root:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 后序遍历 左右中</span>
+</span></span><span style="display:flex;"><span>    left <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>maxDepth(root<span style="color:#f92672">.</span>left)
+</span></span><span style="display:flex;"><span>    right <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>maxDepth(root<span style="color:#f92672">.</span>right)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> max(left, right) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span></code></pre></div><blockquote>
+<p>DFS 是 &ldquo;Depth-First Search&rdquo; 的缩写，中文翻译为“深度优先搜索”</p>
+<ul>
+<li>
+<p>深度优先：指的是在搜索过程中，优先沿着一条路径尽可能深入，直到无法继续深入为止（到达尽头或满足某个条件），然后回溯到上一个节点，再探索其他路径</p>
+</li>
+<li>
+<p>搜索过程：从起点开始，选择一个方向深入探索，访问完一个节点后，继续访问它的子节点，而不是立即访问同一层的其他节点</p>
+</li>
+</ul>
+<p>在二叉树遍历的上下文中，DFS 通常表现为递归调用，因为递归天然具有“深入到底再回溯”的特性:</p>
+<ul>
+<li>
+<p>前序遍历：先访问根节点，然后深度优先遍历左子树，再遍历右子树</p>
+</li>
+<li>
+<p>中序遍历：先深度优先遍历左子树，然后访问根节点，再遍历右子树</p>
+</li>
+<li>
+<p>后序遍历：先深度优先遍历左子树，再遍历右子树，最后访问根节点</p>
+</li>
+</ul>
+<p><strong>DFS 的特点</strong></p>
+<ul>
+<li>可以用递归</li>
+<li>也可以用栈</li>
+<li>空间复杂度：O(h)，h 是树的高度或图的最大深度，因为需要存储递归调用栈或显式栈</li>
+<li>时间复杂度：O(n)，n 是节点数，因为每个节点都会被访问一次</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>BFS（广度优先搜索，Breadth-First Search）：一层一层地探索，先访问所有同一层的节点</p>
+</blockquote>
+<h2 id="5-平衡二叉树-balanced-binary-tree如-avl-树红黑树">5. 平衡二叉树 Balanced Binary Tree，如 AVL 树、红黑树<a href="#5-平衡二叉树-balanced-binary-tree如-avl-树红黑树" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>如何平衡一棵二叉搜索树？<strong>问题变种</strong>：AVL 树和红黑树的区别？</p>
+<ul>
+<li>AVL 树：通过旋转（左旋、右旋）保持高度差 ≤ 1，插入/删除后严格平衡，适合读多写少的场景</li>
+<li>红黑树：通过颜色规则和旋转维持近似平衡，插入/删除效率更高，适合写多读少的场景（如标准库实现）</li>
+<li>区别：AVL 树更严格，查找更快（O(log n) 更稳定）；红黑树更宽松，插入/删除更快</li>
+<li>延伸：可以提到自底向上或自顶向下的平衡过程</li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/git/006-git-workflow/" class="button inline prev">
+        git 工作流
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/006-%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97-redis-sorted-set/" class="button inline next">
+        优先队列 vs Redis Sorted Sets
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

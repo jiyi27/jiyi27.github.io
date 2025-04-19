@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Swift Functions :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Optional Parameters Swift中可选参数的行为很容易误导人, 让人错误的以为可选参数在调用函数的时候可以不提供, 然而并不是这样, 可选参数只是允许该参数值为 nil, 即使该值是 nil, 也必须显示提供.
+// withGreeting: external parameter name (or argument label) func greet(name: String, withGreeting greeting: String?) { if let greeting = greeting { print(&#34;\(greeting), \(name)!&#34;) } else { print(&#34;\(name)!&#34;) } } // 即使 withGreeting 为 nil, 也必须提供 greet(name: &#34;Alice&#34;, withGreeting: nil) // No greeting: &#34;Alice!&#34; greet(name: &#34;Bob&#34;, withGreeting: &#34;Hi&#34;) // Uses the provided greeting: &#34;Hi, Bob!&#34; &ldquo;if let greeting = greeting&rdquo; 这不是这个赋值语句吗, 怎么能用来判断呢?
+在 Swift 中，if let 常用来 unwrap optional value，名字叫可选绑定（optional binding）, 形式如下：
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/ios/swift/002-functions/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Swift Functions">
+<meta property="og:description" content="1. Optional Parameters Swift中可选参数的行为很容易误导人, 让人错误的以为可选参数在调用函数的时候可以不提供, 然而并不是这样, 可选参数只是允许该参数值为 nil, 即使该值是 nil, 也必须显示提供.
+// withGreeting: external parameter name (or argument label) func greet(name: String, withGreeting greeting: String?) { if let greeting = greeting { print(&#34;\(greeting), \(name)!&#34;) } else { print(&#34;\(name)!&#34;) } } // 即使 withGreeting 为 nil, 也必须提供 greet(name: &#34;Alice&#34;, withGreeting: nil) // No greeting: &#34;Alice!&#34; greet(name: &#34;Bob&#34;, withGreeting: &#34;Hi&#34;) // Uses the provided greeting: &#34;Hi, Bob!&#34; &ldquo;if let greeting = greeting&rdquo; 这不是这个赋值语句吗, 怎么能用来判断呢?
+在 Swift 中，if let 常用来 unwrap optional value，名字叫可选绑定（optional binding）, 形式如下：
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/ios/swift/002-functions/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="ios" />
+
+
+  <meta property="article:published_time" content="2024-05-26 16:03:35 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/ios/swift/002-functions/">Swift Functions</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2024-05-26</time><span class="post-reading-time">3 分钟阅读 (434 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/ios/">ios</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/swift/">swift</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h3 id="1-optional-parameters">1. Optional Parameters<a href="#1-optional-parameters" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Swift中可选参数的行为很容易误导人, 让人错误的以为可选参数在调用函数的时候可以不提供, 然而并不是这样, 可选参数只是允许该参数值为 <code>nil</code>, 即使该值是 <code>nil</code>, 也必须显示提供.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#75715e">// withGreeting: external parameter name (or argument label)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">greet</span>(name: String, withGreeting greeting: String?) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#66d9ef">let</span> greeting = greeting {
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">\(</span>greeting<span style="color:#e6db74">)</span><span style="color:#e6db74">, </span><span style="color:#e6db74">\(</span>name<span style="color:#e6db74">)</span><span style="color:#e6db74">!&#34;</span>)
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">\(</span>name<span style="color:#e6db74">)</span><span style="color:#e6db74">!&#34;</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 即使 withGreeting 为 nil, 也必须提供 </span>
+</span></span><span style="display:flex;"><span>greet(name: <span style="color:#e6db74">&#34;Alice&#34;</span>, withGreeting: <span style="color:#66d9ef">nil</span>) <span style="color:#75715e">// No greeting: &#34;Alice!&#34;</span>
+</span></span><span style="display:flex;"><span>greet(name: <span style="color:#e6db74">&#34;Bob&#34;</span>, withGreeting: <span style="color:#e6db74">&#34;Hi&#34;</span>) <span style="color:#75715e">// Uses the provided greeting: &#34;Hi, Bob!&#34;</span>
+</span></span></code></pre></div><blockquote>
+<p>&ldquo;if let greeting = greeting&rdquo; 这不是这个赋值语句吗, 怎么能用来判断呢?</p>
+<p>在 Swift 中，<code>if let</code> 常用来 unwrap optional value，名字叫可选绑定（optional binding）, 形式如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#66d9ef">let</span> unwrappedValue = optionalValue {
+</span></span><span style="display:flex;"><span> <span style="color:#75715e">// 使用 unwrappedValue</span>
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// optionalValue 为 nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></blockquote>
+<h3 id="2-default-parameters">2. Default Parameters<a href="#2-default-parameters" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>默认参数为参数提供一个默认值，这样在调用函数时<strong>可以忽略这些参数</strong>。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">greet</span>(name: String, withGreeting greeting: String = <span style="color:#e6db74">&#34;Hello&#34;</span>) {
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">\(</span>greeting<span style="color:#e6db74">)</span><span style="color:#e6db74">, </span><span style="color:#e6db74">\(</span>name<span style="color:#e6db74">)</span><span style="color:#e6db74">!&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>greet(name: <span style="color:#e6db74">&#34;Alice&#34;</span>) <span style="color:#75715e">// 输出: &#34;Hello, Alice!&#34;</span>
+</span></span><span style="display:flex;"><span>greet(name: <span style="color:#e6db74">&#34;Bob&#34;</span>, withGreeting: <span style="color:#e6db74">&#34;Hi&#34;</span>) <span style="color:#75715e">// 输出: &#34;Hi, Bob!&#34;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">greet</span>(name: String, withGreeting greeting: String) {
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">\(</span>greeting<span style="color:#e6db74">)</span><span style="color:#e6db74">, </span><span style="color:#e6db74">\(</span>name<span style="color:#e6db74">)</span><span style="color:#e6db74">!&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// compile error: &#39;nil&#39; is not compatible with expected argument type &#39;String&#39;</span>
+</span></span><span style="display:flex;"><span>greet(name: <span style="color:#e6db74">&#34;Alice&#34;</span>, withGreeting: <span style="color:#66d9ef">nil</span>)
+</span></span></code></pre></div><blockquote>
+<p>分清你要的东西是什么, 是允许参数为 nil 还是调用函数的时候不提供参数.</p>
+</blockquote>
+<h3 id="3-optional-chaining">3. Optional Chaining<a href="#3-optional-chaining" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>尝试访问可选值的属性或方法时会用到, 如果可选值有值, 那么调用成功, 如果可选值是 <code>nil</code>, 则调用返回 <code>nil</code>, 整个过程不会因为尝试访问 <code>nil</code> 的属性而导致程序崩溃.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Cat</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> name: String
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">init</span>(name: String) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">self</span>.name = name
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">printCatName</span>(<span style="color:#66d9ef">_</span> cat: Cat?) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 若 cat 为 nil, 不会出现 nil 不存在 name 属性的异常</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#66d9ef">let</span> name = cat?.name {
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;The cat&#39;s name is </span><span style="color:#e6db74">\(</span>name<span style="color:#e6db74">)</span><span style="color:#e6db74">.&#34;</span>)
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;No cat provided.&#34;</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>注意 Optional chaining 可以用于一切尝试访问可选值属性的行为, 以避免尝试访问 nil 的属性不存在异常发生,  上面的例子只是参数为可选值的情况,</p>
+<p>观察下面这段代码, 从逻辑上来说 selectedTaskItem 在 if 语句后必不为空, 所以下意识会想到 这里的 Optional Chaining 是不是多余的?</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span>@State <span style="color:#66d9ef">var</span> selectedTaskItem: TaskItem?
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>withAnimation {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> selectedTaskItem == <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        selectedTaskItem = TaskItem(context: viewContext)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    selectedTaskItem?.created = Date()
+</span></span><span style="display:flex;"><span>    selectedTaskItem?.name = name
+</span></span><span style="display:flex;"><span>    selectedTaskItem?.dueDate = dueDate
+</span></span><span style="display:flex;"><span>    selectedTaskItem?.scheduleTime = scheduleTime
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">self</span>.presentationMode.wrappedValue.dismiss()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>答案并不是, 如果直接写为 <code>selectedTaskItem.name = name</code>, 则编译器会报错: <code>Value of optional type 'TaskItem?' must be unwrapped to refer to member 'created' of wrapped base type 'TaskItem'</code></p>
+<p>这是因为在 Swift 中，即使你在条件分支中对一个可选变量进行了赋值，这个变量的类型仍然保持为可选类型 (<code>Optional</code>)。因此，即使我们已经确信该可选变量不为 <code>nil</code>，编译器仍要求我们对其进行安全访问，因为从类型系统的角度来看，该变量仍然是可选的。</p>
+<h3 id="4-parameter-labels">4. Parameter Labels<a href="#4-parameter-labels" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<blockquote>
+<p>关于参数的 label, 如果不指定, 参数的 label 被设置为参数名, 即调用函数的时候必须指定label, 如 <code>getName(id: 123)</code>, id 就是label, 必须指定不可以写为 <code>getName(123)</code></p>
+<p>因此常有些 <code>_</code> 来忽略 label, 为了调用函数的时候不用显示指出 label.</p>
+</blockquote>
+<h3 id="5-unwrapping-optional-value">5. Unwrapping Optional Value<a href="#5-unwrapping-optional-value" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>SafariView 是个自定义 view, 构造函数需要传递一个 URL 类型的参数, 而下面代码却报错,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#75715e">// error: Value of optional type &#39;URL?&#39; must be unwrapped to a value of type &#39;URL&#39;</span>
+</span></span><span style="display:flex;"><span>SafariView(url: URL(string: urlString))
+</span></span></code></pre></div><p>根据报错信息可以看出, URL构造函数应该是返回了一个 optional value, 即可能为 nil, 因此编译器提示我们要 unwrap <code>URL?</code>,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#75715e">// URL 的一个构造函数</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">init</span>?(string: String)
+</span></span></code></pre></div><p>有多种方法 unwrap 可选类型, 分别为 Optional Binding, Force Unwrapping 和 Nil-Coalescing, 其中 Force Unwrapping 不推荐使用, 因为可能导致运行时错误.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#75715e">// Optional Binding</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#66d9ef">let</span> url = URL(string: urlString) {
+</span></span><span style="display:flex;"><span>    SafariView(url: url)
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    Text(<span style="color:#e6db74">&#34;Invalid URL&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Force Unwrapping</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> urlString = <span style="color:#e6db74">&#34;https://www.apple.com&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> url = URL(string: urlString)<span style="color:#f92672">!</span> <span style="color:#75715e">// Force unwrap</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Nil-Coalescing </span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> url = URL(string: urlString) ?? URL(string: <span style="color:#e6db74">&#34;https://www.example.com&#34;</span>)<span style="color:#f92672">!</span> 
+</span></span></code></pre></div><p>在这个地方的 Nil-Coalescing 也用到了 Force Unwrapping, 因为 URL() 总是会返回可选类型, 所以此时最优解是使用 Optional Binding.</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/ios/swift/003-class-struct/" class="button inline prev">
+        Struct &amp; Class - Swift
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/ios/swift/001-syntax-basics/" class="button inline next">
+        Swift Basic Syntax and Data types
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ssl on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/ssl/</link>
+    <description>Recent content in Ssl on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sat, 07 Oct 2023 08:30:26 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/ssl/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>HTTPS 连接建立过程 (TLS 握手)</title>
+      <link>https://blog.jiyi27.com/posts/http/006-https-ssl/</link>
+      <pubDate>Sat, 07 Oct 2023 08:30:26 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/http/006-https-ssl/</guid>
+      <description>&lt;h2 id=&#34;1-http-vs-https&#34;&gt;1. HTTP vs HTTPS&lt;/h2&gt;
+&lt;p&gt;Strictly speaking, HTTPS is not a separate protocol, but refers to use of ordinary HTTP over an encrypted SSL/TLS connection.&lt;/p&gt;
+&lt;p&gt;Port 80 is typically used for unencrypted &lt;a href=&#34;https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol&#34;&gt;HTTP&lt;/a&gt; traffic while port 443 is the common port used for encrypted HTTP traffic which is called  &lt;a href=&#34;https://en.wikipedia.org/wiki/HTTPS&#34;&gt;HTTPS&lt;/a&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that TLS is the successor of SSL, you can simply think they are same thing.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://en.wikipedia.org/wiki/HTTPS#Network_layers&#34;&gt;https://en.wikipedia.org/wiki/HTTPS#Network_layers&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-what-is-tlsssl&#34;&gt;2. What is TLS/SSL&lt;/h2&gt;
+&lt;p&gt;SSL (Secure Sockets Layer) and its successor, TLS (Transport Layer Security), are protocols for establishing &lt;em&gt;&lt;strong&gt;authenticated&lt;/strong&gt;&lt;/em&gt; and &lt;em&gt;&lt;strong&gt;encrypted&lt;/strong&gt;&lt;/em&gt; links between networked computers.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-http-vs-https&#34;&gt;1. HTTP vs HTTPS&lt;/h2&gt;
+&lt;p&gt;Strictly speaking, HTTPS is not a separate protocol, but refers to use of ordinary HTTP over an encrypted SSL/TLS connection.&lt;/p&gt;
+&lt;p&gt;Port 80 is typically used for unencrypted &lt;a href=&#34;https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol&#34;&gt;HTTP&lt;/a&gt; traffic while port 443 is the common port used for encrypted HTTP traffic which is called  &lt;a href=&#34;https://en.wikipedia.org/wiki/HTTPS&#34;&gt;HTTPS&lt;/a&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that TLS is the successor of SSL, you can simply think they are same thing.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://en.wikipedia.org/wiki/HTTPS#Network_layers&#34;&gt;https://en.wikipedia.org/wiki/HTTPS#Network_layers&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-what-is-tlsssl&#34;&gt;2. What is TLS/SSL&lt;/h2&gt;
+&lt;p&gt;SSL (Secure Sockets Layer) and its successor, TLS (Transport Layer Security), are protocols for establishing &lt;em&gt;&lt;strong&gt;authenticated&lt;/strong&gt;&lt;/em&gt; and &lt;em&gt;&lt;strong&gt;encrypted&lt;/strong&gt;&lt;/em&gt; links between networked computers.&lt;/p&gt;
+&lt;p&gt;HTTPS, HTTP, and TLS are all protocols. HTTPS utilizes the encryption and digital authentication provided by SSL/TLS, while SSL/TLS utilizes some cryptographic algorithms within the protocol in different phases, such as RSA is used at session key exchange stage, AES is used during data transfer. Encryption can be further divided into two types:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Symmetric Encryption Algorithms: AES, etc.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Asymmetric Encryption Algorithms (public key cryptography): RSA, ECC, etc.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-the-process-of-establishing-a-https-connection&#34;&gt;3. The process of establishing a HTTPS connection&lt;/h2&gt;
+&lt;p&gt;When we click a link on our browser will send a or multiple http requets to the target server, then the server will respond us with html file or some images or other resources. But transfer data there are other things needed to do under the hood:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;A tcp connection needed to be established (envolves three way handshake).&lt;/li&gt;
+&lt;li&gt;Make a &lt;a href=&#34;https://www.cloudflare.com/learning/ssl/what-happens-in-a-tls-handshake/&#34;&gt;TLS handshake&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;After TLS handshake,  the secure communication begins (client makes http request, server makes response).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;During the TLS handshake, the client generates a session key and encrypts it with the public key of the server and then send the encrypted session key string to the server, then the server decrypt this  string to get the actual session key. Then they make communication with this session key. Now you should understand why I say TLS/SSL use both RSA and AES encryption algorithms at different phrases in previous part.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that SSL/TLS is a stateful protocol, whereas HTTP/HTTPS is a stateless protocol.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;TLS/SSL is stateful.&lt;/strong&gt; The web server and the client (browser) cache the session including the cryptographic keys to improve performance and do &lt;strong&gt;not&lt;/strong&gt; perform key exchange for every request. &lt;a href=&#34;https://stackoverflow.com/a/33681674/16317008&#34;&gt;Source&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;4-details-in-tls-handshake&#34;&gt;4. Details in TLS handshake&lt;/h2&gt;
+&lt;p&gt;I have talked man-in-middle attack in other &lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/002-ssh/&#34;&gt;post&lt;/a&gt;, when a ssh connection is being established at the first time, it will notify us the fingerprint of the server which enables us can make sure to we are connecting the right server. But it&amp;rsquo;s a little diffenent in SSL/TLS (HTTPS). The authenciation happens in the TLS handshake, the authenciation here means to prevent man-in-the-middle attack by verifying the identity of the remote server.&lt;/p&gt;
+&lt;p&gt;The protocols use a handshake with an &lt;a href=&#34;https://en.wikipedia.org/wiki/Asymmetric_cipher&#34;&gt;asymmetric cipher&lt;/a&gt; to establish not only cipher settings but also a session-specific shared key with which further communication is encrypted using a &lt;a href=&#34;https://en.wikipedia.org/wiki/Symmetric_cipher&#34;&gt;symmetric cipher&lt;/a&gt;. During this handshake, the client and server agree on various parameters used to establish the connection&amp;rsquo;s security:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;客户端跟对方说：&amp;ldquo;你好，我想安全地聊天，我可以用这些加密方式&amp;hellip;&amp;rdquo;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;对方回应：&amp;ldquo;好的，那我们就用这种加密方式吧&amp;rdquo;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;对方给你看他的 TLS 数字证书, 这个身份证上有：他的名字、公开的联系方式（公钥）、以及一个权威机构（CA）的盖章.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;浏览器验证证书是不是真的&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;建立专属密码阶段 客户端随机生成一个随机数,&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;方式一：客户端随机生成一个随机数, 用对方的公开联系方式（公钥）加密后发给他&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;方式二：你们俩一起用一个特殊的数学方法（Diffie-Hellman）, 各自算出一个相同的暗号&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;你们用刚才约定的暗号加密之后的所有对话&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;最开始 (握手阶段) 用的是不对称加密, 之后实际传输数据是对称加密&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://en.wikipedia.org/wiki/Transport_Layer_Security&#34;&gt;https://en.wikipedia.org/wiki/Transport_Layer_Security&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://www.cloudflare.com/learning/ssl/what-happens-in-a-tls-handshake/&#34;&gt;https://www.cloudflare.com/learning/ssl/what-happens-in-a-tls-handshake/&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;5-two-ways-to-get-ssltls-certificate&#34;&gt;5. Two ways to get SSL/TLS certificate&lt;/h2&gt;
+&lt;p&gt;There are several ways to obtain an SSL/TLS certificate:&lt;/p&gt;
+&lt;p&gt;Purchase from a Certificate Authority (CA): Trusted CAs offer various types of certificates, such as domain validation (DV), organization validation (OV), and extended validation (EV). A CA is an outside organization, a trusted third party, that generates and gives out SSL certificates. The CA will also digitally sign the certificate with their own private key, &lt;strong&gt;allowing client devices to verify it&lt;/strong&gt;. Once the certificate is issued, it needs to be installed and activated on the website&amp;rsquo;s origin server.&lt;/p&gt;
+&lt;p&gt;Technically, anyone can create their own SSL certificate by generating a public-private key pairing and including all the information mentioned above . Such certificates are called self-signed certificates because the digital signature used, instead of being from a CA, would be the website&amp;rsquo;s own private key. While self-signed certificates provide encryption for your website or application, they are not trusted by default by web browsers or other client applications. Therefore, visitors accessing your site will typically see a warning message stating that the certificate is not trusted. Learn more: &lt;a href=&#34;https://stackoverflow.com/questions/10175812/how-to-generate-a-self-signed-ssl-certificate-using-openssl&#34;&gt;How to generate a self-signed SSL certificate using OpenSSL?&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;6-is-https-secure-enough&#34;&gt;6. Is HTTPS secure enough?&lt;/h2&gt;
+&lt;p&gt;Does an established HTTPS connection mean the line is really secure?&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s important to understand what SSL does and does not do, especially since this is a very common source of misunderstanding.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;It encrypts the channel&lt;/li&gt;
+&lt;li&gt;It applies integrity checking&lt;/li&gt;
+&lt;li&gt;It provides authentication&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;So, the quick answer should be: &amp;ldquo;yes, it is secure enough to transmit sensitive data&amp;rdquo;. However, things are not that simple. There are a few issues here, &lt;strong&gt;the major one being authentication&lt;/strong&gt;. Both ends need to be sure they are talking to the right person or institution and no man-in-the-middle attack or CSRF attacks.&lt;/p&gt;
+&lt;p&gt;HTTPS is secure in encryption. HTTPS is secure itself but if we can totally trust HTTPS connection when exhcange privacy data is another thing. Although &lt;strong&gt;no one can decrept the data without the session key&lt;/strong&gt;, there probably have man-in-the-middle attck or CSRF attck needs to be considered which make the hackers get your money without getting your sensitive data . If you can make sure the client is really that people you want talk as a server or you can make sure the server is the correct server you want to get, then https is safe. Can you make sure the server itself is a bad company? Which will sell your personal data to other perople. But this is another topic, haha, In the last I&amp;rsquo;ll share a &lt;a href=&#34;https://stackoverflow.com/a/5310027/16317008&#34;&gt;answer&lt;/a&gt; here which is very comprehensive:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Question:&lt;/strong&gt; Consider a scenario, where user authentication (username and password) is entered by the user in the page&amp;rsquo;s form element, which is then submitted. The POST data is sent via HTTPS to a new page (where the php code will check for the credentials). If a hacker sits in the network, and say has access to all the traffic, is the Application layer security (HTTPS) enough in this case ?&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;https://stackoverflow.com/a/5310032/16317008&#34;&gt;Answer 1&lt;/a&gt;:&lt;/strong&gt; Yes. In an HTTPS only the handshake is done unencrypted, but even the HTTP GET/POST query&amp;rsquo;s are done encrypted.&lt;/p&gt;
+&lt;p&gt;It is however impossible to hide to what server you are connecting, since he can see your packets he can see the IP address to where your packets go. If you want to hide this too you can use a proxy (though the hacker would know that you are sending to a proxy, but not where your packets go afterwards).&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;https://stackoverflow.com/a/5310288/16317008&#34;&gt;Answer 2&lt;/a&gt;:&lt;/strong&gt; HTTPS is sufficient &amp;ldquo;if&amp;rdquo; the client is secure. Otherwise someone can install a custom certificate and play man-in-the-middle.&lt;/p&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://security.stackexchange.com/questions/5/does-an-established-https-connection-mean-a-line-is-really-secure&#34;&gt;Does an established HTTPS connection mean a line is really secure? - Information Security Stack Exchange&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://stackoverflow.com/questions/5309997/post-data-encryption-is-https-enough&#34;&gt;php - POST data encryption - Is HTTPS enough? - Stack Overflow&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

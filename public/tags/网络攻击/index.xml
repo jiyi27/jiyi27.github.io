@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>网络攻击 on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/</link>
+    <description>Recent content in 网络攻击 on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sat, 03 Jun 2023 17:14:27 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>ssh 免密登陆 中间人攻击 网络安全</title>
+      <link>https://blog.jiyi27.com/posts/cs-basics/004-ssh/</link>
+      <pubDate>Sat, 03 Jun 2023 17:14:27 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cs-basics/004-ssh/</guid>
+      <description>&lt;h3 id=&#34;1-ssh-应对中间人攻击的方法&#34;&gt;1. SSH 应对中间人攻击的方法&lt;/h3&gt;
+&lt;p&gt;SSH 采用了公钥加密, 过程如下：&lt;/p&gt;
+&lt;p&gt;（1）Remote Host 收到用户的登录请求, 把自己的公钥发给用户&lt;/p&gt;
+&lt;p&gt;（2）用户使用这个公钥, 将登录密码加密后, 发送过去&lt;/p&gt;
+&lt;p&gt;（3）Remote Host 用自己的私钥, 解密信息, 验证密码是否正确&lt;/p&gt;
+&lt;p&gt;这个过程存在一个漏洞：如果有人截获了用户的登录请求，然后冒充 Remote Host，将伪造的公钥发给用户，那么用户很难辨别真伪。这就是 Man-in-the-middle attack, 应对方法有两种:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;利用公钥指纹人工进行对比验证,&lt;/li&gt;
+&lt;li&gt;上传公钥实现免密登录&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;接下来我们一一介绍这两种方法,&lt;/p&gt;
+&lt;h2 id=&#34;2-利用公钥指纹人工进行对比验证&#34;&gt;2. 利用公钥指纹人工进行对比验证&lt;/h2&gt;
+&lt;p&gt;看来面的例子, 在Mac上通过ssh连接远程的服务器, 第一次连接的时候会问下面提示:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ssh root@144.202.16.29        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;The authenticity of host &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;144.202.16.29 (144.202.16.29)&amp;#39;&lt;/span&gt; can&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;t be established.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ED25519 key fingerprint is SHA256:sa5vDYS0yhdMRXO6CgMrp9AcQoVQRiDw6TnzTKesnzQ.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;This key is not known by any other names
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Are you sure you want to &lt;span style=&#34;color:#66d9ef&#34;&gt;continue&lt;/span&gt; connecting &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;yes/no/&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;fingerprint&lt;span style=&#34;color:#f92672&#34;&gt;])&lt;/span&gt;? yes
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这是 ssh 在提醒它无法确认 remost host 是不是就是你要连接的那个主机, 因为可能会发生中间人攻击嘛, 但知道它的公钥指纹是&lt;code&gt;sa5vDYS0...&lt;/code&gt;, 问我们还要继续连接吗 (注意单词 establish 在这是 “认证确认” 的意思),&lt;/p&gt;</description>
+      <content>&lt;h3 id=&#34;1-ssh-应对中间人攻击的方法&#34;&gt;1. SSH 应对中间人攻击的方法&lt;/h3&gt;
+&lt;p&gt;SSH 采用了公钥加密, 过程如下：&lt;/p&gt;
+&lt;p&gt;（1）Remote Host 收到用户的登录请求, 把自己的公钥发给用户&lt;/p&gt;
+&lt;p&gt;（2）用户使用这个公钥, 将登录密码加密后, 发送过去&lt;/p&gt;
+&lt;p&gt;（3）Remote Host 用自己的私钥, 解密信息, 验证密码是否正确&lt;/p&gt;
+&lt;p&gt;这个过程存在一个漏洞：如果有人截获了用户的登录请求，然后冒充 Remote Host，将伪造的公钥发给用户，那么用户很难辨别真伪。这就是 Man-in-the-middle attack, 应对方法有两种:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;利用公钥指纹人工进行对比验证,&lt;/li&gt;
+&lt;li&gt;上传公钥实现免密登录&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;接下来我们一一介绍这两种方法,&lt;/p&gt;
+&lt;h2 id=&#34;2-利用公钥指纹人工进行对比验证&#34;&gt;2. 利用公钥指纹人工进行对比验证&lt;/h2&gt;
+&lt;p&gt;看来面的例子, 在Mac上通过ssh连接远程的服务器, 第一次连接的时候会问下面提示:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ssh root@144.202.16.29        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;The authenticity of host &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;144.202.16.29 (144.202.16.29)&amp;#39;&lt;/span&gt; can&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;t be established.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ED25519 key fingerprint is SHA256:sa5vDYS0yhdMRXO6CgMrp9AcQoVQRiDw6TnzTKesnzQ.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;This key is not known by any other names
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Are you sure you want to &lt;span style=&#34;color:#66d9ef&#34;&gt;continue&lt;/span&gt; connecting &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;yes/no/&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;fingerprint&lt;span style=&#34;color:#f92672&#34;&gt;])&lt;/span&gt;? yes
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这是 ssh 在提醒它无法确认 remost host 是不是就是你要连接的那个主机, 因为可能会发生中间人攻击嘛, 但知道它的公钥指纹是&lt;code&gt;sa5vDYS0...&lt;/code&gt;, 问我们还要继续连接吗 (注意单词 establish 在这是 “认证确认” 的意思),&lt;/p&gt;
+&lt;p&gt;那我们怎么知道远程主机的公钥指纹应该是多少？当然是去你的服务器上查看公钥指纹:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@vultr ssh&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;256&lt;/span&gt; SHA256:sa5vDYS0yhdMRXO6CgMrp9AcQoVQRiDw6TnzTKesnzQ root@vultr.guest &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ED25519&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;注意如果你的服务器使用的是其他hash function生成的公钥指纹, 那你就要查看其他文件了:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ssh-keygen -E md5 -lf /etc/ssh/ssh_host_ed25519_key.pub
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以发现输出内容与上面 ssh 警告的指纹相同, 所以我们要来接的这个是我们的真正主机,&lt;/p&gt;
+&lt;p&gt;可能有人会说, 那我们买的服务器物理主机在谷歌阿里, 怎么去直接验证?  你可以在你购买VPS的网站上连接自己服务器保证你连接的一定是你的主机, 但我们只是测试, 所以你直接忽略 ssh 的提示警告, 输入yes, 连上服务器后去验证一下就好了, 因为肯定不会有中间人闲的蛋疼来攻击我们的连接吧? 几块钱一个月的服务器, 谁来攻击你,&lt;/p&gt;
+&lt;p&gt;有人可能又会疑问, 那我们也可以直接去远程主机查看他的公钥啊, 为啥还要用个hash函数来生成它的指纹, 再去比对, 不是多此一举吗? 首先你没发现公钥的指纹很短吗? 我们去远程主机验证一般是用肉眼来比对吧, 那公钥那么长, 几百个字符, 很容易比对错, 而公钥指纹的主要目的就在于它很短, 方便我们比对,&lt;/p&gt;
+&lt;p&gt;最后关于 ssh 输出的信息, 还有其它想说的, 根据输出:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ssh root@144.202.16.29        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;The authenticity of host &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;144.202.16.29 (144.202.16.29)&amp;#39;&lt;/span&gt; can&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;t be established.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ED25519 key fingerprint is SHA256:sa5vDYS0yhdMRXO6CgMrp9AcQoVQRiDw6TnzTKesnzQ.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;该 remote host 上的 ssh 使用的公私钥是由 ED25519 算法生成的, ED25519 是非对称加密算法, 常见的非对称加密算法还有 RSA, 所以 RSA 和 ED25519 是并列的: Today, the RSA is the most widely used public-key algorithm for SSH key. But compared to Ed25519, it&amp;rsquo;s slower and even considered not safe if it&amp;rsquo;s generated with the key smaller than 2048-bit length. EdDSA is a digital signature scheme, Ed25519 is the EdDSA signature scheme using SHA-512 (SHA-2) and Curve25519. &amp;ndash;Wiki&lt;/p&gt;
+&lt;p&gt;另外, 该公钥指纹是由 SHA256 hash function 生成的, 另外常见的 hash function 还有md5,&lt;/p&gt;
+&lt;h3 id=&#34;21-验证公私钥位置&#34;&gt;2.1. 验证公私钥位置&lt;/h3&gt;
+&lt;p&gt;这个时候我们在电脑终端输入yes, 然后就会提示输入密码 (比如root用户对应的密码), 然后系统会提示如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Warning: Permanently added &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;144.202.16.29&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ED25519&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; to the list of known hosts.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;root@144.202.16.29&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;s password: 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Last login: Fri Apr  &lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt; 20:36:06 &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@vultr ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ls&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;当远程主机的公钥被接受以后, 它会被保存在文件&lt;code&gt;~/.ssh/known_hosts&lt;/code&gt;之中, 下次再连接这台主机, 系统就会认出它的公钥已经保存在本地了, 从而跳过警告部分, 直接提示输入密码, 我们来查看Mac上的输出:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ls ~/.ssh 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;id_rsa          id_rsa.pub      known_hosts     known_hosts.old
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cat ~/.ssh/known_hosts 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;github.com ssh-ed25519 AAAAC3NzaC1lZDI1N...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;github.com ecdsa-sha2-nistp256 AAAAE2VjZH....
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;github.com ssh-rsa AAAAB3NzaC1yc2EAAAADA....
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;144.202.16.29 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOpG35RMxOKeeLbTfdWlPgToThzrm00sRpMRQs+pdYig
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;144.202.16.29 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBHP5xEl1122X1Vtc5LzqMp6vlvd4cHRD151ag61xXThvT7KM9vuUK23ol4LKoXMoivUH1SAcWandumVKG37zZfA&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;再看看服务器上的输出,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@vultr ssh&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ls /etc/ssh&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;moduli            ssh_host_dsa_key.pub    ssh_host_ed25519_key.pub
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ssh_config        ssh_host_ecdsa_key      ssh_host_rsa_key
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sshd_config       ssh_host_ecdsa_key.pub  ssh_host_rsa_key.pub
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ssh_host_dsa_key  ssh_host_ed25519_key
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@vultr ssh&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# cat ssh_host_ed25519_key.pub &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOpG35RMxOKeeLbTfdWlPgToThzrm00sRpMRQs+pdYig root@vultr.guest
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@vultr ssh&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# cat ssh_host_ecdsa_key.pub &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBHP5xEl1122X1Vtc5LzqMp6vlvd4cHRD151ag61xXThvT7KM9vuUK23ol4LKoXMoivUH1SAcWandumVKG37zZfA&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; root@vultr.guest
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这两个一个是公钥, 一个是公钥的指纹, 可以看出和上面Mac的存储的内容是一样, 然后上面在服务器 &lt;code&gt;ls /etc/ssh&lt;/code&gt; 的输出, 有 &lt;code&gt;ssh_host_rsa_key.pub&lt;/code&gt;, &lt;code&gt;ssh_host_ecdsa_key.pub&lt;/code&gt; 这就是使用不同的算法产生的不同的key,&lt;/p&gt;
+&lt;p&gt;最后 Mac 上 &lt;code&gt;~/.ssh/known_hosts&lt;/code&gt; 的输出 github 那部分有 ssh-ed25519, ecdsa-sha2-nistp256, 这是什么呢?&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;For &lt;code&gt;ssh-ed25519&lt;/code&gt; and &lt;code&gt;ecdsa-sha2-nistp256&lt;/code&gt; which one is used for a given connection depends on the capabilities and preferences of the client, namely your ssh program. If you are using &lt;code&gt;OpenSSH&lt;/code&gt; versions 6.5 to 8.1, then it prefers &lt;code&gt;ecdsa&lt;/code&gt; then &lt;code&gt;ed25519&lt;/code&gt;, and only 8.2 up prefers &lt;code&gt;ed25519&lt;/code&gt; first. &lt;a href=&#34;https://superuser.com/questions/1688106/why-does-github-recommend-ed25519-ssh-key-encryption-scheme-but-itself-uses-ecd&#34;&gt;Why does GitHub recommend ed25519 SSH key encryption scheme, but itself uses ECDSA? - Super User&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;ecdsa-sha2-nistp256: Specifies the ECDSA algorithm with 256-bit key strength&lt;/li&gt;
+&lt;li&gt;rsa: Specifies the public key algorithm rsa&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-public-key-authentication-上传公钥实现免密登陆&#34;&gt;3. Public Key Authentication (上传公钥实现免密登陆)&lt;/h2&gt;
+&lt;h3 id=&#34;31-过程分析&#34;&gt;3.1. 过程分析&lt;/h3&gt;
+&lt;p&gt;使用密码登录, 每次都必须输入密码, 非常麻烦, 好在SSH还提供了公钥登录, 可以省去输入密码的步骤, 具体验证过程如下:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;The client generates a public/private key pair, typically with RSA or ECC. The client keeps the private key secret and registers the public key with the SSH server.&lt;/li&gt;
+&lt;li&gt;When the client connects to the server, the server authenticates the client by checking if it has the corresponding public key registered for that client.&lt;/li&gt;
+&lt;li&gt;The server will send a challenge message to the client, requesting authentication.&lt;/li&gt;
+&lt;li&gt;The client will take the challenge message and use its private key to generate a digital signature. This proves that the client has the correct private key without revealing the key itself.&lt;/li&gt;
+&lt;li&gt;The client sends the digital signature back to the server as a response to the challenge.&lt;/li&gt;
+&lt;li&gt;The server verifies the signature using the client&amp;rsquo;s registered public key. If the signature is validated, the server knows the client has proven possession of the corresponding private key and grants it access.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;注意关于验证过程, 不同 ssh 版本可能会有不同的实现, 你可能会看到有人说远程主机用 用户的公钥进行解密验证, 其实公钥并不可以用来解密, 别人指的应该是公钥可以用来验证数字签名, 即这种情况下私钥加密其实应该是私钥签名。 私钥 “加密” 以后，谁用公钥都可以打开，就已经失去了加密的意义，所以它只能起到一个“签名”的效果，来达到-大家知道这条信息是我，而且只有我发出的。&lt;/p&gt;
+&lt;p&gt;记住公钥只能用来加密, 不可以用来解密, 不然就不叫公钥了, 所以是远程主机用 用户的公钥进行用户的验证数字签名, 总结公钥有俩功能:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;加密&lt;/li&gt;
+&lt;li&gt;验证数字签名&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;32-具体操作&#34;&gt;3.2. 具体操作&lt;/h3&gt;
+&lt;p&gt;远程主机需要使用用户的公钥来验证用户的身份, 所以&lt;strong&gt;本地机器&lt;/strong&gt;要生成公私钥:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# generate ssh keys&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ssh-keygen
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;一路回车之后在&lt;code&gt;~/.ssh/&lt;/code&gt;会新生成两个文件：&lt;code&gt;id_rsa.pub&lt;/code&gt;和&lt;code&gt;id_rsa&lt;/code&gt;, 前者是你的公钥, 后者是你的私钥, 这时再输入下面的命令, 将公钥传送到远程主机host上面:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ssh-copy-id root@144.202.16.29
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;完成, 之后再登录就不需要输入密码了:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ssh root@144.202.16.29
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;其实你也可以直接编辑远程主机 &lt;code&gt;~/.ssh/authorized_keys&lt;/code&gt; 文件, 把你本地主机的公钥的内容添加进去就行了, &lt;code&gt;ssh-copy-id root@144.202.16.29&lt;/code&gt; 做的就是这件事. 下面我们会验证.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;4-authorized_keys-file&#34;&gt;4. &lt;code&gt;authorized_keys&lt;/code&gt; file&lt;/h2&gt;
+&lt;p&gt;上面 &lt;code&gt;ssh-copy-id root@144.202.16.29&lt;/code&gt; 执行后, 本机公钥存储在了远程主机&lt;code&gt;~/.ssh/authorized_keys&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@vultr ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ls -a&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.   .bash_history  .bash_profile  .cache  .pki  .tcshrc
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;..  .bash_logout   .bashrc        .cshrc  .ssh
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;root@vultr ~&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# cat .ssh/authorized_keys &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDvbHLCIxxUDDqktbqdrICPa+JDd3kEyowKpy9igugi7R+f/94UDBDJLmeu+K8wi90pjwq+mTM6bSPXBkjmYGibCPbUKk7RtrVx5FdR488PR7/ptMqQXJeQeMOIXvK2Lfnzay+rH5Fg/8z1+pd7cuHPq0bWm5LroGq+bYXVTIYgjKC5NDxPbQCY7zd4c0L+SvxlwqrJFvRBZKY41UBLywtuM8geluLWaGcbikX1K2hFVcZ7ETogG7eqdRBtbfx+JxhyRY1Od+snM88CSfuQkOgs4xQli3GrGttgY0f8BA65/pbixG9gAPkacEkexS997iuTP9BmwLmwWq1pw91c0yEQO1JnsbGHj/YfRhBV6s4FL8n5uVC0My64tisqA+8eZTeld8Zwem4XQGjoqwt2HYy1YXv0kOU8NyI0EGDz3fmqER3ex0cL+MqvWf/cnWQ6MRvGI3w/gL3+V8ueZv5qXpnY+ZH2UcrqEv7Xl74fkdqPYo53ySLQ9ZCiCitHgMjl3bk&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shwezu@qq.com
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在Mac上查看我自己的公钥, 是一样的:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-zsh&#34; data-lang=&#34;zsh&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# cat id_rsa.pub &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDvbHLCIxxUDDqktbqdrICPa+JDd3kEyowKpy9igugi7R+f/94UDBDJLmeu+K8wi90pjwq+mTM6bSPXBkjmYGibCPbUKk7RtrVx5FdR488PR7/ptMqQXJeQeMOIXvK2Lfnzay+rH5Fg/8z1+pd7cuHPq0bWm5LroGq+bYXVTIYgjKC5NDxPbQCY7zd4c0L+SvxlwqrJFvRBZKY41UBLywtuM8geluLWaGcbikX1K2hFVcZ7ETogG7eqdRBtbfx+JxhyRY1Od+snM88CSfuQkOgs4xQli3GrGttgY0f8BA65/pbixG9gAPkacEkexS997iuTP9BmwLmwWq1pw91c0yEQO1JnsbGHj/YfRhBV6s4FL8n5uVC0My64tisqA+8eZTeld8Zwem4XQGjoqwt2HYy1YXv0kOU8NyI0EGDz3fmqER3ex0cL+MqvWf/cnWQ6MRvGI3w/gL3+V8ueZv5qXpnY+ZH2UcrqEv7Xl74fkdqPYo53ySLQ9ZCiCitHgMjl3bk&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; shwezu@qq.com
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;5-ssh_config-vs-sshd_config-file&#34;&gt;5. &lt;code&gt;ssh_config&lt;/code&gt; vs &lt;code&gt;sshd_config&lt;/code&gt; file&lt;/h2&gt;
+&lt;p&gt;I would like to change my SSH port running Linux CentOS 6. I also noticed there&amp;rsquo;s an &lt;code&gt;/etc/ssh_config&lt;/code&gt; file along with &lt;code&gt;/etc/sshd_config&lt;/code&gt;. What&amp;rsquo;s the difference between the two? Should I change both?&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;sshd_config&lt;/code&gt; is the ssh &lt;em&gt;&lt;strong&gt;daemon&lt;/strong&gt;&lt;/em&gt; (or ssh server process) configuration file. As you&amp;rsquo;ve already stated, this is the file you&amp;rsquo;ll need to modify to change the server port.&lt;/p&gt;
+&lt;p&gt;Whereas, the &lt;code&gt;ssh_config&lt;/code&gt; file is the ssh &lt;em&gt;&lt;strong&gt;client&lt;/strong&gt;&lt;/em&gt; configuration file. The client configuration file only has bearing on when you use the &lt;code&gt;ssh&lt;/code&gt; command to connect to another ssh host. So, in this case, you don&amp;rsquo;t need to modify it. It will be &lt;em&gt;other&lt;/em&gt; client machines connecting to your server.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://serverfault.com/questions/343533/changing-ssh-port-should-i-modify-only-sshd-config-or-also-ssh-config&#34;&gt;Should I modify only sshd_config, or also ssh_config?&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/EdDSA&#34;&gt;https://en.wikipedia.org/wiki/EdDSA&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Digital_signature&#34;&gt;https://en.wikipedia.org/wiki/Digital_signature&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://superuser.com/a/1688126&#34;&gt;https://superuser.com/a/1688126&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://security.stackexchange.com/questions/230708/should-i-be-using-ecdsa-keys-instead-of-rsa&#34;&gt;https://security.stackexchange.com/questions/230708/should-i-be-using-ecdsa-keys-instead-of-rsa&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Man-in-the-middle_attack&#34;&gt;Man-in-the-middle attack&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://bitlaunch.io/blog/how-to-check-your-ssh-key-fingerprint/&#34;&gt;How to check your SSH key fingerprint (verify the authenticity of the remote host)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

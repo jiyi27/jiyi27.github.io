@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>C&#43;&#43; Operator Overloading :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Operators as functions Consider the following example:
+int x { 2 }; int y { 3 }; std::cout &lt;&lt; x &#43; y &lt;&lt; &#39;\n&#39;; When you see the expression x &#43; y, you can translate this in your head to the function call operator&#43;(x, y) (where operator&#43; is the name of the function).
+Now consider what happens if we try to add two objects of a program-defined class:
+Mystring string1 { &#34;Hello, &#34; }; Mystring string2 { &#34;World!&#34; }; std::cout &lt;&lt; string1 &#43; string2 &lt;&lt; &#39;\n&#39;; What would you expect to happen in this case? The intuitive expected result is “Hello, World!” . However, because Mystring is a program-defined type, the compiler does not have a built-in version of the plus operator that it can use for Mystring operands. So in this case, it will give us an error. In order to make it work like we want, we’d need to write an overloaded function to tell the compiler how the &#43; operator should work with two operands of type Mystring.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/cpp/008-operator-overloading/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="C&#43;&#43; Operator Overloading">
+<meta property="og:description" content="1. Operators as functions Consider the following example:
+int x { 2 }; int y { 3 }; std::cout &lt;&lt; x &#43; y &lt;&lt; &#39;\n&#39;; When you see the expression x &#43; y, you can translate this in your head to the function call operator&#43;(x, y) (where operator&#43; is the name of the function).
+Now consider what happens if we try to add two objects of a program-defined class:
+Mystring string1 { &#34;Hello, &#34; }; Mystring string2 { &#34;World!&#34; }; std::cout &lt;&lt; string1 &#43; string2 &lt;&lt; &#39;\n&#39;; What would you expect to happen in this case? The intuitive expected result is “Hello, World!” . However, because Mystring is a program-defined type, the compiler does not have a built-in version of the plus operator that it can use for Mystring operands. So in this case, it will give us an error. In order to make it work like we want, we’d need to write an overloaded function to tell the compiler how the &#43; operator should work with two operands of type Mystring.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/cpp/008-operator-overloading/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="c&#43;&#43;" />
+
+
+  <meta property="article:published_time" content="2023-05-22 23:03:12 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/cpp/008-operator-overloading/">C++ Operator Overloading</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-05-22</time><span class="post-reading-time">4 分钟阅读 (828 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/c&#43;&#43;/">c&#43;&#43;</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-operators-as-functions">1. Operators as functions<a href="#1-operators-as-functions" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Consider the following example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> x { <span style="color:#ae81ff">2</span> };
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> y { <span style="color:#ae81ff">3</span> };
+</span></span><span style="display:flex;"><span>std<span style="color:#f92672">::</span>cout <span style="color:#f92672">&lt;&lt;</span> x <span style="color:#f92672">+</span> y <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#39;\n&#39;</span>;
+</span></span></code></pre></div><p>When you see the expression <code>x + y</code>, you can translate this in your head to the function call <code>operator+(x, y)</code> (where <code>operator+</code> is the name of the function).</p>
+<p>Now consider what happens if we try to add two objects of a program-defined class:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>Mystring string1 { <span style="color:#e6db74">&#34;Hello, &#34;</span> };
+</span></span><span style="display:flex;"><span>Mystring string2 { <span style="color:#e6db74">&#34;World!&#34;</span> };
+</span></span><span style="display:flex;"><span>std<span style="color:#f92672">::</span>cout <span style="color:#f92672">&lt;&lt;</span> string1 <span style="color:#f92672">+</span> string2 <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#39;\n&#39;</span>;
+</span></span></code></pre></div><p>What would you expect to happen in this case? The intuitive expected result is “Hello, World!” . However, because <code>Mystring</code> is a program-defined type, the compiler does not have a built-in version of the <strong>plus operator</strong> that it can use for <code>Mystring</code> operands. So in this case, it will give us an error. In order to make it work like we want, we’d need to write an <strong>overloaded function</strong> to tell the compiler how the <code>+</code> operator should work with two operands of type <code>Mystring</code>.</p>
+<h2 id="2-overloading-the-arithmetic-operators-using-friend-functions">2. Overloading the arithmetic operators using friend functions<a href="#2-overloading-the-arithmetic-operators-using-friend-functions" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>使用 friend function 的好处是我们可以直接访问类的私有成员, 另外注意 friend function 并不是类的成员函数,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;iostream&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Cents</span> {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">int</span> m_cents {};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>	Cents(<span style="color:#66d9ef">int</span> cents) <span style="color:#f92672">:</span> m_cents{ cents } { }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// add Cents + Cents using a friend function
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// 另外friend function并不是类的成员函数, 但你仍可以在类里面实现它 而不是像我们这样在外面实现
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// 如果是成员函数重载, 这里只用一个参数就行了, 因为*this会默认为左操作数, 具体文章下面部分会讲
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">friend</span> Cents <span style="color:#66d9ef">operator</span><span style="color:#f92672">+</span>(<span style="color:#66d9ef">const</span> Cents<span style="color:#f92672">&amp;</span> c1, <span style="color:#66d9ef">const</span> Cents<span style="color:#f92672">&amp;</span> c2);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">getCents</span>() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> m_cents; }
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// note: this function is not a member function!
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 可以看到, 在类里已经声明的性质(friend, static, virtual) 不用再在外面声明了
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>Cents <span style="color:#66d9ef">operator</span><span style="color:#f92672">+</span>(<span style="color:#66d9ef">const</span> Cents<span style="color:#f92672">&amp;</span> c1, <span style="color:#66d9ef">const</span> Cents<span style="color:#f92672">&amp;</span> c2) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// use the Cents constructor and operator+(int, int)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// we can access m_cents directly because this is a friend function
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">return</span> c1.m_cents <span style="color:#f92672">+</span> c2.m_cents;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	Cents cents1{ <span style="color:#ae81ff">6</span> };
+</span></span><span style="display:flex;"><span>	Cents cents2{ <span style="color:#ae81ff">2</span> };
+</span></span><span style="display:flex;"><span>	Cents centsSum{ cents1 <span style="color:#f92672">+</span> cents2 };
+</span></span><span style="display:flex;"><span>	std<span style="color:#f92672">::</span>cout <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#34;I have &#34;</span> <span style="color:#f92672">&lt;&lt;</span> centsSum.getCents() <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#34; cents.</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="not-everything-can-be-overloaded-as-a-friend-function">Not everything can be overloaded as a friend function<a href="#not-everything-can-be-overloaded-as-a-friend-function" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>The assignment (=), subscript ([]), function call (()), and member selection (-&gt;) operators must be overloaded as member functions, because the language requires them to be.</p>
+<h2 id="3-overloading-operators-using-normal-functions">3. Overloading operators using normal functions<a href="#3-overloading-operators-using-normal-functions" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Using a friend function to overload an operator is convenient because it gives you direct access to the internal members of the classes you’re operating on. However, if you don’t need that access, you can write your overloaded operators as normal functions. 这个normal function既不是friend function, 也不是member function.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;iostream&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Cents</span> {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int</span> m_cents{};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>  Cents(<span style="color:#66d9ef">int</span> cents) <span style="color:#f92672">:</span> m_cents{ cents } {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">getCents</span>() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> m_cents; }
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// note: this function is not a member function nor a friend function!
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 注意哦, 这个函数既不是friend function, 也不是成员函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>Cents <span style="color:#66d9ef">operator</span><span style="color:#f92672">+</span>(<span style="color:#66d9ef">const</span> Cents<span style="color:#f92672">&amp;</span> c1, <span style="color:#66d9ef">const</span> Cents<span style="color:#f92672">&amp;</span> c2) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// use the Cents constructor and operator+(int, int)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// we don&#39;t need direct access to private members here
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">return</span> Cents{ c1.getCents() <span style="color:#f92672">+</span> c2.getCents() };
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>  Cents cents1{ <span style="color:#ae81ff">6</span> };
+</span></span><span style="display:flex;"><span>  Cents cents2{ <span style="color:#ae81ff">8</span> };
+</span></span><span style="display:flex;"><span>  Cents centsSum{ cents1 <span style="color:#f92672">+</span> cents2 };
+</span></span><span style="display:flex;"><span>  std<span style="color:#f92672">::</span>cout <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#34;I have &#34;</span> <span style="color:#f92672">&lt;&lt;</span> centsSum.getCents() <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#34; cents.</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Because the <strong>normal and friend functions</strong> work almost identically (they just have different levels of access to private members), we generally won’t differentiate them. The one difference is that the friend function declaration inside the class serves as a prototype as well. With the normal function version, you’ll have to provide your own function prototype:</p>
+<p>Cents.h:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#75715e">#ifndef CENTS_H
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define CENTS_H
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Cents</span> {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int</span> m_cents{};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>  Cents(<span style="color:#66d9ef">int</span> cents)
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">:</span> m_cents{ cents }
+</span></span><span style="display:flex;"><span>  {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">getCents</span>() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> m_cents; }
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Need to explicitly provide prototype for operator+ so uses of operator+ in other files know this overload exists
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>Cents <span style="color:#66d9ef">operator</span><span style="color:#f92672">+</span>(<span style="color:#66d9ef">const</span> Cents<span style="color:#f92672">&amp;</span> c1, <span style="color:#66d9ef">const</span> Cents<span style="color:#f92672">&amp;</span> c2);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#endif
+</span></span></span></code></pre></div><h2 id="4-overloading-operators-using-member-functions">4. Overloading operators using member functions<a href="#4-overloading-operators-using-member-functions" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>You learned how to overload the arithmetic operators using <strong>friend functions</strong>. You also learned you can overload operators as <strong>normal functions</strong>. Many operators can be overloaded in a different way: as a <strong>member function</strong>.</p>
+<p>Overloading operators using a member function is very similar to overloading operators using a friend function. When overloading an operator using a member function:</p>
+<ul>
+<li>The overloaded operator must be added as a member function of the left operand.</li>
+<li>The left operand becomes the implicit *this object. (比如<code>+</code>需要左右两个操作数, 如果你用成员函数来重载它, 那重载函数<code>operator+</code>只需要一个参数即<code>+</code>右边的操作数, 左边的默认为<code>*this</code>, 可以看下面的实现, 注意与上面friend function对比)</li>
+<li>All other operands become function parameters.</li>
+</ul>
+<p>注意与上面friend function的实现做对比:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;iostream&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Cents</span> {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">private</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> m_cents {};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>    Cents(<span style="color:#66d9ef">int</span> cents) <span style="color:#f92672">:</span> m_cents { cents } { }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Overload Cents + int
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Cents <span style="color:#66d9ef">operator</span><span style="color:#f92672">+</span> (<span style="color:#66d9ef">int</span> value);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">getCents</span>() <span style="color:#66d9ef">const</span> { <span style="color:#66d9ef">return</span> m_cents; }
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// note: this function is a member function!
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// the cents parameter in the friend version is now the implicit *this parameter
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 只有一个参数~, 和friend function一样, 可以访问私有成员, 因为人家是成员函数啊, 肯定可以访问
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>Cents Cents<span style="color:#f92672">::</span><span style="color:#66d9ef">operator</span><span style="color:#f92672">+</span> (<span style="color:#66d9ef">int</span> value) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> Cents { m_cents <span style="color:#f92672">+</span> value };
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	Cents cents1 { <span style="color:#ae81ff">6</span> };
+</span></span><span style="display:flex;"><span>	Cents cents2 { cents1 <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span> };
+</span></span><span style="display:flex;"><span>	std<span style="color:#f92672">::</span>cout <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#34;I have &#34;</span> <span style="color:#f92672">&lt;&lt;</span> cents2.getCents() <span style="color:#f92672">&lt;&lt;</span> <span style="color:#e6db74">&#34; cents.</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/golang/practice/002-golang-worker-pools/" class="button inline prev">
+        Go 并发学习之实现一个 Worker Pool
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/golang/practice/001-snake-game/" class="button inline next">
+        用 Go 实现一个简单的贪吃蛇
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

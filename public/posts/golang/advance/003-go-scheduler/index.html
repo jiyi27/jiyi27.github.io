@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Go Scheduler (1) :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Source: Scheduling In Go : Part I - OS Scheduler
+1. OS scheduler Your program is just a series of machine instructions that need to be executed one after the other sequentially. To make that happen, the operating system uses the concept of a Thread. It’s the job of the Thread to account for and sequentially execute the set of instructions it’s assigned. Execution continues until there are no more instructions for the Thread to execute. This is why I call a Thread, “a path of execution”.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/advance/003-go-scheduler/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Go Scheduler (1)">
+<meta property="og:description" content="Source: Scheduling In Go : Part I - OS Scheduler
+1. OS scheduler Your program is just a series of machine instructions that need to be executed one after the other sequentially. To make that happen, the operating system uses the concept of a Thread. It’s the job of the Thread to account for and sequentially execute the set of instructions it’s assigned. Execution continues until there are no more instructions for the Thread to execute. This is why I call a Thread, “a path of execution”.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/advance/003-go-scheduler/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="golang" />
+
+
+  <meta property="article:published_time" content="2023-05-28 17:48:19 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/advance/003-go-scheduler/">Go Scheduler (1)</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-05-28</time><span class="post-reading-time">10 分钟阅读 (1986 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%9E%B6%E6%9E%84/">计算机架构</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>Source: <a href="https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html">Scheduling In Go : Part I - OS Scheduler</a></p>
+<h2 id="1-os-scheduler">1. OS scheduler<a href="#1-os-scheduler" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Your program is just a series of machine instructions that need to be executed one after the other sequentially. To make that happen, the operating system uses the concept of a Thread. It’s the job of the Thread to account for and sequentially execute the set of instructions it’s assigned. Execution continues until there are no more instructions for the Thread to execute. <strong>This is why I call a Thread, “a path of execution”.</strong></p>
+<p>Every program you run creates a Process and each Process is given an initial Thread. Threads have the ability to create more Threads. All these different Threads run independently of each other and scheduling decisions are made at the Thread level, not at the Process level. Threads can run concurrently (each taking a turn on an individual core), or in parallel (each running at the same time on different cores). Threads also maintain their own state to allow for the safe, local, and independent execution of their instructions.</p>
+<p><strong>The OS scheduler is responsible for making sure cores are not idle if there are Threads that can be executing</strong>. It must also create the illusion that all the Threads (that can execute) are executing at the same time. In the process of creating this illusion, the scheduler needs to run Threads with a higher priority over lower priority Threads. However, Threads with a lower priority can’t be starved of execution time. The scheduler also needs to minimize scheduling latencies as much as possible by making quick and smart decisions.</p>
+<p>To understand all of this better, it’s good to describe and define a few concepts that are important.</p>
+<h2 id="2-program-counter---pc">2. Program counter - PC<a href="#2-program-counter---pc" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>The <a href="https://en.wikipedia.org/wiki/Program_counter">program counter</a> (PC), which is sometimes called the instruction pointer (IP), is what allows the Thread to keep track of the next instruction to execute. In most processors, the PC points to the next instruction and not the current instruction.</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/ff70b7a094d6a0a307fbd467d313b8ef.png" alt=""></p>
+<h2 id="3-thread-states">3. Thread states<a href="#3-thread-states" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Another important concept is Thread state, which dictates the role the scheduler takes with the Thread. A Thread can be in one of three states: Waiting, Runnable or Executing.</p>
+<p><strong>Waiting</strong>: This means the Thread is stopped and waiting for something in order to continue. This could be for reasons like, waiting for the hardware (disk, network), the operating system (system calls) or synchronization calls (atomic, mutexes). These types of <a href="https://en.wikipedia.org/wiki/Latency_%28engineering%29">latencies</a> are a root cause for bad performance.</p>
+<p><strong>Runnable</strong>: This means the Thread wants time on a core so it can execute its assigned machine instructions.</p>
+<p><strong>Executing</strong>: &hellip;</p>
+<h2 id="4-types-of-work">4. Types of work<a href="#4-types-of-work" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>There are two types of work a Thread can do. The first is called CPU-Bound and the second is called IO-Bound.</p>
+<p><strong>CPU-Bound</strong>: This is work that <strong>never creates a situation</strong> where the Thread may <strong>be placed</strong> in Waiting states. This is work that is constantly making calculations. A Thread calculating Pi to the Nth digit would be CPU-Bound.</p>
+<p><strong>IO-Bound</strong>: This is work that causes Threads to enter into Waiting states. This is work that consists in requesting access to a resource over the network or making system calls into the operating system. A Thread that needs to access a database would be IO-Bound. I would include synchronization events (mutexes, atomic), that cause the Thread to wait as part of this category.</p>
+<p>The term CPU-bound describes a scenario where the execution of a task or program is highly dependent on the CPU. In contrast, a task or program is I/O bound if its execution is dependent on the input-output system and its resources, such as disk drives and peripheral devices.</p>
+<h2 id="5-context-switching">5. Context switching<a href="#5-context-switching" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>If you are running on Linux, Mac or Windows, you are running on an OS that has a <strong>preemptive scheduler</strong>. This means a few important things. First, it means the scheduler is unpredictable when it comes to what Threads will be chosen to run at any given time. Thread priorities together with events, (like receiving data on the network) make it impossible to determine what the scheduler will choose to do and when. Second, it means you must never write code based on some perceived behavior that you have been lucky to experience but is not guaranteed to take place every time. It is easy to allow yourself to think, because I’ve seen this happen the same way 1000 times, this is guaranteed behavior. You must control the <strong>synchronization</strong> and <strong>orchestration</strong> of Threads if you need determinism in your application.</p>
+<p><strong>The physical act of swapping Threads on a core is called a context switch.</strong> A context switch happens when the scheduler pulls an Executing thread off a core and replaces it with a Runnable Thread. The Thread that was selected from the run queue moves into an Executing state. The Thread that was pulled can move back into a Runnable state (if it still has the ability to run), or into a Waiting state (if was replaced because of an IO-Bound type of request).</p>
+<p><strong>Context switches are considered to be expensive because it takes times to swap Threads on and off a core</strong>. The amount of latency incurrent during a context switch depends on different factors but it’s not unreasonable for it to take between <a href="https://eli.thegreenplace.net/2018/measuring-context-switching-and-memory-overheads-for-linux-threads/">~1000 and ~1500 nanoseconds</a>. Considering the hardware should be able to reasonably execute (on average) <a href="https://www.youtube.com/watch?v=jEG4Qyo_4Bc&amp;feature=youtu.be&amp;t=266">12 instructions per nanosecond</a> per core, a context switch can cost you ~12k to ~18k instructions of latency. In essence, your program is losing the ability to execute a large number of instructions during a context switch.</p>
+<p>If you have a program that is focused on <strong>IO-Bound</strong> work, then context switches are going to be an advantage. Once a Thread moves into a Waiting state, another Thread in a Runnable state is there to take its place.** This allows the core to always be doing work. This is one of the most important aspects of scheduling. Don’t allow a core to go idle if there is work (Threads in a Runnable state) to be done. 还记得文章第一个加粗的那段话吗, OS Scheduler的作用, 然后再看看段句话,</p>
+<p>If your program is focused on <strong>CPU-Bound</strong> work, then context switches are going to be a performance nightmare. Since the Thead always has work to do, the context switch is stopping that work from progressing. This situation is in stark contrast with what happens with an IO-Bound workload</p>
+<h2 id="6-less-is-more">6. Less is more<a href="#6-less-is-more" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>In the early days when processors had only one core, scheduling wasn’t overly complicated. Because you had a single processor with a single core, only one Thread could execute at any given time. The idea was to define a <a href="https://lwn.net/Articles/404993/">scheduler period</a> and attempt to execute all the Runnable Threads within that period of time. No problem: take the scheduling period and divide it by the number of Threads that need to execute.</p>
+<p>As an example, if you define your scheduler period to be 1000ms (1 second) and you have 10 Threads, then each thread gets 100ms. If you have 100 Threads, each Thread gets 10ms. However, what happens when you have 1000 Threads? Giving each Thread a <strong>time slice</strong> of 1ms doesn’t work because <strong>the percentage of time you’re spending in context switches will be significant related to the amount of time you’re spending on application work</strong>.</p>
+<p>What you need is to set a limit on how small a given time slice can be. In the last scenario, if the minimum time slice was 10ms and you have 1000 Threads, the scheduler period needs to increase to 10000ms (10 seconds). What if there were 10,000 Threads, now you are looking at a scheduler period of 100000ms (100 seconds). At 10,000 threads, with a minimal time slice of 10ms, it takes 100 seconds for all the Threads to run once in this simple example if each Thread uses its full time slice.</p>
+<p>Be aware this is a very simple view of the world. There are more things that need to be considered and handled by the scheduler when making <a href="https://blog.acolyer.org/2016/04/26/the-linux-scheduler-a-decade-of-wasted-cores/">scheduling decisions</a>. You control the number of Threads you use in your application. When there are more Threads to consider, and IO-Bound work happening, there is more chaos and nondeterministic behavior. Things take longer to schedule and execute.</p>
+<p>This is why the rule of the game is “Less is More”. Less Threads in a Runnable state means less scheduling overhead and more time each Thread gets over time. More Threads in a Runnable state mean less time each Thread gets over time. That means less of your work is getting done over time as well.</p>
+<h2 id="7-find-the-balance">7. Find the balance<a href="#7-find-the-balance" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>There is a balance you need to find between the number of cores you have and the number of Threads you need to get the best throughput for your application. When it comes to managing this balance, <strong>Thread pools</strong> were a great answer. <strong>I will show you in <a href="https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part2.html">part II</a> that this is no longer necessary with Go.</strong> I think this is one of the nice things Go did to make multithreaded application development easier.</p>
+<p>Prior to coding in Go, I wrote code in C++ and C# on NT. On that operating system, the use of IOCP (IO Completion Ports) thread pools were critical to writing multithreaded software. As an engineer, you needed to figure out how many Thread pools you needed and the max number of Threads for any given pool to maximize throughput for the number of cores that you were given.</p>
+<p>When writing web services that talked to a database, the magic number of 3 Threads per core seemed to always give the best throughput on NT. In other words, 3 Threads per core minimized the latency costs of context switching while maximizing execution time on the cores. When creating an IOCP Thread pool, I knew to start with a minimum of 1 Thread and a maximum of 3 Threads for every core I identified on the host machine.</p>
+<p>If I used 2 Threads per core, it took longer to get all the work done, because I had idle time when I could have been getting work done. If I used 4 Threads per core, it also took longer, because I had more latency in context switches. The balance of 3 Threads per core, for whatever reason, always seemed to be the magic number on NT.</p>
+<p>What if your service is doing a lot of different types of work? That could create different and inconsistent latencies. Maybe it also creates a lot of different system-level events that need to be handled. It might not be possible to find a magic number that works all the time for all the different work loads. When it comes to using Thread pools to tune the performance of a service, it can get very complicated to find the right consistent configuration.</p>
+<h2 id="8-cache-lines">8. Cache lines<a href="#8-cache-lines" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Accessing data from main memory has <strong>such</strong> a high latency cost (100<del>300 clock cycles) <strong>that</strong> processors and cores have local caches to keep data close to the hardware threads that need it. Accessing data from caches have a much lower cost (3</del>40 clock cycles) depending on the cache being accessed. Today, one aspect of performance is about how efficiently you can get data into the processor to reduce these data-access latencies. Writing multithreaded applications that mutate state need to consider the mechanics of the caching system.</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/fdd6c3eb2f8294b7b43b1013e1b6b6e8.png" alt=""></p>
+<p>Data is exchanged between the processor and main memory using <a href="https://www.youtube.com/watch?v=WDIkqP4JbkE">cache lines</a>. A cache line is a 64-byte chunk of memory that is exchanged between main memory and the caching system. Each core is given its own copy of any cache line it needs, which means the hardware uses <a href="https://www.ardanlabs.com/blog/2017/06/design-philosophy-on-data-and-semantics.html">value semantics</a>. This is why mutations to memory in multithreaded applications can create performance nightmares.</p>
+<p>References:</p>
+<ul>
+<li>
+<p><a href="https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html">Scheduling In Go : Part I - OS Scheduler</a></p>
+</li>
+<li>
+<p><a href="https://www.baeldung.com/cs/cpu-io-bound">Guide to the “Cpu-Bound” and “I/O Bound” Terms | Baeldung on Computer Science</a></p>
+</li>
+</ul>
+<p>Related articles:</p>
+<p><a href="https://davidzhu.xyz/2023/05/28/Operating-System/CPU-Architecture/">多核 CPU 之 Hyper Threading | 橘猫小八的鱼</a></p>
+<p><a href="https://davidzhu.xyz/2023/05/27/Operating-System/Context-Switching/">并发学习之 Context Switching | 橘猫小八的鱼</a></p>
+<p><a href="https://davidzhu.xyz/2023/05/27/Operating-System/Thread-Process/">并发学习之线程进程及Hyper-Threading | 橘猫小八的鱼</a></p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/python/practice/001-add-space/" class="button inline prev">
+        Python 脚本给文章中英字符以及符号间加空格
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/cs-basics/006-cpu-architecture/" class="button inline next">
+        Hyper-Threading &amp; Physical Threads
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

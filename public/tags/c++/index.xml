@@ -1,0 +1,920 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>C&#43;&#43; on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/c&#43;&#43;/</link>
+    <description>Recent content in C&#43;&#43; on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 03 Nov 2023 10:49:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/c++/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Static Linking vs Dynamic Linking</title>
+      <link>https://blog.jiyi27.com/posts/cs-basics/002-statically-linking/</link>
+      <pubDate>Fri, 03 Nov 2023 10:49:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cs-basics/002-statically-linking/</guid>
+      <description>&lt;h2 id=&#34;1-compilation-process-in-c&#34;&gt;1. Compilation process in C&lt;/h2&gt;
+&lt;p&gt;C/C++ programs are built in two main phases (ignore the preprocess, assemble):&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Compilation - produces object code (&lt;code&gt;.obj&lt;/code&gt;, &lt;code&gt;.o&lt;/code&gt;)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Compile source code into an object file without linking:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;gcc -c path/to/source.c
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;The extension of the &lt;em&gt;&lt;strong&gt;object file&lt;/strong&gt;&lt;/em&gt; in DOS is &lt;code&gt;.obj&lt;/code&gt;, and in UNIX, the extension is &lt;code&gt;.o&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Linking - produces executable code (.exe or .dll)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;&lt;strong&gt;executable file&lt;/strong&gt;&lt;/em&gt; with an extension of &lt;code&gt;exe&lt;/code&gt; in DOS and &lt;code&gt;.out&lt;/code&gt; in UNIX OSL&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;2-static-linking-and-dynamic-linking&#34;&gt;2. Static linking and dynamic linking&lt;/h2&gt;
+&lt;h3 id=&#34;21-static-linking---portable-fast&#34;&gt;2.1. Static linking - portable, fast&lt;/h3&gt;
+&lt;p&gt;Mainly, all the programs written in C use library functions. These library functions are pre-compiled, and the object code of these library files is stored with &lt;code&gt;.lib&lt;/code&gt; (or &lt;code&gt;.a&lt;/code&gt;) extension. &lt;strong&gt;The main working of the linker&lt;/strong&gt; is to combine the &lt;em&gt;&lt;strong&gt;object code&lt;/strong&gt;&lt;/em&gt; of library files with the &lt;em&gt;&lt;strong&gt;object code&lt;/strong&gt;&lt;/em&gt; of our program. The output of the linker is the executable file. So the &lt;strong&gt;static Linking creates larger binary files&lt;/strong&gt;.  Note that this is the process of static linking, and &lt;code&gt;.lib&lt;/code&gt; and &lt;code&gt;.a&lt;/code&gt; is static library in windows and linux respectively.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-compilation-process-in-c&#34;&gt;1. Compilation process in C&lt;/h2&gt;
+&lt;p&gt;C/C++ programs are built in two main phases (ignore the preprocess, assemble):&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Compilation - produces object code (&lt;code&gt;.obj&lt;/code&gt;, &lt;code&gt;.o&lt;/code&gt;)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Compile source code into an object file without linking:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;gcc -c path/to/source.c
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;The extension of the &lt;em&gt;&lt;strong&gt;object file&lt;/strong&gt;&lt;/em&gt; in DOS is &lt;code&gt;.obj&lt;/code&gt;, and in UNIX, the extension is &lt;code&gt;.o&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Linking - produces executable code (.exe or .dll)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;&lt;strong&gt;executable file&lt;/strong&gt;&lt;/em&gt; with an extension of &lt;code&gt;exe&lt;/code&gt; in DOS and &lt;code&gt;.out&lt;/code&gt; in UNIX OSL&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;2-static-linking-and-dynamic-linking&#34;&gt;2. Static linking and dynamic linking&lt;/h2&gt;
+&lt;h3 id=&#34;21-static-linking---portable-fast&#34;&gt;2.1. Static linking - portable, fast&lt;/h3&gt;
+&lt;p&gt;Mainly, all the programs written in C use library functions. These library functions are pre-compiled, and the object code of these library files is stored with &lt;code&gt;.lib&lt;/code&gt; (or &lt;code&gt;.a&lt;/code&gt;) extension. &lt;strong&gt;The main working of the linker&lt;/strong&gt; is to combine the &lt;em&gt;&lt;strong&gt;object code&lt;/strong&gt;&lt;/em&gt; of library files with the &lt;em&gt;&lt;strong&gt;object code&lt;/strong&gt;&lt;/em&gt; of our program. The output of the linker is the executable file. So the &lt;strong&gt;static Linking creates larger binary files&lt;/strong&gt;.  Note that this is the process of static linking, and &lt;code&gt;.lib&lt;/code&gt; and &lt;code&gt;.a&lt;/code&gt; is static library in windows and linux respectively.&lt;/p&gt;
+&lt;p&gt;In static linking, everything is bundled into your application, you don’t have to worry that the client will have the right library (and version) available on their system. Since all library code have connected at compile time, the final executable has no dependencies on the library at run time. You have everything under your control and there is no dependency.&lt;/p&gt;
+&lt;p&gt;One major advantage of static libraries being preferred even now “is speed”. There will be no dynamic querying of symbols in static libraries.&lt;/p&gt;
+&lt;p&gt;One drawback of static libraries is, for any change(up-gradation) in the static libraries, you have to recompile the main program every time.&lt;/p&gt;
+&lt;h3 id=&#34;22-dynamic-linking---smaller-binary&#34;&gt;2.2. Dynamic linking - smaller binary&lt;/h3&gt;
+&lt;p&gt;Dynamic Linking doesn’t require the code to be copied, it is done by just placing name of the library in the binary file. The actual linking happens when the program is run, when both the binary file and the library are in memory.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://www.geeksforgeeks.org/static-vs-dynamic-libraries/&#34;&gt;Static and Dynamic Libraries | Set 1 - GeeksforGeeks&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-static-library-vs-dynamic-library&#34;&gt;3. Static library vs dynamic library&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Static library: windows &lt;code&gt;.lib&lt;/code&gt;,  linux &lt;code&gt;.a&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Dynamic library (shared library): windows &lt;code&gt;.dll&lt;/code&gt;, linux &lt;code&gt;.so&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Static library &lt;code&gt;.lib&lt;/code&gt; is just a bundle of &lt;code&gt;.obj&lt;/code&gt; files and therefore isn&amp;rsquo;t a complete program. It hasn&amp;rsquo;t undergone the second (linking) phase of building a program. Dlls, on the other hand, are like exe&amp;rsquo;s and therefore are complete programs.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;If you build a static library&lt;/strong&gt;, it isn&amp;rsquo;t linked yet and therefore consumers of your static library will have to use the same compiler that you used (if you used g++, they will have to use g++). If the static library uses C++ library, such as &lt;code&gt;#include &amp;lt;iostream&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;If instead you built a dll (and built it &lt;a href=&#34;http://www.codeproject.com/Articles/28969/HowTo-Export-C-classes-from-a-DLL&#34;&gt;correctly&lt;/a&gt;), you have built a complete program that all consumers can use, no matter which compiler they are using. There are several restrictions though, on exporting from a dll, if cross compiler compatibility is desired.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://stackoverflow.com/a/25209275/16317008&#34;&gt;https://stackoverflow.com/a/25209275/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-example-in-practice&#34;&gt;4. Example in practice&lt;/h2&gt;
+&lt;p&gt;Dynamic linking means the use of shared libraries. Shared libraries usually end with &lt;code&gt;.so&lt;/code&gt; (short for &amp;ldquo;shared object&amp;rdquo;) or &lt;code&gt;.dylib&lt;/code&gt; on MacOS.&lt;/p&gt;
+&lt;p&gt;Another thing to note is that when a bug is fixed in a shared library, every application that references this library will profit from it. This also means that if the bug remains undetected, each referencing application will suffer from it (if the application uses the affected parts).&lt;/p&gt;
+&lt;p&gt;It can be very hard for beginners &lt;strong&gt;when an application requires a specific version of the library, but the linker only knows the location of an incompatible versio&lt;/strong&gt;n. In this case, you must help the linker find the path to the correct version.&lt;/p&gt;
+&lt;p&gt;Although this is not an everyday issue, understanding dynamic linking will surely help you in fixing such problems.&lt;/p&gt;
+&lt;p&gt;Fortunately, the mechanics for this are quite straightforward. To detect which libraries are required for an application to start, you can use &lt;code&gt;ldd&lt;/code&gt;, which will print out the shared libraries used by a given file.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;$ ldd my_app 
+	linux-vdso.so.1 (0x00007ffd1299c000)
+	libmy_shared.so =&amp;gt; not found
+	libc.so.6 =&amp;gt; /lib64/libc.so.6 (0x00007f56b869b000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f56b8881000)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Note that the library &lt;code&gt;libmy_shared.so&lt;/code&gt; is part of the repository but is not found. This is because the &lt;strong&gt;dynamic linker&lt;/strong&gt;, which is responsible for loading all dependencies into memory before executing the application, cannot find this library in the standard locations it searches.&lt;/p&gt;
+&lt;p&gt;Errors associated with linkers finding incompatible versions of common libraries (like &lt;code&gt;bzip2&lt;/code&gt;, for example) can be quite confusing for a new user. One way around this is to add the repository folder to the environment variable &lt;code&gt;LD_LIBRARY_PATH&lt;/code&gt; to tell the linker where to look for the correct version. In this case, the right version is in this folder, so you can export it:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ LD_LIBRARY_PATH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;$(&lt;/span&gt;pwd&lt;span style=&#34;color:#66d9ef&#34;&gt;)&lt;/span&gt;:$LD_LIBRARY_PATH
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ export LD_LIBRARY_PATH
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Now the dynamic linker knows where to find the library, and the application can be executed. You can rerun &lt;code&gt;ldd&lt;/code&gt; to invoke the dynamic linker, which inspects the application&amp;rsquo;s dependencies and loads them into memory. The memory address is shown after the object path:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ldd my_app 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	linux-vdso.so.1 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x00007ffd385f7000&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	libmy_shared.so &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&amp;gt; /home/stephan/library_sample/libmy_shared.so &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x00007f3fad401000&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	libc.so.6 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&amp;gt; /lib64/libc.so.6 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x00007f3fad21d000&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/lib64/ld-linux-x86-64.so.2 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x00007f3fad408000&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;To find out which linker is invoked, you can use &lt;code&gt;file&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file my_app 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;my_app: ELF 64-bit LSB executable, x86-64, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SYSV&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;, dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;sha1&lt;span style=&#34;color:#f92672&#34;&gt;]=&lt;/span&gt;26c677b771122b4c99f0fd9ee001e6c743550fa6, &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; GNU/Linux 3.2.0, not stripped
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The linker &lt;code&gt;/lib64/ld-linux-x86–64.so.2&lt;/code&gt; is a symbolic link to &lt;code&gt;ld-2.30.so&lt;/code&gt;, which is the default linker for my Linux distribution:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file /lib64/ld-linux-x86-64.so.2 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/lib64/ld-linux-x86-64.so.2: symbolic link to ld-2.31.so
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Looking back to the output of &lt;code&gt;ldd&lt;/code&gt;, you can also see (next to &lt;code&gt;libmy_shared.so&lt;/code&gt;) that each dependency ends with a number (e.g., &lt;code&gt;/lib64/libc.so.6&lt;/code&gt;). The usual naming scheme of shared objects is:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;**lib** XYZ.so **.&amp;lt;MAJOR&amp;gt;** . **&amp;lt;MINOR&amp;gt;**
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;On my system, &lt;code&gt;libc.so.6&lt;/code&gt; is also a symbolic link to the shared object &lt;code&gt;libc-2.30.so&lt;/code&gt; in the same folder:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file /lib64/libc.so.6 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/lib64/libc.so.6: symbolic link to libc-2.31.so
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If you are facing the issue that an application will not start because the loaded library has the wrong version, it is very likely that you can fix this issue by inspecting and rearranging the symbolic links or specifying the correct search path (see &amp;ldquo;The dynamic loader: ld.so&amp;rdquo; below).&lt;/p&gt;
+&lt;p&gt;For more information, look on the &lt;a href=&#34;https://www.man7.org/linux/man-pages/man1/ldd.1.html&#34;&gt;&lt;code&gt;ldd&lt;/code&gt; man page&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://opensource.com/article/20/6/linux-libraries&#34;&gt;How to handle dynamic and static libraries in Linux | Opensource.com&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that the dynamic linker on MacOS is called &lt;code&gt;dyld&lt;/code&gt;, try &lt;code&gt;man dyld&lt;/code&gt; to check the details. Learn more: &lt;a href=&#34;https://stackoverflow.com/a/34905091/16317008&#34;&gt;https://stackoverflow.com/a/34905091/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;hello&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// go build -o server main.go&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then check the shared libraries this executable file &lt;code&gt;server&lt;/code&gt; required:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# otool -L: print shared libraries used&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ otool -L server           
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/usr/lib/libSystem.B.dylib &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;compatibility version 0.0.0, current version 0.0.0&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/usr/lib/libresolv.9.dylib &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;compatibility version 0.0.0, current version 0.0.0&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;ldd&lt;/code&gt; is on linux, on MaxOS you should use &lt;code&gt;otool&lt;/code&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>C 标准库 运行时库(动静态链接库) 浅析</title>
+      <link>https://blog.jiyi27.com/posts/cs-basics/002-standard-library/</link>
+      <pubDate>Tue, 17 Oct 2023 17:58:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cs-basics/002-standard-library/</guid>
+      <description>&lt;h2 id=&#34;1-iso-制定标准库规范&#34;&gt;1. ISO 制定标准库规范&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;ISO/IEC&lt;/strong&gt; 制定 C 和 C++ 编程语言的标准，其中包括&lt;strong&gt;标准库&lt;/strong&gt;的规范。这些标准定义了语言的语法、语义以及标准库中包含的函数、类型和宏&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;标准库&lt;/strong&gt;是标准定义的一组函数和类型, 标准库的规范只定义了接口（即函数原型、类型定义等），而没有定义具体的实现&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;glibc&lt;/strong&gt;（GNU C Library）是 GNU 项目为 GNU 系统（包括 Linux）提供的 C 语言标准库的&lt;strong&gt;一种实现&lt;/strong&gt;, 它是 Linux 系统中最常用的 C 库, 提供了符合 ISO C 标准的函数和类型, 以及一些 Linux 特有的扩展&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;MSVCRT&lt;/strong&gt;（Microsoft Visual C Runtime）是 Microsoft 为 Windows 操作系统提供的 C 和 C++ 运行时库, 其中包含了 C 语言标准库的&lt;strong&gt;一种实现&lt;/strong&gt;, 它与 Microsoft Visual Studio 编译器紧密集成，为 Windows 应用程序提供必要的运行时支持。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;ISO 定义了标准库的规范, glibc 和 MSVCRT 是标准库的不同实现, 分别用于不同的操作系统（Linux 和 Windows）&lt;/p&gt;
+&lt;p&gt;为什么要实现不同版本的运行时库: There are functions for memory allocation, creating threads, and input/output operations (such as those in &lt;code&gt;stdio.h&lt;/code&gt;)  in C language. All of these functions rely on system calls. Therefore, when third-party manufacturers implement the standard library of C language, they must create different versions for the different OS because each OS has its own set of system calls.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-iso-制定标准库规范&#34;&gt;1. ISO 制定标准库规范&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;ISO/IEC&lt;/strong&gt; 制定 C 和 C++ 编程语言的标准，其中包括&lt;strong&gt;标准库&lt;/strong&gt;的规范。这些标准定义了语言的语法、语义以及标准库中包含的函数、类型和宏&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;标准库&lt;/strong&gt;是标准定义的一组函数和类型, 标准库的规范只定义了接口（即函数原型、类型定义等），而没有定义具体的实现&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;glibc&lt;/strong&gt;（GNU C Library）是 GNU 项目为 GNU 系统（包括 Linux）提供的 C 语言标准库的&lt;strong&gt;一种实现&lt;/strong&gt;, 它是 Linux 系统中最常用的 C 库, 提供了符合 ISO C 标准的函数和类型, 以及一些 Linux 特有的扩展&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;MSVCRT&lt;/strong&gt;（Microsoft Visual C Runtime）是 Microsoft 为 Windows 操作系统提供的 C 和 C++ 运行时库, 其中包含了 C 语言标准库的&lt;strong&gt;一种实现&lt;/strong&gt;, 它与 Microsoft Visual Studio 编译器紧密集成，为 Windows 应用程序提供必要的运行时支持。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;ISO 定义了标准库的规范, glibc 和 MSVCRT 是标准库的不同实现, 分别用于不同的操作系统（Linux 和 Windows）&lt;/p&gt;
+&lt;p&gt;为什么要实现不同版本的运行时库: There are functions for memory allocation, creating threads, and input/output operations (such as those in &lt;code&gt;stdio.h&lt;/code&gt;)  in C language. All of these functions rely on system calls. Therefore, when third-party manufacturers implement the standard library of C language, they must create different versions for the different OS because each OS has its own set of system calls.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-运行时-runtime-库&#34;&gt;2. 运行时 (runtime) 库&lt;/h2&gt;
+&lt;p&gt;运行时库分为静态链接库和动态链接库两种形式, 我们在源代码中使用 printf 时, 编译器看到的只是一个函数声明, 这些函数(比如 printf、malloc 等)的真正实现代码在运行时库文件中, 在 &lt;strong&gt;链接 阶段&lt;/strong&gt;, 链接器会把运行时库中我们用到的函数实现和我们的代码链接到一起, 然后&lt;strong&gt;生成可执行文件&lt;/strong&gt;, 有两种链接方式:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;静态链接方式：编译阶段 直接把 静态链接库文件 和obj 二进制文件链接, 生成可执行文件&lt;/li&gt;
+&lt;li&gt;动态链接方式：程序运行时从动态链接库文件中加载运行时库的代码&lt;/li&gt;
+&lt;/ul&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;&lt;/th&gt;
+          &lt;th&gt;静态链接库&lt;/th&gt;
+          &lt;th&gt;动态链接库&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Windows 扩展名&lt;/td&gt;
+          &lt;td&gt;.lib&lt;/td&gt;
+          &lt;td&gt;.dll (Dynamic Link Library)&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Linux/Unix 扩展名&lt;/td&gt;
+          &lt;td&gt;.a (archive)&lt;/td&gt;
+          &lt;td&gt;.so (Shared Object)&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;加载时机&lt;/td&gt;
+          &lt;td&gt;编译时完整复制到可执行文件&lt;/td&gt;
+          &lt;td&gt;程序运行时才加载&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;优点&lt;/td&gt;
+          &lt;td&gt;程序独立性强，不依赖外部环境&lt;/td&gt;
+          &lt;td&gt;• 可执行文件较小&lt;!-- raw HTML omitted --&gt;• 多个程序可共享同一库文件&lt;!-- raw HTML omitted --&gt;• 库文件更新不需重新编译程序&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;缺点&lt;/td&gt;
+          &lt;td&gt;生成的可执行文件较大，内存占用较多&lt;/td&gt;
+          &lt;td&gt;• 程序运行依赖特定动态链接库&lt;!-- raw HTML omitted --&gt;• 可能出现版本兼容性问题&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;C语言标准库示例&lt;/td&gt;
+          &lt;td&gt;• Linux/Unix: libc.a&lt;!-- raw HTML omitted --&gt;• Windows: libcmt.lib&lt;/td&gt;
+          &lt;td&gt;• Linux/Unix: libc.so&lt;!-- raw HTML omitted --&gt;• Windows: msvcrt.dll&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;The term &lt;code&gt;library&lt;/code&gt; (runtime library) and &lt;code&gt;header&lt;/code&gt; are not same&lt;/strong&gt;. &lt;code&gt;Library&lt;/code&gt; are the implementations of the &lt;code&gt;header&lt;/code&gt;, which exist as binary files (the static library &lt;code&gt;.a&lt;/code&gt;/&lt;code&gt;.lib&lt;/code&gt; or the dynamic library &lt;code&gt;.so&lt;/code&gt;/&lt;code&gt;.dll&lt;/code&gt; ), whereas headers are &lt;code&gt;.h&lt;/code&gt; files. Therefore, we usually cannot find the source code of the implementation of C standard library, such as function &lt;code&gt;printf()&lt;/code&gt;. Because the implementation of these functions are provided as compiled binary files. But you can find the glibc&amp;rsquo;s implementation of &lt;code&gt;printf()&lt;/code&gt; on  the internet, because glibc is open source.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;3-libca-va-libcso&#34;&gt;3. libc.a va libc.so&lt;/h2&gt;
+&lt;p&gt;The size of libc.a is &lt;code&gt;5.8 MB&lt;/code&gt; which is huge for codes, &lt;code&gt;libc.a&lt;/code&gt; is a static library, also known as a &amp;ldquo;archive&amp;rdquo; library, It contains compiled object code that gets linked into the final executable at compile time.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ls -lh /usr/lib/x86_64-linux-gnu/libc.a
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-rw-r--r-- &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root root 5.8M Sep &lt;span style=&#34;color:#ae81ff&#34;&gt;25&lt;/span&gt; 14:45 /usr/lib/x86_64-linux-gnu/libc.a
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Don&amp;#39;t archive libc.a directly, archive it on a different folder&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ar -x libc.a
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ls | grep printf
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;printf.o
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sprintf.o
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;为什么静态运行库里面一个目标文件只包含一个函数？比如libc.a里面printf.o只有printf()函数、strlen.o只有strlen()函数，为什么要这样组织？&lt;/p&gt;
+&lt;p&gt;链接器在链接静态库的时候是以目标文件为单位的, 比如我们引用了&lt;code&gt;printf()&lt;/code&gt;函数, 如果进行静态链接的话, 那么链接器就只会把库中包含printf()函数的那个目标文件链接进来, 由于运行库有成百上千个函数, 如果把这些函数都放在一个目标文件中就会很大&amp;hellip;&lt;/p&gt;
+&lt;p&gt;如果把整个链接过程比作一台计算机, 那么ld链接器就是计算机的CPU, 所有的目标文件、库文件就是输入, 链接结果输出的可执行文件就是输出, 而链接控制脚本正是这台计算机的“程序”, 它控制CPU的运行, 以“程序”要求的方式将输入加工成所须要的输出结果.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt;libc.so&lt;/code&gt; is a shared library, often referred to as a &amp;ldquo;dynamic link library.&amp;rdquo; It contains compiled code that is loaded into memory at runtime, allowing multiple programs to share the same code in memory.&lt;/p&gt;
+&lt;p&gt;Both &lt;code&gt;libc.a&lt;/code&gt; and &lt;code&gt;libc.so&lt;/code&gt; are implementations of the C library, but they differ in their form and how they are linked to programs.&lt;/p&gt;
+&lt;p&gt;When we staticlly compile a source file, then &lt;code&gt;libc.a&lt;/code&gt; will be used at compiled time, if we dynamically compile a source file (compile with dynamically linked) then &lt;code&gt;libc.so&lt;/code&gt; will be used at runtime.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ gcc -static -o main main.c         
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file main
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;main: ELF 64-bit LSB executable, x86-64, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;GNU/Linux&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;, statically linked, BuildID&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;sha1&lt;span style=&#34;color:#f92672&#34;&gt;]=&lt;/span&gt;7fd47f129d345aa2ef6c44b06ffa01be4174d098, &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; GNU/Linux 3.2.0, not stripped
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ls -lh main
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-rwxrwxr-x &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ubuntu ubuntu 880K Oct &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; 00:51 main
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ gcc -o main main.c 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file main
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;main: ELF 64-bit LSB pie executable, x86-64, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SYSV&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;, dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;sha1&lt;span style=&#34;color:#f92672&#34;&gt;]=&lt;/span&gt;f14bf2e15cabc179d82a09a2de5bf15da6e5b75c, &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; GNU/Linux 3.2.0, not stripped
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ls -lh main
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-rwxrwxr-x &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ubuntu ubuntu 16K Oct &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; 00:54 main
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see, the dynamically linked binary is very small just 1&lt;code&gt;6k&lt;/code&gt; compared with the statically linked binary &lt;code&gt;880K&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;4-glibc-vs-libc&#34;&gt;4. glibc vs libc&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;特性&lt;/th&gt;
+          &lt;th&gt;libc&lt;/th&gt;
+          &lt;th&gt;glibc&lt;/th&gt;
+          &lt;th&gt;其他libc实现(如musl/uClibc)&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;定义&lt;/td&gt;
+          &lt;td&gt;C标准库的接口规范&lt;/td&gt;
+          &lt;td&gt;GNU项目开发的libc具体实现&lt;/td&gt;
+          &lt;td&gt;轻量级/嵌入式场景的libc实现&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;性质&lt;/td&gt;
+          &lt;td&gt;概念性称呼&lt;/td&gt;
+          &lt;td&gt;实际库文件&lt;/td&gt;
+          &lt;td&gt;实际库文件&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;使用范围&lt;/td&gt;
+          &lt;td&gt;-&lt;/td&gt;
+          &lt;td&gt;Linux系统主流实现&lt;/td&gt;
+          &lt;td&gt;嵌入式系统、资源受限环境&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;体积&lt;/td&gt;
+          &lt;td&gt;-&lt;/td&gt;
+          &lt;td&gt;较大&lt;/td&gt;
+          &lt;td&gt;小巧精简&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;功能&lt;/td&gt;
+          &lt;td&gt;定义基础接口&lt;/td&gt;
+          &lt;td&gt;完整的功能实现，特性丰富&lt;/td&gt;
+          &lt;td&gt;基础功能实现，针对性优化&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;运行环境&lt;/td&gt;
+          &lt;td&gt;-&lt;/td&gt;
+          &lt;td&gt;主要用于桌面和服务器&lt;/td&gt;
+          &lt;td&gt;嵌入式设备、IoT设备等&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;特点&lt;/td&gt;
+          &lt;td&gt;-&lt;/td&gt;
+          &lt;td&gt;功能全面，向后兼容性好&lt;/td&gt;
+          &lt;td&gt;启动快、内存占用小&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;5-conclusion&#34;&gt;5. Conclusion&lt;/h2&gt;
+&lt;p&gt;程序如何使用操作系统提供的API(system call)? 在一般的情况下，一种语言的开发环境往往会附带有语言库（Language Library也可以说是标准库,运行时库）。这些库就是对操作系统的API的包装，比如我们经典的C语言版“Hello World”程序，它使用C语言标准库的“printf”函数来输出一个字符串，“printf”函数对字符串进行一些必要的处理以后，最后会调用操作系统提供的API。各个操作系统下，往终端输出字符串的API都不一样，在Linux下，它是一个“write”的系统调用，而在Windows下它是“WriteConsole”系统API。&lt;strong&gt;标准库函数(运行库)依赖的是system call&lt;/strong&gt;。库里面还带有那些很常用的函数，比如C语言标准库里面有很常用一个函数取得一个字符串的长度叫strlen()，该函数即遍历整个字符串后返回字符串长度，这个函数并没有调用任何操作系统的API，也没有做任何输入输出。但是很大一部分库函数(运行库)都是要调用操作系统的API的.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“Any problem in computer science can be solved by another layer of indirection.”&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/1f35f2b6abb298af70e6c922f5be2f32.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;每个层次之间都须要相互通信，既然须要通信就必须有一个通信的协议，我们一般将其称为接口（Interface），接口的下面那层是接口的提供者，由它定义接口；接口的上面那层是接口的使用者，它使用该接口来实现所需要的功能.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;运行时库(标准库, static library, dynamic library) 依赖 system call, 它提供头文件(&lt;code&gt;stdio.h&lt;/code&gt;, &lt;code&gt;math.h&lt;/code&gt;)供我们使用. 所以它很重要, 它在应用层和操作系统中间. 我们使用它提供的接口(&lt;code&gt;printf()&lt;/code&gt;)和操作系统进行交流(通过system call).&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;我们的软件体系中，位于最上层的是应用程序，比如我们平时用到的网络浏览器、Email客户端、多媒体播放器、图片浏览器等。从整个层次结构上来看，开发工具与应用程序是属于同一个层次的，因为它们都使用一个接口，那就是操作系统应用程序编程接口（Application Programming Interface, 就是标准库的头文件）。应用程序接口(头文件)的提供者是运行库，什么样的运行库提供什么样的API，比如Linux下的Glibc库提供POSIX的API；Windows的运行库提供Windows API，最常见的32位Windows提供的API又被称为Win32。&lt;/p&gt;
+&lt;p&gt;运行库使用操作系统提供的系统调用接口（System call Interface），系统调用接口在实现中往往以软件中断（Software Interrupt）的方式提供，比如Linux使用0x80号中断作为系统调用接口，Windows使用0x2E号中断作为系统调用接口（从Windows XP Sp2开始，Windows开始采用一种新的系统调用方式）。&lt;/p&gt;
+&lt;p&gt;操作系统内核层对于硬件层来说是硬件接口的使用者，而硬件是接口的定义者，硬件的接口定义决定了操作系统内核，具体来讲就是驱动程序如何操作硬件，如何与硬件进行通信。这种接口往往被叫做硬件规格（Hardware Specification），硬件的生产厂商负责提供硬件规格，操作系统和驱动程序的开发者通过阅读硬件规格文档所规定的各种硬件编程接口标准来编写操作系统和驱动程序。&lt;/p&gt;
+&lt;p&gt;&amp;mdash;程序员的自我修养：链接、装载与库&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>C&#43;&#43; Operator Overloading</title>
+      <link>https://blog.jiyi27.com/posts/cpp/008-operator-overloading/</link>
+      <pubDate>Mon, 22 May 2023 23:03:12 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cpp/008-operator-overloading/</guid>
+      <description>&lt;h2 id=&#34;1-operators-as-functions&#34;&gt;1. Operators as functions&lt;/h2&gt;
+&lt;p&gt;Consider the following example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x { &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; y { &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; x &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; y &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\n&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When you see the expression &lt;code&gt;x + y&lt;/code&gt;, you can translate this in your head to the function call &lt;code&gt;operator+(x, y)&lt;/code&gt; (where &lt;code&gt;operator+&lt;/code&gt; is the name of the function).&lt;/p&gt;
+&lt;p&gt;Now consider what happens if we try to add two objects of a program-defined class:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Mystring string1 { &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello, &amp;#34;&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Mystring string2 { &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;World!&amp;#34;&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; string1 &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; string2 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\n&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;What would you expect to happen in this case? The intuitive expected result is “Hello, World!” . However, because &lt;code&gt;Mystring&lt;/code&gt; is a program-defined type, the compiler does not have a built-in version of the &lt;strong&gt;plus operator&lt;/strong&gt; that it can use for &lt;code&gt;Mystring&lt;/code&gt; operands. So in this case, it will give us an error. In order to make it work like we want, we’d need to write an &lt;strong&gt;overloaded function&lt;/strong&gt; to tell the compiler how the &lt;code&gt;+&lt;/code&gt; operator should work with two operands of type &lt;code&gt;Mystring&lt;/code&gt;.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-operators-as-functions&#34;&gt;1. Operators as functions&lt;/h2&gt;
+&lt;p&gt;Consider the following example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x { &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; y { &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; x &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; y &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\n&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When you see the expression &lt;code&gt;x + y&lt;/code&gt;, you can translate this in your head to the function call &lt;code&gt;operator+(x, y)&lt;/code&gt; (where &lt;code&gt;operator+&lt;/code&gt; is the name of the function).&lt;/p&gt;
+&lt;p&gt;Now consider what happens if we try to add two objects of a program-defined class:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Mystring string1 { &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello, &amp;#34;&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Mystring string2 { &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;World!&amp;#34;&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; string1 &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; string2 &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\n&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;What would you expect to happen in this case? The intuitive expected result is “Hello, World!” . However, because &lt;code&gt;Mystring&lt;/code&gt; is a program-defined type, the compiler does not have a built-in version of the &lt;strong&gt;plus operator&lt;/strong&gt; that it can use for &lt;code&gt;Mystring&lt;/code&gt; operands. So in this case, it will give us an error. In order to make it work like we want, we’d need to write an &lt;strong&gt;overloaded function&lt;/strong&gt; to tell the compiler how the &lt;code&gt;+&lt;/code&gt; operator should work with two operands of type &lt;code&gt;Mystring&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;2-overloading-the-arithmetic-operators-using-friend-functions&#34;&gt;2. Overloading the arithmetic operators using friend functions&lt;/h2&gt;
+&lt;p&gt;使用 friend function 的好处是我们可以直接访问类的私有成员, 另外注意 friend function 并不是类的成员函数,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;iostream&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cents&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; m_cents {};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	Cents(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; cents) &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; m_cents{ cents } { }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// add Cents + Cents using a friend function
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 另外friend function并不是类的成员函数, 但你仍可以在类里面实现它 而不是像我们这样在外面实现
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 如果是成员函数重载, 这里只用一个参数就行了, 因为*this会默认为左操作数, 具体文章下面部分会讲
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;friend&lt;/span&gt; Cents &lt;span style=&#34;color:#66d9ef&#34;&gt;operator&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; Cents&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; c1, &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; Cents&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; c2);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getCents&lt;/span&gt;() &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; m_cents; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// note: this function is not a member function!
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 可以看到, 在类里已经声明的性质(friend, static, virtual) 不用再在外面声明了
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;Cents &lt;span style=&#34;color:#66d9ef&#34;&gt;operator&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; Cents&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; c1, &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; Cents&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; c2) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// use the Cents constructor and operator+(int, int)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// we can access m_cents directly because this is a friend function
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; c1.m_cents &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; c2.m_cents;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	Cents cents1{ &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	Cents cents2{ &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	Cents centsSum{ cents1 &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; cents2 };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;I have &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; centsSum.getCents() &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; cents.&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;\n&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;not-everything-can-be-overloaded-as-a-friend-function&#34;&gt;Not everything can be overloaded as a friend function&lt;/h3&gt;
+&lt;p&gt;The assignment (=), subscript ([]), function call (()), and member selection (-&amp;gt;) operators must be overloaded as member functions, because the language requires them to be.&lt;/p&gt;
+&lt;h2 id=&#34;3-overloading-operators-using-normal-functions&#34;&gt;3. Overloading operators using normal functions&lt;/h2&gt;
+&lt;p&gt;Using a friend function to overload an operator is convenient because it gives you direct access to the internal members of the classes you’re operating on. However, if you don’t need that access, you can write your overloaded operators as normal functions. 这个normal function既不是friend function, 也不是member function.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;iostream&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cents&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; m_cents{};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Cents(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; cents) &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; m_cents{ cents } {}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getCents&lt;/span&gt;() &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; m_cents; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// note: this function is not a member function nor a friend function!
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 注意哦, 这个函数既不是friend function, 也不是成员函数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;Cents &lt;span style=&#34;color:#66d9ef&#34;&gt;operator&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; Cents&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; c1, &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; Cents&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; c2) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// use the Cents constructor and operator+(int, int)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// we don&amp;#39;t need direct access to private members here
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; Cents{ c1.getCents() &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; c2.getCents() };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Cents cents1{ &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Cents cents2{ &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Cents centsSum{ cents1 &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; cents2 };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;I have &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; centsSum.getCents() &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; cents.&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;\n&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Because the &lt;strong&gt;normal and friend functions&lt;/strong&gt; work almost identically (they just have different levels of access to private members), we generally won’t differentiate them. The one difference is that the friend function declaration inside the class serves as a prototype as well. With the normal function version, you’ll have to provide your own function prototype:&lt;/p&gt;
+&lt;p&gt;Cents.h:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#ifndef CENTS_H
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#define CENTS_H
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cents&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; m_cents{};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Cents(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; cents)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; m_cents{ cents }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  {}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getCents&lt;/span&gt;() &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; m_cents; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Need to explicitly provide prototype for operator+ so uses of operator+ in other files know this overload exists
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;Cents &lt;span style=&#34;color:#66d9ef&#34;&gt;operator&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; Cents&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; c1, &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; Cents&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; c2);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#endif
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;4-overloading-operators-using-member-functions&#34;&gt;4. Overloading operators using member functions&lt;/h2&gt;
+&lt;p&gt;You learned how to overload the arithmetic operators using &lt;strong&gt;friend functions&lt;/strong&gt;. You also learned you can overload operators as &lt;strong&gt;normal functions&lt;/strong&gt;. Many operators can be overloaded in a different way: as a &lt;strong&gt;member function&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Overloading operators using a member function is very similar to overloading operators using a friend function. When overloading an operator using a member function:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The overloaded operator must be added as a member function of the left operand.&lt;/li&gt;
+&lt;li&gt;The left operand becomes the implicit *this object. (比如&lt;code&gt;+&lt;/code&gt;需要左右两个操作数, 如果你用成员函数来重载它, 那重载函数&lt;code&gt;operator+&lt;/code&gt;只需要一个参数即&lt;code&gt;+&lt;/code&gt;右边的操作数, 左边的默认为&lt;code&gt;*this&lt;/code&gt;, 可以看下面的实现, 注意与上面friend function对比)&lt;/li&gt;
+&lt;li&gt;All other operands become function parameters.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;注意与上面friend function的实现做对比:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;iostream&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cents&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; m_cents {};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Cents(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; cents) &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; m_cents { cents } { }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// Overload Cents + int
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    Cents &lt;span style=&#34;color:#66d9ef&#34;&gt;operator&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; value);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getCents&lt;/span&gt;() &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; m_cents; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// note: this function is a member function!
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// the cents parameter in the friend version is now the implicit *this parameter
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 只有一个参数~, 和friend function一样, 可以访问私有成员, 因为人家是成员函数啊, 肯定可以访问
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;Cents Cents&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;operator&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; value) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; Cents { m_cents &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; value };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	Cents cents1 { &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	Cents cents2 { cents1 &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;I have &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; cents2.getCents() &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; cents.&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;\n&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+    </item>
+    
+    <item>
+      <title>左值和右值</title>
+      <link>https://blog.jiyi27.com/posts/cpp/009-lvalue-rvalue/</link>
+      <pubDate>Wed, 17 May 2023 11:27:07 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cpp/009-lvalue-rvalue/</guid>
+      <description>&lt;p&gt;经常看到左值右值, 刚好有讲到, 摘取一些记录在这, 原文: &lt;a href=&#34;https://www.learncpp.com/cpp-tutorial/value-categories-lvalues-and-rvalues/&#34;&gt;9.2 — Value categories (lvalues and rvalues) – Learn C++&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;1-rvalue-expression-vs-lvalue-expression&#34;&gt;1. Rvalue expression vs Lvalue expression&lt;/h2&gt;
+&lt;h3 id=&#34;11-the-properties-of-an-expression&#34;&gt;1.1. The properties of an expression&lt;/h3&gt;
+&lt;p&gt;To help determine how expressions should evaluate and where they can be used, all expressions in C++ have two properties: a type and a value category.&lt;/p&gt;
+&lt;h3 id=&#34;12-the-type-of-an-expression&#34;&gt;1.2. The type of an expression&lt;/h3&gt;
+&lt;p&gt;The type of an expression is equivalent to the type of the value, object, or function that results from the evaluated expression. For example:&lt;/p&gt;</description>
+      <content>&lt;p&gt;经常看到左值右值, 刚好有讲到, 摘取一些记录在这, 原文: &lt;a href=&#34;https://www.learncpp.com/cpp-tutorial/value-categories-lvalues-and-rvalues/&#34;&gt;9.2 — Value categories (lvalues and rvalues) – Learn C++&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;1-rvalue-expression-vs-lvalue-expression&#34;&gt;1. Rvalue expression vs Lvalue expression&lt;/h2&gt;
+&lt;h3 id=&#34;11-the-properties-of-an-expression&#34;&gt;1.1. The properties of an expression&lt;/h3&gt;
+&lt;p&gt;To help determine how expressions should evaluate and where they can be used, all expressions in C++ have two properties: a type and a value category.&lt;/p&gt;
+&lt;h3 id=&#34;12-the-type-of-an-expression&#34;&gt;1.2. The type of an expression&lt;/h3&gt;
+&lt;p&gt;The type of an expression is equivalent to the type of the value, object, or function that results from the evaluated expression. For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;auto&lt;/span&gt; v1 { &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt; }; &lt;span style=&#34;color:#75715e&#34;&gt;// int / int =&amp;gt; int
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;auto&lt;/span&gt; v2 { &lt;span style=&#34;color:#ae81ff&#34;&gt;12.0&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt; }; &lt;span style=&#34;color:#75715e&#34;&gt;// double / int =&amp;gt; double
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;Note that the type of an expression must be determinable at compile time (otherwise type checking and type deduction wouldn’t work) &amp;ndash; however, the value of an expression may be determined at either compile time (if the expression is constexpr) or runtime (if the expression is not constexpr).&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;13-the-value-category-of-an-expression&#34;&gt;1.3. The value category of an expression&lt;/h3&gt;
+&lt;p&gt;Now consider the following program:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x{};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    x &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// valid: we can assign 5 to x
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; x; &lt;span style=&#34;color:#75715e&#34;&gt;// error: can not assign value of x to literal value 5
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;How does the compiler know which expressions can legally appear on either side of an assignment statement?&lt;/p&gt;
+&lt;p&gt;The answer lies in the second property of expressions: the &lt;code&gt;value category&lt;/code&gt;. The &lt;strong&gt;value category&lt;/strong&gt; of an expression (or subexpression) indicates whether an expression resolves to a value, a function, or an object of some kind.&lt;/p&gt;
+&lt;p&gt;Prior to C++11, there were only two possible value categories: &lt;code&gt;lvalue&lt;/code&gt; and &lt;code&gt;rvalue&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;In C++11, three additional value categories (&lt;code&gt;glvalue&lt;/code&gt;, &lt;code&gt;prvalue&lt;/code&gt;, and &lt;code&gt;xvalue&lt;/code&gt;) were added to support a new feature called &lt;code&gt;move semantics&lt;/code&gt;.&lt;/p&gt;
+&lt;h3 id=&#34;14-lvalue-and-rvalue-expressions&#34;&gt;1.4. &lt;strong&gt;Lvalue and rvalue expressions&lt;/strong&gt;&lt;/h3&gt;
+&lt;p&gt;An &lt;strong&gt;lvalue&lt;/strong&gt; (pronounced “ell-value”) is an expression that evaluates to an identifiable object or function (or bit-field).&lt;/p&gt;
+&lt;p&gt;Entities (such as an object or function) with identities can be accessed via an identifier, reference, or pointer, and typically have a lifetime longer than a single expression or statement. 这里的identifier就是变量名和reference, pointer并列. 比如&lt;code&gt;int x = 3; &lt;/code&gt;, &lt;code&gt;x&lt;/code&gt;就是identifier, &lt;code&gt;3&lt;/code&gt;就是object.&lt;/p&gt;
+&lt;p&gt;An &lt;strong&gt;rvalue&lt;/strong&gt; (pronounced “arr-value”) is an expression that is not an l-value. Commonly seen rvalues include literals (except C-style string literals, which are lvalues) and the return value of functions and operators. Rvalues aren’t identifiable (meaning they have to be used immediately), and only exist within the scope of the expression in which they are used.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;iostream&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;return5&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x{ &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; }; &lt;span style=&#34;color:#75715e&#34;&gt;// 5 is an rvalue expression
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;double&lt;/span&gt; d{ &lt;span style=&#34;color:#ae81ff&#34;&gt;1.2&lt;/span&gt; }; &lt;span style=&#34;color:#75715e&#34;&gt;// 1.2 is an rvalue expression
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; y { x }; &lt;span style=&#34;color:#75715e&#34;&gt;// x is a modifiable lvalue expression
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;double&lt;/span&gt; e { d }; &lt;span style=&#34;color:#75715e&#34;&gt;// d is a non-modifiable lvalue expression
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; z { return5() }; &lt;span style=&#34;color:#75715e&#34;&gt;// return5() is an rvalue expression (since the result is returned by value)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; w { x &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; }; &lt;span style=&#34;color:#75715e&#34;&gt;// x + 1 is an rvalue expression
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; q { &lt;span style=&#34;color:#66d9ef&#34;&gt;static_cast&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;(d) }; &lt;span style=&#34;color:#75715e&#34;&gt;// the result of static casting d to an int is an rvalue expression
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You may be wondering why &lt;code&gt;return5()&lt;/code&gt;, &lt;code&gt;x + 1&lt;/code&gt;, and &lt;code&gt;static_cast&amp;lt;int&amp;gt;(d)&lt;/code&gt; are rvalues: the answer is these expressions produce temporary values that are not identifiable objects.&lt;/p&gt;
+&lt;p&gt;Now we can answer the question about why &lt;code&gt;x = 5&lt;/code&gt; is valid but &lt;code&gt;5 = x&lt;/code&gt; is not: an assignment operation requires the &lt;strong&gt;left operand&lt;/strong&gt; of the assignment to be a modifiable lvalue expression, and the &lt;strong&gt;right operand&lt;/strong&gt; to be an rvalue expression. The latter assignment (&lt;code&gt;5 = x&lt;/code&gt;) fails because the left operand expression &lt;code&gt;5&lt;/code&gt; isn’t an lvalue. 这里说一下, 原文中提到lvalue expression又分为modifiable和non-modifiable, 后者就是加上&lt;code&gt;const&lt;/code&gt;修饰的, 感兴趣可以去原文查看,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x{};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// Assignment requires the left operand to be a modifiable lvalue expression and the right operand to be an rvalue expression
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    x &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// valid: x is a modifiable lvalue expression and 5 is an rvalue expression
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; x; &lt;span style=&#34;color:#75715e&#34;&gt;// error: 5 is an rvalue expression and x is a modifiable lvalue expression
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;15-l-value-to-r-value-conversion&#34;&gt;1.5. l-value to r-value conversion&lt;/h3&gt;
+&lt;p&gt;We said above that the assignment operator expects the right operand to be an rvalue expression, so why does code like this work?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x{ &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; y{ &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    x &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; y; &lt;span style=&#34;color:#75715e&#34;&gt;// y is a modifiable lvalue, not an rvalue, but this is legal
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The answer is because lvalues will implicitly convert to rvalues, so an lvalue can be used wherever an rvalue is required.&lt;/p&gt;
+&lt;h2 id=&#34;2-lvalue-reference-variables&#34;&gt;2. Lvalue reference variables&lt;/h2&gt;
+&lt;p&gt;Modern C++ contains two types of references: &lt;code&gt;lvalue references&lt;/code&gt;, and &lt;code&gt;rvalue references&lt;/code&gt;. Rvalue references are covered in the chapter on &lt;code&gt;move semantics&lt;/code&gt; (&lt;a href=&#34;https://www.learncpp.com/#ChapterM&#34;&gt;chapter M&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;An &lt;strong&gt;lvalue reference&lt;/strong&gt; (commonly just called a &lt;code&gt;reference&lt;/code&gt; since prior to C++11 there was only one type of reference) acts as an alias for an existing lvalue (such as a variable). 说白了我们平时使用的引用都是lvalue reference,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;      &lt;span style=&#34;color:#75715e&#34;&gt;// a normal int type
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;// an lvalue reference to an int object
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;double&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// an lvalue reference to a double object
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x { &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; };    &lt;span style=&#34;color:#75715e&#34;&gt;// x is a normal integer variable
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; ref { x }; &lt;span style=&#34;color:#75715e&#34;&gt;// ref is an lvalue reference variable that can now be used as an alias for variable x
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;21-dangling-references&#34;&gt;2.1. Dangling references&lt;/h3&gt;
+&lt;p&gt;When an object being referenced is destroyed before a reference to it, the reference is left referencing an object that no longer exists. Such a reference is called a &lt;strong&gt;dangling reference&lt;/strong&gt;. Accessing a dangling reference leads to undefined behavior.&lt;/p&gt;
+&lt;h2 id=&#34;3-总结&#34;&gt;3. 总结&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;assignment operation, left operand, right operand&lt;/li&gt;
+&lt;li&gt;rvalue expression, lvalue expression, modifiable lvalue expression, non-modifiable lvalue expression&lt;/li&gt;
+&lt;li&gt;value category of an expression,  type of an expression&lt;/li&gt;
+&lt;li&gt;lvalue references, and rvalue references&lt;/li&gt;
+&lt;li&gt;dangling reference&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>C&#43;&#43; Class Definition Rules</title>
+      <link>https://blog.jiyi27.com/posts/cpp/003-class-definition/</link>
+      <pubDate>Tue, 16 May 2023 22:36:06 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cpp/003-class-definition/</guid>
+      <description>&lt;ul&gt;
+&lt;li&gt;Make any member function that does not modify the state of the class object &lt;code&gt;const&lt;/code&gt;, so that it can be called by const objects.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Default parameters&lt;/strong&gt; for member functions should be declared in the class definition (in the header file), where they can be seen by whomever &lt;code&gt;#includes&lt;/code&gt; the header.&lt;/li&gt;
+&lt;li&gt;For classes used in only one file that aren’t generally reusable, define them directly in the single &lt;code&gt;.cpp&lt;/code&gt; file they’re used in.&lt;/li&gt;
+&lt;li&gt;For classes used in multiple files, or intended for general reuse, define them in a &lt;code&gt;.h&lt;/code&gt; file that has the same name as the class.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Trivial member functions&lt;/strong&gt; (trivial constructors or destructors, access functions, etc…) can be defined inside the class. &lt;strong&gt;Non-trivial member functions&lt;/strong&gt; should be defined in a &lt;code&gt;.cpp&lt;/code&gt; file that has the same name as the class.&lt;/li&gt;
+&lt;li&gt;Member functions defined inside the class definition are implicitly inline. Inline functions are exempt from the one definition per program part of the one-definition rule.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;So why not put everything in a header file?&lt;/strong&gt;
+First, as mentioned above, defining members inside the class definition clutters up your class definition. Second, if you change any of the code in the header, then you’ll need to recompile every file that includes that header. This can have a ripple effect, where one minor change causes the entire program to need to recompile (which can be slow). If you change the code in a .cpp file, only that .cpp file needs to be recompiled!
+There are &lt;a href=&#34;https://www.learncpp.com/cpp-tutorial/classes-and-header-files/&#34;&gt;a few cases&lt;/a&gt; where it might make sense to violate the best practice of putting the class definition in a header and non-trivial member functions in a code file.&lt;/p&gt;</description>
+      <content>&lt;ul&gt;
+&lt;li&gt;Make any member function that does not modify the state of the class object &lt;code&gt;const&lt;/code&gt;, so that it can be called by const objects.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Default parameters&lt;/strong&gt; for member functions should be declared in the class definition (in the header file), where they can be seen by whomever &lt;code&gt;#includes&lt;/code&gt; the header.&lt;/li&gt;
+&lt;li&gt;For classes used in only one file that aren’t generally reusable, define them directly in the single &lt;code&gt;.cpp&lt;/code&gt; file they’re used in.&lt;/li&gt;
+&lt;li&gt;For classes used in multiple files, or intended for general reuse, define them in a &lt;code&gt;.h&lt;/code&gt; file that has the same name as the class.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Trivial member functions&lt;/strong&gt; (trivial constructors or destructors, access functions, etc…) can be defined inside the class. &lt;strong&gt;Non-trivial member functions&lt;/strong&gt; should be defined in a &lt;code&gt;.cpp&lt;/code&gt; file that has the same name as the class.&lt;/li&gt;
+&lt;li&gt;Member functions defined inside the class definition are implicitly inline. Inline functions are exempt from the one definition per program part of the one-definition rule.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;So why not put everything in a header file?&lt;/strong&gt;
+First, as mentioned above, defining members inside the class definition clutters up your class definition. Second, if you change any of the code in the header, then you’ll need to recompile every file that includes that header. This can have a ripple effect, where one minor change causes the entire program to need to recompile (which can be slow). If you change the code in a .cpp file, only that .cpp file needs to be recompiled!
+There are &lt;a href=&#34;https://www.learncpp.com/cpp-tutorial/classes-and-header-files/&#34;&gt;a few cases&lt;/a&gt; where it might make sense to violate the best practice of putting the class definition in a header and non-trivial member functions in a code file.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Separating the class definition and class implementation is very common for libraries that you can use to extend your program. Throughout your programs, you’ve #included headers that belong to the standard library, such as iostream, string, vector, array, and other. Notice that you haven’t needed to add iostream.cpp, string.cpp, vector.cpp, or array.cpp into your projects. Your program needs the declarations from the header files &lt;strong&gt;in order for the compiler to validate you’re writing programs that are syntactically correct&lt;/strong&gt;. However, the implementations for the classes that belong to the C++ standard library are contained in a precompiled file that is linked in at the link stage. You never see the code.&lt;/p&gt;
+&lt;p&gt;Outside of some open source software (where both .h and .cpp files are provided), most 3rd party libraries provide only header files, along with a precompiled library file. There are several reasons for this: 1) It’s faster to link a precompiled library than to recompile it every time you need it, 2) a single copy of a precompiled library can be shared by many applications, whereas compiled code gets compiled into every executable that uses it (inflating file sizes), and 3) intellectual property reasons (you don’t want people stealing your code).&lt;/p&gt;
+&lt;p&gt;Having your own files separated into declaration (header) and implementation (code file) is not only good form, it also makes creating your own custom libraries easier. Creating your own libraries is beyond the scope of these tutorials, but separating your declaration and implementation is a prerequisite to doing so.&lt;/p&gt;
+&lt;p&gt;References: &lt;a href=&#34;https://www.learncpp.com/cpp-tutorial/class-code-and-header-files/&#34;&gt;13.11 — Class code and header files – Learn C++&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>C&#43;&#43; RAII (Resource Acquisition Is Initialization)</title>
+      <link>https://blog.jiyi27.com/posts/cpp/005-raii/</link>
+      <pubDate>Tue, 16 May 2023 20:32:04 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cpp/005-raii/</guid>
+      <description>&lt;p&gt;RAII (Resource Acquisition Is Initialization) is a programming technique whereby resource use is tied to the lifetime of objects with automatic duration (e.g. non-dynamically allocated objects). &lt;strong&gt;In C++, RAII is implemented via classes with constructors and destructors.&lt;/strong&gt; A resource (such as memory, a file or database handle, etc…) is typically acquired in the object’s constructor (though it can be acquired after the object is created if that makes sense). That resource can then be used while the object is alive. The resource is released in the destructor, when the object is destroyed. The primary advantage of RAII is that it helps prevent resource leaks (e.g. memory not being deallocated) as all resource-holding objects are cleaned up automatically.&lt;/p&gt;</description>
+      <content>&lt;p&gt;RAII (Resource Acquisition Is Initialization) is a programming technique whereby resource use is tied to the lifetime of objects with automatic duration (e.g. non-dynamically allocated objects). &lt;strong&gt;In C++, RAII is implemented via classes with constructors and destructors.&lt;/strong&gt; A resource (such as memory, a file or database handle, etc…) is typically acquired in the object’s constructor (though it can be acquired after the object is created if that makes sense). That resource can then be used while the object is alive. The resource is released in the destructor, when the object is destroyed. The primary advantage of RAII is that it helps prevent resource leaks (e.g. memory not being deallocated) as all resource-holding objects are cleaned up automatically.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;IntArray&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; m_array{};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; m_length{};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	IntArray(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; length) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		assert(length &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		m_array &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;[&lt;span style=&#34;color:#66d9ef&#34;&gt;static_cast&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;size_t&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;(length)]{};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		m_length &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; length;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;IntArray() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// Dynamically delete the array we allocated earlier
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;delete&lt;/span&gt;[] m_array;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  ...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &lt;code&gt;IntArray&lt;/code&gt; class above is an example of a class that implements RAII &amp;ndash; allocation in the constructor, deallocation in the destructor. &lt;code&gt;std::string&lt;/code&gt; and &lt;code&gt;std::vector&lt;/code&gt; are examples of classes in the standard library that follow RAII &amp;ndash; &lt;strong&gt;dynamic memory is acquired on initialization, and cleaned up automatically on destruction&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.learncpp.com/cpp-tutorial/overlapping-and-delegating-constructors/&#34;&gt;13.8 — Overlapping and delegating constructors – Learn C++&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.learncpp.com/cpp-tutorial/destructors/&#34;&gt;13.9 — Destructors – Learn C++&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>C&#43;&#43; Constructors</title>
+      <link>https://blog.jiyi27.com/posts/cpp/004-constructors/</link>
+      <pubDate>Mon, 15 May 2023 18:56:01 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cpp/004-constructors/</guid>
+      <description>&lt;h2 id=&#34;1-member-initialization-list&#34;&gt;1. Member initialization list&lt;/h2&gt;
+&lt;p&gt;A &lt;strong&gt;member initialization list&lt;/strong&gt; can also be used to initialize members that are classes:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;iostream&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;A&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;explicit&lt;/span&gt; A(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) { std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;A &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; x &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\n&amp;#39;&lt;/span&gt;; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;B&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    A m_a{};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// call A(int) constructor to initialize member m_a
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;explicit&lt;/span&gt; B(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; y) &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; m_a{ y &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; } {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;B &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; y &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\n&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    B b{ &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;A &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;B &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When variable b is constructed, the &lt;code&gt;B(int)&lt;/code&gt; constructor is called with value 5. &lt;strong&gt;Before the body of the constructor executes, &lt;code&gt;m_a&lt;/code&gt; is initialized,&lt;/strong&gt; calling the &lt;code&gt;A(int)&lt;/code&gt; constructor with value 4. This prints “A 4”. Then control returns back to the B constructor, and the body of the B constructor executes, printing “B 5”.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-member-initialization-list&#34;&gt;1. Member initialization list&lt;/h2&gt;
+&lt;p&gt;A &lt;strong&gt;member initialization list&lt;/strong&gt; can also be used to initialize members that are classes:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;iostream&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;A&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;explicit&lt;/span&gt; A(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) { std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;A &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; x &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\n&amp;#39;&lt;/span&gt;; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;B&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    A m_a{};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// call A(int) constructor to initialize member m_a
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;explicit&lt;/span&gt; B(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; y) &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; m_a{ y &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; } {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;B &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; y &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\n&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    B b{ &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;A &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;B &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When variable b is constructed, the &lt;code&gt;B(int)&lt;/code&gt; constructor is called with value 5. &lt;strong&gt;Before the body of the constructor executes, &lt;code&gt;m_a&lt;/code&gt; is initialized,&lt;/strong&gt; calling the &lt;code&gt;A(int)&lt;/code&gt; constructor with value 4. This prints “A 4”. Then control returns back to the B constructor, and the body of the B constructor executes, printing “B 5”.&lt;/p&gt;
+&lt;p&gt;这里注意, 如果你不使用member initializer lists对变量进行初始化的话, 那你在构造函数体内只能对他们进行赋值, 而不是初始化, 这就意味着, 人家的构造函数已经调用了, 你又进行了一次赋值, 这就涉及到了拷贝, 析构. 什么? 你不相信, 要验证一下?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Cat.h
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#pragma once
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;string&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;iostream&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;utility&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cat&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; age{};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;string name{};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Cat() &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; age(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;){
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cat: Default constructor is called&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;endl;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Cat(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; age, std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;string name) &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; age(age), name(std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;move(name)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cat: Constructor with two parameter is called&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;endl;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Cat(&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; Cat&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; other) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cat: Copy Constructor called&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;endl;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Cat&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;operator&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; Cat&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; other) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cat: Assignment Operator called&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;endl;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;Cat() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Cat: Destructor is called&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;endl;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// main.cpp
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;iostream&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;utility&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;#34;Cat.h&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;B&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Cat cat_2{};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// call A(int) constructor to initialize member m_a
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;explicit&lt;/span&gt; B(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; age, &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;string&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; name){
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        cat_2 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Cat(age, name);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;B: Default constructor is called&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;endl;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    B b{ &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;kitty&amp;#34;&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Cat: Default constructor is called
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Cat: Constructor with two parameter is called
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Cat: Assignment Operator called
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Cat: Destructor is called
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;B: Default constructor is called
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Cat: Destructor is called
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果改成下面这样, 其它不变:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;explicit&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;B&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; age, &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;string&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt; name) &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; cat{age, name}{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;B: Default constructor is called&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;endl;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Cat: Constructor with two parameter is called
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;B: Default constructor is called
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Cat: Destructor with parameter is called
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Member initializer lists allow us to initialize our members rather than assign values to them.&lt;/strong&gt; This is the only way to initialize members that require values upon initialization, such as const or reference members, and it can be more performant than assigning values in the body of the constructor. Member initializer lists work both with fundamental types and members that are classes themselves.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-initializer-list-order&#34;&gt;2. Initializer list order&lt;/h2&gt;
+&lt;p&gt;Perhaps surprisingly, variables in the initializer list are not initialized in the order that they are specified in the initializer list. Instead, &lt;strong&gt;they are initialized in the order in which they are declared in the class&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;For best results, the following recommendations should be observed:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Don’t initialize member variables in such a way that they are dependent upon other member variables being initialized first (in other words, &lt;strong&gt;ensure your member variables will properly initialize even if the initialization ordering is different&lt;/strong&gt;).&lt;/li&gt;
+&lt;li&gt;Initialize variables in the initializer list in the same order in which they are declared in your class. This isn’t strictly required so long as the prior recommendation has been followed, but your compiler may give you a warning if you don’t do so and you have all warnings turned on.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.learncpp.com/cpp-tutorial/constructors/&#34;&gt;13.5 — Constructors – Learn C++&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.learncpp.com/cpp-tutorial/classes-and-class-members/&#34;&gt;13.2 — Classes and class members – Learn C++&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>未初始化的变量和未定义行为</title>
+      <link>https://blog.jiyi27.com/posts/cpp/007-uninitialized-variables-and-undefined-behaviors/</link>
+      <pubDate>Mon, 15 May 2023 09:57:02 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cpp/007-uninitialized-variables-and-undefined-behaviors/</guid>
+      <description>&lt;h2 id=&#34;1-uninitialized-variables&#34;&gt;1. Uninitialized variables&lt;/h2&gt;
+&lt;p&gt;Uninitialized variables就是你定义它了但是却没有给它赋过值(即通过assignment操作或者initialization操作), 如下&lt;code&gt;a&lt;/code&gt;就是个uninitialized variable:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a; 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;为什么要说这个呢, C++编译器在这有点狗, 如果你定义局部变量的时候没有给它值, 如上面的变量&lt;code&gt;a&lt;/code&gt;, 那编译器也并不会给&lt;code&gt;a&lt;/code&gt;一个特定的初始值, 然后你运行程序编译器也不会报错:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; b;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; a &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; endl; &lt;span style=&#34;color:#75715e&#34;&gt;// 打印72433004
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; b &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; endl; &lt;span style=&#34;color:#75715e&#34;&gt;// 打印0
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Java的话是直接不允许你使用未定义的局部变量, 会报错, 如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String &lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt;args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(a);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// error: java: variable a might not have been initialized&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;golang就会省事一些, 不论局部全局, 你若定义的时候没有给值, 编译器会自动给个初始值, Golang明确说明:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Variables declared without an explicit initial value are given their &lt;em&gt;&lt;strong&gt;zero value&lt;/strong&gt;&lt;/em&gt;.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-uninitialized-variables&#34;&gt;1. Uninitialized variables&lt;/h2&gt;
+&lt;p&gt;Uninitialized variables就是你定义它了但是却没有给它赋过值(即通过assignment操作或者initialization操作), 如下&lt;code&gt;a&lt;/code&gt;就是个uninitialized variable:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a; 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;为什么要说这个呢, C++编译器在这有点狗, 如果你定义局部变量的时候没有给它值, 如上面的变量&lt;code&gt;a&lt;/code&gt;, 那编译器也并不会给&lt;code&gt;a&lt;/code&gt;一个特定的初始值, 然后你运行程序编译器也不会报错:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; b;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; a &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; endl; &lt;span style=&#34;color:#75715e&#34;&gt;// 打印72433004
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; b &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; endl; &lt;span style=&#34;color:#75715e&#34;&gt;// 打印0
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Java的话是直接不允许你使用未定义的局部变量, 会报错, 如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String &lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt;args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(a);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// error: java: variable a might not have been initialized&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;golang就会省事一些, 不论局部全局, 你若定义的时候没有给值, 编译器会自动给个初始值, Golang明确说明:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Variables declared without an explicit initial value are given their &lt;em&gt;&lt;strong&gt;zero value&lt;/strong&gt;&lt;/em&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;对比完不同的语言, 那我们继续上面的说C++, 为什么这么问题很严重, 这也是所谓的野指针(wild pointer)问题,&lt;/p&gt;
+&lt;p&gt;假如这时候你定义的是个指针, 然后没有初始化, 这个时候该指针的值是”随机“的(其实页并不是随机, 即编译器为该指针变量分的那块内存里原本有什么, 那指针的值就是什么), 如果你此时尝试访问这个指针就可能会造成未定义行为(undefined behavior), 因为你不知道该指针的“随机”指向哪块内存, 你修改了该块内存的内容就有可能让你的的程序崩溃crush, 如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; p;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;p &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 有时候程序会崩溃, 有时候程序会正常运行, 取决于p指向的哪块内存地址
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;Unlike some programming languages, C/C++ does not initialize most variables to a given value (such as zero) automatically. Thus when a variable is given a memory address to use to store data, the default value of that variable is whatever (garbage) value happens to already be in that memory address! A variable that has not been given a known value (usually through initialization or assignment) is called an &lt;strong&gt;uninitialized&lt;/strong&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;最后对于上面未初始化的变量&lt;code&gt;a&lt;/code&gt;打印了一个“随机”的值, 可能会有疑问, 看到&lt;a href=&#34;https://www.learncpp.com/cpp-tutorial/uninitialized-variables-and-undefined-behavior/&#34;&gt;一篇文章&lt;/a&gt;解释的不错, 分享一下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;iostream&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// define an integer variable named x
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x; &lt;span style=&#34;color:#75715e&#34;&gt;// this variable is uninitialized because we haven&amp;#39;t given it a value
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// print the value of x to the screen
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    std&lt;span style=&#34;color:#f92672&#34;&gt;::&lt;/span&gt;cout &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; x &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;\n&amp;#39;&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// who knows what we&amp;#39;ll get, because x is uninitialized
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;In this case, the computer will assign some unused memory to &lt;em&gt;x&lt;/em&gt;. It will then send the value residing in that memory location to &lt;em&gt;std::cout&lt;/em&gt;, which will print the value (interpreted as an integer). But what value will it print? The answer is “who knows!”, and the answer may (or may not) change every time you run the program. When the author ran this program in Visual Studio, &lt;em&gt;std::cout&lt;/em&gt; printed the value &lt;code&gt;7177728&lt;/code&gt; one time, and &lt;code&gt;5277592&lt;/code&gt; the next. Feel free to compile and run the program yourself (your computer won’t explode).&lt;/p&gt;
+&lt;h2 id=&#34;2-undefined-behavior&#34;&gt;2. Undefined behavior&lt;/h2&gt;
+&lt;p&gt;Using the value from an uninitialized variable is our first example of undefined behavior. &lt;strong&gt;Undefined behavior&lt;/strong&gt; is the result of executing code whose behavior is not well-defined by the C++ language. In this case, the C++ language doesn’t have any rules determining what happens if you use the value of a variable that has not been given a known value. Consequently, if you actually do this, undefined behavior will result.&lt;/p&gt;
+&lt;p&gt;Code implementing undefined behavior may exhibit &lt;em&gt;any&lt;/em&gt; of the following symptoms:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Your program produces different results every time it is run.&lt;/li&gt;
+&lt;li&gt;Your program consistently produces the same incorrect result.&lt;/li&gt;
+&lt;li&gt;Your program behaves inconsistently (sometimes produces the correct result, sometimes not).&lt;/li&gt;
+&lt;li&gt;Your program seems like it’s working but produces incorrect results later in the program.&lt;/li&gt;
+&lt;li&gt;Your program crashes, either immediately or later.&lt;/li&gt;
+&lt;li&gt;Your program works on some compilers but not others.&lt;/li&gt;
+&lt;li&gt;Your program works until you change some other seemingly unrelated code.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.learncpp.com/cpp-tutorial/uninitialized-variables-and-undefined-behavior/&#34;&gt;1.6 — Uninitialized variables and undefined behavior – Learn C++&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>C&#43;&#43; Variable Assignment and Initialization</title>
+      <link>https://blog.jiyi27.com/posts/cpp/006-initialization/</link>
+      <pubDate>Sun, 14 May 2023 18:29:32 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cpp/006-initialization/</guid>
+      <description>&lt;h2 id=&#34;1-define&#34;&gt;1. Define&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x;    &lt;span style=&#34;color:#75715e&#34;&gt;// define an integer variable named x
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; y, z; &lt;span style=&#34;color:#75715e&#34;&gt;// define two integer variables, named y and z
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-variable-assignment&#34;&gt;2. Variable Assignment&lt;/h2&gt;
+&lt;p&gt;After a variable has been defined, you can give it a value (in a separate statement) using the &lt;code&gt;=&lt;/code&gt; operator. This process is called &lt;strong&gt;copy assignment&lt;/strong&gt; (or just &lt;strong&gt;assignment&lt;/strong&gt;) for short:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; width; &lt;span style=&#34;color:#75715e&#34;&gt;// define an integer variable named width
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;width &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// copy assignment of value 5 into variable width
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-initialization&#34;&gt;3. Initialization&lt;/h2&gt;
+&lt;p&gt;Initialization in C++ is surprisingly complex, so we’ll present a simplified view here.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-define&#34;&gt;1. Define&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; x;    &lt;span style=&#34;color:#75715e&#34;&gt;// define an integer variable named x
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; y, z; &lt;span style=&#34;color:#75715e&#34;&gt;// define two integer variables, named y and z
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-variable-assignment&#34;&gt;2. Variable Assignment&lt;/h2&gt;
+&lt;p&gt;After a variable has been defined, you can give it a value (in a separate statement) using the &lt;code&gt;=&lt;/code&gt; operator. This process is called &lt;strong&gt;copy assignment&lt;/strong&gt; (or just &lt;strong&gt;assignment&lt;/strong&gt;) for short:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; width; &lt;span style=&#34;color:#75715e&#34;&gt;// define an integer variable named width
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;width &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// copy assignment of value 5 into variable width
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-initialization&#34;&gt;3. Initialization&lt;/h2&gt;
+&lt;p&gt;Initialization in C++ is surprisingly complex, so we’ll present a simplified view here.&lt;/p&gt;
+&lt;p&gt;There are 6 basic ways to initialize variables in C++:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a;         &lt;span style=&#34;color:#75715e&#34;&gt;// no initializer (default initialization)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; b &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;;    &lt;span style=&#34;color:#75715e&#34;&gt;// initializer after equals sign (copy initialization)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;c&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;);    &lt;span style=&#34;color:#75715e&#34;&gt;// initializer in parenthesis (direct initialization)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// List initialization methods (C++11) (preferred)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; d{&lt;span style=&#34;color:#ae81ff&#34;&gt;7&lt;/span&gt;};       &lt;span style=&#34;color:#75715e&#34;&gt;// initializer in braces (direct list initialization)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; e &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {&lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;};   &lt;span style=&#34;color:#75715e&#34;&gt;// initializer in braces after equals sign (copy list initialization)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; f {};     &lt;span style=&#34;color:#75715e&#34;&gt;// initializer is empty braces (value initialization)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;31-default-initialization&#34;&gt;3.1. Default Initialization&lt;/h3&gt;
+&lt;p&gt;When no initialization value is provided (such as for variable &lt;em&gt;a&lt;/em&gt; above), this is called &lt;strong&gt;default initialization&lt;/strong&gt;. In most cases, default initialization leaves a variable with an indeterminate value.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; a;         &lt;span style=&#34;color:#75715e&#34;&gt;// no initializer (default initialization)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;32-copy-initialization&#34;&gt;3.2. Copy Initialization&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; width &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// copy initialization of value 5 into variable width
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;Copy initialization is also used whenever values are implicitly copied or converted, such as when passing arguments to a function by value, returning from a function by value, or catching exceptions by value.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;33-list-initialization&#34;&gt;3.3. List Initialization&lt;/h3&gt;
+&lt;p&gt;The modern way to initialize objects in C++ is to use a form of initialization that makes use of curly braces: &lt;strong&gt;list initialization&lt;/strong&gt; (also called &lt;strong&gt;uniform initialization&lt;/strong&gt; or &lt;strong&gt;brace initialization&lt;/strong&gt;). List initialization comes in three forms:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; width {&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;};    &lt;span style=&#34;color:#75715e&#34;&gt;// direct list initialization of value 5 into variable width
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; height &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {&lt;span style=&#34;color:#ae81ff&#34;&gt;6&lt;/span&gt;}; &lt;span style=&#34;color:#75715e&#34;&gt;// copy list initialization of value 6 into variable height
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; depth {};     &lt;span style=&#34;color:#75715e&#34;&gt;// value initialization (see next section)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;List initialization has an added benefit: it disallows “narrowing conversions”. This means that if you try to brace initialize a variable using a value that the variable can not safely hold, the compiler will produce an error. For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-cpp&#34; data-lang=&#34;cpp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; width { &lt;span style=&#34;color:#ae81ff&#34;&gt;4.5&lt;/span&gt; }; &lt;span style=&#34;color:#75715e&#34;&gt;// error: a number with a fractional value can&amp;#39;t fit into an int
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;References:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.learncpp.com/cpp-tutorial/variable-assignment-and-initialization/&#34;&gt;1.4 — Variable assignment and initialization – Learn C++&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

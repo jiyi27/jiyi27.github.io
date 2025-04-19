@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>通过交叉编译理解 Docker 运行原理 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="假设我们在 M1 的 Mac 上构建 Docker 镜像:
+FROM golang:alpine WORKDIR /app COPY ./ ./ RUN go mod download RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server . CMD [&#34;./server&#34;] 1. docker build 阶段 1.1 拉取基础镜像 golang:alpine 在 M1 Mac (arm64) 上执行 docker build -t myserver .
+Docker 引擎会看到 FROM golang:alpine 并去 Docker Hub 拉取对应的镜像
+关键点：golang:alpine 是一个多架构（multi-arch）镜像名，里面包含了 amd64、arm64 等不同架构的版本
+Docker 会自动检测到宿主机是 arm64, 于是它会拉取并使用 arm64 版的 golang:alpine, 这样, 构建时运行的容器基础环境就是 arm64 的 Alpine &#43; Go
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/docker/004-docker-has-arch/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="通过交叉编译理解 Docker 运行原理">
+<meta property="og:description" content="假设我们在 M1 的 Mac 上构建 Docker 镜像:
+FROM golang:alpine WORKDIR /app COPY ./ ./ RUN go mod download RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server . CMD [&#34;./server&#34;] 1. docker build 阶段 1.1 拉取基础镜像 golang:alpine 在 M1 Mac (arm64) 上执行 docker build -t myserver .
+Docker 引擎会看到 FROM golang:alpine 并去 Docker Hub 拉取对应的镜像
+关键点：golang:alpine 是一个多架构（multi-arch）镜像名，里面包含了 amd64、arm64 等不同架构的版本
+Docker 会自动检测到宿主机是 arm64, 于是它会拉取并使用 arm64 版的 golang:alpine, 这样, 构建时运行的容器基础环境就是 arm64 的 Alpine &#43; Go
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/docker/004-docker-has-arch/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="docker" />
+
+
+  <meta property="article:published_time" content="2025-02-26 18:31:22 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/docker/004-docker-has-arch/">通过交叉编译理解 Docker 运行原理</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-02-26</time><span class="post-reading-time">2 分钟阅读 (308 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/docker/">docker</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/">交叉编译</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>假设我们在 M1 的 Mac 上构建 Docker 镜像:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-dockerfile" data-lang="dockerfile"><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> golang:alpine</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">WORKDIR</span><span style="color:#e6db74"> /app</span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">COPY</span> ./ ./<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> go mod download<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> CGO_ENABLED<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span> GOOS<span style="color:#f92672">=</span>linux GOARCH<span style="color:#f92672">=</span>amd64 go build -o /server .<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;./server&#34;</span>]<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><h2 id="1-docker-build-阶段">1. <code>docker build</code> 阶段<a href="#1-docker-build-阶段" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="11-拉取基础镜像-golangalpine">1.1 拉取基础镜像 <code>golang:alpine</code><a href="#11-拉取基础镜像-golangalpine" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>
+<p>在 <strong>M1 Mac (arm64)</strong> 上执行 <code>docker build -t myserver .</code></p>
+</li>
+<li>
+<p>Docker 引擎会看到 <code>FROM golang:alpine</code> 并去 Docker Hub 拉取对应的镜像</p>
+</li>
+<li>
+<p><strong>关键点</strong>：<code>golang:alpine</code> 是一个多架构（multi-arch）镜像名，里面包含了 <code>amd64</code>、<code>arm64</code> 等不同架构的版本</p>
+</li>
+<li>
+<p>Docker 会自动检测到宿主机是 arm64, 于是它会拉取并使用 arm64 版的 <code>golang:alpine</code>, 这样, 构建时运行的容器基础环境就是 <strong>arm64</strong> 的 Alpine + Go</p>
+</li>
+</ul>
+<h3 id="12-在容器arm64里执行构建步骤">1.2 在容器（arm64）里执行构建步骤<a href="#12-在容器arm64里执行构建步骤" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>进入到 <code>WORKDIR /app</code> 后，<code>COPY</code> 源码、<code>RUN go mod download</code> 都是在 <strong>arm64</strong> 架构的 Alpine 容器里进行的，没什么特别</p>
+<h3 id="13-编译-golang-源代码">1.3 编译 golang 源代码<a href="#13-编译-golang-源代码" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>现在最有意思的是这一行 <code>CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server .</code></p>
+<ul>
+<li>GOOS=linux：目标操作系统是 Linux（容器实际就是 Linux，但这里做了“明确指定”）</li>
+<li>GOARCH=amd64：目标 CPU 架构是 x86_64（amd64）</li>
+<li>容器自身是 arm64 的 Go 工具链，但是 Go 提供了「交叉编译」能力，所以它可以编译出一个「amd64」二进制</li>
+<li>因此此步骤结束后，容器中 <code>./server</code> 这个可执行文件将是<strong>amd64 架构</strong>的 Linux ELF</li>
+</ul>
+<h3 id="14-结果">1.4. 结果<a href="#14-结果" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>
+<p>生成的二进制是「amd64」的</p>
+</li>
+<li>
+<p>但它坐落在一个「arm64」用户态系统（Alpine）里</p>
+</li>
+<li>
+<p>如果你在这个容器里尝试 <code>./server</code> 立即运行，很可能会报错：</p>
+</li>
+</ul>
+<blockquote>
+<p>“exec format error” (因为是 amd64 指令集，无法在 arm64 CPU 上原生执行)。</p>
+</blockquote>
+<p>然而在 <code>docker build</code> 阶段，Docker 不会去实际“运行”这个二进制（除了 CMD/ENTRYPOINT 之外），它只是把文件打包进镜像。</p>
+<h3 id="15-构建生成的镜像">1.5 构建生成的镜像<a href="#15-构建生成的镜像" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><code>docker build</code> 成功后，会产出一个新的镜像，里头包含：</p>
+<ul>
+<li>基础镜像那一套 arm64 的 Alpine Linux</li>
+<li>以及我们刚刚编译好的 <strong>amd64</strong> 可执行文件 <code>/server</code></li>
+</ul>
+<p>这就导致了镜像本身是“arm64 用户态系统 + amd64 二进制”的“混搭”状态。</p>
+<h2 id="2-docker-run-阶段">2. <code>docker run</code> 阶段<a href="#2-docker-run-阶段" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>当你在 M1 Mac 上执行 <code>docker run myserver</code> 时，Docker 会尝试：</p>
+<ol>
+<li>启动一个容器，它的用户态依旧是「arm64 Alpine」</li>
+<li>在启动时，会执行 <code>CMD [&quot;./server&quot;]</code>（即 <code>/server</code>），这是一个 <strong>amd64</strong> 的二进制</li>
+</ol>
+<p>此时，如果没有任何额外的配置，容器内会试图在 arm64 环境中直接跑 amd64 的 ELF 文件，通常会出现：</p>
+<pre tabindex="0"><code>standard_init_linux.go:xxx: exec user process caused: exec format error
+</code></pre><p><strong>为什么？</strong> 因为 arm64 CPU 无法直接执行 amd64 指令集的二进制。</p>
+<h2 id="3-在-ubuntu--amd64-cpu-上">3. 在 Ubuntu + amd64 CPU 上<a href="#3-在-ubuntu--amd64-cpu-上" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-docker-pull">3.1. docker pull<a href="#31-docker-pull" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>假设 <code>yourrepo/myserver:latest</code> 是一个「多架构 manifest」镜像，包含了 <strong>arm64</strong> 和 <strong>amd64</strong> 两个版本</p>
+<pre tabindex="0"><code>docker pull yourrepo/myserver:latest
+</code></pre><p>当 Ubuntu（amd64）端尝试拉取时，Docker 会先匹配你本地主机是 <code>amd64</code>，接着去仓库搜 <code>myserver</code> 镜像是否包含 <code>linux/amd64</code> 的 manifest,</p>
+<p>最终下载下来的实际上是<strong>amd64</strong> 的用户态环境（如果用的是 Alpine，则它里面的 <code>/bin/sh</code>、<code>/usr/bin/go</code> 等都是 amd64 编译的）,</p>
+<p>与在 M1 Mac 上「自动拿到 arm64 版」是同样的机制，只是目标架构不同,</p>
+<blockquote>
+<p>Docker Hub 上的很多官方镜像（例如 <code>golang:alpine</code>）是做了多架构支持的：它们在同一个镜像名后面，通过一个多架构 manifest，指向了多个真正的镜像文件（比如 amd64 版、arm64 版等）</p>
+<p>当你 <code>docker pull</code> 时，Docker 会根据你当前的宿主机架构，去拉取并解压相匹配的镜像层（layer）。这就是为什么“同一个名称”的镜像，能自动匹配不同架构</p>
+</blockquote>
+<h3 id="32-运行容器-docker-run">3.2. 运行容器 docker run<a href="#32-运行容器-docker-run" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>执行 <code>CMD [&quot;./server&quot;]</code></p>
+<p>因为容器是「amd64 Alpine」, 里面的 <code>/server</code> 也是 amd64 二进制, CPU 指令集、用户态环境全部匹配，<code>./server</code> 可以直接原生执行, 不会出现在 M1 Mac 场景下的“exec format error”问题。</p>
+<blockquote>
+<p>我们拉取的镜像已经是一个微型系统了, 而且包含了我们在 M1 系统编译好的 server amd64 架构的可执行文件,  执行 docker run 的时候, 只会执行: <code>CMD [&quot;./server&quot;]</code>, 上面的指令比如 <code>FROM</code>、<code>WORKDIR</code>、<code>COPY</code>、<code>RUN go mod download</code> 都是在<strong>构建阶段 (<code>docker build</code>)</strong> 执行的, 用来生产最终镜像。</p>
+</blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/005-spring-mvc-boot-cloud/" class="button inline prev">
+        Spring MVC, Spring Boot, Spring Cloud 区别和联系
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/001-kafka-concepts/" class="button inline next">
+        Kafka 消息队列
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Is Multithreaded Server Better than a Single Thread Server? :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Reference: https://qr.ae/pyztor
+Why is a multithreaded web server better than a single thread server? It isn’t.
+There are four basic ways how a web server can handle concurrency:
+forking an OS process per request (like old versions of Apache) spawning an OS thread per request (like a new versions of Apache) using a single-threaded event loop (like nginx) using green threads or lightweight processes scheduled by a VM runtime instead of the OS (like in Erlang) Currently the most common approaches are number 2 and 3.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/cs-basics/007-multithread-singlethread-server/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Is Multithreaded Server Better than a Single Thread Server?">
+<meta property="og:description" content="Reference: https://qr.ae/pyztor
+Why is a multithreaded web server better than a single thread server? It isn’t.
+There are four basic ways how a web server can handle concurrency:
+forking an OS process per request (like old versions of Apache) spawning an OS thread per request (like a new versions of Apache) using a single-threaded event loop (like nginx) using green threads or lightweight processes scheduled by a VM runtime instead of the OS (like in Erlang) Currently the most common approaches are number 2 and 3.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/cs-basics/007-multithread-singlethread-server/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="计算机基础" />
+
+
+  <meta property="article:published_time" content="2023-08-26 19:03:59 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/cs-basics/007-multithread-singlethread-server/">Is Multithreaded Server Better than a Single Thread Server?</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-08-26</time><span class="post-reading-time">3 分钟阅读 (619 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p><strong>Reference:</strong> <a href="https://qr.ae/pyztor">https://qr.ae/pyztor</a></p>
+<p><em>Why is a multithreaded web server better than a single thread server?</em> <strong>It isn’t.</strong></p>
+<p>There are four basic ways how a web server can handle concurrency:</p>
+<ol>
+<li>forking an OS process per request (like old versions of Apache)</li>
+<li>spawning an OS thread per request (like a new versions of Apache)</li>
+<li>using a single-threaded event loop (like nginx)</li>
+<li>using green threads or lightweight processes scheduled by a VM runtime instead of the OS (like in Erlang)</li>
+</ol>
+<p>Currently the most common approaches are number 2 and 3.</p>
+<p>There are pros and cons of both of them. For <strong>I/O-bound</strong> operations (a characteristic of a typical web server) you get <strong>better performance</strong> and <strong>higher number of concurrent requests</strong> when you use a <strong>single-threaded event loop</strong>. But the drawback is that you need to use exclusively asynchronous non-blocking I/O for all operations or otherwise you’ll block the event loop and lose performance. For that reason it’s easier to implement a multi-threaded server but you pay in performance.</p>
+<p>For <strong>CPU-bound</strong> operations (less common for a usual web server, maybe more common for a computationally intensive API) it’s best to have <strong>one OS thread or process per core</strong>. It’s easy to do with single-threaded event loops because you can run a cluster of a number of processes one per core. It’s hard to do with multi-threaded servers because if spawning threads is your only way to handle concurrent requests then you cannot really control how many threads you will have - as you don’t control the number of requests. Once you have more threads than the number of CPU cores then you loose performance for <strong>context switches</strong> and you also use a lot of RAM.</p>
+<p>That is why a <strong>single-threaded nginx server</strong> performs better than a multi-threaded Apache web server (and that is why nginx was created in the first place). Also <strong>Redis</strong>, a database known for exceptionally high performance is <strong>single-threaded</strong>.</p>
+<p>A real example I can give you is this: My first web server was Apache running on a Linux machine with 500MB of RAM. It forked a new process for every request (it actually had a pool so there was not much forking involved but it had to keep those processes alive to reuse them and kill them once in a while to avoid resource leakage).</p>
+<p>My OS used around 100MB of RAM. Every Apache process used 20MB of RAM. It meant that my server could only handle 20 concurrent requests and there was no way around it because I had no more RAM. The processes were mostly blocked on I/O so the CPU utilization was very low, every request above those 20 had to wait and if those 20 was e.g. long running downloads then my server was completely unresponsive.</p>
+<p>When nginx web server was introduced it used a single-threaded event loop and didn’t block for any request. It could handle much more concurrent requests, having no problem with the mythical c10k problem - nginx was basically created to solve the c10k problem (10,000 concurrent requests).</p>
+<p>Imagine how much RAM is wasted for 10,000 threads if you could even spawn that many and how much time is used for context switches.</p>
+<p><strong>Memory usage of multi-threaded Apache vs single-threaded nginx:</strong></p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/3753c8d5681b143ae824ebc3830d959d.png" alt=""></p>
+<p>Incidentally, this is the reason why Ryan Dahl used a non-blocking I/O and a single-threaded event loop in Node.js and he still uses the same idea in Deno, because that is the way to write high performance network servers (contrary to what you might read in other answers here).</p>
+<blockquote>
+<p>Note that <a href="https://nginx.org/en/docs/ngx_core_module.html#worker_processes">nginx “core functionality” doc</a> mentions that on most servers nginx defaults to multiple workers (which will be ran as threads) so it’s not always “single threaded.” <a href="https://www.quora.com/profile/Alex-Sergeyev">from a comment of this blog</a></p>
+</blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/golang/practice/004-nuggets-golang/" class="button inline prev">
+        零碎知识 &#43; 踩坑 - Go
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/linux/bash/002-shell-expansion/" class="button inline next">
+        Shell Expansion
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

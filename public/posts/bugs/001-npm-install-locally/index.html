@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>npm install 总是安装到全局目录排查与解决 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="使用 npm install xxx, 然后总是安装到 ~/node_modules/, 查了好多, 有的说用 npm config list 查看 global 的值, 改为 false 什么, 都没有用, 卸载 node 和 npm 重装依旧不能解决,
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/bugs/001-npm-install-locally/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="npm install 总是安装到全局目录排查与解决">
+<meta property="og:description" content="使用 npm install xxx, 然后总是安装到 ~/node_modules/, 查了好多, 有的说用 npm config list 查看 global 的值, 改为 false 什么, 都没有用, 卸载 node 和 npm 重装依旧不能解决,
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/bugs/001-npm-install-locally/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="bugs" />
+
+
+  <meta property="article:published_time" content="2023-06-27 11:24:35 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/bugs/001-npm-install-locally/">npm install 总是安装到全局目录排查与解决</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-06-27</time><span class="post-reading-time">1 分钟阅读 (113 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/bugs/">bugs</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/npm/">npm</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>使用 <code>npm install xxx</code>, 然后总是安装到 <code>~/node_modules/</code>, 查了好多, 有的说用 <code>npm config list   </code>查看 global 的值, 改为 false 什么, 都没有用, 卸载 node 和 npm 重装依旧不能解决,</p>
+<p>最后删除了  <code>~/node_modules/</code> 文件夹和 <code>~/</code> 下的所有 npm 相关文件夹, 然后进入项目文件夹, 重新运行 <code>npm install xxx</code> 后本地文件夹自动创建 <code>node_modules</code>, 安装成功.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ mkdir jslearn <span style="color:#f92672">&amp;&amp;</span> cd jslearn
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ npm install cors
+</span></span><span style="display:flex;"><span>added <span style="color:#ae81ff">3</span> packages in 466ms
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ ls
+</span></span><span style="display:flex;"><span>node_modules      package-lock.json package.json
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 你看不用 npm init</span>
+</span></span></code></pre></div><p>在知乎看到的回答:</p>
+<blockquote>
+<p>npm的原理大概就是从当前目录往上找，找到哪个目录有node_modules就认为这才是真正的项目目录，所以东西全给装那里面去, 所以不仅仅是User根目录的问题，你得保证从你当前的目录开始一直到根目录都没有node_modules，npm才会“正常”地把东西放到当前目录下的node_modules里 <a href="https://www.zhihu.com/question/33302274/answer/56276831">原文</a></p>
+</blockquote>
+<p>另外:</p>
+<blockquote>
+<p><code>-S</code> is shorthand for <code>--save</code>, and it adds the package you&rsquo;re installing to the dependencies in your <code>package.json</code> file (which can be created with <code>npm init</code>). However, <code>--save</code> or <code>-S</code> is totally unnecessary if you&rsquo;re using npm 5 or above since it&rsquo;s done by default. <a href="https://stackoverflow.com/a/58475949/16317008">https://stackoverflow.com/a/58475949/16317008</a></p>
+</blockquote>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/java/basics/001-jdk-jre-jvm/" class="button inline prev">
+        JDK JRE JVM JavaSE
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/js/004-prototypal-inheritance/" class="button inline next">
+        JS 继承之 Prototype Chain 的意义
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

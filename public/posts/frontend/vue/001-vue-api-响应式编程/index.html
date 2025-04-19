@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Vue 基础概念 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Single File Component 在 Vue.js 中, Single File Component 通常以 .vue 为后缀, 用于将一个组件的模板（HTML）、逻辑（JavaScript）和样式（CSS）封装在同一个文件中, 是 Vue 开发中非常核心的概念之一
+&lt;template&gt; ... &lt;/template&gt; &lt;script&gt; ... &lt;/script&gt; &lt;style scoped&gt; ... &lt;/style&gt; scoped 的作用是将样式限制在当前组件的作用域内
+2. API Styles Options API 和 Composition API 都是 Vue 提供给开发者用来定义组件数据和逻辑的方式, 并且它们的主要目的之一是为 &lt;template&gt; 提供数据, 让模板可以通过数据绑定直接使用这些数据, 它们是Vue实现数据绑定的两种主要方式, 但它们的设计理念、使用场景和灵活性有所不同
+2.1. Options API data() 结构化选项：通过固定的选项（如 data、methods、computed、watch 等）组织代码
+传统方式：Vue 1.x 和 Vue 2.x的主流方式, Vue 3仍然支持
+数据定义：通过 data() 返回一个对象，里面的属性是响应式的
+&lt;template&gt; &lt;p&gt;{{ message }}&lt;/p&gt; &lt;button @click=&#34;updateMessage&#34;&gt;更新&lt;/button&gt; &lt;/template&gt; &lt;script&gt; export default { data() { return { message: &#34;Hello from Options API&#34; }; }, methods: { updateMessage() { this.message = &#34;Updated!&#34;; } } }; &lt;/script&gt; data() 返回的对象中的属性（如message）自动绑定到组件实例, &lt;template&gt; 可以直接访问 方法（如updateMessage）通过 this 操作数据, 触发响应式更新 2.2. Composition API &lt;script setup&gt; 函数式组织：通过 setup() 函数或 &lt;script setup&gt; 以更灵活的方式组织代码，不受固定选项的限制
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/frontend/vue/001-vue-api-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Vue 基础概念">
+<meta property="og:description" content="1. Single File Component 在 Vue.js 中, Single File Component 通常以 .vue 为后缀, 用于将一个组件的模板（HTML）、逻辑（JavaScript）和样式（CSS）封装在同一个文件中, 是 Vue 开发中非常核心的概念之一
+&lt;template&gt; ... &lt;/template&gt; &lt;script&gt; ... &lt;/script&gt; &lt;style scoped&gt; ... &lt;/style&gt; scoped 的作用是将样式限制在当前组件的作用域内
+2. API Styles Options API 和 Composition API 都是 Vue 提供给开发者用来定义组件数据和逻辑的方式, 并且它们的主要目的之一是为 &lt;template&gt; 提供数据, 让模板可以通过数据绑定直接使用这些数据, 它们是Vue实现数据绑定的两种主要方式, 但它们的设计理念、使用场景和灵活性有所不同
+2.1. Options API data() 结构化选项：通过固定的选项（如 data、methods、computed、watch 等）组织代码
+传统方式：Vue 1.x 和 Vue 2.x的主流方式, Vue 3仍然支持
+数据定义：通过 data() 返回一个对象，里面的属性是响应式的
+&lt;template&gt; &lt;p&gt;{{ message }}&lt;/p&gt; &lt;button @click=&#34;updateMessage&#34;&gt;更新&lt;/button&gt; &lt;/template&gt; &lt;script&gt; export default { data() { return { message: &#34;Hello from Options API&#34; }; }, methods: { updateMessage() { this.message = &#34;Updated!&#34;; } } }; &lt;/script&gt; data() 返回的对象中的属性（如message）自动绑定到组件实例, &lt;template&gt; 可以直接访问 方法（如updateMessage）通过 this 操作数据, 触发响应式更新 2.2. Composition API &lt;script setup&gt; 函数式组织：通过 setup() 函数或 &lt;script setup&gt; 以更灵活的方式组织代码，不受固定选项的限制
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/frontend/vue/001-vue-api-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="前端开发" />
+
+
+  <meta property="article:published_time" content="2025-04-17 20:42:20 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/frontend/vue/001-vue-api-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B/">Vue 基础概念</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-04-17</time><span class="post-reading-time">5 分钟阅读 (877 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91/">前端开发</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/vue/">vue</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-single-file-component">1. Single File Component<a href="#1-single-file-component" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>在 Vue.js 中, Single File Component 通常以 <code>.vue</code> 为后缀, 用于将一个组件的模板（HTML）、逻辑（JavaScript）和样式（CSS）封装在同一个文件中, 是 Vue 开发中非常核心的概念之一</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-vue" data-lang="vue"><span style="display:flex;"><span>&lt;<span style="color:#f92672">template</span>&gt;
+</span></span><span style="display:flex;"><span>  ...
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">template</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">script</span>&gt;
+</span></span><span style="display:flex;"><span>  ...
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">script</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">style</span> <span style="color:#a6e22e">scoped</span>&gt;
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">style</span>&gt;
+</span></span></code></pre></div><blockquote>
+<p><code>scoped</code> 的作用是将样式限制在当前组件的作用域内</p>
+</blockquote>
+<h2 id="2-api-styles">2. API Styles<a href="#2-api-styles" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Options API 和 Composition API 都是 Vue 提供给开发者用来定义组件数据和逻辑的方式, 并且它们的主要目的之一是为 <code>&lt;template&gt;</code> 提供数据, 让模板可以通过数据绑定直接使用这些数据, 它们是Vue实现数据绑定的两种主要方式, 但它们的设计理念、使用场景和灵活性有所不同</p>
+<h3 id="21-options-api-data">2.1. Options API <code>data()</code><a href="#21-options-api-data" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>结构化选项</strong>：通过固定的选项（如 data、methods、computed、watch 等）组织代码</p>
+<p><strong>传统方式</strong>：Vue 1.x 和 Vue 2.x的主流方式, Vue 3仍然支持</p>
+<p><strong>数据定义</strong>：通过 <code>data()</code> 返回一个对象，里面的属性是响应式的</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-vue" data-lang="vue"><span style="display:flex;"><span>&lt;<span style="color:#f92672">template</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">p</span>&gt;{{ <span style="color:#a6e22e">message</span> }}&lt;/<span style="color:#f92672">p</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">button</span> <span style="color:#f92672">@click</span><span style="color:#e6db74">=&#34;updateMessage&#34;</span>&gt;<span style="color:#a6e22e">更新</span>&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">template</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">script</span>&gt;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">data</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">message</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;Hello from Options API&#34;</span>
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">methods</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">updateMessage</span>() {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Updated!&#34;</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">script</span>&gt;
+</span></span></code></pre></div><ul>
+<li><code>data()</code> 返回的对象中的属性（如message）自动绑定到组件实例, <code>&lt;template&gt;</code> 可以直接访问</li>
+<li>方法（如<code>updateMessage</code>）通过 <code>this</code> 操作数据, 触发响应式更新</li>
+</ul>
+<h3 id="22-composition-api-script-setup">2.2. Composition API <code>&lt;script setup&gt;</code><a href="#22-composition-api-script-setup" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>函数式组织</strong>：通过 <code>setup()</code> 函数或 <code>&lt;script setup&gt;</code> 以更灵活的方式组织代码，不受固定选项的限制</p>
+<p><strong>Vue 3 引入</strong>：旨在解决 Options API 在大型项目中代码分散和复用性差的问题</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-vue" data-lang="vue"><span style="display:flex;"><span>&lt;<span style="color:#f92672">template</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">p</span>&gt;{{ <span style="color:#a6e22e">message</span> }}&lt;/<span style="color:#f92672">p</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">button</span> <span style="color:#f92672">@click</span><span style="color:#e6db74">=&#34;updateMessage&#34;</span>&gt;<span style="color:#a6e22e">更新</span>&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">template</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">setup</span>&gt;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">ref</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#34;vue&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">message</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ref</span>(<span style="color:#e6db74">&#34;Hello from Composition API&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">updateMessage</span> <span style="color:#f92672">=</span> () =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">message</span>.<span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Updated!&#34;</span>;
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">script</span>&gt;
+</span></span></code></pre></div><ul>
+<li><code>ref</code> 或 <code>reactive</code> 定义的变量（如 <code>message</code> ）在 <code>&lt;script setup&gt;</code> 中是顶层变量, <strong>直接暴露给模板</strong></li>
+<li>方法（如 <code>updateMessage</code> ）通过操作 <code>ref.value</code> 或 <code>reactive</code> 对象的属性更新数据，触发响应式更新</li>
+</ul>
+<blockquote>
+<p><strong>响应式 API</strong> 是一组特定的函数, 专门用于创建和管理响应式数据:  <code>⁠ref()</code>, <code>reactive()</code>, ⁠<code>computed()</code>, <code>watch()</code>, <code>⁠watchEffect()</code>, 这些函数的主要目的是让数据变得&quot;响应式&quot;——当数据变化时, 视图会自动更新, <strong>Composition API</strong> 是 Vue 3 中组织组件代码的整体方法论, 它包括:</p>
+<ul>
+<li>所有响应式 API 函数（上面提到的那些）</li>
+<li>组件生命周期函数（⁠onMounted、⁠onUpdated等）</li>
+<li>依赖注入函数（⁠provide、⁠inject）</li>
+<li><code>setup</code> 函数或 <code>⁠&lt;script setup&gt;</code> 语法</li>
+</ul>
+</blockquote>
+<h2 id="3-reactive">3. <code>reactive()</code><a href="#3-reactive" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-本质">3.1. 本质<a href="#31-本质" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>It is important to note that the returned value from <code>reactive()</code> is a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy">Proxy</a> of the original object, which is not equal to the original object:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">raw</span> <span style="color:#f92672">=</span> {}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">proxy</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">reactive</span>(<span style="color:#a6e22e">raw</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// proxy is NOT equal to the original.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">proxy</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">raw</span>) <span style="color:#75715e">// false
+</span></span></span></code></pre></div><p><strong>Only the proxy is reactive</strong> - mutating the original object will not trigger updates. This rule applies to <strong>nested objects</strong> as well. Due to deep reactivity, nested objects inside a reactive object are also proxies:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">proxy</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">reactive</span>({})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">raw</span> <span style="color:#f92672">=</span> {}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">proxy</span>.<span style="color:#a6e22e">nested</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">raw</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">proxy</span>.<span style="color:#a6e22e">nested</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">raw</span>) <span style="color:#75715e">// false
+</span></span></span></code></pre></div><blockquote>
+<p>理解本质对于后面为什么解构 reactive 对象失去响应式的理解至关重要</p>
+</blockquote>
+<h3 id="32-有限的值类型支持">3.2. 有限的值类型支持<a href="#32-有限的值类型支持" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>Limited value types:</strong> it only works for object types (objects, arrays, and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects#keyed_collections">collection types</a> such as <code>Map</code> and <code>Set</code>). It cannot hold <a href="https://developer.mozilla.org/en-US/docs/Glossary/Primitive">primitive types</a> such as <code>string</code>, <code>number</code> or <code>boolean</code>.</p>
+<p>这个很好理解, 因为 <code>reactive()</code> is a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy">Proxy</a> of the original object, 所以 primitive 类型肯定不行啦,</p>
+<h3 id="33-对解构操作不友好">3.3. 对解构操作不友好<a href="#33-对解构操作不友好" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">state</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">reactive</span>({ <span style="color:#a6e22e">count</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span> })
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> { <span style="color:#a6e22e">count</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">state</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">count</span><span style="color:#f92672">++</span>
+</span></span></code></pre></div><ul>
+<li>reactive 创建的对象是一个 <strong>Proxy</strong>，它包装了整个对象，使得对象的属性访问和修改具有响应式效</li>
+<li>当你解构 <code>state（let { count } = state）</code>，<code>count</code> 只是从 <code>state</code> 中获取了属性值（<code>state.count</code> 的值），而不是保留对 <code>state.count</code> 的响应式引用</li>
+<li>在 JavaScript 中，解构普通对象时会直接复制属性的值（对于原始类型如数字、字符串是值复制）因此，<code>count</code> 是一个普通的 JavaScript 变量（数字类型），与 <code>state</code> 的响应式系统完全脱离</li>
+</ul>
+<blockquote>
+<p>在 JavaScript 中，解构操作（例如 <code>const { prop } = obj</code>）本质上是从对象中提取属性值，并将其赋值给新的变量, 解构的结果取决于属性值的类型：</p>
+<p><strong>基本类型（如 Number、String）</strong>：提取的是值的副本（值传递）</p>
+<p><strong>引用类型（如 Object、Array）</strong>：提取的是引用的副本（仍然指向相同的内存地址）</p>
+<p><strong>解构得到的是基本类型的副本，与原对象完全脱离</strong>, 而reactive 又是基于对象代理, 所以解构一个代理对象获得的字段肯定也失去响应式啦, 因为 Vue 通过对象代理拦截对象属性, 你直接解构提取对象属性成一个 primitive 类型, 都不是对象了, 所以肯定 Vue 也无法监控进行响应式了</p>
+</blockquote>
+<h2 id="4-ref">4. <code>ref</code><a href="#4-ref" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">state</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ref</span>({ <span style="color:#a6e22e">count</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Vue&#39;</span> })
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">value</span>) <span style="color:#75715e">// { count: 0, name: &#39;Vue&#39; }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 修改对象内部的属性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">value</span>.<span style="color:#a6e22e">count</span><span style="color:#f92672">++</span> <span style="color:#75715e">// 响应式更新
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">value</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;React&#39;</span> <span style="color:#75715e">// 响应式更新
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 替换整个对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> { <span style="color:#a6e22e">count</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">10</span>, <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Angular&#39;</span> } <span style="color:#75715e">// 响应式更新
+</span></span></span></code></pre></div><ul>
+<li><code>state</code> 是一个 <code>ref</code> 对象，访问其内容需要通过 <code>state.value</code></li>
+<li><code>state.value</code> 是一个 <strong>响应式对象</strong>，对其属性的操作（如 <code>state.value.count++</code>）会触发响应式更新, <strong>无需再次使用 .value</strong></li>
+<li>替换整个 <code>state.value</code>（如 <code>state.value = { ... }</code>）也会触发响应式更新，因为 <code>ref</code> 会跟踪 <code>.value</code> 的变化</li>
+</ul>
+<h2 id="5-reactive-vs-ref">5. <code>reactive()</code> vs <code>ref</code><a href="#5-reactive-vs-ref" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="51-解构操作">5.1. 解构操作<a href="#51-解构操作" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>两者解构后都会丢失响应性</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">state</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">reactive</span>({ <span style="color:#a6e22e">count</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Vue&#39;</span> });
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">count</span>, <span style="color:#a6e22e">name</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">state</span>; <span style="color:#75715e">// 解构后，count 和 name 失去响应性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 这不会影响原来的响应式对象
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">count</span><span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">count</span>); <span style="color:#75715e">// 仍然是 0
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">state</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ref</span>({ <span style="color:#a6e22e">count</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Vue&#39;</span> });
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">count</span>, <span style="color:#a6e22e">name</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">value</span>; <span style="color:#75715e">// 解构后，count 和 name 失去响应性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 对于基本类型的 ref
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">count</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ref</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ref</span>(<span style="color:#e6db74">&#39;Vue&#39;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">value</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">countValue</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">count</span>; <span style="color:#75715e">// 解构后，countValue 失去响应性
+</span></span></span></code></pre></div><h3 id="52-函数返回值的行为">5.2. 函数返回值的行为<a href="#52-函数返回值的行为" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">useReactiveState</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">state</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">reactive</span>({ <span style="color:#a6e22e">count</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span> });
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">state</span>; <span style="color:#75715e">// 返回完整的响应式对象，保持响应性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">state</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">useReactiveState</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">count</span><span style="color:#f92672">++</span>; <span style="color:#75715e">// 仍然具有响应性
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">useRefState</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">count</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ref</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">count</span>; <span style="color:#75715e">// 返回 ref 对象，保持响应性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">count</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">useRefState</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">count</span>.<span style="color:#a6e22e">value</span><span style="color:#f92672">++</span>; <span style="color:#75715e">// 仍然具有响应性
+</span></span></span></code></pre></div><blockquote>
+<p>看到这可以注意到 <code>ref</code> 和 <code>reactive</code> 创建对象的行为的不同, 前者不能创建 primitive 类型, 若想创建, 只能通过 <code>{ count: 0 }</code> 这种包装一层对象的方式来创建, 而后者可以直接创建</p>
+</blockquote>
+<h3 id="53-常见操作对比">5.3. 常见操作对比<a href="#53-常见操作对比" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// 组合式函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">useCounter</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">count</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ref</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">increment</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">count</span>.<span style="color:#a6e22e">value</span><span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">count</span>,    <span style="color:#75715e">// 返回 ref，保持响应性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">increment</span> <span style="color:#75715e">// 返回方法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  };
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 使用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">count</span>, <span style="color:#a6e22e">increment</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">useCounter</span>();
+</span></span></code></pre></div><p>可以看到 <code>ref</code> 的实现简单明了, 然后来看一下 <code>reactive</code> 的实现:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// 组合式函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">useCounter</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">state</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">reactive</span>({ <span style="color:#a6e22e">count</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span> })
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">increment</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 直接访问属性，不需要 .value
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">count</span><span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 解构直接返回 state 对象或其属性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">count</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">count</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">increment</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>注意这样写会有一个问题：当 <code>setup()</code> 返回 <code>state.count</code> 时，会丢失响应性，因为它被解构了, 模板中的 <code>count</code> 不会更新, 解决办法是<strong>直接返回整个 reactive 对象</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">useCounter</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">state</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">reactive</span>({ <span style="color:#a6e22e">count</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span> })
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">increment</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 直接访问属性，不需要 .value
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">count</span><span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 返回响应式状态
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">state</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">increment</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="6-declaring-reactive-state">6. Declaring Reactive State<a href="#6-declaring-reactive-state" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>In Composition API, the <strong>recommended</strong> way to <strong>declare reactive state</strong> is using the <a href="https://vuejs.org/api/reactivity-core.html#ref"><code>ref()</code></a> function:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">ref</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;vue&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">count</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ref</span>(<span style="color:#ae81ff">0</span>)
+</span></span></code></pre></div><p>You can mutate a ref directly in event handlers:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-vue" data-lang="vue"><span style="display:flex;"><span>&lt;<span style="color:#f92672">button</span> <span style="color:#f92672">@click</span><span style="color:#e6db74">=&#34;count++&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>  {{ <span style="color:#a6e22e">count</span> }}
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span></code></pre></div><ul>
+<li>
+<p>We did <strong>not</strong> need to append <code>.value</code> when using the ref <strong>in the template</strong>. For convenience, refs are automatically unwrapped when used inside templates.</p>
+</li>
+<li>
+<p><code>ref</code> 或 <code>reactive</code> 定义的变量（如 <code>message</code> ）在 <code>&lt;script setup&gt;</code> 中是顶层变量, <strong>直接暴露给模板</strong></p>
+</li>
+</ul>
+<p>For more complex logic, we can declare functions that mutate refs in the same scope and expose them as methods alongside the state:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">ref</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;vue&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">setup</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">count</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ref</span>(<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">increment</span>() {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// .value is needed in JavaScript
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">count</span>.<span style="color:#a6e22e">value</span><span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">count</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">increment</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Exposed methods can then be used as event handlers:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-vue" data-lang="vue"><span style="display:flex;"><span>&lt;<span style="color:#f92672">button</span> <span style="color:#f92672">@click</span><span style="color:#e6db74">=&#34;increment&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>  {{ <span style="color:#a6e22e">count</span> }}
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span></code></pre></div>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/csharp/dot-net/003-mapper-model-binding/" class="button inline prev">
+        IMapper &amp; Model Binding
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/database/mongodb/003-bson-json-%E5%BA%8F%E5%88%97%E5%8C%96/" class="button inline next">
+        BSON JSON 序列化 反序列化
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

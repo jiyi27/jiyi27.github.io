@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kafka on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/kafka/</link>
+    <description>Recent content in Kafka on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sat, 22 Feb 2025 11:12:22 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/kafka/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Kafka 链接失败</title>
+      <link>https://blog.jiyi27.com/posts/bugs/013-kafka-connection/</link>
+      <pubDate>Sat, 22 Feb 2025 11:12:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/013-kafka-connection/</guid>
+      <description>&lt;p&gt;Spring Boot 应用在尝试连接 Kafka 时，不断抛出连接错误，提示无法连接到 localhost:127.0.0.1:9092 的 Kafka 节点:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;[Consumer clientId=consumer-like-group-1, groupId=like-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;检查 Kafka &lt;code&gt;/opt/homebrew/etc/kafka/server.properties&lt;/code&gt; 配置:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;broker.id=0
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;只有这一行, 然后添加:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;broker.id=0
+listeners=PLAINTEXT://0.0.0.0:9092
+advertised.listeners=PLAINTEXT://localhost:9092
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功解决问题,&lt;/p&gt;
+&lt;p&gt;在 Kafka 中，listeners 与 advertised.listeners 这两个配置项常常是“能否连通”的关键。简单来说：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;listeners：定义 Kafka Broker 实际监听的地址和端口, 告诉 Kafka Broker 监听在哪个接口上接收请求&lt;/li&gt;
+&lt;li&gt;advertised.listeners：Kafka “向外宣传”自己的地址，告诉客户端要用哪个 IP/域名 + 端口来连&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;他们两个什么区别, 为什么都要单独设置, 而不是设置一个相同的值?&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;listeners=PLAINTEXT://0.0.0.0:9092
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;0.0.0.0&lt;/code&gt; 表示监听所有网络接口，意味着 Kafka 允许来自任何 IP 地址的连接, 这样做的好处是，它允许本地机器和远程机器都可以连接到这个 Broker,&lt;/p&gt;
+&lt;p&gt;如果你希望 Kafka 被远程访问，比如生产者和消费者运行在不同的机器上，你应该设置 &lt;code&gt;advertised.listeners&lt;/code&gt; 为你的主机名或外部 IP：&lt;/p&gt;</description>
+      <content>&lt;p&gt;Spring Boot 应用在尝试连接 Kafka 时，不断抛出连接错误，提示无法连接到 localhost:127.0.0.1:9092 的 Kafka 节点:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;[Consumer clientId=consumer-like-group-1, groupId=like-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;检查 Kafka &lt;code&gt;/opt/homebrew/etc/kafka/server.properties&lt;/code&gt; 配置:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;broker.id=0
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;只有这一行, 然后添加:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;broker.id=0
+listeners=PLAINTEXT://0.0.0.0:9092
+advertised.listeners=PLAINTEXT://localhost:9092
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功解决问题,&lt;/p&gt;
+&lt;p&gt;在 Kafka 中，listeners 与 advertised.listeners 这两个配置项常常是“能否连通”的关键。简单来说：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;listeners：定义 Kafka Broker 实际监听的地址和端口, 告诉 Kafka Broker 监听在哪个接口上接收请求&lt;/li&gt;
+&lt;li&gt;advertised.listeners：Kafka “向外宣传”自己的地址，告诉客户端要用哪个 IP/域名 + 端口来连&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;他们两个什么区别, 为什么都要单独设置, 而不是设置一个相同的值?&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;listeners=PLAINTEXT://0.0.0.0:9092
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;0.0.0.0&lt;/code&gt; 表示监听所有网络接口，意味着 Kafka 允许来自任何 IP 地址的连接, 这样做的好处是，它允许本地机器和远程机器都可以连接到这个 Broker,&lt;/p&gt;
+&lt;p&gt;如果你希望 Kafka 被远程访问，比如生产者和消费者运行在不同的机器上，你应该设置 &lt;code&gt;advertised.listeners&lt;/code&gt; 为你的主机名或外部 IP：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;listeners=PLAINTEXT://0.0.0.0:9092
+advertised.listeners=PLAINTEXT://your-public-ip:9092
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;listeners=0.0.0.0:9092&lt;/code&gt; 允许 Kafka 在所有网络接口上监听连接&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;advertised.listeners=your-public-ip:9092&lt;/code&gt; 确保客户端能够正确地连接到 Kafka&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;上面说的是服务端, 当客户端启动时(Spring Boot 代码)，会用 &lt;code&gt;bootstrap.servers&lt;/code&gt; 提供的地址列表来&lt;strong&gt;初次连接&lt;/strong&gt; Kafka 集群。这个配置仅用于入口，帮助客户端找到集群中任意一个 broker，从而获取集群的元数据（例如 topic 信息、分区信息以及其它 broker 的地址）。配置内容可以是一台或多台 broker 的地址。通常，在单机开发环境中你可以设置为 &lt;code&gt;localhost:9092&lt;/code&gt;，但在生产环境中，为了容错，通常会配置多个 broker 的地址。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; ConsumerFactory&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;String, String&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;consumerFactory&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 配置 Kafka 消费者&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Map&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;String, Object&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; configs &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; HashMap&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 这些地址就是 broker 的公共 IP&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    configs.&lt;span style=&#34;color:#a6e22e&#34;&gt;put&lt;/span&gt;(ConsumerConfig.&lt;span style=&#34;color:#a6e22e&#34;&gt;BOOTSTRAP_SERVERS_CONFIG&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;broker1:9092,broker2:9092,broker3:9092&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; DefaultKafkaConsumerFactory&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt;(configs);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;hr&gt;
+&lt;p&gt;运行程序, 发现 8080 端口被占用, 查看谁占用的, 然后关闭, 结果 8080 仍然被占用, 很奇怪, 输出如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# david @ Davids-Mac-mini in ~ [22:40:51]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ lsof -i :8080
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;COMMAND   PID  USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;java    &lt;span style=&#34;color:#ae81ff&#34;&gt;85160&lt;/span&gt; david   54u  IPv6 0xb9edb27e9f8be53e      0t0  TCP *:http-alt &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;LISTEN&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# david @ Davids-Mac-mini in ~ [22:40:58]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ kill &lt;span style=&#34;color:#ae81ff&#34;&gt;85160&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# david @ Davids-Mac-mini in ~ [22:41:09]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ lsof -i :8080
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;COMMAND   PID  USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;java    &lt;span style=&#34;color:#ae81ff&#34;&gt;85345&lt;/span&gt; david   54u  IPv6 0x84534af2d36abf6d      0t0  TCP *:http-alt &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;LISTEN&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;查看谁运行的 找出所有 Java 进程:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ps aux | grep java
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;发现一堆输出, 查了一下是 zookeeper 相关的东西,&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/02/8d06ca0c59cc392b20d402e9a3e0e563.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/opt/homebrew/opt/openjdk/bin/java -Dzookeeper.log.dir=...&lt;/code&gt;：进程执行的完整命令，说明这是一个 Java 进程，并且和 &lt;strong&gt;Zookeeper&lt;/strong&gt; 相关,&lt;/p&gt;
+&lt;p&gt;关闭 zookeeper 服务:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;$ brew services stop zookeeper
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功解决问题&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;因为通过 Homebrew 方式安装的 Zookeeper 默认会开启一个内置的 AdminServer（Zookeeper 3.5+ 版本开始就有这个特性），该服务的默认端口是 8080。当你 kill 了对应的 Java 进程后，brew services 还在负责“托管”并自动重启 Zookeeper 服务，所以很快就会有新的进程继续监听 8080 端口。&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Cloudflare 代理无法通过域名解析出 IP 问题 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="这几天弄服务器, 用ssh通过域名连接的时候总是出现超时(域名只有一个A记录即服务器IP), 问题下面是分析思路,
+I&rsquo;m trying to use ssh to connect my server with my domain name ssh root@www.davidzhu.xyz, but I always get timeout. However I can connect my server when use my server ip directly ssh root@144.202.12.32, so I use dig to check the ip address of my domain on DNS, the output is:
+dig davidzhu.xyz &#43;short 172.67.210.8 104.21.50.195 dig www.davidzhu.xyz &#43;short 172.67.210.8 104.21.50.195 But I only have one A record on my domain, this is the DNS Record of my domain name (the third one is about the google search console):
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/bugs/002-bug-domain-with-two-ip/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Cloudflare 代理无法通过域名解析出 IP 问题">
+<meta property="og:description" content="这几天弄服务器, 用ssh通过域名连接的时候总是出现超时(域名只有一个A记录即服务器IP), 问题下面是分析思路,
+I&rsquo;m trying to use ssh to connect my server with my domain name ssh root@www.davidzhu.xyz, but I always get timeout. However I can connect my server when use my server ip directly ssh root@144.202.12.32, so I use dig to check the ip address of my domain on DNS, the output is:
+dig davidzhu.xyz &#43;short 172.67.210.8 104.21.50.195 dig www.davidzhu.xyz &#43;short 172.67.210.8 104.21.50.195 But I only have one A record on my domain, this is the DNS Record of my domain name (the third one is about the google search console):
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/bugs/002-bug-domain-with-two-ip/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="bugs" />
+
+
+  <meta property="article:published_time" content="2023-04-26 17:30:22 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/bugs/002-bug-domain-with-two-ip/">Cloudflare 代理无法通过域名解析出 IP 问题</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-04-26</time><span class="post-reading-time">2 分钟阅读 (356 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/bugs/">bugs</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%BB%BA%E7%AB%99/">建站</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>这几天弄服务器, 用ssh通过域名连接的时候总是出现超时(域名只有一个A记录即服务器IP), 问题下面是分析思路,</p>
+<p>I&rsquo;m trying to use <code>ssh</code> to connect my server with my domain name <code>ssh root@www.davidzhu.xyz</code>, but I always get timeout. However I can connect my server when use my server ip directly <code>ssh root@144.202.12.32</code>, so I use <code>dig</code> to check the ip address of my domain on DNS, the output is:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dig davidzhu.xyz  +short       
+</span></span><span style="display:flex;"><span>172.67.210.8
+</span></span><span style="display:flex;"><span>104.21.50.195
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>dig www.davidzhu.xyz  +short
+</span></span><span style="display:flex;"><span>172.67.210.8
+</span></span><span style="display:flex;"><span>104.21.50.195
+</span></span></code></pre></div><p>But I only have one A record on my domain, this is the DNS Record of my domain name (the third one is about the google search console):</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/f025ec2ddc93a57d7c062cd2f3e590bb.png" alt=""></p>
+<p>惊不惊讶, <strong><code>dig</code>返回的两个IP地址竟然都与我域名的A记录不同</strong>!</p>
+<hr>
+<p>原因是我的域名开启了 Cloudfalre 的 <a href="https://developers.cloudflare.com/fundamentals/concepts/how-cloudflare-works/">reverse proxy</a>, 通过域名获取到的是 Clouflare 的IP, 无法访问到我服务器真实IP:</p>
+<blockquote>
+<p>When you add your application to Cloudflare, we use this network to sit in between requests and your origin server.</p>
+<p>Cloudflare does this by serving as a <strong>reverse proxy</strong> for your web traffic. All requests to and from your origin <strong>flow through Cloudflare</strong> and — as these requests pass through our network — we can apply various rules and optimizations to improve security, performance, and reliability.</p>
+</blockquote>
+<p>关闭 Cloudflare 反向代理就可以通过域名获取到服务器真实IP了:</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/ad242ed1a2bba87d81f18f2a7fa1a64b.png" alt=""></p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/a5091686a0a61fab1ed5ea3f604b9423.jpg" alt=""></p>
+<p>此时可以看到现实 DNS Only, 使用 <code>dig xxx.com +short</code> 即可查到真实绑定 ip, 或者 <code>ping</code> 也可以.</p>
+<blockquote>
+<p>另外通过Cloudflare 域名托管机制(就是现在我们操作的, 中文里都叫托管更合适, 因为他会接管通往我们域名的所有流量), 就是域名被 Cloudflare 托管(Domain Hosting)后, <strong>若想更换域名的 DNS Record, 只需要在上图中的 edit 上修改 A record 就行了</strong>, 就是改成你的新的 VPS(服务器) 的 ipv4 地址, 不用去域名服务商那里修改 DNS Record 了, 因为在把域名托管给 Cloudflare 的时候已经在域名提供商那里把域名的 DNS 服务器设置成了 Cloudflare.</p>
+</blockquote>
+<p>如何让 Cloudfalre 托管我们的域名:: <a href="https://davidzhu.xyz/post/build-website/008-enable-cloudflare-reverse-proxy/">Enable Coudflare Reverse Proxy - David&rsquo;s Blog</a></p>
+<hr>
+<p>另外如果使用了 cloudflare https 代理, 一般都是先修改域名的 NS 为 cloudfalre 指定的 NS, 但是有些电脑可能因为 DNS cache 问题, 通过 https 访问你的域名可能会失败, 此时应该尝试修改本地 DNS cache, 可以查一下 flush dns cache 的命令,</p>
+<p>注意, DNS cache 一般 chrome 保存了一份, 操作系统也会保存一份, 因此两个地方都要考虑进去,</p>
+<p>关于DNS: <a href="https://davidzhu.xyz/post/networking/002-dns-basics/">DNS Concepts (NameServer(NS), DNS Records and Caching) - David&rsquo;s Blog</a></p>
+<p>了解更多: <a href="https://community.cloudflare.com/t/https-works-on-some-computers-but-not-others/15922">HTTPS Works on some computers but not others? - Website, Application, Performance / Security - Cloudflare Community</a></p>
+<hr>
+<p>其实这样有个好处, 就是别人无法通过你的域名接触到你的服务器, 因为每次请求你的域名, 都要经过 Cloudfalre 中转才能到你的服务器, 另外通过nslookup, dig也无法查到你服务器的真实IP, 返回的都是 Cloudflare 的IP.</p>
+<blockquote>
+<p>Because of <a href="https://developers.cloudflare.com/fundamentals/concepts/how-cloudflare-works/">how Cloudflare works</a>, all traffic to <a href="https://developers.cloudflare.com/dns/manage-dns-records/reference/proxied-dns-records/">proxied DNS records</a> pass through Cloudflare before reaching your origin server. This means that your origin server will stop receiving traffic from individual visitor IP addresses and instead receive traffic from <a href="https://www.cloudflare.com/ips">Cloudflare IP addresses</a>, which are shared by all proxied hostnames.</p>
+<p><a href="https://developers.cloudflare.com/learning-paths/get-started/concepts/cloudflare-ips/">Cloudflare IPs · Getting started · Learning paths</a></p>
+</blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/java/backend/001-war/" class="button inline prev">
+        手动部署 War 包到 Tomcat 之何为 War
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/java/backend/002-war-exploded/" class="button inline next">
+        IDEA 项目中的 War 和 War Exploded 的区别
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>MongoDB 聚合管道 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 为何聚合管道效率更高 1.1. 普通查询 var posts = await _postModel.Find(_ =&gt; true).ToListAsync(); List&lt;CommentModel&gt; allComments = new List&lt;CommentModel&gt;(); foreach (var post in posts) { if (post.CommentList != null &amp;&amp; post.CommentList.Any()) { allComments.AddRange(post.CommentList); } } return allComments; ❗1. 传输的数据体积大
+ToListAsync() 会把整条文档加载进内存，包括帖子内容、标题、标签、图片等一堆无关字段 比如每个帖子 1MB，1000 个帖子就是 1GB 网络传输量，哪怕你只要其中的评论 ❗2. 内存占用高
+所有数据都拉进内存，哪怕你只关心里面一小块数据（比如 CommentList） 对于大集合、高并发服务，这会造成严重的资源消耗 ❗3. 处理逻辑写在代码层，效率低
+你要在 C# 层手动拆解、遍历、组合这些数据，相当于自己在模拟数据库的工作，性能远不如数据库原生操作 1.2. 聚合查询 var pipeline = new BsonDocument[] { // 第一步：展开 CommentList 数组 // 对每个 Post 文档，将 CommentList 中的每条评论都“拆开”，每条评论单独形成一条文档 new BsonDocument(&#34;$unwind&#34;, new BsonDocument(&#34;path&#34;, &#34;$CommentList&#34;) .Add(&#34;preserveNullAndEmptyArrays&#34;, false)), // 如果 CommentList 是 null 或空数组，则跳过该文档 // 第二步：投影出我们感兴趣的字段 // 我们只要评论内容，把它包装成 &#34;comment&#34; 字段，同时去掉 _id new BsonDocument(&#34;$project&#34;, new BsonDocument(&#34;_id&#34;, 0) // 不要 MongoDB 的 ObjectId 字段 .Add(&#34;comment&#34;, &#34;$CommentList&#34;)), // 把 CommentList 的当前项命名为 comment // 第三步：把 comment 作为根节点 // 把整条文档替换为 comment 字段的内容，相当于去掉了外层包裹 new BsonDocument(&#34;$replaceRoot&#34;, new BsonDocument(&#34;newRoot&#34;, &#34;$comment&#34;)) }; // 执行聚合管道，最终返回的是一组 CommentModel 类型的列表 var comments = await _postModel.Aggregate&lt;CommentModel&gt;(pipeline).ToListAsync(); return comments; ✅1. 只取需要的数据
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/database/mongodb/004-mongodb%E8%81%9A%E5%90%88%E5%87%BD%E6%95%B0/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="MongoDB 聚合管道">
+<meta property="og:description" content="1. 为何聚合管道效率更高 1.1. 普通查询 var posts = await _postModel.Find(_ =&gt; true).ToListAsync(); List&lt;CommentModel&gt; allComments = new List&lt;CommentModel&gt;(); foreach (var post in posts) { if (post.CommentList != null &amp;&amp; post.CommentList.Any()) { allComments.AddRange(post.CommentList); } } return allComments; ❗1. 传输的数据体积大
+ToListAsync() 会把整条文档加载进内存，包括帖子内容、标题、标签、图片等一堆无关字段 比如每个帖子 1MB，1000 个帖子就是 1GB 网络传输量，哪怕你只要其中的评论 ❗2. 内存占用高
+所有数据都拉进内存，哪怕你只关心里面一小块数据（比如 CommentList） 对于大集合、高并发服务，这会造成严重的资源消耗 ❗3. 处理逻辑写在代码层，效率低
+你要在 C# 层手动拆解、遍历、组合这些数据，相当于自己在模拟数据库的工作，性能远不如数据库原生操作 1.2. 聚合查询 var pipeline = new BsonDocument[] { // 第一步：展开 CommentList 数组 // 对每个 Post 文档，将 CommentList 中的每条评论都“拆开”，每条评论单独形成一条文档 new BsonDocument(&#34;$unwind&#34;, new BsonDocument(&#34;path&#34;, &#34;$CommentList&#34;) .Add(&#34;preserveNullAndEmptyArrays&#34;, false)), // 如果 CommentList 是 null 或空数组，则跳过该文档 // 第二步：投影出我们感兴趣的字段 // 我们只要评论内容，把它包装成 &#34;comment&#34; 字段，同时去掉 _id new BsonDocument(&#34;$project&#34;, new BsonDocument(&#34;_id&#34;, 0) // 不要 MongoDB 的 ObjectId 字段 .Add(&#34;comment&#34;, &#34;$CommentList&#34;)), // 把 CommentList 的当前项命名为 comment // 第三步：把 comment 作为根节点 // 把整条文档替换为 comment 字段的内容，相当于去掉了外层包裹 new BsonDocument(&#34;$replaceRoot&#34;, new BsonDocument(&#34;newRoot&#34;, &#34;$comment&#34;)) }; // 执行聚合管道，最终返回的是一组 CommentModel 类型的列表 var comments = await _postModel.Aggregate&lt;CommentModel&gt;(pipeline).ToListAsync(); return comments; ✅1. 只取需要的数据
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/database/mongodb/004-mongodb%E8%81%9A%E5%90%88%E5%87%BD%E6%95%B0/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="数据库" />
+
+
+  <meta property="article:published_time" content="2025-04-19 22:20:18 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/database/mongodb/004-mongodb%E8%81%9A%E5%90%88%E5%87%BD%E6%95%B0/">MongoDB 聚合管道</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-04-19</time><span class="post-reading-time">2 分钟阅读 (421 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/mongodb/">mongodb</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-为何聚合管道效率更高">1. 为何聚合管道效率更高<a href="#1-为何聚合管道效率更高" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="11-普通查询">1.1. 普通查询<a href="#11-普通查询" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c#" data-lang="c#"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> posts = <span style="color:#66d9ef">await</span> _postModel.Find(_ =&gt; <span style="color:#66d9ef">true</span>).ToListAsync();
+</span></span><span style="display:flex;"><span>List&lt;CommentModel&gt; allComments = <span style="color:#66d9ef">new</span> List&lt;CommentModel&gt;();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">foreach</span> (<span style="color:#66d9ef">var</span> post <span style="color:#66d9ef">in</span> posts)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (post.CommentList != <span style="color:#66d9ef">null</span> &amp;&amp; post.CommentList.Any())
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        allComments.AddRange(post.CommentList);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> allComments;
+</span></span></code></pre></div><p>❗1. <strong>传输的数据体积大</strong></p>
+<ul>
+<li><code>ToListAsync()</code> 会把<strong>整条文档加载进内存</strong>，包括帖子内容、标题、标签、图片等一堆无关字段</li>
+<li>比如每个帖子 1MB，1000 个帖子就是 1GB 网络传输量，哪怕你只要其中的评论</li>
+</ul>
+<p>❗2. <strong>内存占用高</strong></p>
+<ul>
+<li>所有数据都拉进内存，哪怕你只关心里面一小块数据（比如 <code>CommentList</code>）</li>
+<li>对于大集合、高并发服务，这会造成严重的资源消耗</li>
+</ul>
+<p>❗3. <strong>处理逻辑写在代码层，效率低</strong></p>
+<ul>
+<li>你要在 C# 层手动拆解、遍历、组合这些数据，相当于自己在模拟数据库的工作，性能远不如数据库原生操作</li>
+</ul>
+<h3 id="12-聚合查询">1.2. 聚合查询<a href="#12-聚合查询" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c#" data-lang="c#"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> pipeline = <span style="color:#66d9ef">new</span> BsonDocument[]
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 第一步：展开 CommentList 数组</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 对每个 Post 文档，将 CommentList 中的每条评论都“拆开”，每条评论单独形成一条文档</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">new</span> BsonDocument(<span style="color:#e6db74">&#34;$unwind&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">new</span> BsonDocument(<span style="color:#e6db74">&#34;path&#34;</span>, <span style="color:#e6db74">&#34;$CommentList&#34;</span>)
+</span></span><span style="display:flex;"><span>            .Add(<span style="color:#e6db74">&#34;preserveNullAndEmptyArrays&#34;</span>, <span style="color:#66d9ef">false</span>)), <span style="color:#75715e">// 如果 CommentList 是 null 或空数组，则跳过该文档</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 第二步：投影出我们感兴趣的字段</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 我们只要评论内容，把它包装成 &#34;comment&#34; 字段，同时去掉 _id</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">new</span> BsonDocument(<span style="color:#e6db74">&#34;$project&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">new</span> BsonDocument(<span style="color:#e6db74">&#34;_id&#34;</span>, <span style="color:#ae81ff">0</span>) <span style="color:#75715e">// 不要 MongoDB 的 ObjectId 字段</span>
+</span></span><span style="display:flex;"><span>            .Add(<span style="color:#e6db74">&#34;comment&#34;</span>, <span style="color:#e6db74">&#34;$CommentList&#34;</span>)), <span style="color:#75715e">// 把 CommentList 的当前项命名为 comment</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 第三步：把 comment 作为根节点</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 把整条文档替换为 comment 字段的内容，相当于去掉了外层包裹</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">new</span> BsonDocument(<span style="color:#e6db74">&#34;$replaceRoot&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">new</span> BsonDocument(<span style="color:#e6db74">&#34;newRoot&#34;</span>, <span style="color:#e6db74">&#34;$comment&#34;</span>))
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 执行聚合管道，最终返回的是一组 CommentModel 类型的列表</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> comments = <span style="color:#66d9ef">await</span> _postModel.Aggregate&lt;CommentModel&gt;(pipeline).ToListAsync();
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> comments;
+</span></span></code></pre></div><p>✅1. <strong>只取需要的数据</strong></p>
+<ul>
+<li>聚合管道中用 <code>$project</code> 和 <code>$replaceRoot</code> 精确过滤出「你想要的字段」，减少网络负担</li>
+</ul>
+<p>✅2. <strong>由数据库高效处理数据结构</strong></p>
+<ul>
+<li>MongoDB 内部做展开、映射、过滤，使用原生的 C++ 引擎，速度远远快于 C# 遍历</li>
+</ul>
+<p>✅3. <strong>节省内存与计算资源</strong></p>
+<ul>
+<li>不需要把整条大文档拉进来，只需要从 MongoDB 拿你想要的部分，C# 层代码也变得非常轻量</li>
+</ul>
+<p>✅4. <strong>可以在聚合中做更复杂操作</strong></p>
+<ul>
+<li>想做排序、过滤、分页等操作？聚合支持 <code>$match</code>、<code>$sort</code>、<code>$limit</code>，让数据库帮你完成这些逻辑</li>
+</ul>
+<h2 id="2-unwind-project-replaceroot">2. <code>unwind</code>, <code>project</code>, <code>replaceRoot</code><a href="#2-unwind-project-replaceroot" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>在上面的聚合管道中, 我们用了:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">$unwind</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;$CommentList&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">$project</span><span style="color:#f92672">:</span> { <span style="color:#a6e22e">comment</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;$CommentList&#34;</span> }
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">$replaceRoot</span><span style="color:#f92672">:</span> { <span style="color:#a6e22e">newRoot</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;$comment&#34;</span> }
+</span></span></code></pre></div><p>MongoDB 会把每个评论都<strong>单独展开成一条结果文档</strong>，像这样：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>[
+</span></span><span style="display:flex;"><span>  { <span style="color:#e6db74">&#34;Author&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;小明&#34;</span>, <span style="color:#e6db74">&#34;Content&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;写得不错&#34;</span>, <span style="color:#e6db74">&#34;CreatedAt&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;...&#34;</span> },
+</span></span><span style="display:flex;"><span>  { <span style="color:#e6db74">&#34;Author&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;小红&#34;</span>, <span style="color:#e6db74">&#34;Content&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;顶一个&#34;</span>, <span style="color:#e6db74">&#34;CreatedAt&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;...&#34;</span> },
+</span></span><span style="display:flex;"><span>  ...
+</span></span><span style="display:flex;"><span>]
+</span></span></code></pre></div><p>每条结果就是一个纯粹的 <code>CommentModel</code>，所以：聚合后返回的每一条记录是一个 <code>CommentModel</code> 实例，组成的整体就是一个 <code>List&lt;CommentModel&gt;</code></p>
+<p>假设有一个帖子集合 <code>posts</code>，每条文档结构如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;_id&#34;</span>: <span style="color:#e6db74">&#34;post1&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;MongoDB 聚合示例&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;CommentList&#34;</span>: [
+</span></span><span style="display:flex;"><span>    { <span style="color:#f92672">&#34;Author&#34;</span>: <span style="color:#e6db74">&#34;Alice&#34;</span>, <span style="color:#f92672">&#34;Content&#34;</span>: <span style="color:#e6db74">&#34;Nice post!&#34;</span> },
+</span></span><span style="display:flex;"><span>    { <span style="color:#f92672">&#34;Author&#34;</span>: <span style="color:#e6db74">&#34;Bob&#34;</span>, <span style="color:#f92672">&#34;Content&#34;</span>: <span style="color:#e6db74">&#34;I agree!&#34;</span> }
+</span></span><span style="display:flex;"><span>  ]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>我们目标是：从整个 posts 集合中，<strong>提取出每一条独立的评论（CommentModel）</strong>，不带其他字段</p>
+<h3 id="21-第一步-unwind--展开数组字段">2.1. 第一步 <code>$unwind</code> —— <strong>展开数组字段</strong><a href="#21-第一步-unwind--展开数组字段" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>✅ 语法：</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{ <span style="color:#f92672">&#34;$unwind&#34;</span>: { <span style="color:#f92672">&#34;path&#34;</span>: <span style="color:#e6db74">&#34;$CommentList&#34;</span>, <span style="color:#f92672">&#34;preserveNullAndEmptyArrays&#34;</span>: <span style="color:#66d9ef">false</span> } }
+</span></span></code></pre></div><p><strong>✅ 参数解释：</strong></p>
+<ul>
+<li><code>path</code>: 要展开的数组字段，<strong>必须是数组</strong>（这里是 <code>CommentList</code>）</li>
+<li><code>preserveNullAndEmptyArrays</code>: 是否保留空数组或不存在该字段的文档
+<ul>
+<li><code>false</code> 表示不保留（只处理有评论的文档）</li>
+</ul>
+</li>
+</ul>
+<p><strong>✅ 效果：</strong></p>
+<p>这一步的作用是：</p>
+<blockquote>
+<p>如果一个文档中的 <code>CommentList</code> 是一个数组, 它会<strong>把数组里的每个元素拆分为一条新的文档</strong></p>
+</blockquote>
+<p>🔁 原始数据：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;_id&#34;</span>: <span style="color:#e6db74">&#34;post1&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;CommentList&#34;</span>: [
+</span></span><span style="display:flex;"><span>    { <span style="color:#f92672">&#34;Author&#34;</span>: <span style="color:#e6db74">&#34;Alice&#34;</span>, <span style="color:#f92672">&#34;Content&#34;</span>: <span style="color:#e6db74">&#34;Nice post!&#34;</span> },
+</span></span><span style="display:flex;"><span>    { <span style="color:#f92672">&#34;Author&#34;</span>: <span style="color:#e6db74">&#34;Bob&#34;</span>, <span style="color:#f92672">&#34;Content&#34;</span>: <span style="color:#e6db74">&#34;I agree!&#34;</span> }
+</span></span><span style="display:flex;"><span>  ]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>📤 经过 <code>$unwind</code> 后变成两条记录：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;_id&#34;</span>: <span style="color:#e6db74">&#34;post1&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;CommentList&#34;</span>: { <span style="color:#f92672">&#34;Author&#34;</span>: <span style="color:#e6db74">&#34;Alice&#34;</span>, <span style="color:#f92672">&#34;Content&#34;</span>: <span style="color:#e6db74">&#34;Nice post!&#34;</span> }
+</span></span><span style="display:flex;"><span>}<span style="color:#960050;background-color:#1e0010">,</span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;_id&#34;</span>: <span style="color:#e6db74">&#34;post1&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;CommentList&#34;</span>: { <span style="color:#f92672">&#34;Author&#34;</span>: <span style="color:#e6db74">&#34;Bob&#34;</span>, <span style="color:#f92672">&#34;Content&#34;</span>: <span style="color:#e6db74">&#34;I agree!&#34;</span> }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>每条结果都只包含<strong>一个评论对象</strong>在 <code>CommentList</code> 字段中（已经不是数组了）</p>
+<h3 id="22-第二步-project--保留我们关心的字段并重新命名">2.2. 第二步 <code>$project</code> —— <strong>保留我们关心的字段，并重新命名</strong><a href="#22-第二步-project--保留我们关心的字段并重新命名" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>✅ 语法：</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{ <span style="color:#f92672">&#34;$project&#34;</span>: { <span style="color:#f92672">&#34;_id&#34;</span>: <span style="color:#ae81ff">0</span>, <span style="color:#f92672">&#34;comment&#34;</span>: <span style="color:#e6db74">&#34;$CommentList&#34;</span> } }
+</span></span></code></pre></div><p><strong>✅ 参数解释：</strong></p>
+<ul>
+<li>
+<p><code>_id: 0</code>：不显示 MongoDB 默认的 <code>_id</code> 字段</p>
+</li>
+<li>
+<p><code>&quot;comment&quot;: &quot;$CommentList&quot;</code>：把 <code>CommentList</code> 字段的内容赋值给一个新字段 <code>comment</code></p>
+</li>
+</ul>
+<p><strong>🔁 上一步输出：</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;_id&#34;</span>: <span style="color:#e6db74">&#34;post1&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;CommentList&#34;</span>: { <span style="color:#f92672">&#34;Author&#34;</span>: <span style="color:#e6db74">&#34;Alice&#34;</span>, <span style="color:#f92672">&#34;Content&#34;</span>: <span style="color:#e6db74">&#34;Nice post!&#34;</span> }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>📤 变成：</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;comment&#34;</span>: { <span style="color:#f92672">&#34;Author&#34;</span>: <span style="color:#e6db74">&#34;Alice&#34;</span>, <span style="color:#f92672">&#34;Content&#34;</span>: <span style="color:#e6db74">&#34;Nice post!&#34;</span> }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>💡 我们只保留了评论这部分数据，字段名变成了 <code>comment</code>，<strong>更好处理下一步的结构变换</strong></p>
+<h3 id="23-第三步-replaceroot--让-comment-成为新文档的根部">2.3. 第三步 <code>$replaceRoot</code> —— <strong>让 comment 成为新文档的根部</strong><a href="#23-第三步-replaceroot--让-comment-成为新文档的根部" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>✅ 语法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{ <span style="color:#f92672">&#34;$replaceRoot&#34;</span>: { <span style="color:#f92672">&#34;newRoot&#34;</span>: <span style="color:#e6db74">&#34;$comment&#34;</span> } }
+</span></span></code></pre></div><p><strong>✅ 参数解释</strong></p>
+<ul>
+<li><code>newRoot</code>: 用哪个字段的值<strong>替换掉当前文档的根</strong></li>
+</ul>
+<p><strong>🔁 上一步输出：</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;comment&#34;</span>: { <span style="color:#f92672">&#34;Author&#34;</span>: <span style="color:#e6db74">&#34;Alice&#34;</span>, <span style="color:#f92672">&#34;Content&#34;</span>: <span style="color:#e6db74">&#34;Nice post!&#34;</span> }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>📤 变成：</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;Author&#34;</span>: <span style="color:#e6db74">&#34;Alice&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;Content&#34;</span>: <span style="color:#e6db74">&#34;Nice post!&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>💡 <code>comment</code> 字段里的内容被<strong>提取成了顶层字段</strong>，正是你最终想要的结构：一个干净的 <code>CommentModel</code></p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+    
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/vue/003-template%E8%AF%AD%E6%B3%95/" class="button inline next">
+        Vue Template 语法
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

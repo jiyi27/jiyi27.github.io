@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Python 虚拟环境 Conda Venv :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 为什么需要虚拟环境 在工作时通常会接触到不同的工程项目, 而每个项目可能会使用到不同的 Python 版本, 比如项目 A 使用 Python 2.X, 项目 B 使用 Python 3.10, 有的又使用 Python 3.7, 这些并不是根本原因, 主要原因是 Python 生态系统中的库通常对 Python 版本有严格要求, 新库利用新特性, 要求最低 Python 版本, 旧库未更新, 可能不支持新版 Python, 所以我们无法直接用一个最新的版本来充当万用表:
+3.6 → 3.7: 依赖字典非有序性的代码可能失效 3.7 → 3.8: async 和 ⁠await 成为关键字, 使用这些作为变量名的代码会失败 在这种场景之下, 只有一个唯一的全局解释器仅仅只能满足其中一个项目的需要, 所以就需要一种机制可以让我们随时创建或删除不同的 Python 解释器, 于是虚拟环境（Virtual environment）也就应运而生, 使用虚拟环境的好处在于:
+同一机器上并行使用不同 Python 版本 不同项目可使用同一库的不同版本而不冲突, 防止&quot;依赖地狱&quot; 避免全局安装导致的复杂依赖关系问题 2. 常见创建虚拟环境的工具 2.1. venv venv 是 Python 内置的一个模块, 也就是说我们可以直接使用 python 解释器去创建, 不用特意安装:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/python/basics/001-virtual-environment/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Python 虚拟环境 Conda Venv">
+<meta property="og:description" content="1. 为什么需要虚拟环境 在工作时通常会接触到不同的工程项目, 而每个项目可能会使用到不同的 Python 版本, 比如项目 A 使用 Python 2.X, 项目 B 使用 Python 3.10, 有的又使用 Python 3.7, 这些并不是根本原因, 主要原因是 Python 生态系统中的库通常对 Python 版本有严格要求, 新库利用新特性, 要求最低 Python 版本, 旧库未更新, 可能不支持新版 Python, 所以我们无法直接用一个最新的版本来充当万用表:
+3.6 → 3.7: 依赖字典非有序性的代码可能失效 3.7 → 3.8: async 和 ⁠await 成为关键字, 使用这些作为变量名的代码会失败 在这种场景之下, 只有一个唯一的全局解释器仅仅只能满足其中一个项目的需要, 所以就需要一种机制可以让我们随时创建或删除不同的 Python 解释器, 于是虚拟环境（Virtual environment）也就应运而生, 使用虚拟环境的好处在于:
+同一机器上并行使用不同 Python 版本 不同项目可使用同一库的不同版本而不冲突, 防止&quot;依赖地狱&quot; 避免全局安装导致的复杂依赖关系问题 2. 常见创建虚拟环境的工具 2.1. venv venv 是 Python 内置的一个模块, 也就是说我们可以直接使用 python 解释器去创建, 不用特意安装:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/python/basics/001-virtual-environment/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="python" />
+
+
+  <meta property="article:published_time" content="2023-11-09 19:12:40 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/python/basics/001-virtual-environment/">Python 虚拟环境 Conda Venv</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-11-09</time><span class="post-reading-time">3 分钟阅读 (597 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/python/">python</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-为什么需要虚拟环境">1. 为什么需要虚拟环境<a href="#1-为什么需要虚拟环境" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>在工作时通常会接触到不同的工程项目, 而每个项目可能会使用到不同的 Python 版本, 比如项目 A 使用 Python 2.X, 项目 B 使用 Python 3.10, 有的又使用 Python 3.7, 这些并不是根本原因, 主要原因是 Python 生态系统中的库通常对 Python 版本有严格要求, 新库利用新特性, 要求最低 Python 版本, 旧库未更新, 可能不支持新版 Python, 所以我们无法直接用一个最新的版本来充当万用表:</p>
+<ul>
+<li>3.6 → 3.7: 依赖字典非有序性的代码可能失效</li>
+<li>3.7 → 3.8: <code>async</code> 和 ⁠<code>await</code> 成为关键字, 使用这些作为变量名的代码会失败</li>
+</ul>
+<p>在这种场景之下, 只有一个唯一的全局解释器仅仅只能满足其中一个项目的需要, 所以就需要一种机制可以让我们随时创建或删除不同的 Python 解释器, 于是虚拟环境（Virtual environment）也就应运而生, 使用虚拟环境的好处在于:</p>
+<ul>
+<li>同一机器上并行使用不同 Python 版本</li>
+<li>不同项目可使用同一库的不同版本而不冲突, 防止&quot;依赖地狱&quot; 避免全局安装导致的复杂依赖关系问题</li>
+</ul>
+<h2 id="2-常见创建虚拟环境的工具">2. 常见创建虚拟环境的工具<a href="#2-常见创建虚拟环境的工具" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="21-venv">2.1. venv<a href="#21-venv" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><code>venv</code> 是 Python 内置的一个模块, 也就是说我们可以直接使用 python 解释器去创建, 不用特意安装:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ python3 -m venv .skymates_env
+</span></span><span style="display:flex;"><span>$ source .skymates_env/bin/activate
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 可以看到使用的是虚拟环境里的 python 解释器 和 pip</span>
+</span></span><span style="display:flex;"><span>$ which python
+</span></span><span style="display:flex;"><span>/Users/David/Downloads/aaa/.skymates_env/bin/python
+</span></span><span style="display:flex;"><span>$ which pip
+</span></span><span style="display:flex;"><span>/Users/David/Downloads/aaa/.skymates_env/bin/pip
+</span></span><span style="display:flex;"><span>$ python --version
+</span></span><span style="display:flex;"><span>Python 3.10.0
+</span></span></code></pre></div><blockquote>
+<ul>
+<li>
+<p>虚拟环境目录名前面的 <code>.</code> 是个习惯, 因为它与项目无关, 我们选择隐藏它, 就像 <code>.git</code> 文件夹, 你也可以不加前面的 <code>.</code></p>
+</li>
+<li>
+<p><code>-m</code>: run library module as a script</p>
+</li>
+<li>
+<p>使用 <code>venv</code> 有个不方便的地方就是对于 python 版本的控制, 我们环境的版本是由 <code>python3 -m venv .skymates_env</code> 中 执行此命令的 解释器版本决定的, 如果想换个不同解释器版本, 就要使用不同的解释器来执行, 比如: <code>/usr/bin/python3.12  -m venv .skymates_env</code>, 使用  <code>venv</code> 的主要目的就是方便创建一个隔离的环境, 隔离不同项目的依赖</p>
+</li>
+</ul>
+</blockquote>
+<h3 id="22-conda">2.2. conda<a href="#22-conda" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>相信有相当一大部分比例的已经事先学习过 Python 的新手, 又或是如果从事数据分析、机器学习等数据科学相关工作的人, 在学习或使用过程会经常接触到一个名为 <a href="https://sspai.com/link?target=https%3A%2F%2Fwww.anaconda.com%2F">Anaconda</a> 的 Python 发行版本, 在 Anaconda 中不仅内置了一个 Python 解释器, 同时还内置了许多常用的数据科学软件包或工具, 但 Anaconda 为人所诟病的地方也在于它内置了太多东西，其中的大多数又用不到，导致最终体积较大, 当然 Anaconda 还有另外一个精简版 <a href="https://sspai.com/link?target=https%3A%2F%2Fdocs.conda.io%2Fen%2Flatest%2Fminiconda.html">Miniconda</a>，它只包含了少量的一些依赖库或包，有效减轻了电脑磁盘的负担,</p>
+<p><code>venv</code> 需要手动指定 Python 版本（如 <code>python3.9 -m venv env</code>），而 <code>conda</code> 可以在创建环境时直接指定 Python 版本:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ conda create --name my_env python<span style="color:#f92672">=</span>3.10
+</span></span></code></pre></div><p>Conda 最大的一个优势就是它除了能安装 Python 依赖库或包之外, 还能安装其他语言的一些依赖（比如 R 语言）, 同时像 <a href="https://sspai.com/link?target=https%3A%2F%2Ftensorflow.google.cn%2F">Tensorflow</a>、<a href="https://sspai.com/link?target=https%3A%2F%2Fpytorch.org%2F">Pytorch</a> 这种业内常见的深度学习框架，往往会存在由 C/C++ 语言编写的部分，这些部分在安装时需要预先编译，而使用 Conda 安装时会自动连同已经事先编译好的二进制部分一起安装到虚拟环境中，<strong>避免了因操作系统不同而导致的编译问题</strong>,</p>
+<p>不像 <code>pip</code> 或 <code>virtualenv</code> 这样的工具我们能够单独安装, 要使用 Conda 我们通常会捆绑使用 Anaconda 或者 Miniconda, 直接根据自己的需求去官网下载安装就好了,</p>
+<p>使用 Conda 创建虚拟环境:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ conda create --name my_env python<span style="color:#f92672">=</span>3.9
+</span></span></code></pre></div><p>然后激活虚拟环境时只需要通过同样的 <code>active</code> 命令来操作即可:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ conda active myenv
+</span></span></code></pre></div><p>我们也可以将 Conda 作为 <code>pip</code> 工具来安装依赖:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ conda install pandas seaborn
+</span></span></code></pre></div><blockquote>
+<p>在使用 Conda 时, 建议不要混用 conda install 和 pip install 来安装 Python 的依赖包, 因为 Python 解释器自带 pip 工具，而 Conda 也有自己的包管理机制，二者虽然都能安装依赖，但管理方式和环境隔离的实现有所不同，混用可能会导致依赖冲突或环境不一致的问题, Conda 官方建议优先使用 conda install, 如果 Conda 无法满足需求, 再使用 pip install, 但要确保在 Conda 安装所有基础依赖后再用 pip</p>
+</blockquote>
+<h3 id="23-uv">2.3. uv<a href="#23-uv" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>pip</strong>:</p>
+<ul>
+<li>核心功能是安装、卸载和升级 Python 包</li>
+<li>本身不管理虚拟环境, 需配合 venv 或 virtualenv 使用, 使用时需要手动激活虚拟环境, 流程稍显繁琐</li>
+<li>依赖解析有时会出错, 尤其在依赖冲突时, 错误信息不够友好</li>
+<li>主要依赖 requirements.txt 文件，格式简单，但功能有限</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>python -m venv .venv
+</span></span><span style="display:flex;"><span>source .venv/bin/activate
+</span></span><span style="display:flex;"><span>pip install -r requirements.txt
+</span></span><span style="display:flex;"><span>python script.py
+</span></span></code></pre></div><p><strong>uv</strong>:</p>
+<ul>
+<li><strong>包管理</strong>：类似 pip，支持安装、卸载、升级包</li>
+<li><strong>虚拟环境</strong>：内置虚拟环境管理, 安装包时自动创建并使用虚拟环境, 无需手动激活, 无需单独使用 venv 或 virtualenv</li>
+<li><strong>脚本运行</strong>：可以直接运行 Python 脚本或命令（如 uv run）</li>
+<li>支持 requirements.txt，但更推荐使用锁文件和 pyproject.toml</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ uv sync  <span style="color:#75715e"># 自动创建虚拟环境并安装依赖</span>
+</span></span><span style="display:flex;"><span>$ uv run script.py  <span style="color:#75715e"># 自动使用虚拟环境</span>
+</span></span></code></pre></div><p>上面是使用别人的项目, 如果是从零创建项目:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e"># Create a new directory for our project</span>
+</span></span><span style="display:flex;"><span>uv init weather
+</span></span><span style="display:flex;"><span>cd weather
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Create virtual environment and activate it</span>
+</span></span><span style="display:flex;"><span>uv venv
+</span></span><span style="display:flex;"><span>source .venv/bin/activate
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Install dependencies</span>
+</span></span><span style="display:flex;"><span>uv add <span style="color:#e6db74">&#34;mcp[cli]&#34;</span> httpx
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Create our server file</span>
+</span></span><span style="display:flex;"><span>touch weather.py
+</span></span></code></pre></div><h2 id="3-conda-管理机制">3. Conda 管理机制<a href="#3-conda-管理机制" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-虚拟环境存储位置">3.1. 虚拟环境存储位置<a href="#31-虚拟环境存储位置" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>我们知道使用 <code>venv</code> 创建虚拟环境时, 比如 <code>python3 -m venv .skymates_env</code>, 会在项目根目录创建一个虚拟环境目录, 之后我们通过 <code>pip install</code> 安装的依赖都是安装到 <code>.skymates_env</code> 目录下的, 而 <code>conda</code> 会<strong>将环境创建在全局的 envs 目录下</strong>（默认在 ~/anaconda3/envs/ 或 Miniconda 安装路径下），而不是项目根目录</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ conda env list
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># conda environments:</span>
+</span></span><span style="display:flex;"><span>base                   /opt/miniconda3
+</span></span><span style="display:flex;"><span>my_project_env         /opt/miniconda3/envs/my_project_env
+</span></span><span style="display:flex;"><span>travel_ai_env          /opt/miniconda3/envs/travel_ai_env
+</span></span></code></pre></div><p><code>my_project_env</code> 是 Conda 环境的名称, 用于方便管理环境, 当你运行 <code>conda activate my_project_env</code> 时, Conda 知道要切换到 <code>/opt/miniconda3/envs/my_project_env</code>, 这个文件夹是 Conda 环境在文件系统中的实际存储位置, 里面包含了 Python 解释器、所有安装的包和环境变量,</p>
+<h3 id="32-依赖管理">3.2. 依赖管理<a href="#32-依赖管理" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ conda env export &gt; environment.yml
+</span></span><span style="display:flex;"><span>$ conda env create -f environment.yml
+</span></span></code></pre></div><p>将当前 Conda 环境的完整配置（包括所有安装的包及其版本）导出到一个名为 <code>environment.yml</code> 的文件中, 用来记录当前环境的完整状态, 方便在其他机器上或将来重新创建相同的环境</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">name</span>: <span style="color:#ae81ff">myenv</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">channels</span>:
+</span></span><span style="display:flex;"><span>  - <span style="color:#ae81ff">conda-forge</span>
+</span></span><span style="display:flex;"><span>  - <span style="color:#ae81ff">defaults</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">dependencies</span>:
+</span></span><span style="display:flex;"><span>  - <span style="color:#ae81ff">python=3.9</span>
+</span></span><span style="display:flex;"><span>  - <span style="color:#ae81ff">numpy=1.21.2</span>
+</span></span><span style="display:flex;"><span>  - <span style="color:#ae81ff">pandas=1.3.4</span>
+</span></span></code></pre></div><blockquote>
+<p><strong>还有必要使用 requirements.txt 吗？</strong></p>
+<p><code>requirements.txt</code> 是 Python 生态中更传统的依赖管理方式, 通常与 <code>pip</code> 配合使用, 如果你完全依赖 Conda, <code>environment.yml</code> 已经足够, 通常不需要额外的 <code>requirements.txt</code></p>
+<ul>
+<li>environment.yml: 记录整个 Conda 环境的配置, 包括 Python 版本、非 Python 依赖（如 numpy 的底层库）和渠道信息</li>
+<li>equirements.txt: 只记录 Python 包及其版本, 通常不包括非 Python 依赖或渠道信息</li>
+</ul>
+</blockquote>
+<h3 id="33-常用命令">3.3. 常用命令<a href="#33-常用命令" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>创建虚拟环境:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ conda create -n ENV_NAME python<span style="color:#f92672">=</span>3.9
+</span></span></code></pre></div><blockquote>
+<p>Conda 会先检查你的系统中是否已经存在 Python 3.9（比如在 base 环境或其他地方）, 如果没有, Conda 会尝试从默认的包仓库下载 Python 3.9 的安装包, 下载完成后，Conda 会在新环境（ENV_NAME）中安装 Python 3.9, 这个 Python 解释器是独立的, 位于 <code>/path/to/anaconda3/envs/ENV_NAME/bin/python</code>, 不会影响系统中的其他 Python 版本</p>
+</blockquote>
+<p>激活虚拟环境:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ conda activate env_name
+</span></span></code></pre></div><blockquote>
+<p>我们使用 conda activate env_name  激活一个虚拟环境,  我们怎么把这个环境绑定到一个项目上呢, 比如我在项目 A 目录下启动了 环境 env1, 此时切换到另一个项目目录下, 会发生什么?</p>
+<p>在使用 Conda 的虚拟环境时, conda activate ENV_NAME 的作用是将你的终端切换到指定的虚拟环境（例如 env1）, 从而让这个环境中的 Python 解释器、依赖包和其他工具成为当前活跃的配置, 也就是说, 只要你在这个终端中，env1 就会一直生效，无论你切换到哪个目录</p>
+</blockquote>
+<p>列出当前环境中的所有包:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ conda list
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>conda deactivate
+</span></span><span style="display:flex;"><span>conda env remove -n ENV_NAME
+</span></span><span style="display:flex;"><span>conda install PACKAGE_NAME
+</span></span><span style="display:flex;"><span>conda install PACKAGE_NAME<span style="color:#f92672">=</span>VERSION
+</span></span><span style="display:flex;"><span>conda update PACKAGE_NAME <span style="color:#75715e"># 更新包</span>
+</span></span><span style="display:flex;"><span>conda update --all <span style="color:#75715e"># 更新所有包</span>
+</span></span><span style="display:flex;"><span>conda remove PACKAGE_NAME
+</span></span><span style="display:flex;"><span>conda clean --all <span style="color:#75715e"># 清理未使用的包和缓存</span>
+</span></span></code></pre></div>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/build-website/008-cloudflare-cdn/" class="button inline prev">
+        Get Free TLS certificate with Cloudflare
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/other/001-my-mac-config/" class="button inline next">
+        我的 Mac 常用配置
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Property Wrappers - SwiftUI :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. @State 1.1. Basic Concepts @State is a property wrapper struct that just wraps any value to make sure your view will refresh or redraw whenever that value changes. References: https://stackoverflow.com/a/59616812/16317008
+Always declare state as private, and place it in the highest view in the view hierarchy that needs access to the value. Learn more: https://stackoverflow.com/a/72946113/16317008
+@State 修饰的变量声明的时候要初始化, 因为 @State 一般都会被 private 修饰, 在外部通过 init() 初始化会报错, 而 @Binding 修饰的变量声明时不应该有值, 因为它要接受外部的 binding 值, 以便可以修改, 正如文档所表述: A binding connects a property to a source of truth stored elsewhere, instead of storing data directly.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/ios/swiftui/002-property-wrappers/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Property Wrappers - SwiftUI">
+<meta property="og:description" content="1. @State 1.1. Basic Concepts @State is a property wrapper struct that just wraps any value to make sure your view will refresh or redraw whenever that value changes. References: https://stackoverflow.com/a/59616812/16317008
+Always declare state as private, and place it in the highest view in the view hierarchy that needs access to the value. Learn more: https://stackoverflow.com/a/72946113/16317008
+@State 修饰的变量声明的时候要初始化, 因为 @State 一般都会被 private 修饰, 在外部通过 init() 初始化会报错, 而 @Binding 修饰的变量声明时不应该有值, 因为它要接受外部的 binding 值, 以便可以修改, 正如文档所表述: A binding connects a property to a source of truth stored elsewhere, instead of storing data directly.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/ios/swiftui/002-property-wrappers/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="ios" />
+
+
+  <meta property="article:published_time" content="2024-06-02 16:32:10 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/ios/swiftui/002-property-wrappers/">Property Wrappers - SwiftUI</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2024-06-02</time><span class="post-reading-time">3 分钟阅读 (608 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/ios/">ios</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/swiftui/">swiftui</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-state">1. @State<a href="#1-state" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="11-basic-concepts">1.1. Basic Concepts<a href="#11-basic-concepts" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><code>@State</code> is a property wrapper struct that just wraps any value to make sure your view will refresh or redraw <strong>whenever that value changes</strong>. References: <a href="https://stackoverflow.com/a/59616812/16317008">https://stackoverflow.com/a/59616812/16317008</a></p>
+<p><strong>Always declare state as private,</strong> and place it in the highest view in the view hierarchy that needs access to the value. Learn more: <a href="https://stackoverflow.com/a/72946113/16317008">https://stackoverflow.com/a/72946113/16317008</a></p>
+<p>@State 修饰的变量声明的时候要初始化, 因为 @State 一般都会被 private 修饰, 在外部通过 init() 初始化会报错, 而 @Binding 修饰的变量声明时不应该有值, 因为它要接受外部的 binding 值, 以便可以修改, 正如<a href="https://arc.net/l/quote/itwvjdmw">文档</a>所表述: A binding connects a property to a source of truth stored elsewhere, instead of storing data directly.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span>@State <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> isPlaying: Bool = <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>@State <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> itemList = [
+</span></span><span style="display:flex;"><span>        Item(name: <span style="color:#e6db74">&#34;Apple&#34;</span>, count: <span style="color:#ae81ff">1</span>),
+</span></span><span style="display:flex;"><span>        Item(name: <span style="color:#e6db74">&#34;Banana&#34;</span>, count: <span style="color:#ae81ff">2</span>),
+</span></span><span style="display:flex;"><span>        Item(name: <span style="color:#e6db74">&#34;Cherry&#34;</span>, count: <span style="color:#ae81ff">3</span>)
+</span></span><span style="display:flex;"><span>    ]
+</span></span><span style="display:flex;"><span>@Binding <span style="color:#66d9ef">var</span> isPlaying: Bool 
+</span></span></code></pre></div><blockquote>
+<p>@State 既可以修饰单个值也可以修饰数组, 若想监控数组里元素的属性变化更新页面, 则元素的类型必须是 <code>@Observable</code></p>
+</blockquote>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/07/4d2c6bbeba01837b4aba7998f8a1458e.jpg" alt=""></p>
+<h3 id="12-step-further">1.2. Step Further<a href="#12-step-further" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>看到<a href="https://onevcat.com/2021/01/swiftui-state/">一篇文章</a>可以帮助理解State: 在 SwiftUI 中, 我们使用 <code>@State</code> 进行私有状态管理，并驱动 <code>View</code> 的显示，下面的 <code>ContentView</code> 将在点击加号按钮时将显示的数字 +1：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">ContentView</span>: View {
+</span></span><span style="display:flex;"><span>    @State <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> value = <span style="color:#ae81ff">99</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> body: some View {
+</span></span><span style="display:flex;"><span>        VStack(alignment: .leading) {
+</span></span><span style="display:flex;"><span>            Text(<span style="color:#e6db74">&#34;Number: </span><span style="color:#e6db74">\(</span>value<span style="color:#e6db74">)</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>            Button(<span style="color:#e6db74">&#34;+&#34;</span>) { value <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span> }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>当我们想要将这个状态值传递给下层子 View 的时候，直接在子 View 中声明一个变量就可以了:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">DetailView</span>: View {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> number: Int
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> body: some View {
+</span></span><span style="display:flex;"><span>        Text(<span style="color:#e6db74">&#34;Number: </span><span style="color:#e6db74">\(</span>number<span style="color:#e6db74">)</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">ContentView</span>: View {
+</span></span><span style="display:flex;"><span>    @State <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> value = <span style="color:#ae81ff">99</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> body: some View {
+</span></span><span style="display:flex;"><span>        VStack(alignment: .leading) {
+</span></span><span style="display:flex;"><span>            DetailView(number: value)
+</span></span><span style="display:flex;"><span>            Button(<span style="color:#e6db74">&#34;+&#34;</span>) { value <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span> }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在 <code>ContentView</code> 中的 <code>@State value</code> 发生改变时，<em><code>ContentView.body</code> 被重新求值，<code>DetailView</code> 将被重新创建</em>，包含新数字的 <code>Text</code> 被重新渲染。</p>
+<p>另外还有一些想说的, 看下面代码:</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/07/3b1b8f7d3bab518149631f08b510d54c.jpg" alt=""></p>
+<p>每次点击按钮, DetailView 的数字也会变化, 这就意味着每次 ContentView 被重新渲染的时候, 它的子 view 也被重新渲染了, 可是根据<a href="https://arc.net/l/quote/ekwiznyu">官方文档</a>表述: When the @State value changes, SwiftUI updates the parts of the view hierarchy that depend on the value. 可是子 view <code>DetailView</code> 并没有依赖 @State value, 为什么还会被更新呢, 难道说每次 view 更新都会带着更新他的所有子 views? 答案是: 对的, 所以每次我们要把一个View分成好多 subviews, 这样才能更好的控制更新的粒度, 而不是每次更新都全部重建, 了解更多: <a href="https://stackoverflow.com/questions/78635057/why-does-one-child-view-in-swiftui-re-render-on-parent-state-change-but-another">swift - Why does one child view in SwiftUI re-render on parent state change but another doesn&rsquo;t? - Stack Overflow</a></p>
+<blockquote>
+<p>SwiftData 补充: <code>@Model</code> = <code>@Model</code> + <code>@Observable</code>, <code>@Query</code> = <code>@State</code> +  <code>@Query</code></p>
+<p>另外修改 <code>@Query</code> 标记的数组内的元素属性, 框架会自动保存到数据库, 但肯能会延迟, 想要立即生效, 需要使用 context强制立刻保存.</p>
+</blockquote>
+<h3 id="2-published">2. @Published<a href="#2-published" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<blockquote>
+<p>⚠️ The <code>@Observable</code> Macro was first introduced during WWDC 2023 to replace <code>ObservableObject</code> and its <code>@Published</code> parameters. It is now recommended to use the <code>Observable</code> macro to create observable objects. <a href="https://www.youtube.com/watch?v=EK7SthdWV2w&amp;t=306s">Click to learn more</a></p>
+</blockquote>
+<p>In practical terms, that means <strong>whenever an object with a property marked</strong> <code>@Published</code> is changed, all views using that object will be reloaded to reflect those changes.</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/06/429b5b2b4d2b2bb43f74563fa5c27715.jpg" alt=""></p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/06/02e6f5fb20d45ebdc1f70a677f0d42f4.jpg" alt=""></p>
+<p>Learn more: <a href="https://www.youtube.com/watch?v=EK7SthdWV2w&amp;t=306s">SwiftUI Data Flow in iOS 17 - Observation &amp; @Observable - YouTube</a></p>
+<p>MVVM: <a href="https://www.youtube.com/watch?v=FwGMU_Grnf8">SwiftUI - Intro to MVVM | Example Refactor | Model View ViewModel</a></p>
+<h3 id="3-binding-vs-bindable">3. @Binding vs @Bindable<a href="#3-binding-vs-bindable" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<blockquote>
+<p>SwiftData: @Bindable 即可将修改数据的数据实时保存到数据库 不用调用 context 其它函数</p>
+</blockquote>
+<p>@Binding 用于创建对<strong>某个值</strong>的引用，允许子视图修改父视图中的状态。它主要用于简单的值类型，如 Bool、Int、String 等。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">ParentView</span>: View {
+</span></span><span style="display:flex;"><span>    @State <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> isOn = <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> body: some View {
+</span></span><span style="display:flex;"><span>        VStack {
+</span></span><span style="display:flex;"><span>            Text(<span style="color:#e6db74">&#34;Switch is </span><span style="color:#e6db74">\(</span>isOn ? <span style="color:#e6db74">&#34;on&#34;</span> : <span style="color:#e6db74">&#34;off&#34;</span><span style="color:#e6db74">)</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>            ChildView(isOn: <span style="color:#960050;background-color:#1e0010">$</span>isOn)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">ChildView</span>: View {
+</span></span><span style="display:flex;"><span>    @Binding <span style="color:#66d9ef">var</span> isOn: Bool
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> body: some View {
+</span></span><span style="display:flex;"><span>        Toggle(<span style="color:#e6db74">&#34;Toggle Switch&#34;</span>, isOn: <span style="color:#960050;background-color:#1e0010">$</span>isOn)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>有时候也可以直接传递引用</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">ContentView</span>: View {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Book 是 class 不是 struct</span>
+</span></span><span style="display:flex;"><span>    @State <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> book = Book()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> body: some View {
+</span></span><span style="display:flex;"><span>        BookCheckoutView(book: book) <span style="color:#75715e">// 直接传递引用给子视图</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">BookCheckoutView</span>: View {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> book: Book
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> body: some View {
+</span></span><span style="display:flex;"><span>        Button(book.isAvailable ? <span style="color:#e6db74">&#34;Check out book&#34;</span> : <span style="color:#e6db74">&#34;Return book&#34;</span>) {
+</span></span><span style="display:flex;"><span>            book.isAvailable.toggle()
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>@Bindable 是在 iOS 17 中引入的，用于处理遵循 Observable 协议的<strong>引用类型对象</strong>。它允许在视图中直接绑定到可观察对象的属性。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span>@Observable <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">UserProfile</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> name: String = <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> age: Int = <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">ProfileView</span>: View {
+</span></span><span style="display:flex;"><span>    @Bindable <span style="color:#66d9ef">var</span> profile: UserProfile
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> body: some View {
+</span></span><span style="display:flex;"><span>        Form {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 绑定 profile 的 name 和 age 属性, 与上面 Book 例子不同, 这里绑定的是对象的属性, 而不是修改</span>
+</span></span><span style="display:flex;"><span>            TextField(<span style="color:#e6db74">&#34;Name&#34;</span>, text: <span style="color:#960050;background-color:#1e0010">$</span>profile.name)
+</span></span><span style="display:flex;"><span>            Stepper(<span style="color:#e6db74">&#34;Age: </span><span style="color:#e6db74">\(</span>profile.age<span style="color:#e6db74">)</span><span style="color:#e6db74">&#34;</span>, value: <span style="color:#960050;background-color:#1e0010">$</span>profile.age)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">ContentView</span>: View {
+</span></span><span style="display:flex;"><span>    @State <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">var</span> userProfile = UserProfile()
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> body: some View {
+</span></span><span style="display:flex;"><span>        ProfileView(profile: userProfile)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>文档说的很详细: <a href="https://developer.apple.com/documentation/swiftui/state">State | Apple Developer Documentation</a></p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/ios/swiftui/006-reuse-views/" class="button inline prev">
+        SwiftUI Views
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/ios/swiftui/003-nuggets-swiftui/" class="button inline next">
+        零碎知识 &#43; 踩坑 - SwiftUI
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

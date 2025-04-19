@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>map - Go :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Basic concepts A map value is a pointer to a runtime.hmap structure, when you write the statement:
+m := make(map[int]int) The compiler replaces it with a call to runtime.makemap, which has the signature
+// makemap implements a Go map creation make(map[k]v, hint) // If the compiler has determined that the map or the first bucket // can be created on the stack, h and/or bucket may be non-nil. // If h != nil, the map can be created directly in h. // If bucket != nil, bucket can be used as the first bucket. func makemap(t *maptype, hint int64, h *hmap, bucket unsafe.Pointer) *hmap func main() { var m map[int]int var p uintptr fmt.Println(unsafe.Sizeof(m), unsafe.Sizeof(p)) // 8 8 (linux/amd64) } ⚠️ Map value just a pointer, therefore, we don&rsquo;t need to pass a pointer to a map for better performance. This is similar to slices, slice just a struct that has a pointer element which pointer to an underlaying array, so we don&rsquo;t need to set a pointer of slice as a paramter. This also applys function&rsquo;s return type.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/basics/003-map/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="map - Go">
+<meta property="og:description" content="1. Basic concepts A map value is a pointer to a runtime.hmap structure, when you write the statement:
+m := make(map[int]int) The compiler replaces it with a call to runtime.makemap, which has the signature
+// makemap implements a Go map creation make(map[k]v, hint) // If the compiler has determined that the map or the first bucket // can be created on the stack, h and/or bucket may be non-nil. // If h != nil, the map can be created directly in h. // If bucket != nil, bucket can be used as the first bucket. func makemap(t *maptype, hint int64, h *hmap, bucket unsafe.Pointer) *hmap func main() { var m map[int]int var p uintptr fmt.Println(unsafe.Sizeof(m), unsafe.Sizeof(p)) // 8 8 (linux/amd64) } ⚠️ Map value just a pointer, therefore, we don&rsquo;t need to pass a pointer to a map for better performance. This is similar to slices, slice just a struct that has a pointer element which pointer to an underlaying array, so we don&rsquo;t need to set a pointer of slice as a paramter. This also applys function&rsquo;s return type.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/basics/003-map/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="golang" />
+
+
+  <meta property="article:published_time" content="2023-12-06 23:43:50 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/basics/003-map/">map - Go</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-12-06</time><span class="post-reading-time">5 分钟阅读 (862 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-basic-concepts">1. Basic concepts<a href="#1-basic-concepts" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>A map value is a pointer to a <code>runtime.hmap</code> structure, when you write the statement:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">m</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">int</span>]<span style="color:#66d9ef">int</span>)
+</span></span></code></pre></div><p>The compiler replaces it with a call to <a href="https://golang.org/src/runtime/hashmap.go#L222"><code>runtime.makemap</code></a>, which has the signature</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// makemap implements a Go map creation make(map[k]v, hint)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// If the compiler has determined that the map or the first bucket</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// can be created on the stack, h and/or bucket may be non-nil.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// If h != nil, the map can be created directly in h.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// If bucket != nil, bucket can be used as the first bucket.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">makemap</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">maptype</span>, <span style="color:#a6e22e">hint</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">h</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">hmap</span>, <span style="color:#a6e22e">bucket</span> <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">hmap</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">m</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">int</span>]<span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">p</span> <span style="color:#66d9ef">uintptr</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Sizeof</span>(<span style="color:#a6e22e">m</span>), <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Sizeof</span>(<span style="color:#a6e22e">p</span>)) <span style="color:#75715e">// 8 8 (linux/amd64)</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<p>⚠️ Map value just a pointer, therefore, we don&rsquo;t need to pass a pointer to a map for better performance. This is similar to slices, slice just a struct that has a pointer element which pointer to an underlaying array, so we don&rsquo;t need to set a pointer of slice as a paramter. This also applys function&rsquo;s return type.</p>
+</blockquote>
+<blockquote>
+<p>Maps, like channels, but <strong>unlike</strong> slices, are just pointers to <code>runtime</code> types. As you saw above, a map is just a pointer to a <code>runtime.hmap</code> structure.</p>
+</blockquote>
+<p>Learn more: <a href="https://dave.cheney.net/tag/maps">maps | Dave Cheney</a></p>
+<h2 id="2-var-vs-make">2. <code>var</code> vs <code>make()</code><a href="#2-var-vs-make" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>In <a href="https://davidzhu.xyz/post/golang/basics/003-array-slice/">previous post</a> we know that you can append a <code>nil</code> slice directly, but this is not the case in a map:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">cats</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// panic: assignment to entry in nil map</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">cats</span>[<span style="color:#e6db74">&#34;Coco&#34;</span>] = <span style="color:#ae81ff">3</span>
+</span></span></code></pre></div><p>Therefore, for map you should use <code>make</code> or <code>map literal</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// They are equivlent</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">cats</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">int</span>{}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">dogs</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">int</span>)
+</span></span></code></pre></div><h2 id="3-commone-usage-of-map">3. Commone usage of map<a href="#3-commone-usage-of-map" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-use-map-as-a-counter">3.1. Use map as a counter<a href="#31-use-map-as-a-counter" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// as a counter</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">counts</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">int</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">name</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">users</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">counts</span>[<span style="color:#a6e22e">name</span>]<span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// check if exist, O(1)</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">ele</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">m</span>[<span style="color:#e6db74">&#34;key&#34;</span>]
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">ok</span> {<span style="color:#f92672">...</span>}
+</span></span></code></pre></div><h3 id="32-copy-map">3.2. Copy map<a href="#32-copy-map" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Find a <a href="https://web.archive.org/web/20171006194258/https://stackoverflow.com/documentation/go/732/maps/9834/copy-a-map#t=20171006194258443316">blog</a> talks copy map, share it here:</p>
+<p>Like slices, maps hold references to an underlying data structure. So by assigning its value to another variable, only the reference will be passed. To copy the map, it is necessary to create another map and copy each value:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Create the original map</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">originalMap</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">int</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">originalMap</span>[<span style="color:#e6db74">&#34;one&#34;</span>] = <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">originalMap</span>[<span style="color:#e6db74">&#34;two&#34;</span>] = <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Create the target map</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">targetMap</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">int</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Copy from the original map to the target map</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">value</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">originalMap</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">targetMap</span>[<span style="color:#a6e22e">key</span>] = <span style="color:#a6e22e">value</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Deep copy a map or slice: <a href="https://shaowenzhu.top/post/golang/basics/014-gob-json-encoding/#24-values-are-flattened">encoding/gob &amp; encoding/json in golang - David&rsquo;s Blog</a></p>
+<h2 id="4-map-in-concurrent-programming">4. Map in concurrent programming<a href="#4-map-in-concurrent-programming" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>First version:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">memoryStore</span>) <span style="color:#a6e22e">monitorExpiredSessions</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>    	<span style="color:#75715e">// detect every seconds</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">memoryMutex</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">sessions</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">memoryMutex</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">k</span>, <span style="color:#a6e22e">info</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">sessions</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">info</span>.<span style="color:#a6e22e">expiresTimestamp</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Unix</span>() {
+</span></span><span style="display:flex;"><span>				delete(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">sessions</span>, <span style="color:#a6e22e">k</span>)
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">memoryMutex</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// in other place will call this method</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">monitorExpiredSessions</span>()
+</span></span></code></pre></div><p>This is not good, as the size of <code>s.sessions grows</code>, the time to iterate through <code>s.sessions</code> will increase, leading to longer lock holding times. We can optimize lock usage, possibly by using more granular locks or lock-free structures.</p>
+<p><strong>Second version:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">memoryStore</span>) <span style="color:#a6e22e">monitorExpiredSessions</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ticker</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">NewTicker</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">ticker</span>.<span style="color:#a6e22e">Stop</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">ticker</span>.<span style="color:#a6e22e">C</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">isEmpty</span>() {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">k</span>, <span style="color:#a6e22e">info</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">sessions</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">info</span>.<span style="color:#a6e22e">expiresTimestamp</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Unix</span>() {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">s</span>.delete(<span style="color:#a6e22e">k</span>)
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">memoryStore</span>) delete(<span style="color:#a6e22e">k</span> <span style="color:#66d9ef">string</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">memoryMutex</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">memoryMutex</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>	delete(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">sessions</span>, <span style="color:#a6e22e">k</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">memoryStore</span>) <span style="color:#a6e22e">isEmpty</span>() <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">memoryMutex</span>.<span style="color:#a6e22e">RLock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">memoryMutex</span>.<span style="color:#a6e22e">RUnlock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> len(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">sessions</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Some problems:</p>
+<ul>
+<li>There is no lock when ranging map <code>s.sessions</code></li>
+<li>You cannot require a RLock or Lock before range, if you do that, the <code>memoryMutex.Lock()</code> residing in <code>s.delete()</code> will block forever. Because you have hold a lock before the loop, which havn&rsquo;t been released yet, and you cannot acquire another lock in the loop.</li>
+</ul>
+<p><strong>Third version:</strong></p>
+<p>I find <a href="https://github.com/gofiber/storage/blob/main/memory/memory.go">fiber memory storage</a> on github which suits my condition provided by a <a href="https://www.reddit.com/r/golang/comments/169cy30/comment/jz18tzh/?utm_source=share&amp;utm_medium=web2x&amp;context=3">gopher</a>.</p>
+<p>I&rsquo;ll share the code here:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Adopted from: https://github.com/gofiber/storage/blob/main/memory/memory.go</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">cookieStore</span>) <span style="color:#a6e22e">gc</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ticker</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">NewTicker</span>(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">gcInterval</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">ticker</span>.<span style="color:#a6e22e">Stop</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">expired</span> []<span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">ticker</span>.<span style="color:#a6e22e">C</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">isEmpty</span>() {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">mutex</span>.<span style="color:#a6e22e">RLock</span>()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">k</span>, <span style="color:#a6e22e">session</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">sessions</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">expiry</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Unix</span>() {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">expired</span> = append(<span style="color:#a6e22e">expired</span>, <span style="color:#a6e22e">k</span>)
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">mutex</span>.<span style="color:#a6e22e">RUnlock</span>()
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">mutex</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// Double-checked locking.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// User might have reset the max age of the session in the meantime.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">expired</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">v</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">sessions</span>[<span style="color:#a6e22e">expired</span>[<span style="color:#a6e22e">i</span>]]
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">v</span>.<span style="color:#a6e22e">expiry</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Unix</span>() {
+</span></span><span style="display:flex;"><span>				delete(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">sessions</span>, <span style="color:#a6e22e">expired</span>[<span style="color:#a6e22e">i</span>])
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">mutex</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">cookieStore</span>) <span style="color:#a6e22e">isEmpty</span>() <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mutex</span>.<span style="color:#a6e22e">RLock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">mutex</span>.<span style="color:#a6e22e">RUnlock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> len(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">sessions</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>When I test this, the codes get panic sometimes:</p>
+<p>At <code>v.expiry &lt;= time.Now().Unix() </code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">v</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">sessions</span>[<span style="color:#a6e22e">expired</span>[<span style="color:#a6e22e">i</span>]]
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">v</span>.<span style="color:#a6e22e">expiry</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Unix</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">panic</span>: <span style="color:#a6e22e">runtime</span> <span style="color:#66d9ef">error</span>: <span style="color:#a6e22e">invalid</span> <span style="color:#a6e22e">memory</span> <span style="color:#a6e22e">address</span> <span style="color:#a6e22e">or</span> <span style="color:#66d9ef">nil</span> <span style="color:#a6e22e">pointer</span> <span style="color:#a6e22e">dereference</span>
+</span></span></code></pre></div><p>This means we get a nil session from <code>s.sessions[expired[i]]</code>, so there is a problem with slice <code>expired</code>, I was thinking if its length is 0, the range still iterate it. Turns out the <code>range</code> won&rsquo;t iterate an empty slice, just do nothing.</p>
+<p>Then I realize that I did&rsquo;t update the slice, woops, we need drop the useless element in last round:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">ticker</span>.<span style="color:#a6e22e">C</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// drop the useless elements.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">expired</span> = <span style="color:#a6e22e">expired</span>[:<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>..
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/golang/basics/001-basics-go/" class="button inline prev">
+        Value, Variable and Types - Go
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/golang/basics/003-array-slice/" class="button inline next">
+        slice &amp; array - Go
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

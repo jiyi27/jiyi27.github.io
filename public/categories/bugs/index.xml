@@ -1,0 +1,843 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Bugs on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/categories/bugs/</link>
+    <description>Recent content in Bugs on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sat, 22 Feb 2025 11:12:22 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/categories/bugs/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Kafka 链接失败</title>
+      <link>https://blog.jiyi27.com/posts/bugs/013-kafka-connection/</link>
+      <pubDate>Sat, 22 Feb 2025 11:12:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/013-kafka-connection/</guid>
+      <description>&lt;p&gt;Spring Boot 应用在尝试连接 Kafka 时，不断抛出连接错误，提示无法连接到 localhost:127.0.0.1:9092 的 Kafka 节点:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;[Consumer clientId=consumer-like-group-1, groupId=like-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;检查 Kafka &lt;code&gt;/opt/homebrew/etc/kafka/server.properties&lt;/code&gt; 配置:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;broker.id=0
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;只有这一行, 然后添加:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;broker.id=0
+listeners=PLAINTEXT://0.0.0.0:9092
+advertised.listeners=PLAINTEXT://localhost:9092
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功解决问题,&lt;/p&gt;
+&lt;p&gt;在 Kafka 中，listeners 与 advertised.listeners 这两个配置项常常是“能否连通”的关键。简单来说：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;listeners：定义 Kafka Broker 实际监听的地址和端口, 告诉 Kafka Broker 监听在哪个接口上接收请求&lt;/li&gt;
+&lt;li&gt;advertised.listeners：Kafka “向外宣传”自己的地址，告诉客户端要用哪个 IP/域名 + 端口来连&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;他们两个什么区别, 为什么都要单独设置, 而不是设置一个相同的值?&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;listeners=PLAINTEXT://0.0.0.0:9092
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;0.0.0.0&lt;/code&gt; 表示监听所有网络接口，意味着 Kafka 允许来自任何 IP 地址的连接, 这样做的好处是，它允许本地机器和远程机器都可以连接到这个 Broker,&lt;/p&gt;
+&lt;p&gt;如果你希望 Kafka 被远程访问，比如生产者和消费者运行在不同的机器上，你应该设置 &lt;code&gt;advertised.listeners&lt;/code&gt; 为你的主机名或外部 IP：&lt;/p&gt;</description>
+      <content>&lt;p&gt;Spring Boot 应用在尝试连接 Kafka 时，不断抛出连接错误，提示无法连接到 localhost:127.0.0.1:9092 的 Kafka 节点:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;[Consumer clientId=consumer-like-group-1, groupId=like-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;检查 Kafka &lt;code&gt;/opt/homebrew/etc/kafka/server.properties&lt;/code&gt; 配置:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;broker.id=0
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;只有这一行, 然后添加:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;broker.id=0
+listeners=PLAINTEXT://0.0.0.0:9092
+advertised.listeners=PLAINTEXT://localhost:9092
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功解决问题,&lt;/p&gt;
+&lt;p&gt;在 Kafka 中，listeners 与 advertised.listeners 这两个配置项常常是“能否连通”的关键。简单来说：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;listeners：定义 Kafka Broker 实际监听的地址和端口, 告诉 Kafka Broker 监听在哪个接口上接收请求&lt;/li&gt;
+&lt;li&gt;advertised.listeners：Kafka “向外宣传”自己的地址，告诉客户端要用哪个 IP/域名 + 端口来连&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;他们两个什么区别, 为什么都要单独设置, 而不是设置一个相同的值?&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;listeners=PLAINTEXT://0.0.0.0:9092
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;0.0.0.0&lt;/code&gt; 表示监听所有网络接口，意味着 Kafka 允许来自任何 IP 地址的连接, 这样做的好处是，它允许本地机器和远程机器都可以连接到这个 Broker,&lt;/p&gt;
+&lt;p&gt;如果你希望 Kafka 被远程访问，比如生产者和消费者运行在不同的机器上，你应该设置 &lt;code&gt;advertised.listeners&lt;/code&gt; 为你的主机名或外部 IP：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;listeners=PLAINTEXT://0.0.0.0:9092
+advertised.listeners=PLAINTEXT://your-public-ip:9092
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;listeners=0.0.0.0:9092&lt;/code&gt; 允许 Kafka 在所有网络接口上监听连接&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;advertised.listeners=your-public-ip:9092&lt;/code&gt; 确保客户端能够正确地连接到 Kafka&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;上面说的是服务端, 当客户端启动时(Spring Boot 代码)，会用 &lt;code&gt;bootstrap.servers&lt;/code&gt; 提供的地址列表来&lt;strong&gt;初次连接&lt;/strong&gt; Kafka 集群。这个配置仅用于入口，帮助客户端找到集群中任意一个 broker，从而获取集群的元数据（例如 topic 信息、分区信息以及其它 broker 的地址）。配置内容可以是一台或多台 broker 的地址。通常，在单机开发环境中你可以设置为 &lt;code&gt;localhost:9092&lt;/code&gt;，但在生产环境中，为了容错，通常会配置多个 broker 的地址。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; ConsumerFactory&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;String, String&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;consumerFactory&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 配置 Kafka 消费者&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Map&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;String, Object&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; configs &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; HashMap&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 这些地址就是 broker 的公共 IP&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    configs.&lt;span style=&#34;color:#a6e22e&#34;&gt;put&lt;/span&gt;(ConsumerConfig.&lt;span style=&#34;color:#a6e22e&#34;&gt;BOOTSTRAP_SERVERS_CONFIG&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;broker1:9092,broker2:9092,broker3:9092&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; DefaultKafkaConsumerFactory&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&amp;gt;&lt;/span&gt;(configs);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;hr&gt;
+&lt;p&gt;运行程序, 发现 8080 端口被占用, 查看谁占用的, 然后关闭, 结果 8080 仍然被占用, 很奇怪, 输出如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# david @ Davids-Mac-mini in ~ [22:40:51]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ lsof -i :8080
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;COMMAND   PID  USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;java    &lt;span style=&#34;color:#ae81ff&#34;&gt;85160&lt;/span&gt; david   54u  IPv6 0xb9edb27e9f8be53e      0t0  TCP *:http-alt &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;LISTEN&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# david @ Davids-Mac-mini in ~ [22:40:58]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ kill &lt;span style=&#34;color:#ae81ff&#34;&gt;85160&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# david @ Davids-Mac-mini in ~ [22:41:09]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ lsof -i :8080
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;COMMAND   PID  USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;java    &lt;span style=&#34;color:#ae81ff&#34;&gt;85345&lt;/span&gt; david   54u  IPv6 0x84534af2d36abf6d      0t0  TCP *:http-alt &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;LISTEN&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;查看谁运行的 找出所有 Java 进程:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ps aux | grep java
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;发现一堆输出, 查了一下是 zookeeper 相关的东西,&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/02/8d06ca0c59cc392b20d402e9a3e0e563.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;/opt/homebrew/opt/openjdk/bin/java -Dzookeeper.log.dir=...&lt;/code&gt;：进程执行的完整命令，说明这是一个 Java 进程，并且和 &lt;strong&gt;Zookeeper&lt;/strong&gt; 相关,&lt;/p&gt;
+&lt;p&gt;关闭 zookeeper 服务:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;$ brew services stop zookeeper
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功解决问题&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;因为通过 Homebrew 方式安装的 Zookeeper 默认会开启一个内置的 AdminServer（Zookeeper 3.5+ 版本开始就有这个特性），该服务的默认端口是 8080。当你 kill 了对应的 Java 进程后，brew services 还在负责“托管”并自动重启 Zookeeper 服务，所以很快就会有新的进程继续监听 8080 端口。&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>记录 CORS Preflight Request 错误前后端排查过程</title>
+      <link>https://blog.jiyi27.com/posts/bugs/012-cors-options/</link>
+      <pubDate>Sun, 26 Jan 2025 10:36:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/012-cors-options/</guid>
+      <description>&lt;p&gt;遇到的问题是, 一会有跨域请求错误, 一会没有, 真的是莫名其妙,&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Access to fetch at &amp;#39;http://localhost:8080/api/terms/suggestions?query=aaa&amp;#39; from origin &amp;#39;http://localhost:3000&amp;#39; has been blocked by CORS policy: Response to preflight request doesn&amp;#39;t pass access control check: No &amp;#39;Access-Control-Allow-Origin&amp;#39; header is present on the requested resource. If an opaque response serves your needs, set the request&amp;#39;s mode to &amp;#39;no-cors&amp;#39; to fetch the resource with CORS disabled.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当 query 字符串为长度大于 2 的时候, 浏览器就会发送 preflight request 请求, 如下图:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/3a41d4bb6799ca575c2a60f333806d83.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;先不说为什么出现跨域错误, 这个肯定是我后端没处理好, 后面再分析, 我们来看为什么因为 query 不同, 导致了浏览器发送 preflight request, 首先我的所有请求都加上了 &lt;code&gt;&#39;Content-Type&#39;: &#39;application/json&#39;,&lt;/code&gt;, 也就是是说, 我的所有请求都不是简单请求, 因此触发 preflight request 很正常, 可是, 为什么 &lt;code&gt;/suggestions?query = x&lt;/code&gt;, &lt;code&gt;/suggestions?query = xx&lt;/code&gt; 没有触发呢?&lt;/p&gt;</description>
+      <content>&lt;p&gt;遇到的问题是, 一会有跨域请求错误, 一会没有, 真的是莫名其妙,&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Access to fetch at &amp;#39;http://localhost:8080/api/terms/suggestions?query=aaa&amp;#39; from origin &amp;#39;http://localhost:3000&amp;#39; has been blocked by CORS policy: Response to preflight request doesn&amp;#39;t pass access control check: No &amp;#39;Access-Control-Allow-Origin&amp;#39; header is present on the requested resource. If an opaque response serves your needs, set the request&amp;#39;s mode to &amp;#39;no-cors&amp;#39; to fetch the resource with CORS disabled.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当 query 字符串为长度大于 2 的时候, 浏览器就会发送 preflight request 请求, 如下图:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/3a41d4bb6799ca575c2a60f333806d83.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;先不说为什么出现跨域错误, 这个肯定是我后端没处理好, 后面再分析, 我们来看为什么因为 query 不同, 导致了浏览器发送 preflight request, 首先我的所有请求都加上了 &lt;code&gt;&#39;Content-Type&#39;: &#39;application/json&#39;,&lt;/code&gt;, 也就是是说, 我的所有请求都不是简单请求, 因此触发 preflight request 很正常, 可是, 为什么 &lt;code&gt;/suggestions?query = x&lt;/code&gt;, &lt;code&gt;/suggestions?query = xx&lt;/code&gt; 没有触发呢?&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;至于跨域错误是因为我后端没处理好, 原本代码如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-golang&#34; data-lang=&#34;golang&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mux&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;HandleFunc&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;GET /api/terms/suggestions&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;middleware&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Use&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;h&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;GetTermSuggestions&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;middleware&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Logger&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;middleware&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;CORS&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt;)))
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以看出, 我只处理了 GET 请求, 忽略了 OPTION 请求, 这也是为什么明明使用了 CORS 中间件, 却总是不会被触发, 原来是下面这个请求根本没有对应的后端路径:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;OPTIONS http://localhost:8080/api/terms/suggestions?query=xxx
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;另外还有个容易出错的地方:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-golang&#34; data-lang=&#34;golang&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mux&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;HandleFunc&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;GET /api/terms/{id}&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;mux&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;HandleFunc&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;GET /api/terms/suggestions&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;第一个动态路由 API 会覆盖第二个 API, 因为 &lt;code&gt;{id}&lt;/code&gt; 也是字符串, 所以不可以这么写,&lt;/p&gt;
+&lt;p&gt;这么看来, 对每个 API 单独加中间件并不是一个明智的选择, 比如因为我忽略了 OPTION 请求, 导致 CORS 错误, 一直找不到原因, 所以中间件, 应该放到最开始处理的地方,&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Cloudflare R2 Pre-signed URL Cross-Origin Issue</title>
+      <link>https://blog.jiyi27.com/posts/bugs/011-cloudflare-r2/</link>
+      <pubDate>Sun, 20 Oct 2024 10:42:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/011-cloudflare-r2/</guid>
+      <description>&lt;h2 id=&#34;1-problem-description&#34;&gt;1. Problem description&lt;/h2&gt;
+&lt;p&gt;获取到Cloudflare R2的Pre-signed URL后，使用网页上传文件时，总是返回各自各样的错误, 在网页遇到的是跨域问题, 总是报错说 pre flight request failed.&lt;/p&gt;
+&lt;p&gt;查了一圈, 说是请求头的问题, 需要在平台设置 &lt;code&gt;Access-Control-Allow-Origin&lt;/code&gt; 和 &lt;code&gt;Access-Control-Allow-Headers&lt;/code&gt; 等请求头. 后面设置了, 也无济于事. 有的说得包含 Content-type 头, 即若前端通过pre-signed url上传文件, 设置了 Content-Type 头, 则后端请求pre-signed url时, 也必须设置 Content-Type 头. 什么必须要同一个方法 PUT, 都设置 都不行,&lt;/p&gt;
+&lt;p&gt;后来使用 SwiftUI 开发, 想着换个环境, 就没有跨域问题了吧, 可是还是报错, 报错信息是 401, 没有权限.&lt;/p&gt;
+&lt;h2 id=&#34;2-problem-analysis&#34;&gt;2. Problem analysis&lt;/h2&gt;
+&lt;p&gt;结果问题出现在 Cloudflare R2 和 AWS S3 签名版本兼容问题上:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Cloudflare R2 requires presigned URLs to be generated using AWS Signature Version 4. Any other signature version will result in authentication failures.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-problem-description&#34;&gt;1. Problem description&lt;/h2&gt;
+&lt;p&gt;获取到Cloudflare R2的Pre-signed URL后，使用网页上传文件时，总是返回各自各样的错误, 在网页遇到的是跨域问题, 总是报错说 pre flight request failed.&lt;/p&gt;
+&lt;p&gt;查了一圈, 说是请求头的问题, 需要在平台设置 &lt;code&gt;Access-Control-Allow-Origin&lt;/code&gt; 和 &lt;code&gt;Access-Control-Allow-Headers&lt;/code&gt; 等请求头. 后面设置了, 也无济于事. 有的说得包含 Content-type 头, 即若前端通过pre-signed url上传文件, 设置了 Content-Type 头, 则后端请求pre-signed url时, 也必须设置 Content-Type 头. 什么必须要同一个方法 PUT, 都设置 都不行,&lt;/p&gt;
+&lt;p&gt;后来使用 SwiftUI 开发, 想着换个环境, 就没有跨域问题了吧, 可是还是报错, 报错信息是 401, 没有权限.&lt;/p&gt;
+&lt;h2 id=&#34;2-problem-analysis&#34;&gt;2. Problem analysis&lt;/h2&gt;
+&lt;p&gt;结果问题出现在 Cloudflare R2 和 AWS S3 签名版本兼容问题上:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Cloudflare R2 requires presigned URLs to be generated using AWS Signature Version 4. Any other signature version will result in authentication failures.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;这不, 什么都不用改, 只要把签名版本改成4就可以了:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-csharp&#34; data-lang=&#34;csharp&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;R2Service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;readonly&lt;/span&gt; IAmazonS3 _r2Client;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;readonly&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; _bucketName;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; R2Service(IConfiguration configuration)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; accessKey = configuration[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;AWS:S3:AccessKey&amp;#34;&lt;/span&gt;];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; secretKey = configuration[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;AWS:S3:SecretKey&amp;#34;&lt;/span&gt;];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; endpoint = configuration[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;AWS:S3:Endpoint&amp;#34;&lt;/span&gt;];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        _bucketName = configuration[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;AWS:S3:BucketName&amp;#34;&lt;/span&gt;] 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                      ?? &lt;span style=&#34;color:#66d9ef&#34;&gt;throw&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; ArgumentNullException(nameof(configuration), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;AWS:S3:BucketName is not configured&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; config = &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; AmazonS3Config { 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            ServiceURL = endpoint,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            SignatureVersion = &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;4&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#75715e&#34;&gt;// 注意这里&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            ForcePathStyle = &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;,  &lt;span style=&#34;color:#75715e&#34;&gt;// 重要！R2 需要这个配置&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            AuthenticationRegion = &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;auto&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        _r2Client = &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; AmazonS3Client(accessKey, secretKey, config);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; Task&amp;lt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; PresignedUrl, &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; ImageUrl)&amp;gt; GeneratePresignedUrl(&lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; fileName, &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; fileType)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; key = &lt;span style=&#34;color:#e6db74&#34;&gt;$&amp;#34;{Guid.NewGuid()}-{fileName}&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; request = &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; GetPreSignedUrlRequest
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            BucketName = _bucketName,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            Key = key,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            Verb = HttpVerb.PUT, &lt;span style=&#34;color:#75715e&#34;&gt;// 请求的签名方法是PUT, 所以客户端上传文件时, 也必须使用PUT方法&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            ContentType = fileType,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            Expires = DateTime.Now.AddMinutes(&lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; presignedUrl = &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; _r2Client.GetPreSignedURLAsync(request);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; imageUrl = &lt;span style=&#34;color:#e6db74&#34;&gt;$&amp;#34;{_r2Client.Config.ServiceURL}/{_bucketName}/{key}&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; (presignedUrl, imageUrl);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;前端代码:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;registerForm&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;submit&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;) =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;file&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; document.&lt;span style=&#34;color:#a6e22e&#34;&gt;getElementById&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;profileImage&amp;#39;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;files&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;file&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;presignedUrlResponse&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;axios&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;get&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;API_URL&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/api/auth/presigned-url`&lt;/span&gt;, {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#a6e22e&#34;&gt;params&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;fileName&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;file&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;fileType&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;file&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;type&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;presignedUrl&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;imageUrl&lt;/span&gt; } &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;presignedUrlResponse&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;data&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Received presigned URL:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;presignedUrl&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 注意是PUT方法, 也包含了Content-Type头
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;axios&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;put&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;presignedUrl&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;file&lt;/span&gt;, {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    &lt;span style=&#34;color:#a6e22e&#34;&gt;headers&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; {&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Content-Type&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;file&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;type&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#a6e22e&#34;&gt;userData&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;profileImage&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;imageUrl&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            } &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;uploadError&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error uploading image:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;uploadError&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;axios&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;post&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;API_URL&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/api/auth/register`&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;userData&lt;/span&gt;, {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#a6e22e&#34;&gt;headers&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; {&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Content-Type&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;application/json&amp;#39;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;User registered successfully&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Registration error:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;handleAxiosError&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;register&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+    </item>
+    
+    <item>
+      <title>An Analysis of high CPU and RAM usage caused by Go Program</title>
+      <link>https://blog.jiyi27.com/posts/bugs/010-post-large-file/</link>
+      <pubDate>Fri, 12 Apr 2024 10:42:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/010-post-large-file/</guid>
+      <description>&lt;h2 id=&#34;1-problem-description&#34;&gt;1. Problem description&lt;/h2&gt;
+&lt;p&gt;Considering the limitation of the RAM on my VPS, when user attempting to upload a large file, I want to handle the file in chunks, so that I can read the file in small pieces and write them to the disk. And this process is called &lt;strong&gt;streaming&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;The code snippet is like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;server&lt;/span&gt;) &lt;span style=&#34;color:#a6e22e&#34;&gt;handleUpload&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;ResponseWriter&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Request&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;currentDir&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt;) (&lt;span style=&#34;color:#a6e22e&#34;&gt;errs&lt;/span&gt; []&lt;span style=&#34;color:#a6e22e&#34;&gt;uploadError&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// limit the size of incoming request bodies.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Body&lt;/span&gt; = &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;LimitedReader&lt;/span&gt;{&lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt;: &lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Body&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;n&lt;/span&gt;: int64(&lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;maxFileSize&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1024&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1024&lt;/span&gt;)}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;reader&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;MultipartReader&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// reader.NextPart() will close the previous part automatically.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;part&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;reader&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;NextPart&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// not a file, move to the next part.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;part&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;FileName&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;			&lt;span style=&#34;color:#66d9ef&#34;&gt;continue&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;filename&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getAvailableName&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;currentDir&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;part&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;FileName&lt;/span&gt;())
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;dstPath&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;filepath&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Join&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;currentDir&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;filename&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;dst&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;os&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Create&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;dstPath&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// io.Copy() will stream the file to dst, multipart.Part is an io.Reader.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;io&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Copy&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;dst&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;part&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;dst&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Close&lt;/span&gt;(); &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; { &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;But when I try to upload a file of 1.6GB, it takes a long time to finish (about 2 minutes), I thought it may caused by the CPU speed of my VPS or the I/O speed of the disk or the network speed.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-problem-description&#34;&gt;1. Problem description&lt;/h2&gt;
+&lt;p&gt;Considering the limitation of the RAM on my VPS, when user attempting to upload a large file, I want to handle the file in chunks, so that I can read the file in small pieces and write them to the disk. And this process is called &lt;strong&gt;streaming&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;The code snippet is like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;server&lt;/span&gt;) &lt;span style=&#34;color:#a6e22e&#34;&gt;handleUpload&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;ResponseWriter&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Request&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;currentDir&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt;) (&lt;span style=&#34;color:#a6e22e&#34;&gt;errs&lt;/span&gt; []&lt;span style=&#34;color:#a6e22e&#34;&gt;uploadError&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// limit the size of incoming request bodies.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Body&lt;/span&gt; = &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;LimitedReader&lt;/span&gt;{&lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt;: &lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Body&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;n&lt;/span&gt;: int64(&lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;maxFileSize&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1024&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1024&lt;/span&gt;)}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;reader&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;MultipartReader&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// reader.NextPart() will close the previous part automatically.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;part&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;reader&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;NextPart&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// not a file, move to the next part.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;part&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;FileName&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;			&lt;span style=&#34;color:#66d9ef&#34;&gt;continue&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;filename&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getAvailableName&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;currentDir&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;part&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;FileName&lt;/span&gt;())
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;dstPath&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;filepath&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Join&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;currentDir&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;filename&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;dst&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;os&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Create&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;dstPath&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// io.Copy() will stream the file to dst, multipart.Part is an io.Reader.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;io&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Copy&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;dst&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;part&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;dst&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Close&lt;/span&gt;(); &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; { &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;But when I try to upload a file of 1.6GB, it takes a long time to finish (about 2 minutes), I thought it may caused by the CPU speed of my VPS or the I/O speed of the disk or the network speed.&lt;/p&gt;
+&lt;p&gt;But at the browser side, the uploading progress bar is always at 100%, and the browser is waiting for the response from the server, which indicates that the uploading process is finished, but the server is still processing the file.&lt;/p&gt;
+&lt;p&gt;I use &lt;code&gt;htop&lt;/code&gt; to check the CPU usage of my VPS, it&amp;rsquo;s around 20% when uploading the file (consists of network IO and disk IO), which indicates that the CPU is not the bottleneck.&lt;/p&gt;
+&lt;p&gt;Then I use &lt;code&gt;dd&lt;/code&gt; to test the I/O speed of my disk, it&amp;rsquo;s around 488MB/s, which is not bad.&lt;/p&gt;
+&lt;p&gt;Then why the server is still processing the file so long?&lt;/p&gt;
+&lt;p&gt;Besides, when my server is processing the file, if I refresh the page, the RAM and cpu usage of my VPS will increase to 100%, and the server will get killed by the OS. This is super weird.&lt;/p&gt;
+&lt;h2 id=&#34;2-solution-for-high-cpu-usage&#34;&gt;2. Solution for high CPU usage&lt;/h2&gt;
+&lt;p&gt;The error output (call stack) looks like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;goroutine &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;running&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;runtime.systemstack_switch&lt;span style=&#34;color:#f92672&#34;&gt;()&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/Users/David/sdk/go1.20.4/src/runtime/asm_amd64.s:463 fp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004b7b8 sp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004b7b0 pc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0x4643e0
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;runtime.&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;*mheap&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.alloc&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x1c036000?, 0xe01b?, 0x78?&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/Users/David/sdk/go1.20.4/src/runtime/mheap.go:955 +0x65 fp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004b800 sp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004b7b8 pc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0x427025
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;runtime.&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;*mcache&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.allocLarge&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x47047e?, 0x1c036000, 0x0&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/Users/David/sdk/go1.20.4/src/runtime/mcache.go:234 +0x85 fp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004b848 sp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004b800 pc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0x4167e5
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;runtime.mallocgc&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x1c036000, 0x757080, 0x1&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/Users/David/sdk/go1.20.4/src/runtime/malloc.go:1053 +0x4fe fp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004b8b0 sp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004b848 pc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0x40d6de
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;runtime.growslice&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0xc05ca3c000, 0x15?, 0xc00004b9c0?, 0x1?, 0x757080&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/Users/David/sdk/go1.20.4/src/runtime/slice.go:274 +0x4e9 fp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004b910 sp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004b8b0 pc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0x44c3a9
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;main.&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;*server&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.handleUpload&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0xc00005c240, &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;0x0?, 0x820a00?&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;, 0xc000138600, &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;0xc000098008, 0x8&lt;span style=&#34;color:#f92672&#34;&gt;})&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/Users/David/Codes/GoLand/file-server/handleFile.go:87 +0x2ad fp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004ba00 sp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004b910 pc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0x70290d
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;main.&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;*server&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.taskDelegation&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0xc00005c240, &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;0x823000, 0xc000012140&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;, 0xc000138600&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/Users/David/Codes/GoLand/file-server/route.go:25 +0x252 fp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004bbc0 sp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004ba00 pc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0x704652
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;main.&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;*server&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.ServeHTTP&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0xc00005c240, &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;0x823000, 0xc000012140&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;, 0xc000138600&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/Users/David/Codes/GoLand/file-server/server.go:144 +0x4eb fp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004bca0 sp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004bbc0 pc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0x70608b
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;net/http.serverHandler.ServeHTTP&lt;span style=&#34;color:#f92672&#34;&gt;({&lt;/span&gt;0xc00001a0a8?&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;0x823000, 0xc000012140&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;, 0xc000138600&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/Users/David/sdk/go1.20.4/src/net/http/server.go:2936 +0x316 fp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004bd50 sp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004bca0 pc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0x6a2ff6
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;net/http.initALPNRequest.ServeHTTP&lt;span style=&#34;color:#f92672&#34;&gt;({{&lt;/span&gt;0x8232b8?, 0xc0001588a0?&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;, 0xc00010e700?, &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;0xc000146000?&lt;span style=&#34;color:#f92672&#34;&gt;}}&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;0x823000, 0xc000012140&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;, 0xc000138600&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/Users/David/sdk/go1.20.4/src/net/http/server.go:3545 +0x245 fp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004bed8 sp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004bd50 pc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0x6a4ee5
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;net/http.&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;*initALPNRequest&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.ServeHTTP&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x40b5b6?, &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;0x823000?, 0xc000012140?&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;, 0x0?&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&amp;lt;autogenerated&amp;gt;:1 +0x55 fp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004bf20 sp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004bed8 pc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0x6b3fb5
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;net/http.Handler.ServeHTTP-fm&lt;span style=&#34;color:#f92672&#34;&gt;({&lt;/span&gt;0x823000?, 0xc000012140?&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;, 0xc00001c2e8?&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&amp;lt;autogenerated&amp;gt;:1 +0x42 fp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004bf50 sp&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0xc00004bf20 pc&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;0x6b4dc2
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;It seems that the server is trying to allocate memory to a slice, and the size of the slice is too large, so the server is killed by the OS. Checked the code snippet I provided before, there is:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// reader.NextPart() will close the previous part automatically.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;part&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;reader&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;NextPart&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;io&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;EOF&lt;/span&gt; { &lt;span style=&#34;color:#75715e&#34;&gt;// finish reading all parts, exit the loop&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;break&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;errs&lt;/span&gt; = append(&lt;span style=&#34;color:#a6e22e&#34;&gt;errs&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;uploadError&lt;/span&gt;{&lt;span style=&#34;color:#a6e22e&#34;&gt;Message&lt;/span&gt;: &lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Sprintf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;reader.NextPart(): %v&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)})
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;continue&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;What if the error is not &lt;code&gt;io.EOF&lt;/code&gt;, but other errors? Then there will be a infinite loop, this is the reason why the CPU usage is high. What I do is to limit the size of the error message:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;io&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;EOF&lt;/span&gt; { &lt;span style=&#34;color:#75715e&#34;&gt;// finish reading all parts, exit the loop&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;break&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;errs&lt;/span&gt; = append(&lt;span style=&#34;color:#a6e22e&#34;&gt;errs&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;uploadError&lt;/span&gt;{&lt;span style=&#34;color:#a6e22e&#34;&gt;Message&lt;/span&gt;: &lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Sprintf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;reader.NextPart(): %v&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)})
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// too many errors, stop uploading, you must limit the number of errors in case of infinite loop.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; len(&lt;span style=&#34;color:#a6e22e&#34;&gt;errs&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;errs&lt;/span&gt; = append(&lt;span style=&#34;color:#a6e22e&#34;&gt;errs&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;uploadError&lt;/span&gt;{&lt;span style=&#34;color:#a6e22e&#34;&gt;Message&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Maximum error limit reached&amp;#34;&lt;/span&gt;})
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;continue&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-solution-for-slow-uploading-speed&#34;&gt;3. Solution for slow uploading speed&lt;/h2&gt;
+&lt;p&gt;I ask this question in Go community that I joined, and I got a suggestion:&lt;/p&gt;
+&lt;p&gt;Form Upload(&lt;code&gt;multipart/form-data&lt;/code&gt;) is not good for large files, when uploading a large file, we usually use Binary Stream Uploads(&lt;code&gt;application/octet-stream&lt;/code&gt;) instead, use &lt;code&gt;r.Body&lt;/code&gt; directly to read the file content, and write the content to the disk this is real streaming.&lt;/p&gt;
+&lt;p&gt;Actually, with &lt;code&gt;multipart/form-data&lt;/code&gt;, the file content is read by block, not the real streaming, you can check the code I provided before: &lt;code&gt;part, err := reader.NextPart()&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;So use &lt;code&gt;PUT&lt;/code&gt; with &lt;code&gt;application/octet-stream&lt;/code&gt; instead of &lt;code&gt;multipart/form-data&lt;/code&gt; to upload large files.&lt;/p&gt;
+&lt;p&gt;But after I change the code to use &lt;code&gt;POST&lt;/code&gt; with &lt;code&gt;application/octet-stream&lt;/code&gt;, the uploading speed is still slow.&lt;/p&gt;
+&lt;p&gt;Then I monitor the disk I/O speed and network speed and found the reason, the network speed is around 7MB/s, which is the bottleneck.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;dstat -d &lt;span style=&#34;color:#75715e&#34;&gt;# check the disk speed at real time&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;dsat -n &lt;span style=&#34;color:#75715e&#34;&gt;# check the network speed at real time&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/04/c305f2b3b5b586774920af715c01f23f.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/04/90fe48cb6cbd4b0871421a58af25dfad.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;But why the speedtest-cli shows the network speed is fast but the real speed is slow?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Download: 298.52 Mbit/s
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Testing upload speed......................................................................................................
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Upload: 192.82 Mbit/s
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+    </item>
+    
+    <item>
+      <title>Tailwind CSS Commonly Used Class</title>
+      <link>https://blog.jiyi27.com/posts/frontend/styling-css/002-bugs/</link>
+      <pubDate>Sat, 06 Jan 2024 12:46:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/frontend/styling-css/002-bugs/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;调试 bug:&lt;/strong&gt; 加上样式后 刷新页面 样式不符合预期时 可以进入开发者模式 查看真正被应用的元素样式 因为可能是缓存问题&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;p&gt;block 元素水平居中: &lt;code&gt;mx-auto&lt;/code&gt;, 注意对 inline 无效, 原因: &lt;code&gt;margin-left: auto&lt;/code&gt;, &lt;code&gt;margin-right: auto&lt;/code&gt; 无法适用 inline 元素.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;lt;nav className=&amp;#34;fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t dark:border-gray-800 safe-area-pb&amp;#34;&amp;gt;
+            &amp;lt;div className=&amp;#34;mx-auto px-4 max-w-lg&amp;#34;&amp;gt;
+                &amp;lt;div className=&amp;#34;flex justify-around items-center h-16&amp;#34;&amp;gt;
+                	&amp;lt;Link&amp;gt;
+                		...
+                	&amp;lt;/Link&amp;gt;
+                	&amp;lt;Link&amp;gt;
+                		...
+                	&amp;lt;/Link&amp;gt;
+                	&amp;lt;Link&amp;gt;
+                		...
+                	&amp;lt;/Link&amp;gt;
+                	....
+&lt;/code&gt;&lt;/pre&gt;&lt;hr&gt;
+&lt;p&gt;元素变形(变窄), 要想到元素是不是因为 flex 自动挤压导致, 加上 &lt;code&gt;shrink-0&lt;/code&gt; 看看变化, 注意  &lt;code&gt;shrink-0&lt;/code&gt; 就是 css 中的 &lt;code&gt;flex-shrink&lt;/code&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;flex items 三属性 &lt;code&gt;flex-grow&lt;/code&gt;, &lt;code&gt;flex-shrink&lt;/code&gt;, &lt;code&gt;flex-basis&lt;/code&gt; 的默认值分别是 0, 1, auto, 即 flex items 默认允许在必要情况下缩小, 比如有左右两个 flex items, 当左边的 flex items 的内容很多, 而右边的 flex items 的内容很少, 此时右边的 flex items 会被压缩, 以适应 flex container 的宽度, &lt;strong&gt;即使右边的 flex items 设置了宽度, 也会被压缩.&lt;/strong&gt;&lt;/p&gt;</description>
+      <content>&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;调试 bug:&lt;/strong&gt; 加上样式后 刷新页面 样式不符合预期时 可以进入开发者模式 查看真正被应用的元素样式 因为可能是缓存问题&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;p&gt;block 元素水平居中: &lt;code&gt;mx-auto&lt;/code&gt;, 注意对 inline 无效, 原因: &lt;code&gt;margin-left: auto&lt;/code&gt;, &lt;code&gt;margin-right: auto&lt;/code&gt; 无法适用 inline 元素.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;lt;nav className=&amp;#34;fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t dark:border-gray-800 safe-area-pb&amp;#34;&amp;gt;
+            &amp;lt;div className=&amp;#34;mx-auto px-4 max-w-lg&amp;#34;&amp;gt;
+                &amp;lt;div className=&amp;#34;flex justify-around items-center h-16&amp;#34;&amp;gt;
+                	&amp;lt;Link&amp;gt;
+                		...
+                	&amp;lt;/Link&amp;gt;
+                	&amp;lt;Link&amp;gt;
+                		...
+                	&amp;lt;/Link&amp;gt;
+                	&amp;lt;Link&amp;gt;
+                		...
+                	&amp;lt;/Link&amp;gt;
+                	....
+&lt;/code&gt;&lt;/pre&gt;&lt;hr&gt;
+&lt;p&gt;元素变形(变窄), 要想到元素是不是因为 flex 自动挤压导致, 加上 &lt;code&gt;shrink-0&lt;/code&gt; 看看变化, 注意  &lt;code&gt;shrink-0&lt;/code&gt; 就是 css 中的 &lt;code&gt;flex-shrink&lt;/code&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;flex items 三属性 &lt;code&gt;flex-grow&lt;/code&gt;, &lt;code&gt;flex-shrink&lt;/code&gt;, &lt;code&gt;flex-basis&lt;/code&gt; 的默认值分别是 0, 1, auto, 即 flex items 默认允许在必要情况下缩小, 比如有左右两个 flex items, 当左边的 flex items 的内容很多, 而右边的 flex items 的内容很少, 此时右边的 flex items 会被压缩, 以适应 flex container 的宽度, &lt;strong&gt;即使右边的 flex items 设置了宽度, 也会被压缩.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr&gt;
+&lt;p&gt;写菜单栏的时候, 菜单栏展开后会将下面的内容挤下去, 像下面这样:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/08/a199c94496cc4d1f2fbfdd7fd09478c4.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;基本上菜单栏都很窄, 所以当菜单栏展开时, 我希望的是不影响下面的内容, 但是正常情况下两个元素要么是 inline 那种可以在同一行, 要么是 block 那种独占一行, 无法实现我想要的效果. 此时就可以使用 absolute 来实现, 如下:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/08/997c2961834e857ceb3fbc392b90cb56.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;此时也应该注意覆盖的问题, 若对话框宽度为 100vw, 可能会覆盖掉对话框, 因此要将 z-index 设置大一些.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Absolute positioned elements are removed from the normal flow, and &lt;strong&gt;can overlap elements&lt;/strong&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Go File Server Cannot Handle Large Files</title>
+      <link>https://blog.jiyi27.com/posts/bugs/009-go-server-handle-large-file/</link>
+      <pubDate>Thu, 30 Nov 2023 21:43:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/009-go-server-handle-large-file/</guid>
+      <description>&lt;h2 id=&#34;1-problem-description&#34;&gt;1. Problem description&lt;/h2&gt;
+&lt;p&gt;I&amp;rsquo;ve discussed how to use Cloudflare as a &lt;a href=&#34;https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/&#34;&gt;reverse proxy&lt;/a&gt; for my web traffic in &lt;a href=&#34;https://blog.yorforger.cc/post/build-website/008-cloudflare-cdn/&#34;&gt;previous post&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I write a &lt;a href=&#34;https://github.com/shwezhu/file-server&#34;&gt;file server&lt;/a&gt; in Go, when attempting to upload a file of approximately 200 MB, it becomes very slow (always uploading) and never succeed. Upon monitoring the server using tools like &lt;code&gt;htop&lt;/code&gt;, it seems that the server might be unaware of the incoming large file upload. I come across a error by chance:  &lt;strong&gt;413 Request Entity Too Large&lt;/strong&gt;.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-problem-description&#34;&gt;1. Problem description&lt;/h2&gt;
+&lt;p&gt;I&amp;rsquo;ve discussed how to use Cloudflare as a &lt;a href=&#34;https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/&#34;&gt;reverse proxy&lt;/a&gt; for my web traffic in &lt;a href=&#34;https://blog.yorforger.cc/post/build-website/008-cloudflare-cdn/&#34;&gt;previous post&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I write a &lt;a href=&#34;https://github.com/shwezhu/file-server&#34;&gt;file server&lt;/a&gt; in Go, when attempting to upload a file of approximately 200 MB, it becomes very slow (always uploading) and never succeed. Upon monitoring the server using tools like &lt;code&gt;htop&lt;/code&gt;, it seems that the server might be unaware of the incoming large file upload. I come across a error by chance:  &lt;strong&gt;413 Request Entity Too Large&lt;/strong&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;2-cloudflare&#34;&gt;2. Cloudflare&lt;/h2&gt;
+&lt;p&gt;Then I found this is because the limitation of Couldflare proxy:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;There’s a &lt;strong&gt;body size&lt;/strong&gt; limit of 100 MB on Free and Pro, 200 MB on Business and &lt;a href=&#34;https://community.cloudflare.com/t/community-tip-fixing-error-500-internal-server-error/44453&#34;&gt;50074&lt;/a&gt; MB on Enterprise. Only Enterprise customers can request to have the body size limit increased.&lt;/p&gt;
+&lt;p&gt;Each user can only upload files with maximum size of 100MB at a time &lt;strong&gt;if your website is proxied by Cloudflare.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://community.cloudflare.com/t/does-the-100-mb-limit-apllies-to-all-users-on-my-website/297261&#34;&gt;Does the 100 Mb limit apllies to all users on my website?&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;So this is the thing, then I try to access my website directly by IP address (bypass the Cloudflare proxy).&lt;/p&gt;
+&lt;h2 id=&#34;3-vps-ram&#34;&gt;3. VPS RAM&lt;/h2&gt;
+&lt;p&gt;Then I can see my file server handling the incoming request whose body larger than 100MB, I use &lt;code&gt;htop&lt;/code&gt; to check the RAM usage status on my VPS, I can see the RAM increase from 50MB to 100MB then 200MB, then my file server get killed by the OS.&lt;/p&gt;
+&lt;p&gt;My VPS RAM is 512MB, and there is 460MB left, I don&amp;rsquo;t know why the OS kill my file server program.&lt;/p&gt;
+&lt;h2 id=&#34;4-golang&#34;&gt;4. Golang&lt;/h2&gt;
+&lt;p&gt;Besides, when I tried to upload some files whose size is around 60MB, the RAM usage of my VPS increase from 50MB (total) to around 100MB, this makes sense, because the file server needs load the whole file to the RAM and copy the content to the disk.&lt;/p&gt;
+&lt;p&gt;But after handling this request, the RAM usage is still around 100MB, if I upload another file (60MB), then the RAM usage increases to around 160MB. I thought there is memory leak on my program. But I was wrong. I found a post and share it here:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Go does not release memory it allocated from the OS immediately. The reason is probably that allocating memory is costly (needs system calls) and the chance is high that it will be needed in the near future anyway again. But, if memory gets long enough unused it will be released eventually so that the &lt;strong&gt;RSS&lt;/strong&gt; of the process decreases again.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://stackoverflow.com/a/49843380/16317008&#34;&gt;https://stackoverflow.com/a/49843380/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;RSS indicates the actual physical memory consumed by a process, while VSZ includes not only the physical memory but also the virtual memory.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://stackoverflow.com/a/21049737/16317008&#34;&gt;https://stackoverflow.com/a/21049737/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>排查实验室电脑无法访问一些网站</title>
+      <link>https://blog.jiyi27.com/posts/bugs/008-computer-lab-cannot-access-youtube/</link>
+      <pubDate>Wed, 22 Nov 2023 21:43:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/008-computer-lab-cannot-access-youtube/</guid>
+      <description>&lt;p&gt;首先可以联网, 谷歌和微软邮箱等其他的一些网站都可访问, 但是访问油管的时候总是会超时,&lt;/p&gt;
+&lt;p&gt;首先想到了是 DNS 服务器的问题, 尝试把电脑的 DNS server 改为 8.8.8.8, 可惜需要管理员权限, 失败&lt;/p&gt;
+&lt;p&gt;后来无聊想着看看解析出来 youtube.com 的实际ip是什么, 使用 nklookup 查了一下, (大概这样, 没在实验室)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ nslookup youtube.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.100.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Name:	youtube.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 142.251.40.206
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;于是访问 &lt;code&gt;142.251.40.206&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ wget -O- 142.251.40.206
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;--2023-11-22 22:23:53--  http://142.251.40.206/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Connecting to 142.251.40.206:80... connected.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;HTTP request sent, awaiting response... &lt;span style=&#34;color:#ae81ff&#34;&gt;301&lt;/span&gt; Moved Permanently
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Location: http://www.google.com/ &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;following&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;--2023-11-22 22:23:53--  http://www.google.com/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Resolving www.google.com &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;www.google.com&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;... 142.250.80.36
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以看到被重定向到了谷歌页面, 当时在实验室也是这种情况, 查了一下, 这确实是正确的地址, 只是&lt;a href=&#34;https://stackoverflow.com/questions/5142030/why-does-the-resolved-ip-of-youtube-com-direct-to-google-com&#34;&gt;谷歌给重定向&lt;/a&gt;了, 所以不是DNS的问题, 那应该就是防火墙的问题, 下次去实验室再看看,&lt;/p&gt;</description>
+      <content>&lt;p&gt;首先可以联网, 谷歌和微软邮箱等其他的一些网站都可访问, 但是访问油管的时候总是会超时,&lt;/p&gt;
+&lt;p&gt;首先想到了是 DNS 服务器的问题, 尝试把电脑的 DNS server 改为 8.8.8.8, 可惜需要管理员权限, 失败&lt;/p&gt;
+&lt;p&gt;后来无聊想着看看解析出来 youtube.com 的实际ip是什么, 使用 nklookup 查了一下, (大概这样, 没在实验室)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ nslookup youtube.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.100.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Name:	youtube.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 142.251.40.206
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;于是访问 &lt;code&gt;142.251.40.206&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ wget -O- 142.251.40.206
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;--2023-11-22 22:23:53--  http://142.251.40.206/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Connecting to 142.251.40.206:80... connected.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;HTTP request sent, awaiting response... &lt;span style=&#34;color:#ae81ff&#34;&gt;301&lt;/span&gt; Moved Permanently
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Location: http://www.google.com/ &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;following&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;--2023-11-22 22:23:53--  http://www.google.com/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Resolving www.google.com &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;www.google.com&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;... 142.250.80.36
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以看到被重定向到了谷歌页面, 当时在实验室也是这种情况, 查了一下, 这确实是正确的地址, 只是&lt;a href=&#34;https://stackoverflow.com/questions/5142030/why-does-the-resolved-ip-of-youtube-com-direct-to-google-com&#34;&gt;谷歌给重定向&lt;/a&gt;了, 所以不是DNS的问题, 那应该就是防火墙的问题, 下次去实验室再看看,&lt;/p&gt;
+&lt;p&gt;另外上面 nskookup 返回的是 &lt;a href=&#34;https://davidzhu.xyz/post/networking/006-commands-in-network/&#34;&gt;Non-authoritative answer&lt;/a&gt;, 意思是 ip 地址不是由该域名的 NS 服务器返回的, 而是从 DNS cache获取的, 所以 Non-authoritative answer 并不是代表不安全或者不可靠, 但可能不是最新的, 比如你的域名刚更新了 NS server, 加了层 Cloudflare 的 https 加密代理, 即 &lt;code&gt;your_domain-&amp;gt;proxy-ip-&amp;gt;your_ip&lt;/code&gt;, 而学校的 DNS cache 里缓存的却是你之前的 ip, 即 &lt;code&gt;your_domain -&amp;gt; your_ip&lt;/code&gt;, 那代理就不会生效,&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;去实验室查了一下我域名的NS, 竟然 time-out:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;c: \Users\student&amp;gt;nslookup shaowenzhu.top
+Server: Unknown
+Address:192.168.102.1
+
+DNS request timed out.
+timeout was 2 seconds.
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;查了一下, 看到了一个与我&lt;a href=&#34;https://superuser.com/questions/1303128/why-does-nslookup-return-dns-request-timed-out&#34;&gt;相似的问题&lt;/a&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;DNS request timed out&lt;/em&gt; means NSLookup submitted the query to the DNS server, but did not get a response.&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s possible the DNS server you queried was having a problem and couldn&amp;rsquo;t reply. Network errors could be to blame as well.&lt;/p&gt;
+&lt;p&gt;However, given that you did this from a &amp;ldquo;public computer,&amp;rdquo; the most likely explanation is that &lt;strong&gt;your DNS lookup was blocked by the network&amp;rsquo;s firewall&lt;/strong&gt;. It&amp;rsquo;s common for network administrators to require that DNS lookups originating from nodes on the internal network be done using approved DNS servers. These can either be DNS servers under the administrator&amp;rsquo;s control, or specific public DNS servers selected by the admin.&lt;/p&gt;
+&lt;p&gt;突然想到 DNS 缓存在 Chrome 上也有备份, 于是去查了一下是不是可以修改 DNS server 在 Chrome 上, (在电脑上没有管理员权限),&lt;/p&gt;
+&lt;p&gt;真的有, 具体参考(privacy-security -&amp;gt; Advanced -&amp;gt; Use Secure DNS): &lt;a href=&#34;https://www.minitool.com/news/how-to-change-dns-server-in-google-chrome.html&#34;&gt;How to Change DNS Server in Google Chrome on Computer and Mobile? - MiniTool&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;然后可以在Chrome上通过域名访问我的网站了, 终于不用输入 IP 了每次, nnd&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>CGO Compile Error Building Docker Image</title>
+      <link>https://blog.jiyi27.com/posts/bugs/006-cgo-docker-image-build-error/</link>
+      <pubDate>Sat, 21 Oct 2023 10:24:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/006-cgo-docker-image-build-error/</guid>
+      <description>&lt;p&gt;I choose a sqilte3 library which uses cgo, the Dockerfile:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; golang:alpine&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./ ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go mod download&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; CGO_ENABLED&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;amd64 go build -o /server .&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;在使用 docker 运行 golang 相关的程序的时候, 我们需要先选择基础镜像, 比如: &lt;code&gt;FROM golang:alpine&lt;/code&gt;, 编译 golang 源码的时候, 需要指定构建的目的系统和CPU架构, 比如: &lt;code&gt;GOOS=linux&lt;/code&gt;, 此时 选择 GOOS=linux 是因为我们选择基础镜像是 &lt;code&gt;golang:alpine&lt;/code&gt; 是 Linux 系统, 而 &lt;code&gt;GOARCH=amd64&lt;/code&gt; 是因为宿主机 CPU 架构是 amd64, 容器里的程序只能跑在与宿主机 CPU 架构兼容的环境上,&lt;/p&gt;
+&lt;p&gt;When cgo is enabled, the binary may link dynamically to C libraries, which can add dependencies on system-specific libraries. Disabling cgo (by setting &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;) helps produce a more self-contained binary, making cross-platform deployment easier.&lt;/p&gt;</description>
+      <content>&lt;p&gt;I choose a sqilte3 library which uses cgo, the Dockerfile:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; golang:alpine&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./ ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go mod download&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; CGO_ENABLED&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;amd64 go build -o /server .&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;在使用 docker 运行 golang 相关的程序的时候, 我们需要先选择基础镜像, 比如: &lt;code&gt;FROM golang:alpine&lt;/code&gt;, 编译 golang 源码的时候, 需要指定构建的目的系统和CPU架构, 比如: &lt;code&gt;GOOS=linux&lt;/code&gt;, 此时 选择 GOOS=linux 是因为我们选择基础镜像是 &lt;code&gt;golang:alpine&lt;/code&gt; 是 Linux 系统, 而 &lt;code&gt;GOARCH=amd64&lt;/code&gt; 是因为宿主机 CPU 架构是 amd64, 容器里的程序只能跑在与宿主机 CPU 架构兼容的环境上,&lt;/p&gt;
+&lt;p&gt;When cgo is enabled, the binary may link dynamically to C libraries, which can add dependencies on system-specific libraries. Disabling cgo (by setting &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;) helps produce a more self-contained binary, making cross-platform deployment easier.&lt;/p&gt;
+&lt;p&gt;Learn more:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/golang/advance/012-statically-linking/&#34;&gt;Static Linking Go Programs - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/golang/advance/011-cross-compilation/&#34;&gt;Cross Compilation - Go - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;After build successfully and run image:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run -p 80:80 shwezhu/file-station:v1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;2023/10/10 02:15:15 /app/main.go:12
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;error&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; failed to initialize database, got error Binary was compiled with &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CGO_ENABLED=0&amp;#39;&lt;/span&gt;, go-sqlite3 requires cgo to work. This is a stub
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see, apparently I will get an error, because my Go code use the &lt;code&gt;go-sqlite3 &lt;/code&gt; package which implemented by pure cgo, if I disable cgo with &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, this will wrong. Then I change the dockerfile to:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Install gcc to compile cgo&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; apk add --no-cache --update go gcc g++&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go build -o /server .&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;And build image with command:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker build -t shwezhu/file-station:v2 .
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;There is an error when run the image on EC2 server:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run -p 80:80 shwezhu/file-station:v1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;WARNING: The requested image&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;s platform &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;linux/arm64&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; does not match the detected host platform &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;linux/amd64&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; and no specific platform was requested
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Because my local machine is arm64, which means the image will be built to arm64 by default, but my EC2 server is linux/amd64, so there is an error occurred. With &lt;code&gt;--platform&lt;/code&gt;, you can specify the platform this image built for:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker build --platform linux/amd64 -t shwezhu/file-station:v2 .
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;Go&lt;/em&gt; is a statically &lt;em&gt;compiled&lt;/em&gt; language. To execute a &lt;em&gt;Go&lt;/em&gt; binary on a machine, it must be &lt;em&gt;compiled&lt;/em&gt; for the matching operating system and processor architecture. So there is cross-compilation in Go. &lt;code&gt;--platform&lt;/code&gt; is used to build &lt;a href=&#34;https://docs.docker.com/build/building/multi-platform/&#34;&gt;multi-platform docker images&lt;/a&gt;, not build Go for another platform. You should know the difference between these concepts.&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>urllib3 not compatible with openssl issue - python</title>
+      <link>https://blog.jiyi27.com/posts/python/practice/002-openssl-issue/</link>
+      <pubDate>Sat, 07 Oct 2023 12:01:25 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/python/practice/002-openssl-issue/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;OpenSSL is an all-around cryptography library that offers an open-source application of the TLS protocol. It allows users to perform various SSL-related tasks, including CSR (Certificate Signing Request) and private keys generation, and SSL certificate installation. You can use OpenSSL&amp;rsquo;s commands to generate, install and manage SSL certificates on various servers.  &lt;a href=&#34;https://www.ssldragon.com/blog/what-is-openssl/&#34;&gt;What Is OpenSSL and How Does It Work?&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;OpenSSL is a library, so there should be API interfaces. However, the more common use of OpenSSL is as a command-line tool, which can be entered on a computer&lt;/p&gt;</description>
+      <content>&lt;blockquote&gt;
+&lt;p&gt;OpenSSL is an all-around cryptography library that offers an open-source application of the TLS protocol. It allows users to perform various SSL-related tasks, including CSR (Certificate Signing Request) and private keys generation, and SSL certificate installation. You can use OpenSSL&amp;rsquo;s commands to generate, install and manage SSL certificates on various servers.  &lt;a href=&#34;https://www.ssldragon.com/blog/what-is-openssl/&#34;&gt;What Is OpenSSL and How Does It Work?&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;OpenSSL is a library, so there should be API interfaces. However, the more common use of OpenSSL is as a command-line tool, which can be entered on a computer&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ openssl version   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;LibreSSL 3.3.6
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Why the output is LibreSSL? LibreSSL is another version of SSL implementation, which exists alongside OpenSSL. Learn more: &lt;a href=&#34;https://www.youtube.com/watch?v=n1uaoJyBwHk&#34;&gt;Why You Should Use LibreSSL Instead of OpenSSL&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;OpenSSL is indeed a library, and HTTPS is based on SSL. When establishing a secure connection using SSL, operations such as SSL handshake and identity verification are required. For example, we write a program to make an HTTPS request to a server, do TLS handshake and verifying digital signatures on our own would be challenging. This is where OpenSSL comes in—it handles these complex operations.&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s possible that some people may have noticed that when sending HTTP requests using Python, OpenSSL was not explicitly used. There are two reasons for this:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;It could be because you were sending an HTTP request instead of an HTTPS request. You can check if the destination port is set to 80, which is the default port for HTTP.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The HTTP library you used in Python may have called the OpenSSL library at its lower levels to handle the complex operations on your behalf. However, you might not have noticed this because it happens behind the scenes. For example, the OpenAI package you mentioned that you recently used internally utilizes OpenSSL, but you wouldn&amp;rsquo;t be able to detect it without examining the source code:&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; openai
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;openai&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;api_key &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Your Key&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# make https request here&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;response &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; openai&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;ChatCompletion&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;create(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    model&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;gpt-3.5-turbo&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    messages&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;[
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        {&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;role&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;user&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;content&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Who won the 2018 FIFA world cup?&amp;#34;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;print(response[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;choices&amp;#39;&lt;/span&gt;][&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;][&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;message&amp;#39;&lt;/span&gt;][&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;content&amp;#39;&lt;/span&gt;])
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When I run the code above, there is an error:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ImportError: urllib3 v2.0 only supports OpenSSL 1.1.1+, currently the &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ssl&amp;#39;&lt;/span&gt; module is compiled with LibreSSL 2.8.3. See: https://github.com/urllib3/urllib3/issues/2168
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;openai&lt;/code&gt; package utilizes a Python package called urllib3, which is used for sending HTTP requests. urllib3 relies on a built-in Python library called ssl, which internally calls OpenSSL&amp;rsquo;s related interfaces for tasks such as session creation and certificate verification.&lt;/p&gt;
+&lt;p&gt;However, from your Python code&amp;rsquo;s perspective, you&amp;rsquo;re just using the ssl module&amp;rsquo;s high-level API. You don&amp;rsquo;t have to interact directly with OpenSSL - it&amp;rsquo;s an implementation detail hidden by the SSLContext and socket wrapping methods. So in short, the Python SSL library uses the OpenSSL library under the hood to actually perform SSL handshakes, key generation, encryption, etc. But from a Python programmer&amp;rsquo;s point of view, you just import ssl and call its APIs to establish encrypted SSL connections.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/003-openssl-issue/b.png&#34; alt=&#34;b&#34;&gt;&lt;/p&gt;
+&lt;p&gt;So, the error message above is stating that urllib3 version 2.0 only supports OpenSSL 1.1.1+ but the SSL library used on my computer is LibreSSL 2.8.3. (Remember,  &lt;code&gt;openssl version&lt;/code&gt; earlier, the output is LibreSSL) Since urllib3 version 2.0 does not support the LibreSSL on your computer, the solution would be to switch to a different version of urllib3.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;pip3 uninstall urllib3 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;pip3 install &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;urllib3&amp;lt;2.0&amp;#39;&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Alternatively, I could consider upgrading or changing the version of LibreSSL on my computer to a version that is compatible with urllib3 2.0:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;brew install openssl@1.1
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+    </item>
+    
+    <item>
+      <title>ssh session vary slow</title>
+      <link>https://blog.jiyi27.com/posts/bugs/005-ssh-connection-slow/</link>
+      <pubDate>Mon, 25 Sep 2023 14:30:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/005-ssh-connection-slow/</guid>
+      <description>&lt;p&gt;Connecting to my aws server with ssh client is very slow, and after connected, the session is very slow too.&lt;/p&gt;
+&lt;p&gt;Like input a command in the ssh session and you have to wait seconds to get the output, lots of latency.&lt;/p&gt;
+&lt;p&gt;Then I think maybe there is a &amp;ldquo;bad&amp;rdquo; process which takes a lot of cpu usages makes my server in high load, or there is a high network traffic. Then I use &lt;code&gt;top&lt;/code&gt; command to check, then I got this:&lt;/p&gt;</description>
+      <content>&lt;p&gt;Connecting to my aws server with ssh client is very slow, and after connected, the session is very slow too.&lt;/p&gt;
+&lt;p&gt;Like input a command in the ssh session and you have to wait seconds to get the output, lots of latency.&lt;/p&gt;
+&lt;p&gt;Then I think maybe there is a &amp;ldquo;bad&amp;rdquo; process which takes a lot of cpu usages makes my server in high load, or there is a high network traffic. Then I use &lt;code&gt;top&lt;/code&gt; command to check, then I got this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ top
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;60841&lt;/span&gt; asterisk -11   &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1025372&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;325376&lt;/span&gt;   &lt;span style=&#34;color:#ae81ff&#34;&gt;9300&lt;/span&gt; R  99.9  32.9 980:16.51 asterisk
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The asterisk which takes up 99.9% of my cup!!!&lt;/p&gt;
+&lt;p&gt;Thenk I kill it with&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo kill &lt;span style=&#34;color:#ae81ff&#34;&gt;60841&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then my server works fine.&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>npm install 总是安装到全局目录排查与解决</title>
+      <link>https://blog.jiyi27.com/posts/bugs/001-npm-install-locally/</link>
+      <pubDate>Tue, 27 Jun 2023 11:24:35 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/001-npm-install-locally/</guid>
+      <description>&lt;p&gt;使用 &lt;code&gt;npm install xxx&lt;/code&gt;, 然后总是安装到 &lt;code&gt;~/node_modules/&lt;/code&gt;, 查了好多, 有的说用 &lt;code&gt;npm config list   &lt;/code&gt;查看 global 的值, 改为 false 什么, 都没有用, 卸载 node 和 npm 重装依旧不能解决,&lt;/p&gt;</description>
+      <content>&lt;p&gt;使用 &lt;code&gt;npm install xxx&lt;/code&gt;, 然后总是安装到 &lt;code&gt;~/node_modules/&lt;/code&gt;, 查了好多, 有的说用 &lt;code&gt;npm config list   &lt;/code&gt;查看 global 的值, 改为 false 什么, 都没有用, 卸载 node 和 npm 重装依旧不能解决,&lt;/p&gt;
+&lt;p&gt;最后删除了  &lt;code&gt;~/node_modules/&lt;/code&gt; 文件夹和 &lt;code&gt;~/&lt;/code&gt; 下的所有 npm 相关文件夹, 然后进入项目文件夹, 重新运行 &lt;code&gt;npm install xxx&lt;/code&gt; 后本地文件夹自动创建 &lt;code&gt;node_modules&lt;/code&gt;, 安装成功.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ mkdir jslearn &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; cd jslearn
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ npm install cors
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;added &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; packages in 466ms
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ls
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;node_modules      package-lock.json package.json
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 你看不用 npm init&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在知乎看到的回答:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;npm的原理大概就是从当前目录往上找，找到哪个目录有node_modules就认为这才是真正的项目目录，所以东西全给装那里面去, 所以不仅仅是User根目录的问题，你得保证从你当前的目录开始一直到根目录都没有node_modules，npm才会“正常”地把东西放到当前目录下的node_modules里 &lt;a href=&#34;https://www.zhihu.com/question/33302274/answer/56276831&#34;&gt;原文&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;另外:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;-S&lt;/code&gt; is shorthand for &lt;code&gt;--save&lt;/code&gt;, and it adds the package you&amp;rsquo;re installing to the dependencies in your &lt;code&gt;package.json&lt;/code&gt; file (which can be created with &lt;code&gt;npm init&lt;/code&gt;). However, &lt;code&gt;--save&lt;/code&gt; or &lt;code&gt;-S&lt;/code&gt; is totally unnecessary if you&amp;rsquo;re using npm 5 or above since it&amp;rsquo;s done by default. &lt;a href=&#34;https://stackoverflow.com/a/58475949/16317008&#34;&gt;https://stackoverflow.com/a/58475949/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;</content>
+    </item>
+    
+    <item>
+      <title>grep 不支持 Negative Lookahead 问题</title>
+      <link>https://blog.jiyi27.com/posts/bugs/003-bug-regex-grep-lookahead/</link>
+      <pubDate>Tue, 02 May 2023 22:29:30 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/003-bug-regex-grep-lookahead/</guid>
+      <description>&lt;p&gt;刚开始使用&lt;code&gt;printf &amp;quot;123\n24567\n8930\n234\n&amp;quot; | egrep &#39;(?&amp;lt;!2)3&#39;&lt;/code&gt;提示&lt;code&gt;egrep: repetition-operator operand invalid&lt;/code&gt;, 然后查到可以使用参数&lt;code&gt;-P&lt;/code&gt;, 如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;123\n24567\n8930\n234\n&amp;#34;&lt;/span&gt; | grep -P &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;(?&amp;lt;!2)3&amp;#39;&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;但是仍然报错和上面报错相同, 然后就考虑是不是版本问题,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ grep --v
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;grep &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;BSD grep, GNU compatible&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; 2.6.0-FreeBSD
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;尝试更新,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ brew upgrade grep
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Error: grep not installed
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;然后尝试安装,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ brew install grep
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;All commands have been installed with the prefix &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;g&amp;#34;&lt;/span&gt;.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;If you need to use these commands with their normal names, you
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;can add a &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;gnubin&amp;#34;&lt;/span&gt; directory to your PATH from your bashrc like:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;PATH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/opt/homebrew/opt/grep/libexec/gnubin:&lt;/span&gt;$PATH&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;安装成功, 然后根据提示往&lt;code&gt;.zshrc&lt;/code&gt;添加对应环境变量&lt;code&gt;PATH&lt;/code&gt;, 注意&lt;code&gt;$:PATH&lt;/code&gt;的含义(追加),&lt;/p&gt;</description>
+      <content>&lt;p&gt;刚开始使用&lt;code&gt;printf &amp;quot;123\n24567\n8930\n234\n&amp;quot; | egrep &#39;(?&amp;lt;!2)3&#39;&lt;/code&gt;提示&lt;code&gt;egrep: repetition-operator operand invalid&lt;/code&gt;, 然后查到可以使用参数&lt;code&gt;-P&lt;/code&gt;, 如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ printf &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;123\n24567\n8930\n234\n&amp;#34;&lt;/span&gt; | grep -P &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;(?&amp;lt;!2)3&amp;#39;&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;但是仍然报错和上面报错相同, 然后就考虑是不是版本问题,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ grep --v
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;grep &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;BSD grep, GNU compatible&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; 2.6.0-FreeBSD
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;尝试更新,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ brew upgrade grep
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Error: grep not installed
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;然后尝试安装,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ brew install grep
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;All commands have been installed with the prefix &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;g&amp;#34;&lt;/span&gt;.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;If you need to use these commands with their normal names, you
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;can add a &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;gnubin&amp;#34;&lt;/span&gt; directory to your PATH from your bashrc like:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;PATH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/opt/homebrew/opt/grep/libexec/gnubin:&lt;/span&gt;$PATH&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;安装成功, 然后根据提示往&lt;code&gt;.zshrc&lt;/code&gt;添加对应环境变量&lt;code&gt;PATH&lt;/code&gt;, 注意&lt;code&gt;$:PATH&lt;/code&gt;的含义(追加),&lt;/p&gt;
+&lt;p&gt;查看版本,&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;grep --v
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;grep &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;GNU grep&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; 3.10
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Packaged by Homebrew
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Copyright &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;C&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2023&lt;/span&gt; Free Software Foundation, Inc.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;现在支持上面语法&lt;code&gt;grep -P &#39;(?&amp;lt;!2)3&#39; &lt;/code&gt;, 问题解决~&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Cloudflare 代理无法通过域名解析出 IP 问题</title>
+      <link>https://blog.jiyi27.com/posts/bugs/002-bug-domain-with-two-ip/</link>
+      <pubDate>Wed, 26 Apr 2023 17:30:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/002-bug-domain-with-two-ip/</guid>
+      <description>&lt;p&gt;这几天弄服务器, 用ssh通过域名连接的时候总是出现超时(域名只有一个A记录即服务器IP), 问题下面是分析思路,&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;m trying to use &lt;code&gt;ssh&lt;/code&gt; to connect my server with my domain name &lt;code&gt;ssh root@www.davidzhu.xyz&lt;/code&gt;, but I always get timeout. However I can connect my server when use my server ip directly &lt;code&gt;ssh root@144.202.12.32&lt;/code&gt;, so I use &lt;code&gt;dig&lt;/code&gt; to check the ip address of my domain on DNS, the output is:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;dig davidzhu.xyz  +short       
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;172.67.210.8
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;104.21.50.195
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;dig www.davidzhu.xyz  +short
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;172.67.210.8
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;104.21.50.195
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;But I only have one A record on my domain, this is the DNS Record of my domain name (the third one is about the google search console):&lt;/p&gt;</description>
+      <content>&lt;p&gt;这几天弄服务器, 用ssh通过域名连接的时候总是出现超时(域名只有一个A记录即服务器IP), 问题下面是分析思路,&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;m trying to use &lt;code&gt;ssh&lt;/code&gt; to connect my server with my domain name &lt;code&gt;ssh root@www.davidzhu.xyz&lt;/code&gt;, but I always get timeout. However I can connect my server when use my server ip directly &lt;code&gt;ssh root@144.202.12.32&lt;/code&gt;, so I use &lt;code&gt;dig&lt;/code&gt; to check the ip address of my domain on DNS, the output is:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;dig davidzhu.xyz  +short       
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;172.67.210.8
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;104.21.50.195
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;dig www.davidzhu.xyz  +short
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;172.67.210.8
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;104.21.50.195
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;But I only have one A record on my domain, this is the DNS Record of my domain name (the third one is about the google search console):&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/f025ec2ddc93a57d7c062cd2f3e590bb.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;惊不惊讶, &lt;strong&gt;&lt;code&gt;dig&lt;/code&gt;返回的两个IP地址竟然都与我域名的A记录不同&lt;/strong&gt;!&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;原因是我的域名开启了 Cloudfalre 的 &lt;a href=&#34;https://developers.cloudflare.com/fundamentals/concepts/how-cloudflare-works/&#34;&gt;reverse proxy&lt;/a&gt;, 通过域名获取到的是 Clouflare 的IP, 无法访问到我服务器真实IP:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;When you add your application to Cloudflare, we use this network to sit in between requests and your origin server.&lt;/p&gt;
+&lt;p&gt;Cloudflare does this by serving as a &lt;strong&gt;reverse proxy&lt;/strong&gt; for your web traffic. All requests to and from your origin &lt;strong&gt;flow through Cloudflare&lt;/strong&gt; and — as these requests pass through our network — we can apply various rules and optimizations to improve security, performance, and reliability.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;关闭 Cloudflare 反向代理就可以通过域名获取到服务器真实IP了:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/ad242ed1a2bba87d81f18f2a7fa1a64b.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/a5091686a0a61fab1ed5ea3f604b9423.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;此时可以看到现实 DNS Only, 使用 &lt;code&gt;dig xxx.com +short&lt;/code&gt; 即可查到真实绑定 ip, 或者 &lt;code&gt;ping&lt;/code&gt; 也可以.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;另外通过Cloudflare 域名托管机制(就是现在我们操作的, 中文里都叫托管更合适, 因为他会接管通往我们域名的所有流量), 就是域名被 Cloudflare 托管(Domain Hosting)后, &lt;strong&gt;若想更换域名的 DNS Record, 只需要在上图中的 edit 上修改 A record 就行了&lt;/strong&gt;, 就是改成你的新的 VPS(服务器) 的 ipv4 地址, 不用去域名服务商那里修改 DNS Record 了, 因为在把域名托管给 Cloudflare 的时候已经在域名提供商那里把域名的 DNS 服务器设置成了 Cloudflare.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;如何让 Cloudfalre 托管我们的域名:: &lt;a href=&#34;https://davidzhu.xyz/post/build-website/008-enable-cloudflare-reverse-proxy/&#34;&gt;Enable Coudflare Reverse Proxy - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;另外如果使用了 cloudflare https 代理, 一般都是先修改域名的 NS 为 cloudfalre 指定的 NS, 但是有些电脑可能因为 DNS cache 问题, 通过 https 访问你的域名可能会失败, 此时应该尝试修改本地 DNS cache, 可以查一下 flush dns cache 的命令,&lt;/p&gt;
+&lt;p&gt;注意, DNS cache 一般 chrome 保存了一份, 操作系统也会保存一份, 因此两个地方都要考虑进去,&lt;/p&gt;
+&lt;p&gt;关于DNS: &lt;a href=&#34;https://davidzhu.xyz/post/networking/002-dns-basics/&#34;&gt;DNS Concepts (NameServer(NS), DNS Records and Caching) - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;了解更多: &lt;a href=&#34;https://community.cloudflare.com/t/https-works-on-some-computers-but-not-others/15922&#34;&gt;HTTPS Works on some computers but not others? - Website, Application, Performance / Security - Cloudflare Community&lt;/a&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;其实这样有个好处, 就是别人无法通过你的域名接触到你的服务器, 因为每次请求你的域名, 都要经过 Cloudfalre 中转才能到你的服务器, 另外通过nslookup, dig也无法查到你服务器的真实IP, 返回的都是 Cloudflare 的IP.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Because of &lt;a href=&#34;https://developers.cloudflare.com/fundamentals/concepts/how-cloudflare-works/&#34;&gt;how Cloudflare works&lt;/a&gt;, all traffic to &lt;a href=&#34;https://developers.cloudflare.com/dns/manage-dns-records/reference/proxied-dns-records/&#34;&gt;proxied DNS records&lt;/a&gt; pass through Cloudflare before reaching your origin server. This means that your origin server will stop receiving traffic from individual visitor IP addresses and instead receive traffic from &lt;a href=&#34;https://www.cloudflare.com/ips&#34;&gt;Cloudflare IP addresses&lt;/a&gt;, which are shared by all proxied hostnames.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://developers.cloudflare.com/learning-paths/get-started/concepts/cloudflare-ips/&#34;&gt;Cloudflare IPs · Getting started · Learning paths&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>SSH连接远程主机出现的Connection Refused问题</title>
+      <link>https://blog.jiyi27.com/posts/bugs/004-bug-ssh-connection-refused/</link>
+      <pubDate>Sun, 23 Apr 2023 20:30:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/004-bug-ssh-connection-refused/</guid>
+      <description>&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ssh root@144.202.12.32
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ssh: connect to host 144.202.12.32 port 22: Connection refused
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;查的一些博客说修改mac设置成允许远程连接(这其实是允许别人连接你的mac电脑比如&lt;code&gt;ssh localhost&lt;/code&gt;), 还有修改服务器里的配置文件&lt;code&gt;/etc/ssh/ssh_config&lt;/code&gt;, 22端口取消注释, 都没用,&lt;/p&gt;
+&lt;p&gt;直接去服务器卸载ssh再重装就好了&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo yum remove openssh-server
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo yum install openssh-server
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sudo systemctl stop sshd&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo systemctl start sshd
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 查看状态&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service sshd status
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
+      <content>&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ssh root@144.202.12.32
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ssh: connect to host 144.202.12.32 port 22: Connection refused
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;查的一些博客说修改mac设置成允许远程连接(这其实是允许别人连接你的mac电脑比如&lt;code&gt;ssh localhost&lt;/code&gt;), 还有修改服务器里的配置文件&lt;code&gt;/etc/ssh/ssh_config&lt;/code&gt;, 22端口取消注释, 都没用,&lt;/p&gt;
+&lt;p&gt;直接去服务器卸载ssh再重装就好了&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo yum remove openssh-server
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo yum install openssh-server
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sudo systemctl stop sshd&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo systemctl start sshd
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 查看状态&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;service sshd status
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+    </item>
+    
+  </channel>
+</rss>

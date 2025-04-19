@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>IO in Golang :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. os.Open() loads entire file into memory? No, the os.Open() function in Golang does not load the entire file into RAM by default. It returns a file descriptor that allows you to read or write data from or to the file.
+I found this answer talks about the open() sys call Linux on StackOverflow, which may give you hints on how os.Open() works:
+No, a file is not automatically read into memory by opening it. That would be awfully inefficient. You have to read it yourself.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/basics/006-io/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="IO in Golang">
+<meta property="og:description" content="1. os.Open() loads entire file into memory? No, the os.Open() function in Golang does not load the entire file into RAM by default. It returns a file descriptor that allows you to read or write data from or to the file.
+I found this answer talks about the open() sys call Linux on StackOverflow, which may give you hints on how os.Open() works:
+No, a file is not automatically read into memory by opening it. That would be awfully inefficient. You have to read it yourself.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/basics/006-io/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="golang" />
+
+
+  <meta property="article:published_time" content="2023-12-04 14:25:04 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/basics/006-io/">IO in Golang</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-12-04</time><span class="post-reading-time">9 分钟阅读 (1811 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/io/">io</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-osopen-loads-entire-file-into-memory">1. <code>os.Open()</code> loads entire file into memory?<a href="#1-osopen-loads-entire-file-into-memory" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>No, the os.Open() function in Golang does not load the entire file into RAM by default. It returns a file descriptor that allows you to read or write data from or to the file.</p>
+<p>I found this answer talks about the open() sys call Linux on StackOverflow, which may give you hints on how <code>os.Open()</code> works:</p>
+<blockquote>
+<p>No, a file is not automatically read into memory by opening it. That would be awfully inefficient. You have to read it yourself.</p>
+<p>No it doesn&rsquo;t. It just gives file a descriptor called file descriptor which then you can use to do read / write and some other operations. Think file descriptor as an abstraction or an handle over what lays on disk.</p>
+<p>The open() function shall establish the connection between a file and a file descriptor.</p>
+<p>Source: <a href="https://stackoverflow.com/a/20512890/16317008">https://stackoverflow.com/a/20512890/16317008</a></p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Open</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>, <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><p>Open opens the named file for reading. If successful, methods on the returned file can be used for reading;</p>
+<p>The return type of <code>os.Open()</code> is <code>*File</code>, which is a pointer to a struct:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// File represents an open file descriptor.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">File</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">*</span><span style="color:#a6e22e">file</span> <span style="color:#75715e">// os specific</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">file</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pfd</span>         <span style="color:#a6e22e">poll</span>.<span style="color:#a6e22e">FD</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">name</span>        <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">dirinfo</span>     <span style="color:#f92672">*</span><span style="color:#a6e22e">dirInfo</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">nonblock</span>    <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">stdoutOrErr</span> <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">appendMode</span>  <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>As you can see, os.Open() just returns a file descriptor, which is a pointer to a struct. It does not load the entire file into memory. After you get the file descriptor, you can use it to read or write data from or to the file. This is why we say &ldquo;The open() function shall establish the connection between a file and a file descriptor.&rdquo;</p>
+<p>If you want to read the entire file into memory, you can use the ioutil.ReadFile() function from the io/ioutil package. This function reads the entire contents of a file into a byte slice. However, keep in mind that this approach may not be suitable for <strong>very large files</strong>, as it loads the entire file into memory at once.</p>
+<p>Let me demonstrate how to open a file and read its contents chunk by chunk in Golang:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Open the file for reading</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#e6db74">&#34;input.txt&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Close the file later, otherwise it will cause memory leak</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Create a buffer to keep chunks that are read</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">buffer</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">byte</span>, <span style="color:#ae81ff">1024</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Read from the file</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// Read a chunk</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// There is another way to read: file.ReadAt()</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">buffer</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">n</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(string(<span style="color:#a6e22e">buffer</span>[:<span style="color:#a6e22e">n</span>]))
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Why if os.File() load the entire file into memory matters? Because if you are dealing with a very large file, and the RAM is quite limited, your program may get killed by the OS due to out of memory.</p>
+<h2 id="2-ioreader-interface">2. <code>io.Reader</code> interface<a href="#2-ioreader-interface" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="21-what-is-ioreader">2.1. What is <code>io.Reader</code><a href="#21-what-is-ioreader" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>The use <code>io.Reader</code> is quite common in Go. What is <code>io.Reader</code>?</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Reader</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">p</span> []<span style="color:#66d9ef">byte</span>) (<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>As you can see, <code>io.Reader</code> is an interface that has a <code>Read()</code> method. <strong>Any type</strong> that implements the <code>Read()</code> method is a <code>io.Reader</code>. Read reads up to len(p) bytes into p. It returns the number of bytes read (0 &lt;= n &lt;= len(p)) and any error encountered. Learn more: <a href="https://golang.org/pkg/io/#Reader">https://golang.org/pkg/io/#Reader</a></p>
+<h3 id="22-common-types-implement-ioreader">2.2. Common types implement <code>io.Reader</code><a href="#22-common-types-implement-ioreader" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<h4 id="221-osfile">2.2.1. <code>*os.File</code><a href="#221-osfile" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p><code>*os.File</code> we mentioned above has the <code>Read()</code> method, which means it&rsquo;s an <code>io.Reader</code>.
+Note that <code>*os.File</code> doesn&rsquo;t equals to <code>os.File</code>, because they have different method set. Learn more: <a href="https://davidzhu.xyz/post/golang/basics/006-interfaces/">https://davidzhu.xyz/post/golang/basics/006-interfaces/</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>) <span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">b</span> []<span style="color:#66d9ef">byte</span>) (<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><h4 id="222-bytesbuffer">2.2.2. <code>*bytes.Buffer</code><a href="#222-bytesbuffer" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// A Buffer is a variable-sized buffer of bytes with Read and Write methods. The zero value for Buffer is an empty buffer ready to use.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Buffer</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// contains filtered or unexported fields</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Buffer</span>) <span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">p</span> []<span style="color:#66d9ef">byte</span>) (<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><p>As you can see, <code>*bytes.Buffer</code> has the <code>Read()</code> method, not <code>bytes.Buffer</code>. So <code>*bytes.Buffer</code> is an <code>io.Reader</code>, but <code>bytes.Buffer</code> is not.</p>
+<p>If you run code below, you will get an error <em>Cannot use &lsquo;bytes.Buffer{}&rsquo; (type bytes.Buffer) as the type io.Reader Type does not implement &lsquo;io.Reader&rsquo; as the &lsquo;Read&rsquo; method has a pointer receiver</em>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">r</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Reader</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">r</span> = <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">Buffer</span>{}  <span style="color:#75715e">// error</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">r</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">Buffer</span>{} <span style="color:#75715e">// this is ok</span>
+</span></span></code></pre></div><p>You should learn how to read the documentation provided Go, it&rsquo;s very important:</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/08/d8078b517922fcdbc5f3a861c09fa09f.png" alt=""></p>
+<h4 id="223-netconn">2.2.3. <code>net.Conn</code><a href="#223-netconn" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p>The net.Conn interface represents a network connection, such as a TCP or UDP connection. Many networking packages in Go, like net, net/http, and net/rpc, provide implementations of this interface. <code>net.Conn</code> interface has the <code>Read()</code> method, so it&rsquo;s an <code>io.Reader</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Conn</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">b</span> []<span style="color:#66d9ef">byte</span>) (<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Write</span>(<span style="color:#a6e22e">b</span> []<span style="color:#66d9ef">byte</span>) (<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="224-code-example">2.2.4. Code example<a href="#224-code-example" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#e6db74">&#34;example.txt&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">buffer</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">byte</span>, <span style="color:#ae81ff">1024</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">buffer</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Read %d bytes from the file: %s\n&#34;</span>, <span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">buffer</span>[:<span style="color:#a6e22e">n</span>])
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">data</span> <span style="color:#f92672">:=</span> []byte(<span style="color:#e6db74">&#34;Hello, World!&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">buffer</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">NewBuffer</span>(<span style="color:#a6e22e">data</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">readData</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">byte</span>, <span style="color:#ae81ff">5</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">buffer</span>.<span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">readData</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Read %d bytes from the buffer: %s\n&#34;</span>, <span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">readData</span>)
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">conn</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Dial</span>(<span style="color:#e6db74">&#34;tcp&#34;</span>, <span style="color:#e6db74">&#34;example.com:80&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">conn</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">buffer</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">byte</span>, <span style="color:#ae81ff">1024</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">conn</span>.<span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">buffer</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Read %d bytes from the network connection: %s\n&#34;</span>, <span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">buffer</span>[:<span style="color:#a6e22e">n</span>])
+</span></span></code></pre></div><p><code>*os.File</code>, <code>*bytes.Buffer</code>, and <code>net.Conn</code> all have the <code>Read()</code> method, so they are all <code>io.Reader</code>. And the use of them are quite similar which involves:</p>
+<ul>
+<li>get a <code>io.Reader</code></li>
+<li>close the <code>io.Reader</code> later</li>
+<li>create a buffer for store chunk of data (not load entire data into memory)</li>
+<li>read data (chunk by chunk) to the buffer</li>
+</ul>
+<h2 id="3-reader-wrapper">3. Reader wrapper<a href="#3-reader-wrapper" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-read-user-input-from-the-console">3.1. Read user input from the console<a href="#31-read-user-input-from-the-console" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Sometimes we want to add some extra functionality to a <code>io.Reader</code>, for example, when read user input from the console, we want use a specific delimiter to indicate the end of input. We can use a <code>bufio.Reader</code> to wrap the <code>os.Stdin</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">reader</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bufio</span>.<span style="color:#a6e22e">NewReader</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stdin</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;Enter your input: &#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">input</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">reader</span>.<span style="color:#a6e22e">ReadString</span>(<span style="color:#e6db74">&#39;\n&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;You entered:&#34;</span>, <span style="color:#a6e22e">input</span>)
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// In bufio package, so the pointer receiver *Reader here is *bufio.Reader not io.Reader.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewReader</span>(<span style="color:#a6e22e">rd</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Reader</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Reader</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// In bufio package, same as above.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">b</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Reader</span>) <span style="color:#a6e22e">ReadString</span>(<span style="color:#a6e22e">delim</span> <span style="color:#66d9ef">byte</span>) (<span style="color:#66d9ef">string</span>, <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><p><code>*bufio.Reader</code> and <code>os.Stdin</code> both have the <code>Read()</code> method, so they are both <code>io.Reader</code>. But <code>bufio.Reader</code> provides more functionality than <code>os.Stdin</code>, for example, <code>ReadString()</code>, <code>ReadBytes()</code>, <code>ReadLine()</code>, etc. So we can use <code>bufio.Reader</code> to wrap <code>os.Stdin</code> to add extra functionality.</p>
+<p>If you use <code>os.Stdin</code> to read user input, would be a little inconvenient, for example, you need convert the byte slice to a string, and trim the unused part. And you cannot specify a delimiter to indicate the end of input:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;Enter your input: &#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">input</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">byte</span>, <span style="color:#ae81ff">1024</span>) <span style="color:#75715e">// Create a byte slice of a certain size</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stdin</span>.<span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">input</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Convert byte slice to a string, trimming the unused part</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">inputStr</span> <span style="color:#f92672">:=</span> string(<span style="color:#a6e22e">input</span>[:<span style="color:#a6e22e">n</span>])
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;You entered:&#34;</span>, <span style="color:#a6e22e">inputStr</span>)
+</span></span></code></pre></div><h3 id="32-limit-the-size-of-http-request-body">3.2. Limit the size of HTTP request body<a href="#32-limit-the-size-of-http-request-body" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>When handle the user upload file, you may handle like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">uploadHandler</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Parse the form data from the request</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">ParseMultipartForm</span>(<span style="color:#ae81ff">10</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">20</span>) <span style="color:#75715e">// Set a reasonable file size limit, e.g., 10MB</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Get the file from the request</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">FormFile</span>(<span style="color:#e6db74">&#34;file&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Accroding to the documentation of <code>r.ParseMultipartForm()</code>:</p>
+<blockquote>
+<p>ParseMultipartForm parses a request body as multipart/form-data. <strong>The whole request body is parsed</strong> and up to a total of maxMemory bytes of its file parts are stored in memory, with the remainder stored on disk in temporary files. <a href="https://pkg.go.dev/net/http#Request.ParseMultipartForm">http package - net/http - Go Packages</a></p>
+</blockquote>
+<p>This means <code>r.ParseMultipartForm()</code> will parse the whole request body even if the uploaded file is larger than <code>maxMemory</code>. But think about another senario, if the client sends a vary large file, the server needs to handle all that data, which may consume the bandwith and CUP usage of the server.</p>
+<p>So we need to limit the size of incoming request bodies. We can use <code>http.MaxBytesReader()</code> to wrap the <code>http.Request.Body</code> like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">server</span>) <span style="color:#a6e22e">handleUpload</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>, <span style="color:#a6e22e">currentDir</span> <span style="color:#66d9ef">string</span>) (<span style="color:#66d9ef">error</span>, <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Body</span> = <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">MaxBytesReader</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Body</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">maxFileSize</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">ParseMultipartForm</span>(<span style="color:#a6e22e">maxFileSize</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;file is too large:%v&#34;</span>, <span style="color:#a6e22e">err</span>), <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusBadRequest</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// obtain file from parsed form.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">parsedFile</span>, <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">FormFile</span>(<span style="color:#e6db74">&#34;file&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Let&rsquo;s see the <a href="https://pkg.go.dev/net/http#MaxBytesReader">documentation</a> of <code>http.MaxBytesReader()</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">MaxBytesReader</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">ReadCloser</span>, <span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int64</span>) <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">ReadCloser</span>
+</span></span></code></pre></div><p><code>http.MaxBytesReader()</code>  accepts a <code>io.ReadCloser</code> and returns a <code>io.ReadCloser</code>. To be specific, <code>http.MaxBytesReader()</code> wraps the <code>http.Request.Body</code>(<code>io.ReadCloser</code>) to a <code>http.maxBytesReader</code> which implements the <code>io.ReadCloser</code> interface.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">MaxBytesReader</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">ReadCloser</span>, <span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int64</span>) <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">ReadCloser</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">n</span> &lt; <span style="color:#ae81ff">0</span> { <span style="color:#75715e">// Treat negative limits as equivalent to 0.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">n</span> = <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">maxBytesReader</span>{<span style="color:#a6e22e">w</span>: <span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">r</span>: <span style="color:#a6e22e">r</span>, <span style="color:#a6e22e">i</span>: <span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">n</span>: <span style="color:#a6e22e">n</span>}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>As you can see, what <code>http.MaxBytesReader()</code> does is just to wrap the <code>http.Request.Body</code> to another <code>io.ReadCloser</code>.</p>
+<p>Then you call <code>r.ParseMultipartForm()</code>, this is where the actual parsing and loading of data into memory occur. According to the documentation of <code>r.ParseMultipartForm()</code>, it will parse the whole request body. But <strong>the wrapped <code>http.Request.Body</code> will limit the size of the request body</strong>, if the incoming data exceeds <strong>maxFileSize</strong> during the reading and parsing process, the http.MaxBytesReader will trigger an error, effectively preventing the server from reading any more data from the client. This helps to protect against clients sending excessively large requests.</p>
+<p>Then what do you think about how the <code>r.ParseMultipartForm()</code> parse file from request body? Don&rsquo;t forget <code>http.Request.Body</code> is a <code>io.Reader</code> too, which means it has the <code>Read()</code> method.
+It actually calls the <code>Read()</code> method of <code>http.Request.Body</code> to read data from the request body.</p>
+<p>In the Read() method of <code>http.maxBytesReader</code>, it will check if the number of bytes read exceeds the limit, if so, it will return an error. You can check the source code of the Read() method of <code>http.maxBytesReader</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">l</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">maxBytesReader</span>) <span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">p</span> []<span style="color:#66d9ef">byte</span>) (<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">res</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">w</span>.(<span style="color:#a6e22e">requestTooLarger</span>); <span style="color:#a6e22e">ok</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">requestTooLarge</span>()
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">err</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">MaxBytesError</span>{<span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">i</span>}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<p>MaxBytesReader prevents clients from accidentally or maliciously sending a large request and wasting server resources. If possible, it tells the ResponseWriter to close the connection after the limit has been reached.</p>
+</blockquote>
+<h2 id="4-the-nature-of-ioreader">4. The nature of io.Reader<a href="#4-the-nature-of-ioreader" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Readers in Go are used for reading data streams, and they have a crucial property: once you read data from a reader, that <strong>data is consumed</strong>. It&rsquo;s not possible to &lsquo;rewind&rsquo; or read the same data from the reader again unless the reader specifically supports such an operation.</p>
+<p>As what we did above, we read data from <code>*os.File</code>, <code>*bytes.Buffer</code>, and <code>net.Conn</code> which are all <code>io.Reader</code>. When we read the data into the buffer chunk by chunk, we didn&rsquo;t record or mark where we stop, but in next time we read from the reader, it will start from the last stop point. This is because the data is consumed. Let me demonstrate this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">reader</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">NewReader</span>(<span style="color:#e6db74">&#34;HelloWorld&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">buf</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">byte</span>, <span style="color:#ae81ff">5</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">reader</span>.<span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">buf</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(string(<span style="color:#a6e22e">buf</span>)) <span style="color:#75715e">// Outputs: Hello</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">reader</span>.<span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">buf</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(string(<span style="color:#a6e22e">buf</span>)) <span style="color:#75715e">// Outputs: World</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>This applies to all readers, including <code>*os.File</code>, <code>*bytes.Buffer</code>, and <code>net.Conn</code>, etc.</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/golang/basics/003-array-slice/" class="button inline prev">
+        slice &amp; array - Go
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/python/basics/002-nuggets-python/" class="button inline next">
+        零碎知识 &#43; 踩坑 - Python
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

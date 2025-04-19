@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Rust 引发的类型安全的思考 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="关于 type safety, 一直没有一个确切的定义, 每个语言的作者对 type safety 可能有不同的理解, 我比较喜欢的是维基百科对 type safety 的定义, 即 type safety 阻止或者使 type errors 不容易发生, 而什么是 type errors 在下面这段话里也给出了定义:
+In computer science, type safety is the extent to which a programming language discourages or prevents type errors. The behaviors classified as type errors are usually that result from attempts to perform operations on values that are not of the appropriate data type, e.g., adding a string to an integer when there&rsquo;s no definition on how to handle this case. This classification is partly based on opinion. https://en.wikipedia.org/wiki/Type_safety
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/cs-basics/003-type-safety/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Rust 引发的类型安全的思考">
+<meta property="og:description" content="关于 type safety, 一直没有一个确切的定义, 每个语言的作者对 type safety 可能有不同的理解, 我比较喜欢的是维基百科对 type safety 的定义, 即 type safety 阻止或者使 type errors 不容易发生, 而什么是 type errors 在下面这段话里也给出了定义:
+In computer science, type safety is the extent to which a programming language discourages or prevents type errors. The behaviors classified as type errors are usually that result from attempts to perform operations on values that are not of the appropriate data type, e.g., adding a string to an integer when there&rsquo;s no definition on how to handle this case. This classification is partly based on opinion. https://en.wikipedia.org/wiki/Type_safety
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/cs-basics/003-type-safety/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="计算机基础" />
+
+
+  <meta property="article:published_time" content="2023-08-05 18:32:53 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/cs-basics/003-type-safety/">Rust 引发的类型安全的思考</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-08-05</time><span class="post-reading-time">2 分钟阅读 (382 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/rust/">rust</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E7%B1%BB%E5%9E%8B%E5%AE%89%E5%85%A8/">类型安全</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>关于 type safety, 一直没有一个确切的定义, 每个语言的作者对 type safety 可能有不同的理解, 我比较喜欢的是维基百科对 type safety 的定义, 即 type safety 阻止或者使 type errors 不容易发生, 而什么是 type errors 在下面这段话里也给出了定义:</p>
+<blockquote>
+<p>In computer science, <strong>type safety</strong> is the extent to which a programming language discourages or prevents <strong>type errors</strong>. The behaviors classified as type errors are usually that result from attempts to perform operations on values that are not of the appropriate data type, e.g., <strong>adding a string to an integer when there&rsquo;s no definition on how to handle this case</strong>. This classification is partly based on opinion. <a href="https://en.wikipedia.org/wiki/Type_safety">https://en.wikipedia.org/wiki/Type_safety</a></p>
+</blockquote>
+<p>感觉维基百科对类型安全的定义与 Why Rust 一书的作者观点不谋而合:</p>
+<blockquote>
+<p>If a program has been written so that no possible execution can exhibit undefined behavior, we say that program is well defined. If a language’s type system ensures that every program is well defined, we say that language is type safe.</p>
+</blockquote>
+<p>undefined behavior: 在 c99 的定义中, undefined behaviors 有很多: 如分母为 0, 访问超出数组大小的位置 (c 是没有越界检查的), 让一个int能表示的最大数加一,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> a[<span style="color:#ae81ff">1</span>];
+</span></span><span style="display:flex;"><span>  a[<span style="color:#ae81ff">3</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x7ffff7b36cebUL</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>According to C99, because this program accesses an element off the end of the array <code>a</code>, its behavior is undefined, meaning that it can do anything whatsoever.</p>
+<p>A carefully written C or C++ program might be well defined, but C and C++ are not type safe: the program shown earlier has no type errors, yet exhibits undefined behavior. By contrast, Python is type safe. Python is willing to spend processor time to detect and handle out-of-range array indices in a friendlier fashion than C:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>&gt;&gt;&gt; a <span style="color:#f92672">=</span> <span style="color:#f92672">[</span>0<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>&gt;&gt;&gt; a<span style="color:#f92672">[</span>3<span style="color:#f92672">]</span> <span style="color:#f92672">=</span> 0x7ffff7b36ceb
+</span></span><span style="display:flex;"><span>Traceback <span style="color:#f92672">(</span>most recent call last<span style="color:#f92672">)</span>:
+</span></span><span style="display:flex;"><span>  File <span style="color:#e6db74">&#34;&lt;stdin&gt;&#34;</span>, line 1, in &lt;module&gt;
+</span></span><span style="display:flex;"><span>IndexError: list assignment index out of range
+</span></span><span style="display:flex;"><span>&gt;&gt;&gt;
+</span></span></code></pre></div><p>Python raised an exception, which is not undefined behavior: the Python documentation specifies that the assignment to <code>a[3]</code> should raise an <code>IndexError</code> exception, as we saw. Certainly, a module like <code>ctypes</code> that provides unconstrained access to the machine can introduce undefined behavior into Python, but the core language itself is type safe. Java, JavaScript, Ruby, and Haskell are similar in this way.</p>
+<blockquote>
+<p>Note that being type safe is independent of whether a language checks types at compile time or at runtime: C checks at compile time, and is not type safe; Python checks at runtime, and is type safe.</p>
+</blockquote>
+<p>以上讨论来自: <a href="https://www.oreilly.com/library/view/programming-rust/9781491927274/ch01.html">Why Rust Chapter 1</a> , 感兴趣可以自己翻阅,</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/java/basics/006-reflection/" class="button inline prev">
+        java.lang.Object &amp; java.lang.Class
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/java/basics/001-jdk-jre-jvm/" class="button inline next">
+        JDK JRE JVM JavaSE
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

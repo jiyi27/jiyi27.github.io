@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Spring Cloud 核心组件和配置 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 两个配置文件 在 Spring Cloud 项目中, 配置文件分为两类:
+bootstrap.yml
+作用：用于指定 Spring Cloud Config Server 的地址, 帮助服务从远程拉取具体配置 存放位置：每个服务的本地项目中（src/main/resources 目录下） application.yml
+作用：包含服务的具体配置信息, 如端口、Eureka 注册地址、数据库连接等 存放位置：集中存储在 GitHub 仓库中, 由 Config Server 管理 一般 Config Server 只用配置 application.yml 文件, 指定监听端口, 不用向 Eureka 注册, 因为它属于一个独立运行的服务, 负责为其他服务如用户认证, 订单服务, Eureka Server, Gateway 等提供配置文件,
+所以 Config Server 的配置文件 application.yml 内容大致如下, 不需要 bootstrap.yml:
+spring: application: name: skymates-config-server cloud: config: server: git: uri: https://github.com/jiyi27/skymates.git search-paths: configs default-label: master server: port: 8888 其他微服务只需要在本地配置 bootstrap.yml 文件, 用于指定 Config Server 服务器位置 和 自己需要的配置文件名字, 这也是为什么 Config Server 不需要向 Eureka Server 注册的原因, 因为其他微服务已经知道他的位置, 每个微服务直接从 Config Server 动态拉取自己的配置文件, Eureka Server 的 bootstrap.yml 文件内容:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/006-spring-cloud-building/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Spring Cloud 核心组件和配置">
+<meta property="og:description" content="1. 两个配置文件 在 Spring Cloud 项目中, 配置文件分为两类:
+bootstrap.yml
+作用：用于指定 Spring Cloud Config Server 的地址, 帮助服务从远程拉取具体配置 存放位置：每个服务的本地项目中（src/main/resources 目录下） application.yml
+作用：包含服务的具体配置信息, 如端口、Eureka 注册地址、数据库连接等 存放位置：集中存储在 GitHub 仓库中, 由 Config Server 管理 一般 Config Server 只用配置 application.yml 文件, 指定监听端口, 不用向 Eureka 注册, 因为它属于一个独立运行的服务, 负责为其他服务如用户认证, 订单服务, Eureka Server, Gateway 等提供配置文件,
+所以 Config Server 的配置文件 application.yml 内容大致如下, 不需要 bootstrap.yml:
+spring: application: name: skymates-config-server cloud: config: server: git: uri: https://github.com/jiyi27/skymates.git search-paths: configs default-label: master server: port: 8888 其他微服务只需要在本地配置 bootstrap.yml 文件, 用于指定 Config Server 服务器位置 和 自己需要的配置文件名字, 这也是为什么 Config Server 不需要向 Eureka Server 注册的原因, 因为其他微服务已经知道他的位置, 每个微服务直接从 Config Server 动态拉取自己的配置文件, Eureka Server 的 bootstrap.yml 文件内容:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/006-spring-cloud-building/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-03-07 08:28:52 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/006-spring-cloud-building/">Spring Cloud 核心组件和配置</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-03-07</time><span class="post-reading-time">3 分钟阅读 (512 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E9%9D%A2%E8%AF%95/">后端面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-两个配置文件">1. 两个配置文件<a href="#1-两个配置文件" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>在 Spring Cloud 项目中, 配置文件分为两类:</p>
+<p><code>bootstrap.yml</code></p>
+<ul>
+<li><strong>作用</strong>：用于指定 Spring Cloud Config Server 的地址, 帮助服务从远程拉取具体配置</li>
+<li><strong>存放位置</strong>：每个服务的本地项目中（src/main/resources 目录下）</li>
+</ul>
+<p><code>application.yml</code></p>
+<ul>
+<li><strong>作用</strong>：包含服务的具体配置信息, 如端口、Eureka 注册地址、数据库连接等</li>
+<li><strong>存放位置</strong>：集中存储在 GitHub 仓库中, 由 Config Server 管理</li>
+</ul>
+<p>一般 Config Server 只用配置 <code>application.yml</code> 文件, 指定监听端口, 不用向 Eureka 注册, 因为它属于一个独立运行的服务, 负责为其他服务如用户认证, 订单服务, Eureka Server, Gateway 等提供配置文件,</p>
+<p>所以 Config Server 的配置文件  <code>application.yml</code>  内容大致如下, 不需要 <code>bootstrap.yml</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">spring</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">application</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">skymates-config-server</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">cloud</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">config</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">server</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">git</span>:
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">uri</span>: <span style="color:#ae81ff">https://github.com/jiyi27/skymates.git</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">search-paths</span>: <span style="color:#ae81ff">configs</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">default-label</span>: <span style="color:#ae81ff">master</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">server</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">port</span>: <span style="color:#ae81ff">8888</span>
+</span></span></code></pre></div><p>其他微服务<strong>只需要在本地配置 <code>bootstrap.yml</code> 文件, 用于指定 Config Server 服务器位置 和 自己需要的配置文件名字</strong>, 这也是为什么 Config Server 不需要向 Eureka Server 注册的原因, 因为其他微服务已经知道他的位置, 每个微服务直接从 Config Server 动态拉取自己的配置文件, Eureka Server 的  <code>bootstrap.yml</code> 文件内容:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">spring</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">cloud</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">config</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">uri</span>: <span style="color:#ae81ff">http://localhost:8888</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># 当你配置了 name: eureka-server 时，Config Server 会尝试加载类似于 eureka-server.yml、</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># eureka-server.properties 或其他符合命名规则的配置文件</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">eureka-server</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">profile</span>: <span style="color:#ae81ff">default</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">label</span>: <span style="color:#ae81ff">master</span>
+</span></span></code></pre></div><p>Gateway  <code>bootstrap.yml</code> 文件内容:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">spring</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">cloud</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">config</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">uri</span>: <span style="color:#ae81ff">http://localhost:8888</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># 指定 name: gateway 时, 当在 Config Server 加载配置文件的时候</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># Config Server 尝试加载类似于 gateway.yml、gateway.properties 或其他符合命名规则的配置文件</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">gateway</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">profile</span>: <span style="color:#ae81ff">default</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">label</span>: <span style="color:#ae81ff">master</span>
+</span></span></code></pre></div><p>User-Service  <code>bootstrap.yml</code> 文件内容:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">spring</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">cloud</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">config</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">uri</span>: <span style="color:#ae81ff">http://localhost:8888</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># 指定 name: content-service 时, 当在 Config Server 加载配置文件的时候</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e"># Config Server 尝试加载类似于 content-service.yml、content-service.properties 或其他符合命名规则的配置文件</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">name</span>: <span style="color:#ae81ff">content-service</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">profile</span>: <span style="color:#ae81ff">default</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">label</span>: <span style="color:#ae81ff">master</span>
+</span></span></code></pre></div><p>然后我们需要单独为这些服务创建具体的配置文件,  指定如端口、Eureka 注册地址、数据库连接, 把这些文件放到 <code>github.com/jiyi27/skymates/configs</code> 目录下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ ls configs
+</span></span><span style="display:flex;"><span>eureka-server.yml   gateway.yml         user-service.yml
+</span></span></code></pre></div><p>其中 <code>eureka-server.yml</code> 内容:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">spring</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">application</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">skymates-eureka-server</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">server</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">port</span>: <span style="color:#ae81ff">8761</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">eureka</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">client</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">register-with-eureka</span>: <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">fetch-registry</span>: <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 这个 URL 不是直接在浏览器访问的页面, 直接访问地址是 http://localhost:8761</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 它是一个 RESTful API 端点, 返回的数据通常是 JSON 或 XML 格式, 供其它微服务客户端解析服务信息</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">service-url</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">defaultZone</span>: <span style="color:#ae81ff">http://localhost:8761/eureka/</span>
+</span></span></code></pre></div><p><code>gateway.yml</code> 内容:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">spring</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">application</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">skymates-gateway</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">cloud</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">gateway</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">routes</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">id</span>: <span style="color:#ae81ff">user-service-route</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">uri</span>: <span style="color:#ae81ff">lb://skymates-user-service</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">predicates</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">Path=/user/**</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">filters</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">StripPrefix=1</span>
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">id</span>: <span style="color:#ae81ff">content-service-route</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">uri</span>: <span style="color:#ae81ff">lb://skymates-content-service</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">predicates</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">Path=/content/**</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">filters</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">StripPrefix=1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">server</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">port</span>: <span style="color:#ae81ff">8083</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">eureka</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">client</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">service-url</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">defaultZone</span>: <span style="color:#ae81ff">http://localhost:8761/eureka/</span>
+</span></span></code></pre></div><p><code>user-service.yml</code> 内容:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">spring</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">application</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 定义当前应用程序的名, 会被发送到 Eureka 服务器, 作为服务注册时的服务名</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 这样 Eureka 就知道了有一个 skymates-user-service 服务, ip地址为 xxx, 服务端口为server.port</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Gateway 就可以进行负载均衡路由转发: uri: lb://skymates-user-service</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">skymates-user-service</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">datasource</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">url</span>: <span style="color:#ae81ff">jdbc:mysql://localhost:3306/skymates?serverTimezone=UTC</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">username</span>: <span style="color:#ae81ff">root</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">password</span>: <span style="color:#ae81ff">778899</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">driver-class-name</span>: <span style="color:#ae81ff">com.mysql.cj.jdbc.Driver</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">jpa</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">database-platform</span>: <span style="color:#ae81ff">org.hibernate.dialect.MySQL8Dialect</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">hibernate</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">ddl-auto</span>: <span style="color:#ae81ff">update</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">jwt</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">secret</span>: <span style="color:#ae81ff">MY_JWT_SECRET_KEY_EXAMPLE_123456</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">expiration</span>: <span style="color:#ae81ff">86400000</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">server</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">port</span>: <span style="color:#ae81ff">8081</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">eureka</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">client</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">service-url</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">defaultZone</span>: <span style="color:#ae81ff">http://localhost:8761/eureka/</span>
+</span></span></code></pre></div><blockquote>
+<p>注意一般有  <code>bootstrap.yml</code> 文件的服务 需要添加依赖:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#75715e">&lt;!-- 注册 Eureka --&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.cloud<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;artifactId&gt;</span>spring-cloud-starter-netflix-eureka-client<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">&lt;!-- 从 Config Server 拉配置 --&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.cloud<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;artifactId&gt;</span>spring-cloud-starter-config<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">&lt;!-- 解析 bootstrap.yml 配置文件 --&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.cloud<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;artifactId&gt;</span>spring-cloud-starter-bootstrap<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>如果依赖 spring-cloud-starter-netflix-eureka-client 没有加, 尽管你在 <code>application.yml</code> 中写了 <code>eureka.client.service-url.defaultZone</code>, 也不会真的注册</p>
+</blockquote>
+<h2 id="2-核心组件-启动步骤">2. 核心组件 启动步骤<a href="#2-核心组件-启动步骤" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="21-启动步骤">2.1. 启动步骤<a href="#21-启动步骤" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>根据以上配置, 我们可以按照下面顺序启动各个微服务:</p>
+<p><strong>启动 Config Server</strong>：</p>
+<ul>
+<li>运行 skymates-config-server 项目</li>
+<li>Config Server 从 GitHub 仓库的 configs 目录拉取所有配置文件，监听端口 8888</li>
+</ul>
+<p><strong>启动 Eureka Server</strong>：</p>
+<ul>
+<li>运行 skymates-eureka-server 项目</li>
+<li>从 Config Server 拉取 eureka-server.yml，启动服务发现功能，监听端口 8761</li>
+</ul>
+<p><strong>启动 Gateway</strong>：</p>
+<ul>
+<li>运行 skymates-gateway 项目</li>
+<li>从 Config Server 拉取 gateway.yml，注册到 Eureka Server，监听端口 8080</li>
+</ul>
+<p><strong>启动 User Service</strong>：</p>
+<ul>
+<li>运行 skymates-user-service 项目</li>
+<li>从 Config Server 拉取 user-service.yml，注册到 Eureka Server，监听端口 8081</li>
+</ul>
+<h3 id="22-gateway-运行过程">2.2. Gateway 运行过程<a href="#22-gateway-运行过程" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>Gateway 启动</strong>：</p>
+<ul>
+<li>加载本地 <code>bootstrap.yml</code>，读取 Config Server 地址 http://localhost:8888</li>
+<li>向 Config Server 请求 <code>gateway.yml</code>（基于 <code>bootstrap.yml</code> 中的 <code>name: gateway</code>）</li>
+<li>Config Server 从 GitHub 仓库的 configs 目录返回 <code>gateway.yml</code></li>
+<li>Gateway 加载 <code>gateway.yml</code>, 获取路由规则和 Eureka 注册地址 http://localhost:8761/eureka/</li>
+<li>Gateway 向 Eureka Server 注册自己, 服务名为 skymates-gateway (基于 <code>gateway.yml</code> 中的 <code>name: skymates-gateway</code>)</li>
+<li>Gateway 开始监听端口 8080，准备接收请求</li>
+</ul>
+<p><strong>请求转发</strong>：</p>
+<ul>
+<li>客户端发送请求 http://localhost:8080/user/profile</li>
+<li>Gateway 根据  <code>gateway.yml</code> 中定义的路由规则<code>Path=/user/**</code> 匹配到 user-service-route</li>
+<li>使用 lb://skymates-user-service, 从 Eureka Server 获取 User Service 的实例地址（例如 http://localhost:8081）</li>
+<li>Gateway 将请求转发到 http://localhost:8081/profile, 完成路由</li>
+</ul>
+<blockquote>
+<p>你可能会疑惑, Eureka Server 是怎么知道每个服务的名字的, 其实每个服务的配置文件中都有自己的名字, 当它们向 Eureka Server 注册的时候, Eureka Server 会根据他们提供的名字并解析出他们的 host ip 地址和对方提供的端口号, 比如 <code>user-service.yml</code> 有相关定义:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">spring</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">application</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">name</span>: <span style="color:#ae81ff">skymates-user-service</span>
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div></blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/004-mysql-redis-%E6%95%B0%E6%8D%AE%E4%B8%80%E8%87%B4%E6%80%A7/" class="button inline prev">
+        Redis 和 MySQL 如何实现数据一致性
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/003-%E6%AD%BB%E9%94%81/" class="button inline next">
+        数据库死锁以及排查
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>JS 继承之 Prototype Chain 的意义 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Objects are values in Javascript {} 就是个空对象, {} 在 Python 里是个 dictionary, 当然 dictionary 也是个对象,
+在说继承之前还要提一下 JS 对象与其它语言不同的地方, 举个例子,
+const student = { name: &#39;John&#39;, study: function () { return &#39;study&#39; } } console.log(student) // { name: &#39;John&#39;, study: [Function: study] } student.age = 99 // 这里没有出错竟然! console.log(student) // { name: &#39;John&#39;, study: [Function: study], age: 99 } 在其它面向对象语言里, 如果我们尝试赋值或者访问对象不存在的 field就会报错, 在 JS 里并不会, 当你尝试读取不存在的 feild 的时候 (包括 prototype chain, 下面会讨论) 才会报错,
+原因是, JS 的对象与其它语言如 Java, Python不同, Java里对象的 fields 是有类决定的, 类似所有对象的蓝图, JS并不是, JS里的对象不是由类创建的, 更像一个 map,
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/frontend/js/004-prototypal-inheritance/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="JS 继承之 Prototype Chain 的意义">
+<meta property="og:description" content="1. Objects are values in Javascript {} 就是个空对象, {} 在 Python 里是个 dictionary, 当然 dictionary 也是个对象,
+在说继承之前还要提一下 JS 对象与其它语言不同的地方, 举个例子,
+const student = { name: &#39;John&#39;, study: function () { return &#39;study&#39; } } console.log(student) // { name: &#39;John&#39;, study: [Function: study] } student.age = 99 // 这里没有出错竟然! console.log(student) // { name: &#39;John&#39;, study: [Function: study], age: 99 } 在其它面向对象语言里, 如果我们尝试赋值或者访问对象不存在的 field就会报错, 在 JS 里并不会, 当你尝试读取不存在的 feild 的时候 (包括 prototype chain, 下面会讨论) 才会报错,
+原因是, JS 的对象与其它语言如 Java, Python不同, Java里对象的 fields 是有类决定的, 类似所有对象的蓝图, JS并不是, JS里的对象不是由类创建的, 更像一个 map,
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/frontend/js/004-prototypal-inheritance/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="javascript" />
+
+
+  <meta property="article:published_time" content="2023-06-21 11:08:32 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/frontend/js/004-prototypal-inheritance/">JS 继承之 Prototype Chain 的意义</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-06-21</time><span class="post-reading-time">3 分钟阅读 (633 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/javascript/">javascript</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91/">前端开发</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-objects-are-values-in-javascript">1. Objects are values in Javascript<a href="#1-objects-are-values-in-javascript" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<blockquote>
+<p><code>{}</code> 就是个空对象, <code>{}</code> 在 Python 里是个 dictionary, 当然 dictionary 也是个对象,</p>
+</blockquote>
+<p>在说继承之前还要提一下 JS 对象与其它语言不同的地方, 举个例子,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">student</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;John&#39;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">study</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span> () {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;study&#39;</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">student</span>)  <span style="color:#75715e">// { name: &#39;John&#39;, study: [Function: study] }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">student</span>.<span style="color:#a6e22e">age</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">99</span> <span style="color:#75715e">// 这里没有出错竟然!
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">student</span>)  <span style="color:#75715e">// { name: &#39;John&#39;, study: [Function: study], age: 99 }
+</span></span></span></code></pre></div><p>在其它面向对象语言里, 如果我们尝试赋值或者访问对象不存在的 field就会报错, 在 JS 里并不会, 当你尝试读取不存在的 feild 的时候 (包括 prototype chain, 下面会讨论) 才会报错,</p>
+<p>原因是, JS 的对象与其它语言如 Java, Python不同, Java里对象的 fields 是有类决定的, 类似所有对象的蓝图, JS并不是,  JS里的对象不是由类创建的, 更像一个 map,</p>
+<p>我们知道 JS 的值分为两类, Primitive values: immutable, object values: mutable, 这里的 mutable 其实就是指 你可以随意给对象增加属性, 一个对象就是一个value,</p>
+<p>当尝试读取对象的属性时, 会触发 prototype chain, 看下面代码:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">person</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Jack&#39;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sayHello</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span> () {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;hello from &#39;</span> <span style="color:#f92672">+</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">name</span>)
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 注意: 通过对象属性 __proto__ 访问对象 prototype
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">student</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">age</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">13</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">__proto__</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">person</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">student</span>.<span style="color:#a6e22e">name</span>)     <span style="color:#75715e">// student没有name属性, 通过prototype chain访问其他对象的name属性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">student</span>)         <span style="color:#75715e">// { age: 13 }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">student</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;John&#39;</span>       <span style="color:#75715e">// 为 student 创建新属性 name
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">student</span>.<span style="color:#a6e22e">name</span>)  <span style="color:#75715e">// student 此时已有name属性 直接访问其name属性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">student</span>)      <span style="color:#75715e">// { age: 13, name: &#39;John&#39; }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">student</span>.<span style="color:#a6e22e">sayHello</span>()       <span style="color:#75715e">// 因student无sayHello函数, 通过prototype chain查找sayHello函数, 找到后, sayHello中的this被替换为student
+</span></span></span></code></pre></div><h2 id="2-prototype">2. Prototype<a href="#2-prototype" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="21-ways-to-access-prototype">2.1. Ways to access prototype<a href="#21-ways-to-access-prototype" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Every <strong>object value</strong> in JavaScript has a built-in property, which is called its <code>prototype</code>. The <code>prototype</code> is itself <strong>an object value</strong>, so the <code>prototype</code> will have its own <code>prototype</code>, making what&rsquo;s called a <strong>prototype chain</strong>. The chain ends when we reach a prototype that has <code>null</code> for its own prototype.</p>
+<p>关于prototype有一个迷惑的地方, 通过<code>obj.prototype</code>访问到的并不是上面我们讨论的prototype, 只能通过<code>obj.__proto__</code>和全局函数<code>Object.getPrototypeOf()</code>来获取一个对象的<code>prototype</code>属性:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">person</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Jack&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">greet</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span> () {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;Hi, I am&#39;</span> <span style="color:#f92672">+</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">name</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">person</span>.<span style="color:#a6e22e">prototype</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">person</span>.<span style="color:#a6e22e">__proto__</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(Object.<span style="color:#a6e22e">getPrototypeOf</span>(<span style="color:#a6e22e">person</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// undefined
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// [Object: null prototype] {}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// [Object: null prototype] {}
+</span></span></span></code></pre></div><p>根据打印可以看出 <code>person.prototype</code>跟<code>person.__proto__</code>压根就不是一个东西,</p>
+<h3 id="22-prototype-的获取与赋值">2.2. Prototype 的获取与赋值<a href="#22-prototype-的获取与赋值" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><code>obj.__proto__</code> 不是访问对象 prototype 属性的标准方法, 因为有的browser可能没实现, 所以访问(只读)一般用<code>Object.getPrototypeOf(student)</code>, 通过创建该对象的时候为其 <code>__proto__</code> 属性赋值的方法给一个对象的 prototype 赋值, 如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">person</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Jack&#39;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sayHello</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span> () {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;hello from &#39;</span> <span style="color:#f92672">+</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">name</span>)
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">student</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">age</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">13</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Check the assignment here:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">__proto__</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">person</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(Object.<span style="color:#a6e22e">getPrototypeOf</span>(<span style="color:#a6e22e">student</span>))  <span style="color:#75715e">// { name: &#39;Jack&#39;, sayHello: [Function: sayHello] }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 或者创建对象后赋值, 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">student</span>.<span style="color:#a6e22e">__proto__</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">person</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 注意若student没有__proto__属性则这里自动为student创建__proto__并赋值, 赋值后我们就可以访问了
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 所以这和上面我们说的不要通过 `obj.__proto__`  访问一个对象的 prototype 并不矛盾
+</span></span></span></code></pre></div><h2 id="3-prototype-chain-的意义">3. Prototype Chain 的意义<a href="#3-prototype-chain-的意义" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<blockquote>
+<p>Javascript is an object-based language, not a class-based language.</p>
+</blockquote>
+<p>If you know Java or C++, you should be familiar with the inheritance concept. <strong>In this programming paradigm</strong>, a class is a blueprint for creating objects. If you want a new class to reuse the functionality of an existing class, you can create a new class that extends the existing class. This is called <strong>classical inheritance</strong>.</p>
+<p>JavaScript doesn’t use <strong>classical inheritance</strong>. Instead, it uses <strong>prototypal inheritance</strong>. In prototypal inheritance, an object “inherits” properties from another object via the <code>prototype</code> linkage.</p>
+<p>Prototype chain 的意义正是代替了传统语言中的继承机制, 只不过是对象之间的继承, 而不是类之间,</p>
+<h2 id="4-javascript-不存在真正的类">4. Javascript 不存在真正的类<a href="#4-javascript-不存在真正的类" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>JS 不存在真正的类, 即使是ES6之后的类也不过是个语法糖 (syntactic sugar) 而已,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Person</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">constructor</span>(<span style="color:#a6e22e">name</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">name</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">getName</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">name</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">Person</span>); <span style="color:#75715e">//function
+</span></span></span></code></pre></div><blockquote>
+<p>Unlike other programming languages such as Java and C#, JavaScript classes are syntactic sugar over the <strong>prototypal inheritance</strong>. In other words, ES6 classes are just special functions. But class declarations are not <strong>hoisted</strong> like function declarations.</p>
+</blockquote>
+<p>上面提到 <code>obj.prototype</code> 和 <code>obj.__proto__</code> 不是一个东西, 当创建对象后 (除函数对象) 它们的 <code>obj.prototype</code> 是 <code>undefined</code>, 而创建函数对象后, 这个函数的<code>func.prototype</code>会被自动创建, 并且值为一个空对象<code>{}</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">func</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;John&#39;</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">cap</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">size</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">36</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">price</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;30CAD&#39;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">func</span>.<span style="color:#a6e22e">prototype</span>); <span style="color:#75715e">//{}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">cap</span>.<span style="color:#a6e22e">prototype</span>); <span style="color:#75715e">//undefined
+</span></span></span></code></pre></div><p>思考下面代码发生了什么:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Person</span>(<span style="color:#a6e22e">name</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">name</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Person</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">getName</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">name</span>;
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">Person</span>.<span style="color:#a6e22e">prototype</span>); <span style="color:#75715e">// { getName: [Function (anonymous)] }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">john</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Person</span>(<span style="color:#e6db74">&#34;John Doe&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(Object.<span style="color:#a6e22e">getPrototypeOf</span>(<span style="color:#a6e22e">john</span>)); <span style="color:#75715e">// { getName: [Function (anonymous)] }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">john</span>); <span style="color:#75715e">// Person { name: &#39;John Doe&#39; }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">john</span>.<span style="color:#a6e22e">getName</span>()); <span style="color:#75715e">// John Doe
+</span></span></span></code></pre></div><p>第一步发生在定义函数Person时:</p>
+<ol>
+<li>
+<p><code>Person.prototype</code> 被创建, 并被赋值为一个空对象<code>{}</code></p>
+</li>
+<li>
+<p><code>Person.prototype </code>对象增加一个函数 <code>getName()</code></p>
+</li>
+</ol>
+<p>此时 <code>Person.prototype </code>不再是个空对象, 而是有一个名为<code>getName</code>函数的对象<code>{ getName: [Function (anonymous)] }</code></p>
+<p>之后三步发生在调用<code>new Person(&quot;John Doe&quot;)</code>时:</p>
+<ol start="3">
+<li>新创建空对象<code>{}</code>并赋值给john</li>
+<li>执行<code>john.__proto__ = Person.prototype</code></li>
+<li>执行函数Person, 函数体里的 <code>this.name = name</code>变为 <code>john.name = name</code></li>
+</ol>
+<blockquote>
+<p>综上: The <code>john</code> object is an instance of the <code>Person</code> through <strong>prototypal inheritance</strong>.</p>
+</blockquote>
+<p>参考:</p>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/Object_prototypes">https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/Object_prototypes</a></li>
+<li><a href="https://stackoverflow.com/a/34948211/16317008">https://stackoverflow.com/a/34948211/16317008</a></li>
+<li><a href="https://www.javascripttutorial.net/es6/javascript-class/">https://www.javascripttutorial.net/es6/javascript-class/</a></li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/bugs/001-npm-install-locally/" class="button inline prev">
+        npm install 总是安装到全局目录排查与解决
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/js/001-javascript-basics/" class="button inline next">
+        Objects &amp; Collections in Javascript
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

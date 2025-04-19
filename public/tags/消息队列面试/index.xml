@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>消息队列面试 on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E9%9D%A2%E8%AF%95/</link>
+    <description>Recent content in 消息队列面试 on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Tue, 15 Apr 2025 19:56:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>消息队列如何保证可靠性</title>
+      <link>https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/004-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E7%9A%84%E5%8F%AF%E9%9D%A0%E6%80%A7/</link>
+      <pubDate>Tue, 15 Apr 2025 19:56:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/004-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E7%9A%84%E5%8F%AF%E9%9D%A0%E6%80%A7/</guid>
+      <description>&lt;h2 id=&#34;1-消息队列如何保证可靠性&#34;&gt;1. 消息队列如何保证可靠性&lt;/h2&gt;
+&lt;h3 id=&#34;11-消息持久化&#34;&gt;1.1. 消息持久化&lt;/h3&gt;
+&lt;p&gt;确保消息在系统崩溃或重启后不丢失&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;为提升性能, broker 可能先写入内存缓冲区, 再异步刷盘（需配置同步刷盘以确保强一致性）&lt;/li&gt;
+&lt;li&gt;异步刷盘可能在极短窗口内丢失消息（毫秒级），但吞吐量可提高 10 倍以上，业界常用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;消息元数据（如 offset、时间戳）也需持久化，防止消费状态丢失&lt;/p&gt;
+&lt;p&gt;持久化存储通常结合定期清理（如按时间/大小删除）避免磁盘溢出&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;12-副本机制高可用广泛使用&#34;&gt;1.2. 副本机制（高可用，广泛使用）&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;实现原理&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;单点故障（如节点宕机）会导致服务不可用或数据丢失，副本机制确保高可用和容错&lt;/li&gt;
+&lt;li&gt;消息在多个节点存储副本，主节点（leader）处理读写，从节点（follower）同步数据&lt;/li&gt;
+&lt;li&gt;写操作需多数副本确认（quorum，如 3 副本中至少 2 个确认）才算成功&lt;/li&gt;
+&lt;li&gt;主节点故障时，从节点选举为新主，自动接管服务&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;业界实践&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Kafka 使用分区副本（ISR，In-Sync Replicas），RabbitMQ 使用镜像队列&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;副本数通常设为 2-3，兼顾可靠性和存储成本（副本过多增加开销）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;同步 vs 异步复制&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;同步复制（如 Kafka 的 acks=all）保证强一致性，但延迟稍高&lt;/li&gt;
+&lt;li&gt;异步复制（如 Kafka 的 acks=1）性能更好，但可能丢少量消息，适用于对丢失敏感度低的场景&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;13-消息确认机制生产者与消费者核心机制&#34;&gt;1.3. 消息确认机制（生产者与消费者，核心机制）&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;实现原理:&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;生产者确认&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;生产者发送消息后，等待 broker 确认（ack）&lt;/li&gt;
+&lt;li&gt;确认级别
+&lt;ul&gt;
+&lt;li&gt;全程无需确认（火力全开，性能最高，可能丢消息）&lt;/li&gt;
+&lt;li&gt;主节点确认（折衷，业界常用）&lt;/li&gt;
+&lt;li&gt;多数副本确认（最可靠，延迟稍高）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;消费者确认&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;消费者处理消息后，向 broker 发送确认（ack），broker 删除消息&lt;/li&gt;
+&lt;li&gt;未收到确认的消息可重新投递（at-least-once 语义）&lt;/li&gt;
+&lt;li&gt;自动确认（auto-ack）性能高，但可能丢失；手动确认（manual-ack）可靠，业界更常用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;业界实践&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Kafka：使用异步批量确认提高吞吐, 生产者配置 acks（0/1/all），消费者手动提交 offset&lt;/li&gt;
+&lt;li&gt;RabbitMQ：生产者用 publisher confirm，消费者用 manual ack&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;优化&lt;/strong&gt;：异步批量确认（如 Kafka 缓冲发送）或延迟确认（如 RabbitMQ 批量 ack）提升吞吐。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;重复消息可能因网络抖动或重试产生，需幂等性支持&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-消息队列如何保证可靠性&#34;&gt;1. 消息队列如何保证可靠性&lt;/h2&gt;
+&lt;h3 id=&#34;11-消息持久化&#34;&gt;1.1. 消息持久化&lt;/h3&gt;
+&lt;p&gt;确保消息在系统崩溃或重启后不丢失&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;为提升性能, broker 可能先写入内存缓冲区, 再异步刷盘（需配置同步刷盘以确保强一致性）&lt;/li&gt;
+&lt;li&gt;异步刷盘可能在极短窗口内丢失消息（毫秒级），但吞吐量可提高 10 倍以上，业界常用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;消息元数据（如 offset、时间戳）也需持久化，防止消费状态丢失&lt;/p&gt;
+&lt;p&gt;持久化存储通常结合定期清理（如按时间/大小删除）避免磁盘溢出&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;12-副本机制高可用广泛使用&#34;&gt;1.2. 副本机制（高可用，广泛使用）&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;实现原理&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;单点故障（如节点宕机）会导致服务不可用或数据丢失，副本机制确保高可用和容错&lt;/li&gt;
+&lt;li&gt;消息在多个节点存储副本，主节点（leader）处理读写，从节点（follower）同步数据&lt;/li&gt;
+&lt;li&gt;写操作需多数副本确认（quorum，如 3 副本中至少 2 个确认）才算成功&lt;/li&gt;
+&lt;li&gt;主节点故障时，从节点选举为新主，自动接管服务&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;业界实践&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Kafka 使用分区副本（ISR，In-Sync Replicas），RabbitMQ 使用镜像队列&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;副本数通常设为 2-3，兼顾可靠性和存储成本（副本过多增加开销）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;同步 vs 异步复制&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;同步复制（如 Kafka 的 acks=all）保证强一致性，但延迟稍高&lt;/li&gt;
+&lt;li&gt;异步复制（如 Kafka 的 acks=1）性能更好，但可能丢少量消息，适用于对丢失敏感度低的场景&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;13-消息确认机制生产者与消费者核心机制&#34;&gt;1.3. 消息确认机制（生产者与消费者，核心机制）&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;实现原理:&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;生产者确认&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;生产者发送消息后，等待 broker 确认（ack）&lt;/li&gt;
+&lt;li&gt;确认级别
+&lt;ul&gt;
+&lt;li&gt;全程无需确认（火力全开，性能最高，可能丢消息）&lt;/li&gt;
+&lt;li&gt;主节点确认（折衷，业界常用）&lt;/li&gt;
+&lt;li&gt;多数副本确认（最可靠，延迟稍高）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;消费者确认&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;消费者处理消息后，向 broker 发送确认（ack），broker 删除消息&lt;/li&gt;
+&lt;li&gt;未收到确认的消息可重新投递（at-least-once 语义）&lt;/li&gt;
+&lt;li&gt;自动确认（auto-ack）性能高，但可能丢失；手动确认（manual-ack）可靠，业界更常用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;业界实践&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Kafka：使用异步批量确认提高吞吐, 生产者配置 acks（0/1/all），消费者手动提交 offset&lt;/li&gt;
+&lt;li&gt;RabbitMQ：生产者用 publisher confirm，消费者用 manual ack&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;优化&lt;/strong&gt;：异步批量确认（如 Kafka 缓冲发送）或延迟确认（如 RabbitMQ 批量 ack）提升吞吐。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;重复消息可能因网络抖动或重试产生，需幂等性支持&lt;/p&gt;
+&lt;p&gt;确认超时需重试，增加系统复杂性，但不可或缺&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;14-幂等性与去重&#34;&gt;1.4. 幂等性与去重&lt;/h3&gt;
+&lt;p&gt;消息重试或网络问题可能导致重复发送/消费, 幂等性防止重复处理影响业务逻辑:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;当生产者发送消息到消息队列后，如果没有收到确认响应（可能因为网络问题或服务器处理延迟），生产者会认为消息发送失败并重新发送，导致相同消息被发送多次&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;幂等性是指一个操作执行一次和执行多次的结果是一样的, 下面是 &lt;strong&gt;消费者&lt;/strong&gt; 实现代码:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 库存服务处理消息的代码示例&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;processInventoryReduction&lt;/span&gt;(InventoryMessage message) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String messageId &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; message.&lt;span style=&#34;color:#a6e22e&#34;&gt;getMessageId&lt;/span&gt;(); &lt;span style=&#34;color:#75715e&#34;&gt;// 消息唯一ID&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 检查消息是否已处理&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (messageProcessRepository.&lt;span style=&#34;color:#a6e22e&#34;&gt;isProcessed&lt;/span&gt;(messageId)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        log.&lt;span style=&#34;color:#a6e22e&#34;&gt;info&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;消息{}已处理，忽略重复消息&amp;#34;&lt;/span&gt;, messageId);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 执行库存扣减逻辑&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        inventoryService.&lt;span style=&#34;color:#a6e22e&#34;&gt;reduce&lt;/span&gt;(message.&lt;span style=&#34;color:#a6e22e&#34;&gt;getProductId&lt;/span&gt;(), message.&lt;span style=&#34;color:#a6e22e&#34;&gt;getQuantity&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 标记消息为已处理&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        messageProcessRepository.&lt;span style=&#34;color:#a6e22e&#34;&gt;markAsProcessed&lt;/span&gt;(messageId);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (Exception e) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        log.&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;处理消息{}失败&amp;#34;&lt;/span&gt;, messageId, e);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;throw&lt;/span&gt; e;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;是不是好奇幂等性是怎么实现的? &lt;code&gt;messageProcessRepository&lt;/code&gt; 是全局的仓库吗 也就是说 所有的客户端共享这一个仓库 确保消息被处理一次, 如果每个客户端单独维护一个仓库, 好像无法实现?&lt;/p&gt;
+&lt;p&gt;在多个消费者实例的情况下, &lt;code&gt;messageProcessRepository&lt;/code&gt; 必须是全局共享的存储, 最常见的实现是一个数据库表, 记录已处理的消息ID, 而且不要忘了, 消费者也是运行在服务器上的, 而不是客户端&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;幂等性实现的完整架构&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 消息处理记录表
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; message_process_record (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    message_id VARCHAR(&lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt;,  &lt;span style=&#34;color:#75715e&#34;&gt;-- 消息唯一ID作为主键确保唯一性
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    consumer_group VARCHAR(&lt;span style=&#34;color:#ae81ff&#34;&gt;50&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt;, &lt;span style=&#34;color:#75715e&#34;&gt;-- 消费者组标识
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    process_time &lt;span style=&#34;color:#66d9ef&#34;&gt;TIMESTAMP&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt;,     &lt;span style=&#34;color:#75715e&#34;&gt;-- 处理时间
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    process_status VARCHAR(&lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;NOT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;NULL&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;-- 处理状态
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 可选：添加索引优化查询
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INDEX&lt;/span&gt; idx_consumer_message &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; message_process_record(consumer_group, message_id);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;消费者实现&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;InventoryConsumer&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Autowired&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; JdbcTemplate jdbcTemplate;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Autowired&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; InventoryService inventoryService;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 消费者组标识，通常从配置中获取&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;final&lt;/span&gt; String CONSUMER_GROUP &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;inventory-service&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@RabbitListener&lt;/span&gt;(queues &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;inventory-queue&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;processInventoryReduction&lt;/span&gt;(InventoryMessage message) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        String messageId &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; message.&lt;span style=&#34;color:#a6e22e&#34;&gt;getMessageId&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 检查消息是否已处理 - 使用共享数据库&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (isMessageProcessed(messageId)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            log.&lt;span style=&#34;color:#a6e22e&#34;&gt;info&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;消息{}已处理，忽略重复消息&amp;#34;&lt;/span&gt;, messageId);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 尝试记录消息处理状态 - 使用数据库唯一约束确保幂等&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;markMessageProcessing(messageId)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                log.&lt;span style=&#34;color:#a6e22e&#34;&gt;info&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;消息{}已被其他实例处理，忽略&amp;#34;&lt;/span&gt;, messageId);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 执行库存扣减逻辑&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            inventoryService.&lt;span style=&#34;color:#a6e22e&#34;&gt;reduce&lt;/span&gt;(message.&lt;span style=&#34;color:#a6e22e&#34;&gt;getProductId&lt;/span&gt;(), message.&lt;span style=&#34;color:#a6e22e&#34;&gt;getQuantity&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 标记消息为已成功处理&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            markMessageProcessed(messageId);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        } &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (Exception e) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            log.&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;处理消息{}失败&amp;#34;&lt;/span&gt;, messageId, e);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 可选：标记消息处理失败，以便后续分析&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            markMessageFailed(messageId, e.&lt;span style=&#34;color:#a6e22e&#34;&gt;getMessage&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;throw&lt;/span&gt; e;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;boolean&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;isMessageProcessed&lt;/span&gt;(String messageId) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; jdbcTemplate.&lt;span style=&#34;color:#a6e22e&#34;&gt;queryForObject&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SELECT COUNT(*) FROM message_process_record WHERE message_id = ? AND consumer_group = ?&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            Integer.&lt;span style=&#34;color:#a6e22e&#34;&gt;class&lt;/span&gt;, messageId, CONSUMER_GROUP);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; count &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; 0;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;boolean&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;markMessageProcessing&lt;/span&gt;(String messageId) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            jdbcTemplate.&lt;span style=&#34;color:#a6e22e&#34;&gt;update&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;INSERT INTO message_process_record (message_id, consumer_group, process_time, process_status) &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;VALUES (?, ?, NOW(), &amp;#39;PROCESSING&amp;#39;)&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                messageId, CONSUMER_GROUP);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        } &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (DuplicateKeyException e) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 如果消息ID已存在，说明已被处理或正在处理&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;markMessageProcessed&lt;/span&gt;(String messageId) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        jdbcTemplate.&lt;span style=&#34;color:#a6e22e&#34;&gt;update&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;UPDATE message_process_record SET process_status = &amp;#39;PROCESSED&amp;#39;, process_time = NOW() &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;WHERE message_id = ? AND consumer_group = ?&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            messageId, CONSUMER_GROUP);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;markMessageFailed&lt;/span&gt;(String messageId, String errorMessage) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        jdbcTemplate.&lt;span style=&#34;color:#a6e22e&#34;&gt;update&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;UPDATE message_process_record SET process_status = &amp;#39;FAILED&amp;#39;, error_message = ?, process_time = NOW() &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;WHERE message_id = ? AND consumer_group = ?&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            errorMessage, messageId, CONSUMER_GROUP);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;对于需要更强一致性保证的场景，可以结合分布式锁：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Autowired&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; RedissonClient redissonClient;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;processInventoryReduction&lt;/span&gt;(InventoryMessage message) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String messageId &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; message.&lt;span style=&#34;color:#a6e22e&#34;&gt;getMessageId&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String lockKey &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;inventory_msg_lock:&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; messageId;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 检查消息是否已处理&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (isMessageProcessed(messageId)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        log.&lt;span style=&#34;color:#a6e22e&#34;&gt;info&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;消息{}已处理，忽略重复消息&amp;#34;&lt;/span&gt;, messageId);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 获取分布式锁，确保同一时间只有一个实例处理该消息&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    RLock lock &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; redissonClient.&lt;span style=&#34;color:#a6e22e&#34;&gt;getLock&lt;/span&gt;(lockKey);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 尝试获取锁，等待2秒，持有锁10秒&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (lock.&lt;span style=&#34;color:#a6e22e&#34;&gt;tryLock&lt;/span&gt;(2, 10, TimeUnit.&lt;span style=&#34;color:#a6e22e&#34;&gt;SECONDS&lt;/span&gt;)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 再次检查，防止锁等待期间其他实例已处理&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (isMessageProcessed(messageId)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    log.&lt;span style=&#34;color:#a6e22e&#34;&gt;info&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;获取锁后再次检查：消息{}已处理&amp;#34;&lt;/span&gt;, messageId);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 标记为处理中&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                markMessageProcessing(messageId);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 执行业务逻辑&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                inventoryService.&lt;span style=&#34;color:#a6e22e&#34;&gt;reduce&lt;/span&gt;(message.&lt;span style=&#34;color:#a6e22e&#34;&gt;getProductId&lt;/span&gt;(), message.&lt;span style=&#34;color:#a6e22e&#34;&gt;getQuantity&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 标记为已处理&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                markMessageProcessed(messageId);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            } &lt;span style=&#34;color:#66d9ef&#34;&gt;finally&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                lock.&lt;span style=&#34;color:#a6e22e&#34;&gt;unlock&lt;/span&gt;(); &lt;span style=&#34;color:#75715e&#34;&gt;// 确保释放锁&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            log.&lt;span style=&#34;color:#a6e22e&#34;&gt;info&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;无法获取消息{}的处理锁，跳过处理&amp;#34;&lt;/span&gt;, messageId);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (InterruptedException e) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Thread.&lt;span style=&#34;color:#a6e22e&#34;&gt;currentThread&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;interrupt&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        log.&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;获取锁被中断&amp;#34;&lt;/span&gt;, e);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-redis-list-简易消息队列可靠性分析&#34;&gt;2. Redis List 简易消息队列可靠性分析&lt;/h2&gt;
+&lt;p&gt;无论什么, 消息队列的可靠性都可以参考上面的规范, 这里我们主要讨论 redis 持久化, 所以上面的很多都没考虑, 保证消息的可靠性分为两个方面:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;生产者使用消息持久化&lt;/li&gt;
+&lt;li&gt;消费者使用重试确认机制&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;21-生产者-redis-持久化&#34;&gt;2.1. 生产者 (Redis 持久化)&lt;/h3&gt;
+&lt;p&gt;启用 Redis 的 AOF（Append-Only File）持久化，确保消息写入 List 后, 即使 Redis 重启也能恢复, AOF 的 &lt;code&gt;everysec&lt;/code&gt; 模式适合大多数场景，若需更高可靠性可改为&lt;code&gt;always&lt;/code&gt;:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;appendonly yes
+appendfsync everysec  # 每秒同步，平衡性能与可靠性
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;22-消费者&#34;&gt;2.2. 消费者&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;可靠取出&lt;/strong&gt;：使用 RPOPLPUSH（而非简单的 RPOP），将消息从主队列（如 email_queue）原子性地弹出并推入备份队列（如 backup_queue）, 处理成功后再从备份队列移除，确保消息不丢失&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code class=&#34;language-pyyhon&#34; data-lang=&#34;pyyhon&#34;&gt;def consume_task():
+    try:
+        order_id = redis_client.rpoplpush(&amp;#34;email_queue&amp;#34;, &amp;#34;backup_queue&amp;#34;)
+        if order_id:
+            send_email(order_id)
+            redis_client.lrem(&amp;#34;backup_queue&amp;#34;, 1, order_id)  # 确认处理成功
+    except Exception as e:
+        print(f&amp;#34;Error: {e}&amp;#34;)
+        # 任务仍在 backup_queue，可重试
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;失败重试&lt;/strong&gt;：如果邮件发送失败（如网络问题），消费者可将任务重新推回主队列或记录到错误队列，稍后重试&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;def&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;retry_task&lt;/span&gt;(order_id):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    redis_client&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;lpush(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;email_queue&amp;#34;&lt;/span&gt;, order_id)  &lt;span style=&#34;color:#75715e&#34;&gt;# 重新推入主队列&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;使用 ⁠&lt;code&gt;RPOP&lt;/code&gt; 时的主要问题是 一旦任务被弹出，它就从队列中消失了, 使用 RPOPLPUSH 的场景:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;初始状态: 
+待处理队列 = [任务1, 任务2, 任务3]
+处理中队列 = []
+
+1. 应用程序执行 RPOPLPUSH → 将&amp;#34;任务3&amp;#34;从待处理队列移到处理中队列
+   待处理队列 = [任务1, 任务2]
+   处理中队列 = [任务3]
+   
+2. 应用程序开始处理&amp;#34;任务3&amp;#34;
+   
+3. 在处理过程中，应用程序崩溃
+   
+结果: &amp;#34;任务3&amp;#34;仍然存在于处理中队列，可以在系统重启后恢复
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;RPOPLPUSH 是一个原子操作，它确保元素从源列表移除并添加到目标列表的过程不会被中断&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

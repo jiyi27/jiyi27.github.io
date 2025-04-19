@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>MySQL 基础八股文 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 数据库设计 规范化 有了解过数据库设计范式吗?
+范式的目的是减少冗余, 确保数据的一致性和完整性, 但并不是说表的设计必须严格按照所有范式 (比如帖子点赞表), 要根据业务逻辑和性能做出取舍
+平时开发中如何设计数据库表?
+首先分析应该有的实体, 每个实体应该有哪些字段, 在考虑这些的时候其实也是进行拆表, 减少冗余或用冗余换性能的过程, 而这一过程的理论依据就是三大范式 第二步考虑主键, 建立索引, 具体有单个索引 查询频率高的字段 或 或 Join 查询考虑外键, 复合索引 多条件查询, 覆盖索引 减少回表查询 设计数据表的时候 减少数据库冗余 是如何做的?
+回答思路: 第二范式 消除部分依赖, 第三范式尽量减少传递依赖
+1.1. 第一范式 第一范式: 数据表中的所有字段都必须是原子的, 不能存储多个值 即每个字段只能存储单一信息
+post -------------------------------------- | id | title | author | tags | -------------------------------------- | 1 | Golang入门 | 张三 | Go, 后端 | | 2 | React教程 | 李四 | 前端, React| -------------------------------------- tags 字段存储了多个值, 违反了原子性, 要符合 1NF, 我们需要拆分表, 将 tags 字段拆成独立的行: post -------------------------------------- | id | title | author | -------------------------------------- | 1 | Golang入门 | 张三 | | 2 | React教程 | 李四 | -------------------------------------- post_tags ----------------------- | post_id | tag | ----------------------- | 1 | Go | | 1 | 后端 | | 2 | 前端 | | 2 | React | ----------------------- 1.2. 第二范式 - 数据冗余 第二范式: 非主键字段必须完全依赖于整个主键, 不能只依赖于主键的一部分, 如果一个表中没有复合主键 即只有单字段作为主键, 那么它天然符合第二范式, 因为所有非主键字段只能依赖于整个主键, 没有“部分依赖”的问题
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/000-%E6%95%B0%E6%8D%AE%E5%BA%93%E8%8C%83%E5%BC%8F-%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="MySQL 基础八股文">
+<meta property="og:description" content="1. 数据库设计 规范化 有了解过数据库设计范式吗?
+范式的目的是减少冗余, 确保数据的一致性和完整性, 但并不是说表的设计必须严格按照所有范式 (比如帖子点赞表), 要根据业务逻辑和性能做出取舍
+平时开发中如何设计数据库表?
+首先分析应该有的实体, 每个实体应该有哪些字段, 在考虑这些的时候其实也是进行拆表, 减少冗余或用冗余换性能的过程, 而这一过程的理论依据就是三大范式 第二步考虑主键, 建立索引, 具体有单个索引 查询频率高的字段 或 或 Join 查询考虑外键, 复合索引 多条件查询, 覆盖索引 减少回表查询 设计数据表的时候 减少数据库冗余 是如何做的?
+回答思路: 第二范式 消除部分依赖, 第三范式尽量减少传递依赖
+1.1. 第一范式 第一范式: 数据表中的所有字段都必须是原子的, 不能存储多个值 即每个字段只能存储单一信息
+post -------------------------------------- | id | title | author | tags | -------------------------------------- | 1 | Golang入门 | 张三 | Go, 后端 | | 2 | React教程 | 李四 | 前端, React| -------------------------------------- tags 字段存储了多个值, 违反了原子性, 要符合 1NF, 我们需要拆分表, 将 tags 字段拆成独立的行: post -------------------------------------- | id | title | author | -------------------------------------- | 1 | Golang入门 | 张三 | | 2 | React教程 | 李四 | -------------------------------------- post_tags ----------------------- | post_id | tag | ----------------------- | 1 | Go | | 1 | 后端 | | 2 | 前端 | | 2 | React | ----------------------- 1.2. 第二范式 - 数据冗余 第二范式: 非主键字段必须完全依赖于整个主键, 不能只依赖于主键的一部分, 如果一个表中没有复合主键 即只有单字段作为主键, 那么它天然符合第二范式, 因为所有非主键字段只能依赖于整个主键, 没有“部分依赖”的问题
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/000-%E6%95%B0%E6%8D%AE%E5%BA%93%E8%8C%83%E5%BC%8F-%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-03-18 21:03:20 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/000-%E6%95%B0%E6%8D%AE%E5%BA%93%E8%8C%83%E5%BC%8F-%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/">MySQL 基础八股文</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-03-18</time><span class="post-reading-time">5 分钟阅读 (979 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9D%A2%E8%AF%95/">数据库面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-数据库设计-规范化">1. 数据库设计 规范化<a href="#1-数据库设计-规范化" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<blockquote>
+<p>有了解过数据库设计范式吗?</p>
+<p>范式的目的是减少冗余, 确保数据的一致性和完整性, 但并不是说表的设计必须严格按照所有范式 (比如帖子点赞表), 要根据业务逻辑和性能做出取舍</p>
+<p>平时开发中如何设计数据库表?</p>
+<ul>
+<li>首先分析应该有的实体, 每个实体应该有哪些字段, 在考虑这些的时候其实也是进行拆表, 减少冗余或用冗余换性能的过程, 而这一过程的理论依据就是三大范式</li>
+<li>第二步考虑主键, 建立索引, 具体有单个索引 查询频率高的字段 或 或 Join 查询考虑外键, 复合索引 多条件查询, 覆盖索引 减少回表查询</li>
+</ul>
+<p>设计数据表的时候 减少数据库冗余 是如何做的?</p>
+<p>回答思路: 第二范式 消除部分依赖, 第三范式尽量减少传递依赖</p>
+</blockquote>
+<h3 id="11-第一范式">1.1. 第一范式<a href="#11-第一范式" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>第一范式: 数据表中的所有字段都必须是<strong>原子</strong>的, 不能存储多个值 即每个字段只能存储单一信息</p>
+<pre tabindex="0"><code>post
+--------------------------------------
+| id | title     | author | tags      |
+--------------------------------------
+| 1  | Golang入门 | 张三   | Go, 后端   |
+| 2  | React教程  | 李四   | 前端, React|
+--------------------------------------
+</code></pre><ul>
+<li><code>tags</code> 字段存储了多个值, 违反了原子性, 要符合 1NF, 我们需要拆分表, 将 <code>tags</code> 字段拆成独立的行:</li>
+</ul>
+<pre tabindex="0"><code>post
+--------------------------------------
+| id | title       | author |
+--------------------------------------
+| 1  | Golang入门   | 张三   |
+| 2  | React教程    | 李四   |
+--------------------------------------
+</code></pre><pre tabindex="0"><code>post_tags
+-----------------------
+| post_id | tag   |
+-----------------------
+| 1       | Go    |
+| 1       | 后端   |
+| 2       | 前端   |
+| 2       | React |
+-----------------------
+</code></pre><h3 id="12-第二范式---数据冗余">1.2. 第二范式 - 数据冗余<a href="#12-第二范式---数据冗余" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>第二范式: 非主键字段必须完全依赖于整个主键, 不能只依赖于主键的一部分, 如果一个表中没有<strong>复合主键</strong> 即只有单字段作为主键, 那么它天然符合第二范式, 因为所有非主键字段只能依赖于整个主键, 没有“部分依赖”的问题</p>
+<pre tabindex="0"><code>post_comment
+-------------------------------------
+| post_id | user_id | user_name    | comment |
+-------------------------------------
+| 1       | 101     | david12      | 很有帮助  |
+| 2       | 102     | chikawa      | 学到了   |
+-------------------------------------
+</code></pre><ul>
+<li>该表的主键为复合主键: <code>(post_id, user_id)</code></li>
+<li><code>user_name</code> 明显只依赖 <code>user_id</code>, 而不是只依赖 <code>(post_id, user_id)</code>, 这就违反 2NF</li>
+<li><strong>冗余数据</strong>：如果david12 (<code>user_id = 101</code>) 评论了 100 条帖子, 那 <code>david12</code> 这个名字就会存 100 次</li>
+<li><strong>数据一致性问题</strong>：如果王五改名字, 就得修改 100 条记录, 容易出错</li>
+</ul>
+<p>在数据库设计中, 数据冗余指的是在数据库中存储了重复或不必要的数据, 这些数据可以通过其他数据表连接查询出来, 而不是必须单独存储, 假设我们正在设计一个论坛网站的数据库, 包含以下几个表:</p>
+<ol>
+<li>用户表 (Users)：存储用户信息，如用户ID、用户名、邮箱</li>
+<li>帖子表 (Posts)：存储帖子内容，如帖子ID、标题、正文、作者ID</li>
+<li>评论表 (Comments)：存储评论内容，如评论ID、帖子ID、评论者ID、评论正文</li>
+</ol>
+<p>如果我们在 帖子表 (Posts) 中不仅存储了 作者ID, 还额外存储了 作者用户名（如“张三”）, 这就产生了数据冗余, 因为：</p>
+<ul>
+<li>作者用户名 已经存在于 用户表 (Users) 中, 通过 作者ID 可以关联查询到</li>
+<li>在 帖子表 中重复存储 作者用户名, 属于不必要的数据重复</li>
+</ul>
+<h3 id="13-第三范式---传递依赖">1.3. 第三范式 - 传递依赖<a href="#13-第三范式---传递依赖" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>传递依赖和第二范式的部分依赖很像, 因为它们都涉及到数据库中非主属性与主键之间的依赖关系问题, 第二范式要求非主属性必须完全依赖于整个主键, 而不能只依赖主键的一部分, 部分依赖通常出现在复合主键的表中, 第三范式（3NF）要求在满足 2NF 的基础上, 非主属性不能通过其他非主属性间接依赖于主键, 即不存在传递依赖:</p>
+<table>
+  <thead>
+      <tr>
+          <th>UserID</th>
+          <th>Username</th>
+          <th>City</th>
+          <th>CityPopulation</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>1</td>
+          <td>张三</td>
+          <td>北京</td>
+          <td>2000万</td>
+      </tr>
+      <tr>
+          <td>2</td>
+          <td>李四</td>
+          <td>上海</td>
+          <td>2400万</td>
+      </tr>
+      <tr>
+          <td>3</td>
+          <td>王五</td>
+          <td>北京</td>
+          <td>2000万</td>
+      </tr>
+  </tbody>
+</table>
+<ul>
+<li>
+<p>主键：UserID</p>
+</li>
+<li>
+<p>非主属性：Username、City、CityPopulation</p>
+</li>
+<li>
+<p>传递依赖：</p>
+<ul>
+<li>
+<p>UserID → City（用户决定城市）</p>
+</li>
+<li>
+<p>City → CityPopulation（城市决定人口）</p>
+</li>
+<li>
+<p>因此，CityPopulation 通过 City 间接依赖 UserID，即 UserID → City → CityPopulation</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>这违反了 3NF, 因为 CityPopulation 不是直接依赖主键, 而是通过非主属性 City 传递依赖, “北京” 和 “2000万” 在第1行和第3行出现了两次, 如果有更多用户住在北京, 这个信息(2000万)会重复更多次, 这种重复存储就是<strong>数据冗余</strong>, 解决办法拆分为两个表:</p>
+<table>
+  <thead>
+      <tr>
+          <th>UserID</th>
+          <th>Username</th>
+          <th>City</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>1</td>
+          <td>张三</td>
+          <td>北京</td>
+      </tr>
+      <tr>
+          <td>2</td>
+          <td>李四</td>
+          <td>上海</td>
+      </tr>
+      <tr>
+          <td>3</td>
+          <td>王五</td>
+          <td>北京</td>
+      </tr>
+  </tbody>
+</table>
+<table>
+  <thead>
+      <tr>
+          <th>City</th>
+          <th>CityPopulation</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>北京</td>
+          <td>2000万</td>
+      </tr>
+      <tr>
+          <td>上海</td>
+          <td>2400万</td>
+      </tr>
+  </tbody>
+</table>
+<p>可以看出用户表中不用存储多个 2000 万 数据, 只用存个城市北京就行, 然后具体人口可以通过连表查询, 其实这个传递依赖和部分依赖很像, 引起的问题也一样, 就是数据冗余, 当然数据冗余又会造成 插入更新 麻烦, 如果北京的人口变为 2100 万, 需要修改表中所有包含“北京”的行,</p>
+<p>综上, 第二第三范式主要解决 部分依赖 和 传递依赖的问题, 这两个问题会引起数据冗余, 而数据冗余又会导致 插入 更新 效率低的问题, 当然这些问题我们可以通过拆表来解决, 但是并不是说满足三个范式一定是好的设计, 有时候在高并发场景下, 就需要一定的数据冗余来换取性能, 当然代价是更新起来麻烦, 且数据发生了冗余, 比如帖子点赞的场景, 我们一般设计 post 表:</p>
+<table>
+  <thead>
+      <tr>
+          <th>字段</th>
+          <th>类型</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>PostID</td>
+          <td>INT</td>
+          <td>主键，帖子ID</td>
+      </tr>
+      <tr>
+          <td>UserID</td>
+          <td>INT</td>
+          <td>外键，作者ID</td>
+      </tr>
+      <tr>
+          <td>Title</td>
+          <td>VARCHAR</td>
+          <td>帖子标题</td>
+      </tr>
+      <tr>
+          <td>Content</td>
+          <td>TEXT</td>
+          <td>帖子内容</td>
+      </tr>
+      <tr>
+          <td>CreateTime</td>
+          <td>DATETIME</td>
+          <td>创建时间</td>
+      </tr>
+  </tbody>
+</table>
+<p>用一个表记录点赞关系：</p>
+<table>
+  <thead>
+      <tr>
+          <th>字段</th>
+          <th>类型</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>LikeID</td>
+          <td>INT</td>
+          <td>主键，点赞ID</td>
+      </tr>
+      <tr>
+          <td>UserID</td>
+          <td>INT</td>
+          <td>外键，点赞者ID</td>
+      </tr>
+      <tr>
+          <td>TargetID</td>
+          <td>INT</td>
+          <td>目标ID（帖子或评论ID）</td>
+      </tr>
+      <tr>
+          <td>CreateTime</td>
+          <td>CreateTime</td>
+          <td>点赞时间</td>
+      </tr>
+  </tbody>
+</table>
+<p>这样确实复合数据库设计的三个范式, 没有部分依赖, 没有传递依赖, 可是代价每次获取帖子信息以及其被点赞次数时, 需要关联点赞表做一个统计:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> 
+</span></span><span style="display:flex;"><span>    p.PostID,
+</span></span><span style="display:flex;"><span>    p.UserID,
+</span></span><span style="display:flex;"><span>    p.Title,
+</span></span><span style="display:flex;"><span>    p.Content,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">COUNT</span>(l.LikeID) <span style="color:#66d9ef">AS</span> LikeCount
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span> 
+</span></span><span style="display:flex;"><span>    Posts p
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">LEFT</span> <span style="color:#66d9ef">JOIN</span> 
+</span></span><span style="display:flex;"><span>    Likes l 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">ON</span> 
+</span></span><span style="display:flex;"><span>    p.PostID <span style="color:#f92672">=</span> l.TargetID 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">AND</span> l.TargetType <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Post&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">GROUP</span> <span style="color:#66d9ef">BY</span> 
+</span></span><span style="display:flex;"><span>    p.PostID, p.UserID, p.Title, p.Content;
+</span></span></code></pre></div><p>小网站还好, 高并发的话, 这样是不行的, 我们可以直接在 posts 表增加新字段 <code>LikeCount</code>, 这就造成了冗余存储, 因为 LikeCount 是从 Likes 表统计得来的, 理论上可以不存储, 直接通过查询计算, 冗余就代表更新操作更麻烦, 在修改数据的时候就造成了问题, 需要多步操作:</p>
+<ul>
+<li>
+<p>用户点赞时，插入 Likes 表记录，同时更新对应 Post  的 LikeCount</p>
+<ul>
+<li>这时候涉及到了多表操作, 在业务逻辑层就要用事务保证数据一致性, 即要么都成功要么都失败, 回滚机制</li>
+<li>在 Redis 层面可以使用 Lua 脚本, Lua 脚本作为一个整体在 Redis 内部执行, 中间不会被打断, 是完全原子性的, Lua 脚本没有显式的“回滚”机制, 单若 Lua 脚本失败时整个脚本不生效, 因此无需回滚</li>
+</ul>
+</li>
+<li>
+<p>用户取消点赞时，删除 Likes 表记录，同时减少 LikeCount</p>
+</li>
+</ul>
+<p>从三个范式分析的话, 这样设计不符合第三范式, 造成了存储冗余和更新操作的麻烦, 但是带来了高性能:</p>
+<ul>
+<li>在 Posts 表中，LikeCount 表示帖子的点赞数，它依赖于 Likes 表中针对该 PostID 的记录数，而不是直接依赖 Posts 表的主键 PostID</li>
+<li>因此, LikeCount 是冗余字段，存在传递依赖: PostID → Likes 表中的记录 → LikeCount</li>
+</ul>
+<h2 id="2-数据库设计-外键-join">2. 数据库设计 外键 Join<a href="#2-数据库设计-外键-join" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<blockquote>
+<p>平时用到的查询, 如果关联表过多怎么办?</p>
+<ul>
+<li>确保 所有 <code>JOIN</code> 字段上都有索引（尤其是外键）</li>
+<li>数据冗余（适度反范式化）</li>
+<li>使用 NoSQL, 比如 MongoDB 的文档嵌入</li>
+</ul>
+</blockquote>
+<p>外键 Foreign Key 是数据库中用来建立和强化两个表之间联系的关键字段, 简单来说, 它是一个表中的某个字段, 这个字段的值来源于另一个表的主键 Primary Key, 默认不会创建外键, 需要自己指定, 当然主键也可以自己指定, 但外键更像是一个确保数据一致性约束, 比如下面两个表的结构和建表语句:</p>
+<pre tabindex="0"><code>users 表
+user_id | username
+--------+----------
+1       | 张三
+2       | 李四
+
+orders 表
+order_id | user_id | order_date
+---------+---------+------------
+101      | 1       | 2025-03-01
+102      | 2       | 2025-03-02
+103      | 1       | 2025-03-15
+</code></pre><p>显然 orders 表中的 <code>user_id</code> 和 <code>order_date</code> 就是一个普通字段, 但是我们知道, 在处理用户和订单一对多的关系时 (一个用户可以拥有多个订单, 一个订单只能属于一个用户), 订单表里的外键设置为用户表里的主键就可以了, 不需要额外分表, 但是我们需要告诉订单表, 并不是说把字段设置成 <code>user_id</code>, 订单表就知道了</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> users (
+</span></span><span style="display:flex;"><span>    user_id INT <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> AUTO_INCREMENT,
+</span></span><span style="display:flex;"><span>    username VARCHAR(<span style="color:#ae81ff">50</span>) <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> orders (
+</span></span><span style="display:flex;"><span>    order_id INT <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> AUTO_INCREMENT,
+</span></span><span style="display:flex;"><span>    user_id INT <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>    order_date DATE <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">FOREIGN</span> <span style="color:#66d9ef">KEY</span> (user_id) <span style="color:#66d9ef">REFERENCES</span> users(user_id) <span style="color:#66d9ef">ON</span> <span style="color:#66d9ef">DELETE</span> <span style="color:#66d9ef">CASCADE</span>
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><blockquote>
+<p><code>ON DELETE CASCADE</code> 是 外键约束 中的一种行为, 当 父表（即主键表）的某一行被删除时, 所有引用该行的 子表 记录也会被自动删除, 看到这不难理解, 外键就是一种约束手段, 没有什么特殊的, 和主键不一样(自动创建索引), 大部分数据库并不会为 外键 自动创建索引, 但 外键查询经常涉及 <code>user_id</code>, 如果不加索引, 查询效率会变低:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">INDEX</span> idx_orders_user_id <span style="color:#66d9ef">ON</span> orders(user_id);
+</span></span></code></pre></div><p>这样可以提高查询性能, 比如单表查询或者连接查询：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> orders <span style="color:#66d9ef">WHERE</span> user_id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span></code></pre></div><p>在 <code>JOIN</code> 查询中，数据库需要在 <code>users</code> 和 <code>orders</code> 之间匹配 <code>user_id</code>，如果 <code>orders.user_id</code> 没有索引，数据库就不得不进行全表扫描（<code>Full Table Scan</code>），从而导致查询变慢:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#75715e">-- 查询 用户 &#34;1&#34; 的所有订单, 包括用户名
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">SELECT</span> o.order_id, o.order_date, u.username
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span> orders o
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">JOIN</span> users u <span style="color:#66d9ef">ON</span> o.user_id <span style="color:#f92672">=</span> u.user_id
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">WHERE</span> u.user_id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">-- 查询 每个用户下的订单总数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">SELECT</span> u.username, <span style="color:#66d9ef">COUNT</span>(o.order_id) <span style="color:#66d9ef">AS</span> order_count
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span> users u
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">LEFT</span> <span style="color:#66d9ef">JOIN</span> orders o <span style="color:#66d9ef">ON</span> u.user_id <span style="color:#f92672">=</span> o.user_id
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">GROUP</span> <span style="color:#66d9ef">BY</span> u.username;
+</span></span></code></pre></div></blockquote>
+<blockquote>
+<p><strong>拓展:</strong> 除此之外, 在<a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/003-%E6%AD%BB%E9%94%81/#13-%E5%A4%96%E9%94%AE%E5%BC%95%E8%B5%B7">数据库死锁以及排查</a>文章中我们提到过, 死锁的一个原因就是外键导致的, 原因是删除主表(用户表)的一行记录时, 因为订单表的外键约束, 数据库需要去检查订单表中的外键 是不是引用的该行记录的 主键, 在检查扫表的过程会加锁, 如果有 <code>ON DELETE CASCADE</code>, 那还会删除 订单表中 对应的记录, 这更要加锁, 这就可能导致加锁顺序不一致而造成的循环等待死锁问题</p>
+</blockquote>
+<h2 id="3-分库分表">3. 分库分表<a href="#3-分库分表" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<blockquote>
+<p>平时怎么做分表?</p>
+<p>分表是通过减少单表数据量或宽度, 提升查询性能, 例如水平分表后, 扫描的行数减少, 垂直分表后, 读取的字段减少</p>
+<ul>
+<li>对于<strong>水平分表</strong>, 选择<strong>合适的分片键</strong>非常关键, 分片键要保证数据分布均匀, 避免某些表过热（如按时间分片可能导致最新表负载过高）, 常见的键包括ID哈希、范围（如时间、地域）等</li>
+<li><strong>垂直分表</strong>不需要分片键，而是基于业务逻辑拆分字段</li>
+</ul>
+<p>将一张大表拆成多张关联表 (如user和address通过外键关联), 目的是消除冗余、保持数据一致性, 这是数据库设计中的<strong>规范化Normalization</strong>, 所以分表和数据库规范化设计不一样</p>
+</blockquote>
+<h3 id="31-垂直分库">3.1. 垂直分库<a href="#31-垂直分库" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>“垂直分库”通常是指按照业务功能或业务模块进行数据库层面的拆分, 也可以理解为“业务维度”的拆分, 比如把用户相关的数据放在 <code>user_db</code>, 订单相关的数据放在 <code>order_db</code>, 支付相关的数据放在 <code>payment_db</code> 等等, 各个库之间相互独立, 分别部署到不同的数据库实例上, 缺点也很明显 <strong>跨库事务复杂</strong>, 可能需要分布式事务支持</p>
+<h3 id="32-垂直分表">3.2. 垂直分表<a href="#32-垂直分表" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>“垂直分表”指的是在同一个数据库实例内，把一张表中按列拆分成多张表，也就是把一个大而“宽”的表变成几个更“窄”的表，通常是将热点字段或常用字段与冷门或低频字段分开</p>
+<ul>
+<li>提高查询效率，减少 I/O 开销（因为主表变“窄”）</li>
+<li>需要多表关联查询，增加了复杂性</li>
+</ul>
+<p>原始表：用户表 (id, name, age, address, biography, photo)</p>
+<p>拆分后：</p>
+<ul>
+<li>主表：用户表 (id, name, age, address)</li>
+<li>附表：用户扩展表 (id, biography, photo)</li>
+</ul>
+<blockquote>
+<p>查询通常依赖索引来定位数据, 垂直分表并不会减少记录行数, 为什么但垂直分表可以提高查询效率 减少 I/O 开销?</p>
+<ul>
+<li>数据库（特别是关系型数据库，如 MySQL）将数据存储在磁盘上的<strong>数据页</strong>（Page）中, 一个数据页的大小是固定的（比如 MySQL InnoDB 默认 16KB）</li>
+<li>每行数据（记录）占用一定空间，行的宽度（即所有字段的总字节大小）决定了单个数据页能存储多少行</li>
+<li>当执行查询时，数据库并不是只读取目标字段，而是会将包含目标行的整个数据页加载到内存中（这就是 I/O 操作）</li>
+</ul>
+<p>假设你经常执行的查询是 SELECT id, name, age FROM 用户表 WHERE age &gt; 18，只涉及主表的部分字段</p>
+<p>未分表前:</p>
+<ul>
+<li>每行数据包含所有字段（包括 biography 和 photo），行宽很大, 一个数据页存的行数少（比如 16 行），查询 1000 行可能需要加载 62 个数据页（1000 ÷ 16）</li>
+<li>加载的数据页中包含大量无关字段（biography, photo），而页数越多，磁盘 I/O 操作就越多，效率就越低</li>
+</ul>
+<p><strong>分表后</strong>：</p>
+<ul>
+<li>主表只包含 id, name, age，行变窄</li>
+<li>一个数据页存的行数多（比如 160 行），查询 1000 行只需加载 7 个数据页（1000 ÷ 160）</li>
+<li>加载的数据页只包含需要的字段，I/O 开销显著减少</li>
+</ul>
+<p>确实索引能快速定位到目标行, 但定位后, 数据库仍需从数据页中读取整行数据, 如果行很宽, 读取的无关数据多, I/O 效率就低, 垂直分表让主表的行变窄, 索引定位后的数据读取成本降低</p>
+</blockquote>
+<h3 id="33-水平分库-horizontal-database-sharding">3.3. 水平分库 Horizontal Database Sharding<a href="#33-水平分库-horizontal-database-sharding" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>“水平分库”指的是把同一个逻辑表中的数据按行分散到多个不同的数据库实例中，每个实例上的表结构相同，但存储的数据范围（或子集）不同，比如根据订单 ID、用户 ID、时间等进行切分，每台库只负责一部分数据:</p>
+<ul>
+<li>例如订单数据体量巨大、访问频率非常高，此时单台数据库的扩容成本太高或已经接近物理瓶颈，需要多个数据库实例并行承担负载</li>
+<li>提高整体吞吐量，降低单库故障对全局的影响</li>
+<li>可以将不同分片布置在不同的机房或不同节点上，实现一定程度上的容灾与负载均衡</li>
+</ul>
+<blockquote>
+<p>分片键 sharding key 的选择</p>
+<ul>
+<li>
+<p>分片键水平分库的核心, 常见的做法是选择访问量最高的查询条件作为分片键, 比如用户 ID、订单 ID、时间等</p>
+</li>
+<li>
+<p>需要保证分片后的数据分布尽量均匀，避免热点分片（如大量订单都集中在某几个用户）</p>
+</li>
+<li>
+<p>如果经常做范围查询（如时间区间），还需要考虑是否采用 Range Sharding，与 Hash Sharding 各有利弊（Range 容易出现数据倾斜，但查询方便；Hash 数据分布均匀，但跨分片查询复杂）</p>
+</li>
+</ul>
+<p>跨库查询、跨库事务，需要在中间件或应用层做聚合处理，或者通过最终一致性解决事务问题</p>
+</blockquote>
+<h3 id="34-水平分表">3.4. 水平分表<a href="#34-水平分表" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>水平分表在同一个数据库实例中, 将同一逻辑大表的数据按行划分到多张结构相同的小表里, 比如 <code>user_001</code>, <code>user_002</code>…<code>user_016</code>, 这些分表依旧在同一个数据库实例中, 只是物理上拆成多个表, 以减少单表容量、索引体量、DDL 风险等</p>
+<blockquote>
+<p>在数据库水平拆分的讨论中, 经常会出现“水平分库”与“水平分表”这两个概念, 有时也会听到“分库分表”都统称为“水平分片”或“水平切分”:</p>
+<ul>
+<li>
+<p>水平分表是“拆表”，但依然在单个数据库实例内</p>
+</li>
+<li>
+<p>水平分库是“拆库”，把数据分散到多台数据库服务器（实例）上</p>
+</li>
+<li>
+<p>在大规模、高并发场景下，往往先从“水平分表”演进到“水平分库”，或者直接做“分库+分表”以获得更大的水平扩展能力</p>
+</li>
+</ul>
+</blockquote>
+<h3 id="35-不同类型的分片键及其适用场景">3.5. 不同类型的分片键及其适用场景<a href="#35-不同类型的分片键及其适用场景" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>常见的分片策略包括 Range（区间/范围）、Hash（哈希）、Modulo（取模）、业务逻辑（地理、时间等）</p>
+<p><strong>Range Sharding</strong> 根据分片键的值所处的区间来决定存储位置。例如常见的按“时间范围”或按“ID 范围”来切分：</p>
+<ul>
+<li>
+<p>按时间：每个月/每季度/每年创建一张新表或新库，比如 <code>orders_202301</code>，<code>orders_202302</code>…</p>
+</li>
+<li>
+<p>按 ID 范围：假如用户 ID 范围 <code>[0, 99999]</code> 放在库/表 1，<code>[100000, 199999]</code> 放在库/表 2，依此类推</p>
+</li>
+<li>
+<p>优点 区间查询友好</p>
+</li>
+<li>
+<p>缺点 易出现数据倾斜和热点, 如果大量写入发生在最新时间段, 或某些 ID 段比较热门, 就会导致某一个或少数几个分区负载极高, 而其他分区相对空闲</p>
+</li>
+</ul>
+<p><strong>Hash Sharding</strong>  对分片键进行哈希计算, 然后将哈希结果映射到不同的分片中, 常见的方案是 <code>shard_id = hash(key) mod N</code>, 其中 N 是分片数:</p>
+<ul>
+<li>优点 数据分布更均匀相比按范围分片，哈希分片能够平衡各个分区的存储与访问压力，避免单点或单区过热</li>
+<li>缺点 对于点查（基于主键或唯一键查询）非常友好，但对于范围扫描不太友好, 如果需要按时间区间查询或多条件查询，很可能要扫描所有分片，增加了负载和逻辑复杂度</li>
+</ul>
+<p><strong>业务逻辑分片（地理、业务域等）</strong> 根据业务属性对数据进行划分，如国家/地区、渠道、业务模块等。例如：</p>
+<ul>
+<li><strong>地区分片</strong>：<code>用户(中国)</code> 放在一个分片，<code>用户(北美)</code> 放在另一个分片</li>
+<li><strong>业务域分片</strong>：A 产品线所有订单进 A 库，B 产品线所有订单进 B 库</li>
+<li>缺点 数据分布不一定均匀</li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/006-%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97-redis-sorted-set/" class="button inline prev">
+        优先队列 vs Redis Sorted Sets
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/008-tomcat-nginx-gateway/" class="button inline next">
+        Tomcat Nginx Gateway LoadBalancer
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

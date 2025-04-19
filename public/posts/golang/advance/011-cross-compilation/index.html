@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Cross Compilation - Go :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. What is cross compilation? Cross-compilation is the process of compiling code for runing on a different OS.
+2. An example There is a question on Stackoverflow:
+It&rsquo;s said that Golang is the compiled language, but what does it mean by compiled? If golang application is compiled to machine code, why can&rsquo;t I just distribute the binary (of course on corresponding arch and platform) instead of go install stuff?
+Once you compile a binary you can distribute it onto machines with the same architecture. You don&rsquo;t need go real time envorionment such as go install, go run, etc, which are just necessary for compilation.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/advance/011-cross-compilation/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Cross Compilation - Go">
+<meta property="og:description" content="1. What is cross compilation? Cross-compilation is the process of compiling code for runing on a different OS.
+2. An example There is a question on Stackoverflow:
+It&rsquo;s said that Golang is the compiled language, but what does it mean by compiled? If golang application is compiled to machine code, why can&rsquo;t I just distribute the binary (of course on corresponding arch and platform) instead of go install stuff?
+Once you compile a binary you can distribute it onto machines with the same architecture. You don&rsquo;t need go real time envorionment such as go install, go run, etc, which are just necessary for compilation.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/advance/011-cross-compilation/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="golang" />
+
+
+  <meta property="article:published_time" content="2023-10-10 11:09:35 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/advance/011-cross-compilation/">Cross Compilation - Go</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-10-10</time><span class="post-reading-time">3 分钟阅读 (568 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/">交叉编译</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-what-is-cross-compilation">1. What is cross compilation?<a href="#1-what-is-cross-compilation" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><a href="http://en.wikipedia.org/wiki/Cross_compilation">Cross-compilation</a> is the process of compiling code for runing on a different OS.</p>
+<h2 id="2-an-example">2. An example<a href="#2-an-example" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>There is <a href="https://stackoverflow.com/questions/23072889/why-go-programs-need-runtime-support/23072968#23072968">a question</a> on Stackoverflow:</p>
+<p>It&rsquo;s said that Golang is the <em>compiled</em> language, but what does it mean by <em>compiled</em>? If golang application is compiled to machine code, why can&rsquo;t I just distribute the binary (of course on corresponding arch and platform) instead of <code>go install</code> stuff?</p>
+<blockquote>
+<p>Once you compile a binary you <em>can</em> distribute it onto machines with the same architecture. You don&rsquo;t need go real time envorionment such as <code>go install,</code> <code>go run,</code> etc, which are just necessary for compilation.</p>
+</blockquote>
+<p>The go code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">srv</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">NewServeMux</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">srv</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;/&#34;</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Fprintln</span>(<span style="color:#a6e22e">w</span>, <span style="color:#e6db74">&#34;hello world&#34;</span>)
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;running...&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:8080&#34;</span>, <span style="color:#a6e22e">srv</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Compile go program on my local machine MacOS:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ go  build -o server main.go 
+</span></span><span style="display:flex;"><span>$ file server 
+</span></span><span style="display:flex;"><span>server: Mach-O 64-bit executable arm64
+</span></span><span style="display:flex;"><span>$ uname -m
+</span></span><span style="display:flex;"><span>arm64
+</span></span></code></pre></div><p>Then copy this file to my Ubuntu server and try to run it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e"># ubuntu @ ip-172-31-12-228 in ~ [13:38:04] </span>
+</span></span><span style="display:flex;"><span>$ uname -m
+</span></span><span style="display:flex;"><span>x86_64
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ubuntu @ ip-172-31-12-228 in ~ [13:38:09] </span>
+</span></span><span style="display:flex;"><span>$ file server
+</span></span><span style="display:flex;"><span>server: Mach-O 64-bit arm64 executable, flags:&lt;|DYLDLINK|PIE&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ubuntu @ ip-172-31-12-228 in ~ [13:38:17] </span>
+</span></span><span style="display:flex;"><span>$ ./server 
+</span></span><span style="display:flex;"><span>zsh: exec format error: ./serve
+</span></span></code></pre></div><p>Then I tried add <code>GOOS=linux</code> when compile it on my Mac,  and it works:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ GOOS<span style="color:#f92672">=</span>linux GOARCH<span style="color:#f92672">=</span>amd64 go build -o server main.go 
+</span></span></code></pre></div><p>Run on my Ubuntu server:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e"># Note the output &#39;statically linked&#39;</span>
+</span></span><span style="display:flex;"><span>$ file server 
+</span></span><span style="display:flex;"><span>server: ELF 64-bit LSB executable, x86-64, version <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>SYSV<span style="color:#f92672">)</span>, statically linked, Go BuildID<span style="color:#f92672">=</span>UPJ7jqIdP4OxbRX0df1Y/Xoh0f7edlCBhoN_dKDuV/xIAf8LzXqSyYE4r7v3Rq/Jq_3l1_5WQhsiIkApqgj, with debug_info, not stripped
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ ./server
+</span></span><span style="display:flex;"><span>running...
+</span></span></code></pre></div><p>So once you compile a binary you <em>can</em> distribute it onto machines <strong>with the same architecture</strong>. You don&rsquo;t need go real time envorionment to run it. This is the power of compiled language.</p>
+<h2 id="3-cross-compilation">3. Cross-compilation<a href="#3-cross-compilation" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>I found <a href="https://opensource.com/article/21/1/go-cross-compiling">a post</a>, share it here:</p>
+<p>The Bash shell and the Python interpreter are available on most Linux servers of any architecture. Hence, everything had worked well before.</p>
+<p>However, now I was dealing with a <strong>compiled language</strong>, Go, which produces an executable binary. The compiled binary consists of <a href="https://en.wikipedia.org/wiki/Opcode">opcodes</a> or assembly instructions that <strong>are tied to a specific architecture</strong>. That&rsquo;s why I got the format error. Since the Arm64 CPU (where I ran the binary) could not interpret the binary&rsquo;s x86-64 instructions, it errored out. Previously, the shell and Python interpreter took care of the underlying opcodes or architecture-specific instructions for me.</p>
+<p>I checked the Golang docs and discovered that to produce an Arm64 binary, all I had to do was set two environment variables when compiling the Go program before running the <code>go build</code> command.</p>
+<p><code>GOOS</code> refers to the operating system (Linux, Windows, BSD, etc.), while <code>GOARCH</code> refers to the architecture to build for.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ env GOOS<span style="color:#f92672">=</span>linux GOARCH<span style="color:#f92672">=</span>arm64 go build -o prepnode_arm64
+</span></span></code></pre></div><h3 id="31-what-about-other-architectures">3.1. What about other architectures?<a href="#31-what-about-other-architectures" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>x86 and Arm are two of the five architectures I test software on. I was worried that Go might not support the other ones, but that was not the case. You can find out which architectures Go supports with:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ go tool dist list
+</span></span><span style="display:flex;"><span>aix/ppc64
+</span></span><span style="display:flex;"><span>android/386
+</span></span><span style="display:flex;"><span>android/amd64
+</span></span><span style="display:flex;"><span>android/arm
+</span></span><span style="display:flex;"><span>android/arm64
+</span></span><span style="display:flex;"><span>darwin/amd64
+</span></span><span style="display:flex;"><span>darwin/arm64
+</span></span><span style="display:flex;"><span>windows/386
+</span></span><span style="display:flex;"><span>windows/amd64
+</span></span><span style="display:flex;"><span>.....
+</span></span></code></pre></div><p>Generatiing binaries for all of the architectures under my test is as simple as writing a tiny shell script from my x86 laptop:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>archs<span style="color:#f92672">=(</span>amd64 arm64 ppc64le ppc64 s390x<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> arch in <span style="color:#e6db74">${</span>archs<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>	env GOOS<span style="color:#f92672">=</span>linux GOARCH<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>arch<span style="color:#e6db74">}</span> go build -o prepnode_<span style="color:#e6db74">${</span>arch<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span></code></pre></div>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/golang/advance/012-statically-linking/" class="button inline prev">
+        Static Linking Go Programs
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/docker/001-docker-basics/" class="button inline next">
+        Docker Basics
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

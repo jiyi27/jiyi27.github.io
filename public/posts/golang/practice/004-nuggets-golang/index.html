@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>零碎知识 &#43; 踩坑 - Go :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Tricks 1.1. remove an element from a slice // remove the element at index i from a a = append(a[:i], a[i&#43;1:]...) 1.2. handle close() // credit to: https://gist.github.com/benbjohnson/9eebd201ec096ab6430e1f33411e6427 func doSomething() error { f, err := os.Create(&#34;foo&#34;) if err != nil { return err } // ensure that it&#39;s definitely closed by the end defer f.Close() if _, err := f.Write([]byte(&#34;bar&#34;); err != nil { return err } return f.Close() } Why we bother to care about getting error from f.Close()? We have got error from f.Write(). Well, there are a lot to say, learn more: Don&rsquo;t Defer Close() on Writable Files - Go Notes
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/practice/004-nuggets-golang/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="零碎知识 &#43; 踩坑 - Go">
+<meta property="og:description" content="1. Tricks 1.1. remove an element from a slice // remove the element at index i from a a = append(a[:i], a[i&#43;1:]...) 1.2. handle close() // credit to: https://gist.github.com/benbjohnson/9eebd201ec096ab6430e1f33411e6427 func doSomething() error { f, err := os.Create(&#34;foo&#34;) if err != nil { return err } // ensure that it&#39;s definitely closed by the end defer f.Close() if _, err := f.Write([]byte(&#34;bar&#34;); err != nil { return err } return f.Close() } Why we bother to care about getting error from f.Close()? We have got error from f.Write(). Well, there are a lot to say, learn more: Don&rsquo;t Defer Close() on Writable Files - Go Notes
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/practice/004-nuggets-golang/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="golang" />
+
+
+  <meta property="article:published_time" content="2023-08-27 17:12:55 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/practice/004-nuggets-golang/">零碎知识 + 踩坑 - Go</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-08-27</time><span class="post-reading-time">3 分钟阅读 (457 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9B%B6%E7%A2%8E%E7%9F%A5%E8%AF%86/">零碎知识</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E8%B8%A9%E5%9D%91/">踩坑</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-tricks">1. Tricks<a href="#1-tricks" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="11-remove-an-element-from-a-slice">1.1. remove an element from a slice<a href="#11-remove-an-element-from-a-slice" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// remove the element at index i from a</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">a</span> = append(<span style="color:#a6e22e">a</span>[:<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>:]<span style="color:#f92672">...</span>)
+</span></span></code></pre></div><h3 id="12-handle-close">1.2. handle <code>close()</code><a href="#12-handle-close" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// credit to: https://gist.github.com/benbjohnson/9eebd201ec096ab6430e1f33411e6427</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">doSomething</span>() <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">f</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Create</span>(<span style="color:#e6db74">&#34;foo&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ensure that it&#39;s definitely closed by the end</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Write</span>([]byte(<span style="color:#e6db74">&#34;bar&#34;</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Why we bother to care about getting error from <code>f.Close()</code>? We have got error from  <code>f.Write()</code>. Well, there are a lot to say, learn more: <a href="https://davidzhu.xyz/post/golang/advance/010-defer-close/">Don&rsquo;t Defer Close() on Writable Files - Go Notes</a></p>
+<h2 id="2-common-mistakes">2. Common mistakes<a href="#2-common-mistakes" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h4 id="21-encoding-non-exported-fields-struct-value-with-gobs">2.1. Encoding non-exported fields struct value with gobs<a href="#21-encoding-non-exported-fields-struct-value-with-gobs" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p>gobs can encode the exported fields of a struct value, if a sturct without exported field, when you try encode its value, you will get a <code>nil</code>.</p>
+<blockquote>
+<p>Functions and channels will not be sent in a gob. Attempting to encode such a value at the top level will fail. A struct field of chan or func type is treated exactly like an unexported field and is ignored.</p>
+</blockquote>
+<h4 id="22-use-var-to-declare-channel">2.2. Use <code>var</code> to declare channel<a href="#22-use-var-to-declare-channel" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p>Variables declared without an explicit initial value are given their zero value. Zero value for a channel is <code>nil</code>, read and write a <code>nil</code> channel will block forever. The code below is a common mistake:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">expiredSessions</span> <span style="color:#66d9ef">chan</span> []<span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span> <span style="color:#75715e">// expiredSessions == nil</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">errSession</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">error</span> <span style="color:#75715e">// errSession == nil</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">store</span>.<span style="color:#a6e22e">GetExpiredSessions</span>(<span style="color:#a6e22e">expiredSessions</span>, <span style="color:#a6e22e">errSession</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">select</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">sessions</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">expiredSessions</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}()
+</span></span></code></pre></div><p><strong>Don&rsquo;t use <code>var</code> to declare</strong> <strong>channel</strong>, <strong>map</strong> <strong>or slice values</strong>, use <code>make()</code>, keep this convension you will won&rsquo;t make mistakes.</p>
+<p>Learn more: <a href="https://davidzhu.xyz/post/golang/basics/003-collections/#5-var-vs-make">https://davidzhu.xyz/post/golang/basics/003-collections/#5-var-vs-make</a></p>
+<h4 id="23-using-goroutines-on-a-loop-iterator-variable">2.3. Using goroutines on a loop iterator variable<a href="#23-using-goroutines-on-a-loop-iterator-variable" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p>In Go, the loop iterator variable is a single variable that takes different values in each loop iteration.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">out</span> []<span style="color:#f92672">*</span><span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">3</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">out</span> = append(<span style="color:#a6e22e">out</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Values:&#34;</span>, <span style="color:#f92672">*</span><span style="color:#a6e22e">out</span>[<span style="color:#ae81ff">0</span>], <span style="color:#f92672">*</span><span style="color:#a6e22e">out</span>[<span style="color:#ae81ff">1</span>], <span style="color:#f92672">*</span><span style="color:#a6e22e">out</span>[<span style="color:#ae81ff">2</span>])
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Addresses:&#34;</span>, <span style="color:#a6e22e">out</span>[<span style="color:#ae81ff">0</span>], <span style="color:#a6e22e">out</span>[<span style="color:#ae81ff">1</span>], <span style="color:#a6e22e">out</span>[<span style="color:#ae81ff">2</span>])
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Values</span>: <span style="color:#ae81ff">3</span> <span style="color:#ae81ff">3</span> <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Addresses</span>: <span style="color:#ae81ff">0x40e020</span> <span style="color:#ae81ff">0x40e020</span> <span style="color:#ae81ff">0x40e020</span>
+</span></span></code></pre></div><p>For example, you might write something like this, using a closure:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// this is bad</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">val</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">values</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">val</span>)
+</span></span><span style="display:flex;"><span>	}()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Because the closures are all only bound to that one variable, <strong>there is a very good chance that</strong> when you run this code you will see the last element printed for every iteration instead of each value in sequence, because the goroutines will probably not begin executing until after the loop.</p>
+<p>The proper way to write that closure loop is:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">val</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">values</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">val</span> <span style="color:#66d9ef">interface</span>{}) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">val</span>)
+</span></span><span style="display:flex;"><span>	}(<span style="color:#a6e22e">val</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<p>Avoid mixing anonymous functions and goroutines. <a href="https://youtu.be/DqHb5KBe7qI?si=IW3zRKFc1Wtk4ZJh">Concurrency Made Easy</a></p>
+</blockquote>
+<p>Learn more:</p>
+<ul>
+<li><a href="https://go.dev/doc/effective_go#channels">https://go.dev/doc/effective_go#channels</a></li>
+<li><a href="https://github.com/golang/go/wiki/CommonMistakes">https://github.com/golang/go/wiki/CommonMistakes</a></li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/golang/basics/009-gob-json-encoding/" class="button inline prev">
+        encoding/gob &amp; encoding/json in Go
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/cs-basics/007-multithread-singlethread-server/" class="button inline next">
+        Is Multithreaded Server Better than a Single Thread Server?
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

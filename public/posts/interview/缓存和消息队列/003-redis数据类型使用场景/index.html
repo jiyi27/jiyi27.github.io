@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Redis 常见数据类型的使用场景 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. String 1.1. 缓存热点数据 在高并发系统中，频繁查询数据库会导致性能瓶颈，使用 Redis String 缓存数据库查询结果（如用户信息、商品详情）可以显著降低数据库压力：
+user_id = 1001 cached_user = redis_client.get(f&#34;user:{user_id}&#34;) if cached_user: return json.loads(cached_user) else: user = db.query(User).get(user_id) # 从数据库查询 redis_client.setex(f&#34;user:{user_id}&#34;, 3600, json.dumps(user)) # 缓存 1 小时 return user Redis 中习惯在 KEY 中通过 : 连接字符串, 这样可以清晰的表达出含义, 如: page:view:article:1001, 就是一个字符串, 不是什么高级的东西
+1.2. 分布式锁 在分布式系统中，防止多个服务同时操作同一资源（如库存扣减），Redis String 结合 SETNX（set if not exists）实现简单分布式锁
+SETNX lock:order:12345 &quot;locked&quot;（如果 key 不存在，则设置成功，表示获取到锁） EXPIRE lock:order:12345 10（设置超时时间，防止死锁） 操作完成后 DEL lock:order:12345（释放锁） 在 Redis 中，大部分单个命令都是原子操作，像 SET、INCR、SETNX、DEL 是绝对原子的，因为 Redis 是单线程执行命令的，这意味着 不会有其他操作在命令执行的过程中打断它，当然也有不是原子操作: GETSET, MGET / MSET
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/003-redis%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Redis 常见数据类型的使用场景">
+<meta property="og:description" content="1. String 1.1. 缓存热点数据 在高并发系统中，频繁查询数据库会导致性能瓶颈，使用 Redis String 缓存数据库查询结果（如用户信息、商品详情）可以显著降低数据库压力：
+user_id = 1001 cached_user = redis_client.get(f&#34;user:{user_id}&#34;) if cached_user: return json.loads(cached_user) else: user = db.query(User).get(user_id) # 从数据库查询 redis_client.setex(f&#34;user:{user_id}&#34;, 3600, json.dumps(user)) # 缓存 1 小时 return user Redis 中习惯在 KEY 中通过 : 连接字符串, 这样可以清晰的表达出含义, 如: page:view:article:1001, 就是一个字符串, 不是什么高级的东西
+1.2. 分布式锁 在分布式系统中，防止多个服务同时操作同一资源（如库存扣减），Redis String 结合 SETNX（set if not exists）实现简单分布式锁
+SETNX lock:order:12345 &quot;locked&quot;（如果 key 不存在，则设置成功，表示获取到锁） EXPIRE lock:order:12345 10（设置超时时间，防止死锁） 操作完成后 DEL lock:order:12345（释放锁） 在 Redis 中，大部分单个命令都是原子操作，像 SET、INCR、SETNX、DEL 是绝对原子的，因为 Redis 是单线程执行命令的，这意味着 不会有其他操作在命令执行的过程中打断它，当然也有不是原子操作: GETSET, MGET / MSET
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/003-redis%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-04-13 21:56:20 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/003-redis%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/">Redis 常见数据类型的使用场景</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-04-13</time><span class="post-reading-time">3 分钟阅读 (539 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E7%BC%93%E5%AD%98%E9%9D%A2%E8%AF%95/">缓存面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-string">1. String<a href="#1-string" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="11-缓存热点数据">1.1. 缓存热点数据<a href="#11-缓存热点数据" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>在高并发系统中，频繁查询数据库会导致性能瓶颈，使用 Redis String 缓存数据库查询结果（如用户信息、商品详情）可以显著降低数据库压力：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>user_id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1001</span>
+</span></span><span style="display:flex;"><span>cached_user <span style="color:#f92672">=</span> redis_client<span style="color:#f92672">.</span>get(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;user:</span><span style="color:#e6db74">{</span>user_id<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> cached_user:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> json<span style="color:#f92672">.</span>loads(cached_user)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>    user <span style="color:#f92672">=</span> db<span style="color:#f92672">.</span>query(User)<span style="color:#f92672">.</span>get(user_id)  <span style="color:#75715e"># 从数据库查询</span>
+</span></span><span style="display:flex;"><span>    redis_client<span style="color:#f92672">.</span>setex(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;user:</span><span style="color:#e6db74">{</span>user_id<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>, <span style="color:#ae81ff">3600</span>, json<span style="color:#f92672">.</span>dumps(user))  <span style="color:#75715e"># 缓存 1 小时</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> user
+</span></span></code></pre></div><blockquote>
+<p>Redis 中习惯在 KEY 中通过 <code>:</code> 连接字符串, 这样可以清晰的表达出含义, 如: <code>page:view:article:1001</code>, 就是一个字符串, 不是什么高级的东西</p>
+</blockquote>
+<h3 id="12-分布式锁">1.2. 分布式锁<a href="#12-分布式锁" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>在分布式系统中，防止多个服务同时操作同一资源（如库存扣减），Redis String 结合 SETNX（set if not exists）实现简单分布式锁</p>
+<ul>
+<li><code>SETNX lock:order:12345 &quot;locked&quot;</code>（如果 key 不存在，则设置成功，表示获取到锁）</li>
+<li><code>EXPIRE lock:order:12345 10</code>（设置超时时间，防止死锁）</li>
+<li>操作完成后 <code>DEL lock:order:12345</code>（释放锁）</li>
+</ul>
+<blockquote>
+<p>在 Redis 中，大部分<strong>单个命令</strong>都是原子操作，像 <code>SET</code>、<code>INCR</code>、<code>SETNX</code>、<code>DEL</code> 是绝对原子的，因为 Redis 是单线程执行命令的，这意味着 不会有其他操作在命令执行的过程中打断它，当然也有不是原子操作: <code>GETSET</code>, <code>MGET / MSET</code></p>
+</blockquote>
+<h3 id="13-计数器">1.3. 计数器<a href="#13-计数器" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>记录网站的访问量、文章的点赞数、商品的浏览量等，Redis String 支持原子操作 INCR 和 DECR，非常适合计数场景</p>
+<pre tabindex="0"><code>INCR article:view:2001  # 文章 ID 2001 浏览量 +1
+GET article:view:2001   # 获取当前浏览量
+</code></pre><h3 id="14-短链存储">1.4. 短链存储<a href="#14-短链存储" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>实现短链接功能，如 <code>https://tinyurl.com/abcd</code> 映射到 <code>https://example.com/long-url</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">generate_short_code</span>(url):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;生成短链代码（如 6 位随机字符串或基于 URL 的哈希）&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 简单示例：随机 6 位字符</span>
+</span></span><span style="display:flex;"><span>    characters <span style="color:#f92672">=</span> string<span style="color:#f92672">.</span>ascii_letters <span style="color:#f92672">+</span> string<span style="color:#f92672">.</span>digits
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">.</span>join(random<span style="color:#f92672">.</span>choice(characters) <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">6</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">create_short_url</span>(long_url, expire_seconds<span style="color:#f92672">=</span><span style="color:#ae81ff">2592000</span>):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;创建短链并存储&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    short_code <span style="color:#f92672">=</span> generate_short_code(long_url)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 确保 short_code 唯一，实际中可能需要重试或哈希</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> redis_client<span style="color:#f92672">.</span>exists(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;short:</span><span style="color:#e6db74">{</span>short_code<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>):
+</span></span><span style="display:flex;"><span>        short_code <span style="color:#f92672">=</span> generate_short_code(long_url)
+</span></span><span style="display:flex;"><span>    redis_client<span style="color:#f92672">.</span>setex(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;short:</span><span style="color:#e6db74">{</span>short_code<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>, expire_seconds, long_url)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> short_code
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_long_url</span>(short_code):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;根据短链获取原始网址&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    long_url <span style="color:#f92672">=</span> redis_client<span style="color:#f92672">.</span>get(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;short:</span><span style="color:#e6db74">{</span>short_code<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> long_url<span style="color:#f92672">.</span>decode() <span style="color:#66d9ef">if</span> long_url <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">None</span>
+</span></span></code></pre></div><h2 id="2-set">2. Set<a href="#2-set" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="21-数据去重与快速查重">2.1. 数据去重与快速查重<a href="#21-数据去重与快速查重" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>利用 Set 元素不允许重复的特性，可以用来存储用户访问记录或防止重复投票 点赞等场景</p>
+<h3 id="22-共同关注好友推荐">2.2. 共同关注/好友推荐<a href="#22-共同关注好友推荐" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>社交平台中，查找用户共同关注的人，或基于共同关注推荐新好友</p>
+<pre tabindex="0"><code class="language-redis" data-lang="redis">SADD user:1001:follows &#34;user:2001&#34; &#34;user:2002&#34; &#34;user:2003&#34;
+SADD user:1002:follows &#34;user:2002&#34; &#34;user:2003&#34; &#34;user:2004&#34;
+SINTER user:1001:follows user:1002:follows  # 交集：共同关注 [&#34;user:2002&#34;, &#34;user:2003&#34;]
+</code></pre><h3 id="23-黑名单白名单管理">2.3. 黑名单/白名单管理<a href="#23-黑名单白名单管理" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Set 常用于存储黑名单或白名单数据，由于其快速的查找特性，可以高效判断某个元素是否被列入名单，适用于安全控制、IP 屏蔽、广告过滤等场景</p>
+<pre tabindex="0"><code class="language-redis" data-lang="redis"># 添加IP到黑名单
+SADD blacklist:ips &#34;192.168.1.100&#34; &#34;10.0.0.5&#34;
+
+# 检查IP是否在黑名单中
+SISMEMBER blacklist:ips &#34;192.168.1.100&#34;  # 返回 1 表示IP被屏蔽
+
+# 移除IP
+SREM blacklist:ips &#34;10.0.0.5&#34;
+</code></pre><h2 id="3-redis-hash">3. Redis Hash<a href="#3-redis-hash" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-用户信息存储">3.1. 用户信息存储<a href="#31-用户信息存储" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Redis Hash 是一个键值对集合，每个 Hash 包含多个字段和对应的值，你可以单独操作某个字段（增、删、改、查），而不必操作整个数据结构,</p>
+<p><strong>对比 JSON 字符串</strong>：如果用 String 类型存储对象（例如用户信息），通常会将整个对象序列化为 JSON 字符串<code>{&quot;id&quot;:&quot;1001&quot;,&quot;name&quot;:&quot;Alice&quot;,&quot;email&quot;:&quot;alice@example.com&quot;}</code>要修改某个字段（如只改 <code>name</code>），需要：</p>
+<ol>
+<li>获取整个 JSON 字符串（GET）</li>
+<li>反序列化解析为对象</li>
+<li>修改字段</li>
+<li>序列化回 JSON</li>
+<li>再存回 Redis, 这会导致额外的 CPU 和内存开销，且操作复杂</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>HMSET user:<span style="color:#ae81ff">1001</span> id <span style="color:#e6db74">&#34;1001&#34;</span> name <span style="color:#e6db74">&#34;Alice&#34;</span> email <span style="color:#e6db74">&#34;alice@example.com&#34;</span>
+</span></span><span style="display:flex;"><span>HSET user:<span style="color:#ae81ff">1001</span> name <span style="color:#e6db74">&#34;Bob&#34;</span>  <span style="color:#75715e"># 只修改 name 字段</span>
+</span></span><span style="display:flex;"><span>HGET user:<span style="color:#ae81ff">1001</span> name       <span style="color:#75715e"># 只获取 name 字段</span>
+</span></span></code></pre></div><h3 id="32-配置管理">3.2. 配置管理<a href="#32-配置管理" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>存储系统配置项（如 API 密钥、开关状态）</p>
+<pre tabindex="0"><code>HMSET config:api rate_limit &#34;100&#34; enabled &#34;true&#34;
+HGET config:api rate_limit  # 获取限流配置
+</code></pre><h3 id="33-购物车管理">3.3. 购物车管理<a href="#33-购物车管理" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>存储用户购物车，商品 ID 作为字段，数量作为值</p>
+<pre tabindex="0"><code>HSET cart:user:1001 product:001 2 product:002 1  # 购买 2 件 product:001，1 件 product:002
+HINCRBY cart:user:1001 product:001 1  # 增加 1 件
+HGETALL cart:user:1001  # 获取购物车内容
+</code></pre><h2 id="4-list">4. List<a href="#4-list" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="41-简单的消息队列">4.1. 简单的消息队列<a href="#41-简单的消息队列" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>一个电商平台需要处理订单支付后的通知（如发送邮件或短信）， 前端提交订单后，后台将通知任务放入队列，消费者异步处理, 优点：</p>
+<ul>
+<li>
+<p>LPUSH 和 BRPOP 提供高效的队列操作</p>
+</li>
+<li>
+<p>BRPOP 的阻塞机制减少轮询，提高性能</p>
+</li>
+<li>
+<p>适合轻量级队列，简单易用</p>
+</li>
+</ul>
+<p><strong>场景</strong></p>
+<ul>
+<li>假设订单支付后，需发送一封确认邮件</li>
+<li>生产者（订单服务）将任务推入 Redis List，消费者（邮件服务）从队列取出任务</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># 生产者：订单支付后推送任务</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">add_notification_task</span>(order_id, user_email):
+</span></span><span style="display:flex;"><span>    task <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;send_email:</span><span style="color:#e6db74">{</span>order_id<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">{</span>user_email<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    r<span style="color:#f92672">.</span>lpush(<span style="color:#e6db74">&#34;notification_queue&#34;</span>, task)  <span style="color:#75715e"># 推入队列头部</span>
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Task added for order </span><span style="color:#e6db74">{</span>order_id<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 消费者：邮件服务处理任务</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">process_notification</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> <span style="color:#66d9ef">True</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># 阻塞等待任务，最多等 10 秒</span>
+</span></span><span style="display:flex;"><span>        task <span style="color:#f92672">=</span> r<span style="color:#f92672">.</span>brpop(<span style="color:#e6db74">&#34;notification_queue&#34;</span>, timeout<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> task:
+</span></span><span style="display:flex;"><span>            _, task_data <span style="color:#f92672">=</span> task  <span style="color:#75715e"># task 是 (key, value) 元组</span>
+</span></span><span style="display:flex;"><span>            print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Processing: </span><span style="color:#e6db74">{</span>task_data<span style="color:#f92672">.</span>decode()<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># 解析任务并发送邮件（伪代码）</span>
+</span></span><span style="display:flex;"><span>            order_id, email <span style="color:#f92672">=</span> task_data<span style="color:#f92672">.</span>decode()<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#34;:&#34;</span>)[<span style="color:#ae81ff">1</span>:]
+</span></span><span style="display:flex;"><span>            send_email(email, <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Order </span><span style="color:#e6db74">{</span>order_id<span style="color:#e6db74">}</span><span style="color:#e6db74"> confirmed!&#34;</span>)
+</span></span></code></pre></div><blockquote>
+<p>思考： 如何保证消息队列的可靠性？</p>
+</blockquote>
+<h3 id="42-任务堆栈撤销操作">4.2. 任务堆栈（撤销操作）<a href="#42-任务堆栈撤销操作" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>一个在线文档编辑器需要支持“撤销”功能，记录用户的每次操作（如文本插入、删除），用户点击撤销时回退到上一步：</p>
+<ul>
+<li>
+<p>用户每次编辑，操作记录压入 List</p>
+</li>
+<li>
+<p>点击撤销，从 List 顶部弹出最近的操作并执行反向逻辑</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># 记录用户编辑操作</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">record_edit</span>(user_id, operation):
+</span></span><span style="display:flex;"><span>    key <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;edit_history:</span><span style="color:#e6db74">{</span>user_id<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    r<span style="color:#f92672">.</span>lpush(key, operation)  <span style="color:#75715e"># 压入操作</span>
+</span></span><span style="display:flex;"><span>    r<span style="color:#f92672">.</span>ltrim(key, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">99</span>)  <span style="color:#75715e"># 限制最多 100 条历史</span>
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Recorded: </span><span style="color:#e6db74">{</span>operation<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 撤销操作</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">undo_edit</span>(user_id):
+</span></span><span style="display:flex;"><span>    key <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;edit_history:</span><span style="color:#e6db74">{</span>user_id<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    operation <span style="color:#f92672">=</span> r<span style="color:#f92672">.</span>lpop(key)  <span style="color:#75715e"># 弹出最近操作</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> operation:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Undoing: </span><span style="color:#e6db74">{</span>operation<span style="color:#f92672">.</span>decode()<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># 执行反向操作（伪代码）</span>
+</span></span><span style="display:flex;"><span>        reverse_operation(operation<span style="color:#f92672">.</span>decode())
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;No operations to undo&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 测试</span>
+</span></span><span style="display:flex;"><span>record_edit(<span style="color:#e6db74">&#34;user123&#34;</span>, <span style="color:#e6db74">&#34;insert:text:hello&#34;</span>)
+</span></span><span style="display:flex;"><span>record_edit(<span style="color:#e6db74">&#34;user123&#34;</span>, <span style="color:#e6db74">&#34;delete:char:5&#34;</span>)
+</span></span><span style="display:flex;"><span>undo_edit(<span style="color:#e6db74">&#34;user123&#34;</span>)  <span style="color:#75715e"># 输出: Undoing: delete:char:5</span>
+</span></span></code></pre></div><h3 id="43-时间线">4.3. 时间线<a href="#43-时间线" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>一个社交平台需要展示用户<strong>最新的 10 条动态</strong>（如朋友圈或微博），按发布时间倒序排列, 优点：</p>
+<ul>
+<li>
+<p>LPUSH 保证最新动态在列表头部，天然按时间倒序</p>
+</li>
+<li>
+<p>LRANGE 高效获取指定范围的数据</p>
+</li>
+<li>
+<p>适合实时更新和展示有序内容</p>
+</li>
+</ul>
+<p><strong>场景：</strong></p>
+<ul>
+<li>
+<p>用户发布动态时，记录动态 ID 和内容到 List</p>
+</li>
+<li>
+<p>前端请求时，取出最新的 N 条动态展示</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># 用户发布动态</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">post_update</span>(user_id, content):
+</span></span><span style="display:flex;"><span>    post_id <span style="color:#f92672">=</span> int(time<span style="color:#f92672">.</span>time() <span style="color:#f92672">*</span> <span style="color:#ae81ff">1000</span>)  <span style="color:#75715e"># 用时间戳作为 ID</span>
+</span></span><span style="display:flex;"><span>    post_data <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>post_id<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">{</span>user_id<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">{</span>content<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    r<span style="color:#f92672">.</span>lpush(<span style="color:#e6db74">&#34;timeline:global&#34;</span>, post_data)  <span style="color:#75715e"># 推入全局时间线</span>
+</span></span><span style="display:flex;"><span>    r<span style="color:#f92672">.</span>ltrim(<span style="color:#e6db74">&#34;timeline:global&#34;</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">999</span>)  <span style="color:#75715e"># 限制 1000 条</span>
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Posted: </span><span style="color:#e6db74">{</span>content<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 获取最新动态</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_recent_posts</span>(limit<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span>):
+</span></span><span style="display:flex;"><span>    posts <span style="color:#f92672">=</span> r<span style="color:#f92672">.</span>lrange(<span style="color:#e6db74">&#34;timeline:global&#34;</span>, <span style="color:#ae81ff">0</span>, limit <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>)  <span style="color:#75715e"># 取最新 10 条</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> [p<span style="color:#f92672">.</span>decode() <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> posts]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 测试</span>
+</span></span><span style="display:flex;"><span>post_update(<span style="color:#e6db74">&#34;user123&#34;</span>, <span style="color:#e6db74">&#34;Hello, world!&#34;</span>)
+</span></span><span style="display:flex;"><span>post_update(<span style="color:#e6db74">&#34;user456&#34;</span>, <span style="color:#e6db74">&#34;Nice day!&#34;</span>)
+</span></span><span style="display:flex;"><span>recent_posts <span style="color:#f92672">=</span> get_recent_posts()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> post <span style="color:#f92672">in</span> recent_posts:
+</span></span><span style="display:flex;"><span>    print(post)
+</span></span></code></pre></div><blockquote>
+<p>注意 List 不适合排行榜, 因为他不会排序, 可以考虑使用堆来实现</p>
+</blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/004-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E7%9A%84%E5%8F%AF%E9%9D%A0%E6%80%A7/" class="button inline prev">
+        消息队列如何保证可靠性
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/networking/011-%E7%BC%93%E5%AD%98%E6%8A%95%E6%AF%92/" class="button inline next">
+        缓存投毒
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

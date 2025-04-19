@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>encoding/gob &amp; encoding/json in Go :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Why do we need encoding To transmit a data structure across a network or to store it in a file, it must be encoded and then decoded again. Cause computer just know binary.
+There are many encodings available, of course: JSON, XML, Google’s protocol buffers, and more. And now there’s another, provided by Go’s gob package.
+2. encoding/gob 2.1. Why gob Why define a new encoding? It’s a lot of work and redundant at that. Why not just use one of the existing formats? Well, for one thing, we do! Go has packages supporting all the encodings just mentioned (the protocol buffer package is in a separate repository but it’s one of the most frequently downloaded). And for many purposes, including communicating with tools and systems written in other languages, they’re the right choice.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/basics/009-gob-json-encoding/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="encoding/gob &amp; encoding/json in Go">
+<meta property="og:description" content="1. Why do we need encoding To transmit a data structure across a network or to store it in a file, it must be encoded and then decoded again. Cause computer just know binary.
+There are many encodings available, of course: JSON, XML, Google’s protocol buffers, and more. And now there’s another, provided by Go’s gob package.
+2. encoding/gob 2.1. Why gob Why define a new encoding? It’s a lot of work and redundant at that. Why not just use one of the existing formats? Well, for one thing, we do! Go has packages supporting all the encodings just mentioned (the protocol buffer package is in a separate repository but it’s one of the most frequently downloaded). And for many purposes, including communicating with tools and systems written in other languages, they’re the right choice.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/basics/009-gob-json-encoding/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="golang" />
+
+
+  <meta property="article:published_time" content="2023-08-31 11:38:20 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/basics/009-gob-json-encoding/">encoding/gob &amp; encoding/json in Go</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-08-31</time><span class="post-reading-time">10 分钟阅读 (2080 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E7%BC%96%E7%A0%81/">编码</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-why-do-we-need-encoding">1. Why do we need encoding<a href="#1-why-do-we-need-encoding" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<blockquote>
+<p>To transmit a data structure across a network or to store it in a file, it must be encoded and then decoded again. Cause computer just know binary.</p>
+</blockquote>
+<p>There are many encodings available, of course: <a href="http://www.json.org/">JSON</a>, <a href="http://www.w3.org/XML/">XML</a>, Google’s <a href="http://code.google.com/p/protobuf">protocol buffers</a>, and more. And now there’s another, provided by Go’s <a href="https://go.dev/pkg/encoding/gob/">gob</a> package.</p>
+<h2 id="2-encodinggob">2. encoding/gob<a href="#2-encodinggob" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="21-why-gob">2.1. Why gob<a href="#21-why-gob" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Why define a new encoding? It’s a lot of work and redundant at that. Why not just use one of the existing formats? Well, for one thing, we do! Go has <a href="https://go.dev/pkg/">packages</a> supporting all the encodings just mentioned (the <a href="http://github.com/golang/protobuf">protocol buffer package</a> is in a separate repository but it’s one of the most frequently downloaded). And for many purposes, including communicating with tools and systems written in other languages, they’re the right choice.</p>
+<p>But for a Go-specific environment, such as communicating between two servers written in Go, there’s an opportunity to build something much easier to use and possibly more efficient.</p>
+<blockquote>
+<p>Gob is much more preferred when communicating between Go programs. However, gob is currently supported only in Go and, well, <a href="https://code.google.com/archive/p/libgob/">C</a>, so only ever use that when you&rsquo;re sure no program written in any other programming language will try to decode the values. <a href="https://stackoverflow.com/questions/41179453/difference-between-encoding-gob-and-encoding-json">source</a></p>
+</blockquote>
+<h3 id="22-googles-protocol-buffers-misfeatures">2.2. Google’s Protocol Buffers misfeatures<a href="#22-googles-protocol-buffers-misfeatures" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Gobs implements thress important features compared with Google&rsquo;s Protocol Buffers:</p>
+<ul>
+<li>The type being encoded does&rsquo;t need to be a struct, it can be a map, slice, array etc&hellip;</li>
+<li>Don&rsquo;t need all fields of a type exist when decoding and encoding.</li>
+<li>If the varibale being transmitted has &ldquo;zero value&rdquo; for its type, it doesn&rsquo;t need to be transmitted. Decoder know its type, it will set its default value automatically.</li>
+</ul>
+<h3 id="23-how-does-gob-work---value-of-encoded-gob-data-is-just-integer">2.3. How does gob work - value of encoded gob data is just integer<a href="#23-how-does-gob-work---value-of-encoded-gob-data-is-just-integer" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>The <strong>encoded gob data</strong> isn’t about types like <code>int8</code> and <code>uint16</code>. Instead, somewhat analogous to constants in Go, its integer values are abstract, sizeless numbers, either signed or unsigned. When you encode an <code>int8</code>, its value is transmitted as an unsized, variable-length integer. When you encode an <code>string</code>, its value is also transmitted as an unsized, variable-length integer.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Initialize the encoder and decoder.  Normally enc and dec would be</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// bound to network connections and the encoder and decoder would</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// run in different processes.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">network</span> <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">Buffer</span>        <span style="color:#75715e">// Stand-in for a network connection</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">enc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">network</span>) <span style="color:#75715e">// Will write to network.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">dec</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">NewDecoder</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">network</span>) <span style="color:#75715e">// Will read from network.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">message</span> <span style="color:#f92672">:=</span> <span style="color:#e6db74">&#34;hello, there&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Encode (send) the value.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">enc</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">message</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">network</span>.<span style="color:#a6e22e">Bytes</span>())
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Decode (receive) the value.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ms</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">dec</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">ms</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">network</span>.<span style="color:#a6e22e">Bytes</span>())
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">ms</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#f92672">------------------------------------------</span>
+</span></span><span style="display:flex;"><span>[<span style="color:#ae81ff">15</span> <span style="color:#ae81ff">12</span> <span style="color:#ae81ff">0</span> <span style="color:#ae81ff">12</span> <span style="color:#ae81ff">104</span> <span style="color:#ae81ff">101</span> <span style="color:#ae81ff">108</span> <span style="color:#ae81ff">108</span> <span style="color:#ae81ff">111</span> <span style="color:#ae81ff">44</span> <span style="color:#ae81ff">32</span> <span style="color:#ae81ff">116</span> <span style="color:#ae81ff">104</span> <span style="color:#ae81ff">101</span> <span style="color:#ae81ff">114</span> <span style="color:#ae81ff">101</span>]
+</span></span><span style="display:flex;"><span>[]
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">hello</span>, <span style="color:#a6e22e">there</span>
+</span></span></code></pre></div><p>As you can see, all <strong>encoded data</strong> is a variable-length integer, <code>bytes.Buffer</code> is just a struct, network is an object of it,  <code>network.Bytes()</code> returns a slice holding the unread portion of the buffer so it print <code>[]</code> on second line,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Buffer</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">buf</span>      []<span style="color:#66d9ef">byte</span> <span style="color:#75715e">// contents are the bytes buf[off : len(buf)]</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">off</span>      <span style="color:#66d9ef">int</span>    <span style="color:#75715e">// read at &amp;buf[off], write at &amp;buf[len(buf)]</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">lastRead</span> <span style="color:#a6e22e">readOp</span> <span style="color:#75715e">// last read operation, so that Unread* can work correctly.</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Besides, <code>enc.Encode(message)</code> does two things: encode message and transmit it, similar to<code>dec.Decode(&amp;ms)</code>.</p>
+<h3 id="24-values-are-flattened">2.4. Values are flattened<a href="#24-values-are-flattened" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<blockquote>
+<p>A stream of gobs is <strong>self-describing</strong>. Each data item in the stream is preceded by a specification of its type, expressed in terms of a small set of predefined types. <strong>Pointers are not transmitted, but the things they point to are transmitted</strong>; that is, the values are flattened. Nil pointers are not permitted, as they have no value. <strong>Recursive types work fine</strong>, but recursive values (data with cycles) are problematic. <a href="https://pkg.go.dev/encoding/gob#pkg-overview">source</a></p>
+</blockquote>
+<p>I find a <a href="https://gist.github.com/soroushjp/0ec92102641ddfc3ad5515ca76405f4d">blog</a>, which implement a function that can deep copy a map with gobs, even the map has a map inside. Golang: deepcopy <code>map[string]interface{}.</code> Could be used for any other Go type with minor modifications.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Package deepcopy provides a function for deep copying map[string]interface{}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// values. Inspired by the StackOverflow answer at:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// http://stackoverflow.com/a/28579297/1366283</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Uses the golang.org/pkg/encoding/gob package to do this and therefore has the</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// same caveats.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// See: https://blog.golang.org/gobs-of-data</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// See: https://golang.org/pkg/encoding/gob/</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">deepcopy</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;bytes&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;encoding/gob&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">init</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">Register</span>(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">interface</span>{}{})
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Map performs a deep copy of the given map m.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Map</span>(<span style="color:#a6e22e">m</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">interface</span>{}) (<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">interface</span>{}, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">buf</span> <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">Buffer</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">enc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">buf</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">dec</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">NewDecoder</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">buf</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">enc</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">m</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">copy</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">interface</span>{}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">dec</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">copy</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">copy</span>, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="25-types-on-the-wire">2.5. Types on the wire<a href="#25-types-on-the-wire" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>The first time you send a given type, the gob package includes in the data stream a description of that type. In fact, what happens is that the encoder is used to encode, in the standard gob encoding format, <strong>an internal struct</strong> that describes the type and gives it a unique number. (Basic types, plus the layout of the type description structure, are predefined by the software for bootstrapping.) After the type is described, it can be referenced by its type number.</p>
+<p>Thus when we send our first type <code>T</code>, the gob encoder sends a description of <code>T</code> and tags it with a type number, say 127. All values, including the first, are then prefixed by that number, so a stream of <code>T</code> values looks like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>(<span style="color:#e6db74">&#34;define type id&#34;</span> <span style="color:#ae81ff">127</span>, <span style="color:#a6e22e">definition</span> <span style="color:#a6e22e">of</span> <span style="color:#66d9ef">type</span> <span style="color:#a6e22e">T</span>)(<span style="color:#ae81ff">127</span>, <span style="color:#a6e22e">T</span> <span style="color:#a6e22e">value</span>)(<span style="color:#ae81ff">127</span>, <span style="color:#a6e22e">T</span> <span style="color:#a6e22e">value</span>), <span style="color:#f92672">...</span>
+</span></span></code></pre></div><p>CommonType holds elements of all types. It is a historical artifact, kept for binary compatibility and exported only for the benefit of the package&rsquo;s encoding of type descriptors. It is not intended for direct use by clients.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">CommonType</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Id</span>   <span style="color:#a6e22e">typeId</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="26-functions-and-channels">2.6. Functions and channels<a href="#26-functions-and-channels" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Functions and channels will not be sent in a gob. Attempting to encode such a value at the top level will fail. A struct field of chan or func type is treated exactly like an unexported field and is ignored.</p>
+<h3 id="27-gobregister-method">2.7. gob.Register method<a href="#27-gobregister-method" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Register records a type, identified by a value for that type, under its internal type name. That name will identify the concrete type of a value sent or received as an interface variable. <strong>Only types that will be transferred as implementations of interface values need to be registered.</strong> Expecting to be used only during initialization, it panics if the mapping between types and names is not a bijection.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Register</span>(<span style="color:#a6e22e">value</span> <span style="color:#66d9ef">any</span>)
+</span></span></code></pre></div><p>If you&rsquo;re dealing with concrete types (structs) only, you don&rsquo;t really need it. Once you&rsquo;re dealing with interfaces you must register your concrete type first.</p>
+<p>For example, let&rsquo;s assume we have these struct and interface (the struct implements the interface):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Getter</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Get</span>() <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Foo</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Bar</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#a6e22e">Foo</span>) <span style="color:#a6e22e">Get</span>() <span style="color:#66d9ef">string</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>.<span style="color:#a6e22e">Bar</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>To send a <code>Foo</code> over gob <strong>as a <code>Getter</code></strong> and decode it back, we must first call</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">Register</span>(<span style="color:#a6e22e">Foo</span>{})
+</span></span></code></pre></div><p>So the flow would be:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-golang" data-lang="golang"><span style="display:flex;"><span><span style="color:#75715e">// init and register</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">buf</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">NewBuffer</span>(<span style="color:#66d9ef">nil</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">Register</span>(<span style="color:#a6e22e">Foo</span>{})    
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// create a getter of Foo</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">g</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Getter</span>(<span style="color:#a6e22e">Foo</span>{<span style="color:#e6db74">&#34;wazzup&#34;</span>})
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// encode</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">enc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#a6e22e">buf</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">enc</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">g</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// decode</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">dec</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">NewDecoder</span>(<span style="color:#a6e22e">buf</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">gg</span> <span style="color:#a6e22e">Getter</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">dec</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">gg</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>    panic(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Now try removing the <code>Register</code> and this won&rsquo;t work because gob wouldn&rsquo;t know how to map things back to their appropriate type.</p>
+<h3 id="28-gobregister">2.8. gob.Register<a href="#28-gobregister" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>When there is an interface, be careful, you should figure out all the possiable concrete types (implementations) of the interface would be, and if these concrete type is not primitive type, you need register for them. <strong>You don&rsquo;t need to register for interface itself</strong>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">Register</span>(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">int</span>{})
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">expectedCopy</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">interface</span>{}{
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;id&#34;</span>: <span style="color:#e6db74">&#34;0007&#34;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;cats&#34;</span>: <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">int</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#34;kitten&#34;</span>: <span style="color:#ae81ff">3</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#34;milo&#34;</span>:   <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>	},
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>If you don&rsquo;t register for <code>map[string]int</code> you will get an error</p>
+<pre tabindex="0"><code>error: gob: type not registered for interface: map[string]int
+</code></pre><p>All of this because we have <code>map[string]interface{}</code>, there is an interface, according to <a href="https://pkg.go.dev/encoding/gob">gob package</a>, <strong>Only types that will be transferred as implementations of interface values need to be registered.</strong></p>
+<p>You need to register for nothing if <code>expectedCopy</code> type is <code>map[string]map[string]int</code> (because there is no interface):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// don&#39;t need this: gob.Register(map[string]map[string]int{})</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// don&#39;t need this: gob.Register(map[string]int{})</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">expectedCopy</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">int</span>{
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;cats&#34;</span>: <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">int</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#34;kitten&#34;</span>: <span style="color:#ae81ff">3</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#34;milo&#34;</span>:   <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>	},
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Note that you <strong>don&rsquo;t need to register for a slice of primitive type or primitive type itself</strong> when they are the implementations of an interface, because Go has done that for you:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">registerBasics</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Register</span>(int(<span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Register</span>(float32(<span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Register</span>(complex64(<span style="color:#ae81ff">0i</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Register</span>([]uint(<span style="color:#66d9ef">nil</span>))
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Register</span>([]bool(<span style="color:#66d9ef">nil</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Register</span>([]string(<span style="color:#66d9ef">nil</span>))
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Therefore, if you want encode <code>expectedOriginal</code> below, you need register for nothing:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Go has done this for use: gob.Register([]string{})</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">expectedOriginal</span>: <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">interface</span>{}{
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;cats&#34;</span>: []<span style="color:#66d9ef">string</span>{<span style="color:#e6db74">&#34;Coco&#34;</span>, <span style="color:#e6db74">&#34;Bella&#34;</span>},
+</span></span><span style="display:flex;"><span>},
+</span></span></code></pre></div><p>If the implementation&rsquo;s type of the interface is a custom type, you have to register for that type:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Cat</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// you have to register for Cat</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">Register</span>(<span style="color:#a6e22e">Cat</span>{})
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">expectedOriginal</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">interface</span>{}{
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;cats&#34;</span>: <span style="color:#a6e22e">Cat</span>{<span style="color:#a6e22e">Name</span>: <span style="color:#e6db74">&#34;jack&#34;</span>},
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Similarly to we have talked above:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// don&#39;t need this: gob.Register(Cat{})</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// there is no interface</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">expectedOriginal</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#a6e22e">Cat</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;cats&#34;</span>: <span style="color:#a6e22e">Cat</span>{<span style="color:#a6e22e">Name</span>: <span style="color:#e6db74">&#34;jack&#34;</span>},
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>And don&rsquo;t forget, the first letter of the field of Cat must be Capital, namely, expored fields, otherwise, it (the field) won&rsquo;t encode by gob.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Cat</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">interface</span>{}][]<span style="color:#a6e22e">Cat</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#34;cats&#34;</span>: []<span style="color:#a6e22e">Cat</span>{{<span style="color:#a6e22e">Name</span>: <span style="color:#e6db74">&#34;jack&#34;</span>}},
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">buf</span> <span style="color:#f92672">:=</span> new(<span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">Buffer</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">enc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#a6e22e">buf</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">dec</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">NewDecoder</span>(<span style="color:#a6e22e">buf</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">enc</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">m</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;failed to copy map: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">result</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">interface</span>{}][]<span style="color:#a6e22e">Cat</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">dec</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">result</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;failed to copy map: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">result</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="3-encodingjson">3. encoding/json<a href="#3-encodingjson" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<ul>
+<li><code>Marshal()</code> → to encode GO values to JSON in string format</li>
+<li><code>Unmarshal()</code> → to decode JSON data to GO values</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Marshal</span>(<span style="color:#a6e22e">v</span> <span style="color:#66d9ef">interface</span>{}) ([]<span style="color:#66d9ef">byte</span>, <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Unmarshal</span>(<span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>, <span style="color:#a6e22e">v</span> <span style="color:#66d9ef">interface</span>{}) <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><h3 id="31-jsonmarshal">3.1. <code>json.Marshal()</code><a href="#31-jsonmarshal" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Cat</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// lowercase field cannot be exported</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// `json:&#34;name&#34;` makes &#34;Name&#34; to &#34;name&#34; in json string after apply json.Marshal()</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// check in output</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span> <span style="color:#e6db74">`json:&#34;name&#34;`</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Age</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">IsAdult</span> <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">json</span>.<span style="color:#a6e22e">Marshal</span>(<span style="color:#a6e22e">Cat</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Name</span>: <span style="color:#e6db74">&#34;Kitten&#34;</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Age</span>: <span style="color:#ae81ff">2</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">IsAdult</span>: <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span>	println(<span style="color:#a6e22e">data</span>)
+</span></span><span style="display:flex;"><span>	println(string(<span style="color:#a6e22e">data</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">json</span>.<span style="color:#a6e22e">Marshal</span>(<span style="color:#e6db74">&#34;Hello&#34;</span>)
+</span></span><span style="display:flex;"><span>	println(<span style="color:#a6e22e">data</span>)
+</span></span><span style="display:flex;"><span>	println(string(<span style="color:#a6e22e">data</span>))
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#f92672">----------------------------------</span>
+</span></span><span style="display:flex;"><span>[<span style="color:#ae81ff">40</span><span style="color:#f92672">/</span><span style="color:#ae81ff">48</span>]<span style="color:#ae81ff">0x140000161b0</span>
+</span></span><span style="display:flex;"><span>{<span style="color:#e6db74">&#34;name&#34;</span>:<span style="color:#e6db74">&#34;Kitten&#34;</span>,<span style="color:#e6db74">&#34;Age&#34;</span>:<span style="color:#ae81ff">2</span>,<span style="color:#e6db74">&#34;IsAdult&#34;</span>:<span style="color:#66d9ef">true</span>}
+</span></span><span style="display:flex;"><span>[<span style="color:#ae81ff">7</span><span style="color:#f92672">/</span><span style="color:#ae81ff">8</span>]<span style="color:#ae81ff">0x1400001c1a8</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;Hello&#34;</span>
+</span></span></code></pre></div><blockquote>
+<p>⚠️Note: <em>Channel</em>, complex, and <em>function</em> values cannot be encoded in JSON. Attempting to encode such a value causes <em>Marshal</em> to return an UnsupportedTypeError. <a href="https://pkg.go.dev/encoding/json">json package - encoding/json - Go Packages</a></p>
+</blockquote>
+<p>In the past, if you use <code>json.Marshal()</code> to encode map, you need to ensure that the type of the key is strin, otherwise, it will fail, It&rsquo;s not because of Go, but because of Json: Json does not support anything else than strings for keys.</p>
+<p>Learn more: <a href="https://stackoverflow.com/questions/24284612/failed-to-json-marshal-map-with-non-string-keys">https://stackoverflow.com/questions/24284612/failed-to-json-marshal-map-with-non-string-keys</a></p>
+<p>But now you can use <code>json.Marshal()</code> to encode the map whose key&rsquo;s type is int, but not float:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">m</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">float32</span>]<span style="color:#66d9ef">string</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">m</span>[<span style="color:#ae81ff">3</span>] = <span style="color:#e6db74">&#34;helllo&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">json</span>.<span style="color:#a6e22e">Marshal</span>(<span style="color:#a6e22e">m</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>  panic(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// panic: json: unsupported type: map[float32]string</span>
+</span></span></code></pre></div><p>Therefore, you may want do something like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// JSONSerializer encode the session map to JSON.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">JSONSerializer</span> <span style="color:#66d9ef">struct</span>{}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Serialize to JSON. Will err if there are unmarshalable key values</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#a6e22e">JSONSerializer</span>) <span style="color:#a6e22e">Serialize</span>(<span style="color:#a6e22e">ss</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">sessions</span>.<span style="color:#a6e22e">Session</span>) ([]<span style="color:#66d9ef">byte</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">interface</span>{}, len(<span style="color:#a6e22e">ss</span>.<span style="color:#a6e22e">Values</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">k</span>, <span style="color:#a6e22e">v</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">ss</span>.<span style="color:#a6e22e">Values</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">ks</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">k</span>.(<span style="color:#66d9ef">string</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">ok</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;Non-string key value, cannot serialize session to JSON: %v&#34;</span>, <span style="color:#a6e22e">k</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;redistore.JSONSerializer.serialize() Error: %v&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>, <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">m</span>[<span style="color:#a6e22e">ks</span>] = <span style="color:#a6e22e">v</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">json</span>.<span style="color:#a6e22e">Marshal</span>(<span style="color:#a6e22e">m</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Code from: <a href="https://github.com/boj/redistore">https://github.com/boj/redistore</a></p>
+<p>Now support for non string key types for maps for json Marshal/UnMarshal has been added through the use of <a href="https://golang.org/pkg/encoding/#TextMarshaler">TextMarshaler</a> and <a href="https://golang.org/pkg/encoding/#TextUnmarshaler">TextUnmarshaler</a> interfaces <a href="https://go-review.googlesource.com/c/go/&#43;/20356/1">here</a>. You could just implement these interfaces for your key types and then <code>json.Marshal</code> would work as expected. Learn more: <a href="https://stackoverflow.com/a/55879732/16317008">https://stackoverflow.com/a/55879732/16317008</a></p>
+<h3 id="32-jsonunmarshal">3.2. <code>json.Unmarshal()</code><a href="#32-jsonunmarshal" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">json</span>.<span style="color:#a6e22e">Marshal</span>(<span style="color:#a6e22e">Cat</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Name</span>: <span style="color:#e6db74">&#34;Kitten&#34;</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Age</span>: <span style="color:#ae81ff">2</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">IsAdult</span>: <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">cat</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Cat</span>{}
+</span></span><span style="display:flex;"><span>	 <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">json</span>.<span style="color:#a6e22e">Unmarshal</span>(<span style="color:#a6e22e">data</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">cat</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">cat</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#f92672">----------------------------------</span>
+</span></span><span style="display:flex;"><span>{<span style="color:#a6e22e">Kitten</span> <span style="color:#ae81ff">2</span> <span style="color:#66d9ef">true</span>}
+</span></span></code></pre></div><h3 id="33-jsonnewdecoder--jsonunmarshal">3.3. <code>json.NewDecoder()</code> &amp; <code>json.Unmarshal()</code><a href="#33-jsonnewdecoder--jsonunmarshal" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>Use <code>json.Decoder</code> if your data is coming from an <code>io.Reader</code> stream, or you need to decode multiple values from a stream of data.</li>
+<li>Use <code>json.Unmarshal</code> if you already have the JSON data in memory.</li>
+</ul>
+<p>If you check the signature, you should understand:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewDecoder</span>(<span style="color:#a6e22e">r</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Reader</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Decoder</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Unmarshal</span>(<span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>, <span style="color:#a6e22e">v</span> <span style="color:#66d9ef">any</span>) <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><p>Source: <a href="https://stackoverflow.com/a/21198571/16317008">https://stackoverflow.com/a/21198571/16317008</a></p>
+<p>References:</p>
+<ul>
+<li><a href="https://go.dev/blog/gob">Gobs of data - The Go Programming Language</a></li>
+<li><a href="https://pkg.go.dev/encoding/gob">gob package - encoding/gob - Go Packages</a></li>
+<li><a href="https://stackoverflow.com/questions/41179453/difference-between-encoding-gob-and-encoding-json">difference between encoding/gob and encoding/json</a></li>
+<li><a href="https://stackoverflow.com/questions/32676898/whats-the-purpose-of-gob-register-method/32677598#32677598">go - What&rsquo;s the purpose of gob.Register method? - Stack Overflow</a></li>
+<li><a href="https://stackoverflow.com/questions/31467602/gob-register-by-type-or-for-each-variable">go - gob.Register() by type or for each variable? - Stack Overflow</a></li>
+</ul>
+<p>Learn more:</p>
+<ul>
+<li><a href="https://gist.github.com/evalphobia/a2ba2636acbc112f68dcd89e8b81d349">Golang Benchmark: gob vs json</a></li>
+<li><a href="https://www.cs.ubc.ca/~bestchai/teaching/cs416_2015w2/go1.4.3-docs/pkg/encoding/gob/index.html">gob - The Go Programming Language</a></li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/linux/bash/001-shell-basics/" class="button inline prev">
+        Shell Script Basic Syntax
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/golang/practice/004-nuggets-golang/" class="button inline next">
+        零碎知识 &#43; 踩坑 - Go
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

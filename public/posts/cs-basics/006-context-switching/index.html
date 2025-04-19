@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Context Switching :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Context switch In a CPU, the term &ldquo;context&rdquo; refers to the data in the registers and program counter (PC) at a specific moment in time. A register holds the current CPU instruction. A program counter, also known as an instruction address register, is a small amount of fast memory that holds the address of the instruction to be executed immediately after the current one.
+In computing, a context switch is the process of storing the state of a process or thread, so that it can be restored and resume execution at a later point, and then restoring a different, previously saved, state. Two steps, the first step is to store the state of the thread and then restore the state of another.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/cs-basics/006-context-switching/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Context Switching">
+<meta property="og:description" content="1. Context switch In a CPU, the term &ldquo;context&rdquo; refers to the data in the registers and program counter (PC) at a specific moment in time. A register holds the current CPU instruction. A program counter, also known as an instruction address register, is a small amount of fast memory that holds the address of the instruction to be executed immediately after the current one.
+In computing, a context switch is the process of storing the state of a process or thread, so that it can be restored and resume execution at a later point, and then restoring a different, previously saved, state. Two steps, the first step is to store the state of the thread and then restore the state of another.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/cs-basics/006-context-switching/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="计算机基础" />
+
+
+  <meta property="article:published_time" content="2023-05-27 16:29:15 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/cs-basics/006-context-switching/">Context Switching</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-05-27</time><span class="post-reading-time">4 分钟阅读 (805 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/">操作系统</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/">多线程</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-context-switch">1. Context switch<a href="#1-context-switch" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>In a CPU, the term &ldquo;context&rdquo; refers to the data in the registers and program counter (PC) at a specific moment in time. A register holds the current CPU instruction. A program counter, also known as an instruction address register, is a small amount of fast memory that holds the address of the instruction to be executed immediately after the current one.</p>
+<p>In computing, a context switch is the process of storing the state of a process or thread, so that it can be restored and resume execution at a later point, and then restoring a different, previously saved, state. Two steps, the first step is to <strong>store the state of the thread and then restore the state of another</strong>.</p>
+<h2 id="2-two-data-structure-pcb--tcb">2. Two data structure: PCB &amp; TCB<a href="#2-two-data-structure-pcb--tcb" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>The &lsquo;state&rsquo; mentioned above is thread or process related information, stored in PCB (Process) and TCB (Thread) respectively.</p>
+<h3 id="21-process-control-block-pcb">2.1 Process control block (PCB)<a href="#21-process-control-block-pcb" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>A process control block (PCB) contains information about the process, i.e. registers, PID, priority, etc. The process table is an array of PCBs, that means logically contains a PCB for all of the current processes in the system.</p>
+<ul>
+<li>Process State – new, ready, running, waiting, dead;</li>
+<li>Process Number (PID) – unique identification number for each process (also known as Process ID);</li>
+<li>Program Counter (PC) – a pointer to the address of the next instruction to be executed for this process;</li>
+<li>CPU Registers – register set where process needs to be stored for execution for running state;</li>
+</ul>
+<h3 id="22-thread-control-block-tcb">2.2 <strong>Thread control block</strong> (<strong>TCB</strong>)<a href="#22-thread-control-block-tcb" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>An example of information contained within a TCB is:</p>
+<ul>
+<li>Thread Identifier: Unique id (tid) is assigned to every new thread</li>
+<li>Stack pointer: Points to thread&rsquo;s stack in the process</li>
+<li>Program counter (PC): Points to the current program instruction of the thread</li>
+<li>State of the thread (running, ready, waiting, start, done)</li>
+<li>Thread&rsquo;s register values</li>
+<li>Pointer to the Process control block (PCB) of the process that the thread lives on</li>
+</ul>
+<h2 id="3-cost-of-context-switch">3. Cost of context switch<a href="#3-cost-of-context-switch" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Switching from one process to another requires a certain amount of time for doing the administration – saving and loading registers and memory maps, updating various tables and lists, etc.</p>
+<p>For example, in the Linux kernel, context switching involves <em><strong>loading the corresponding process control block (PCB)</strong></em> stored in the PCB table in the kernel stack to retrieve information about the state of the new process. <em><strong>CPU state information</strong></em> including the registers, stack pointer, and program counter as well as memory management information like segmentation tables and page tables (unless the old process shares the memory with the new) are loaded from the PCB for the new process. To avoid incorrect address translation in the case of the previous and current processes using different memory, <em><strong>the translation lookaside buffer (TLB)</strong></em> must be flushed. This negatively affects performance because every memory reference to the TLB will be a miss because it is empty after most context switches.</p>
+<p>Furthermore, analogous context switching happens between <a href="https://en.wikipedia.org/wiki/User_thread">user threads</a>, notably <a href="https://en.wikipedia.org/wiki/Green_thread">green threads</a>, and is often very lightweight, saving and restoring minimal context. In extreme cases, such as switching between goroutines in <a href="https://en.wikipedia.org/wiki/Go_%28programming_language%29">Go</a>, a context switch is equivalent to a <a href="https://en.wikipedia.org/wiki/Coroutine">coroutine</a> yield, which is only marginally more expensive than a <a href="https://en.wikipedia.org/wiki/Subroutine">subroutine</a> call.</p>
+<h2 id="4-when-context-switch-happens">4. When context switch happens<a href="#4-when-context-switch-happens" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<ul>
+<li>
+<p><strong>System calls</strong>: when a process makes any system calls, the OS switches the mode of the kernel and saves that process in context, and executes the system call.</p>
+</li>
+<li>
+<p><strong>Interrupt handling:</strong> Modern architectures are <a href="https://en.wikipedia.org/wiki/Interrupt">interrupt</a> driven. This means that if the CPU requests data from a disk, for example, it does not need to <a href="https://en.wikipedia.org/wiki/Busy-wait">busy-wait</a> until the read is over; it can issue the request (to the I/O device) and continue with some other task. When the read is over, the CPU can be <em>interrupted</em> (by a hardware in this case, which sends interrupt request to <a href="https://en.wikipedia.org/wiki/Programmable_interrupt_controller">PIC</a>) and presented with the read. For interrupts, a program called an <em><a href="https://en.wikipedia.org/wiki/Interrupt_handler">interrupt handler</a></em> is installed, and it is the interrupt handler that handles the interrupt from the disk.</p>
+</li>
+<li>
+<p><strong>User and Kernel Mode switching</strong>: this trigger is used when the OS needed to switch between the user mode and kernel mode.</p>
+</li>
+</ul>
+<h2 id="5-performance">5. Performance<a href="#5-performance" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Context switching itself has a cost in performance, due to running the task scheduler, TLB flushes, and indirectly due to sharing the CPU cache between multiple tasks. <strong>Switching between threads of a single process can be faster than between two separate processes, because threads share the same virtual memory maps, so a TLB flush is not necessary</strong>.</p>
+<h2 id="6-conclusion">6. Conclusion<a href="#6-conclusion" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<ul>
+<li>program counter (PC): processor register, stores the address of next instruction to be executed.</li>
+<li>context switch: store state, restore state</li>
+<li>causes of context siwtch
+<ul>
+<li>system call</li>
+<li>interrupt handling: CPU requests data from a disk</li>
+</ul>
+</li>
+</ul>
+<p>References:</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Context_switch">Context switch</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Process_control_block">Process control block</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Thread_control_block">Thread control block</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Program_counter">Program counter</a></li>
+<li><a href="https://www.geeksforgeeks.org/context-switch-in-operating-system/">Context Switch in Operating System - GeeksforGeeks</a></li>
+<li><a href="https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html">Scheduling In Go : Part I - OS Scheduler</a></li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/cs-basics/006-thread-process/" class="button inline prev">
+        Thread Stack and CPU Cores
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/cs-basics/003-go-runtime-complie-c/" class="button inline next">
+        说说C的编译动态静态库及Go的Runtime
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

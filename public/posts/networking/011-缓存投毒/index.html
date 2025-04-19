@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>缓存投毒 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 缓存投毒 Web Cache Posioning 1.1. 基础概念 Web 缓存投毒攻击的核心在于: 攻击者找到一种方法, 让缓存系统存储并向其他用户提供恶意内容, 在 CDN 场景中, 这种攻击尤为危险:
+CDN 服务于大量用户 缓存内容可能持续较长时间 影响范围广泛且难以快速修复 这里说的缓存就是上面我们讨论的 CDN, 简单来说, 当一个用户访问了例如 /static/test.png, Cache 服务将会缓存, 之后再有用户访问相同的资源时, Cache服务将不会转发此请求至后端服务器, 而是直接将其保存的对应的数据返回, 那这里有个题外话, CDN 判断两个请求是否相同的依据是什么? 答案是 缓存建, 缓存键通常由以下部分组成：
+URL 路径
+主机名
+某些特定的请求头（如 Accept-Encoding）
+查询参数（可配置是否包含）
+用户请求 → CDN 边缘节点 → 检查缓存键 → 缓存命中返回内容/缓存未命中从源站获取 有一种简单的方式是基于 url 以及 host 头时, 那么缓存服务器将简单地认为下两个请求是等同的:
+可以看到, 橙色字体将是缓存服务器判断的根据, 所以缓存服务器将会把第一个请求的响应拿来作为第二个请求的响应,
+1.2. 简单例子 举个例子: 利用未验证的 HTTP 头 假设有一个电商网站 ⁠shop.example.com, 使用 CDN 加速内容分发, 该网站有一个功能, 根据用户的地理位置显示不同的促销信息, 网站后端代码:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/networking/011-%E7%BC%93%E5%AD%98%E6%8A%95%E6%AF%92/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="缓存投毒">
+<meta property="og:description" content="1. 缓存投毒 Web Cache Posioning 1.1. 基础概念 Web 缓存投毒攻击的核心在于: 攻击者找到一种方法, 让缓存系统存储并向其他用户提供恶意内容, 在 CDN 场景中, 这种攻击尤为危险:
+CDN 服务于大量用户 缓存内容可能持续较长时间 影响范围广泛且难以快速修复 这里说的缓存就是上面我们讨论的 CDN, 简单来说, 当一个用户访问了例如 /static/test.png, Cache 服务将会缓存, 之后再有用户访问相同的资源时, Cache服务将不会转发此请求至后端服务器, 而是直接将其保存的对应的数据返回, 那这里有个题外话, CDN 判断两个请求是否相同的依据是什么? 答案是 缓存建, 缓存键通常由以下部分组成：
+URL 路径
+主机名
+某些特定的请求头（如 Accept-Encoding）
+查询参数（可配置是否包含）
+用户请求 → CDN 边缘节点 → 检查缓存键 → 缓存命中返回内容/缓存未命中从源站获取 有一种简单的方式是基于 url 以及 host 头时, 那么缓存服务器将简单地认为下两个请求是等同的:
+可以看到, 橙色字体将是缓存服务器判断的根据, 所以缓存服务器将会把第一个请求的响应拿来作为第二个请求的响应,
+1.2. 简单例子 举个例子: 利用未验证的 HTTP 头 假设有一个电商网站 ⁠shop.example.com, 使用 CDN 加速内容分发, 该网站有一个功能, 根据用户的地理位置显示不同的促销信息, 网站后端代码:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/networking/011-%E7%BC%93%E5%AD%98%E6%8A%95%E6%AF%92/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="计算机网络" />
+
+
+  <meta property="article:published_time" content="2025-04-13 00:02:28 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/networking/011-%E7%BC%93%E5%AD%98%E6%8A%95%E6%AF%92/">缓存投毒</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-04-13</time><span class="post-reading-time">2 分钟阅读 (218 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/">网络安全</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-缓存投毒-web-cache-posioning">1. 缓存投毒 Web Cache Posioning<a href="#1-缓存投毒-web-cache-posioning" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="11-基础概念">1.1. 基础概念<a href="#11-基础概念" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Web 缓存投毒攻击的核心在于: 攻击者找到一种方法, 让<strong>缓存系统存储并向其他用户提供恶意内容</strong>, 在 CDN 场景中, 这种攻击尤为危险:</p>
+<ol>
+<li>CDN 服务于大量用户</li>
+<li>缓存内容可能持续较长时间</li>
+<li>影响范围广泛且难以快速修复</li>
+</ol>
+<p>这里说的缓存就是上面我们讨论的 CDN, 简单来说, 当一个用户访问了例如 <code>/static/test.png</code>, Cache 服务将会缓存, 之后再有用户访问相同的资源时, Cache服务将不会转发此请求至后端服务器, 而是直接将其保存的对应的数据返回, 那这里有个题外话, CDN 判断两个请求是否相同的依据是什么?  答案是 缓存建, 缓存键通常由以下部分组成：</p>
+<ul>
+<li>
+<p>URL 路径</p>
+</li>
+<li>
+<p>主机名</p>
+</li>
+<li>
+<p>某些特定的请求头（如 Accept-Encoding）</p>
+</li>
+<li>
+<p>查询参数（可配置是否包含）</p>
+</li>
+</ul>
+<pre tabindex="0"><code>用户请求 → CDN 边缘节点 → 检查缓存键 → 缓存命中返回内容/缓存未命中从源站获取
+</code></pre><p>有一种简单的方式是基于 url 以及 host 头时, 那么缓存服务器将简单地认为下两个请求是等同的:</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/04/ec33be3d6c3fc5ddd2905f29256ec613.jpg" alt=""></p>
+<p>可以看到, 橙色字体将是缓存服务器判断的根据, 所以缓存服务器将会把第一个请求的响应拿来作为第二个请求的响应,</p>
+<h3 id="12-简单例子">1.2. 简单例子<a href="#12-简单例子" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>举个例子: <strong>利用未验证的 HTTP 头</strong> 假设有一个电商网站 ⁠<code>shop.example.com</code>, 使用 CDN 加速内容分发, 该网站有一个功能, 根据用户的地理位置显示不同的促销信息, 网站后端代码:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">//</span> 服务器端代码
+</span></span><span style="display:flex;"><span>app<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;/promotions&#39;</span>, (req, res) <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">//</span> 从 X<span style="color:#f92672">-</span>Forwarded<span style="color:#f92672">-</span>Host 头获取主机名<span style="color:#960050;background-color:#1e0010">，</span>用于构建资源 URL
+</span></span><span style="display:flex;"><span>  const host <span style="color:#f92672">=</span> req<span style="color:#f92672">.</span>headers[<span style="color:#e6db74">&#39;x-forwarded-host&#39;</span>] <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;shop.example.com&#39;</span>;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">//</span> 返回包含动态脚本引用的 HTML
+</span></span><span style="display:flex;"><span>  res<span style="color:#f92672">.</span>send(<span style="color:#960050;background-color:#1e0010">`</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;</span>html<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&lt;</span>head<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;</span>title<span style="color:#f92672">&gt;</span>Today<span style="color:#e6db74">&#39;s Promotions&lt;/title&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;</span>script src<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://$</span><span style="color:#e6db74">{host}</span><span style="color:#e6db74">/scripts/promo.js&#34;</span><span style="color:#f92672">&gt;&lt;/</span>script<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&lt;/</span>head<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&lt;</span>body<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;</span>h1<span style="color:#f92672">&gt;</span>Special Offers<span style="color:#f92672">&lt;/</span>h1<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">!</span><span style="color:#f92672">--</span> 页面内容 <span style="color:#f92672">--&gt;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&lt;/</span>body<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/</span>html<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#960050;background-color:#1e0010">`</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>攻击者发现 <code>⁠X-Forwarded-Host</code> 头被直接用于构建脚本 URL, 但这个头不是缓存键的一部分, 于是发送以下请求:</p>
+<pre tabindex="0"><code>GET /promotions HTTP/1.1
+Host: shop.example.com
+X-Forwarded-Host: malicious-site.com
+User-Agent: Mozilla/5.0 ...
+</code></pre><ul>
+<li>
+<p>服务器生成包含 ⁠<code>&lt;script src=&quot;https://malicious-site.com/scripts/promo.js&quot;&gt;&lt;/script&gt;</code> 的响应</p>
+</li>
+<li>
+<p>CDN 缓存这个响应，但缓存键中不包含 ⁠<code>X-Forwarded-Host</code> 头</p>
+</li>
+<li>
+<p>所有后续访问 ⁠<code>/promotions</code> 的用户都会加载攻击者控制的 JavaScript</p>
+</li>
+</ul>
+<h3 id="13-实际案例-akamai-cdn-缓存投毒2019">1.3. 实际案例 Akamai CDN 缓存投毒（2019）<a href="#13-实际案例-akamai-cdn-缓存投毒2019" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>研究人员发现 Akamai CDN 配置中的一个问题, 允许攻击者通过操纵 HTTP 请求, 将恶意内容注入缓存:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>POST <span style="color:#f92672">/</span>search HTTP<span style="color:#f92672">/</span><span style="color:#ae81ff">1.1</span>
+</span></span><span style="display:flex;"><span>Host: vulnerable<span style="color:#f92672">-</span>site<span style="color:#f92672">.</span>com
+</span></span><span style="display:flex;"><span>Content<span style="color:#f92672">-</span>Type: application<span style="color:#f92672">/</span>x<span style="color:#f92672">-</span>www<span style="color:#f92672">-</span>form<span style="color:#f92672">-</span>urlencoded
+</span></span><span style="display:flex;"><span>Content<span style="color:#f92672">-</span>Length: <span style="color:#ae81ff">128</span>
+</span></span><span style="display:flex;"><span>Content<span style="color:#f92672">-</span>Length: <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>q<span style="color:#f92672">=</span>testGET <span style="color:#f92672">/</span>search<span style="color:#960050;background-color:#1e0010">?</span>q<span style="color:#f92672">=&lt;</span>script<span style="color:#f92672">&gt;</span>alert(<span style="color:#e6db74">&#39;XSS&#39;</span>)<span style="color:#f92672">&lt;/</span>script<span style="color:#f92672">&gt;</span> HTTP<span style="color:#f92672">/</span><span style="color:#ae81ff">1.1</span>
+</span></span><span style="display:flex;"><span>X<span style="color:#f92672">-</span>Ignore: X
+</span></span></code></pre></div><p><strong>两个 Content-Length 头</strong></p>
+<ul>
+<li>
+<p>第一个声明内容长度为 128 字节</p>
+</li>
+<li>
+<p>第二个声明内容长度为 4 字节</p>
+</li>
+</ul>
+<p><strong>CDN 的处理</strong>：</p>
+<ul>
+<li>
+<p>Akamai CDN 可能使用第二个 ⁠Content-Length: 4</p>
+</li>
+<li>
+<p>因此 CDN 只将 ⁠<code>q=test</code> 作为请求体，认为请求到此结束</p>
+</li>
+</ul>
+<p><strong>源站服务器的处理</strong>：</p>
+<ul>
+<li>
+<p>源站可能使用第一个 ⁠Content-Length: 128</p>
+</li>
+<li>
+<p>将整个内容视为一个请求体</p>
+</li>
+<li>
+<p>但在处理后，剩余的内容 ⁠<code>GET /search?q=&lt;script&gt;alert('XSS')&lt;/script&gt; HTTP/1.1...</code> 被解释为第二个请求</p>
+</li>
+</ul>
+<p><strong>缓存污染</strong>：</p>
+<ul>
+<li>
+<p>源站对第二个<strong>走私请求</strong>的响应（包含 XSS 脚本）可能被 CDN 缓存</p>
+</li>
+<li>
+<p>CDN 使用 URL 路径 ⁠<code>/search?q=&lt;script&gt;alert('XSS')&lt;/script&gt;</code> 作为缓存键</p>
+</li>
+<li>
+<p>后续用户访问 ⁠<code>/search</code> 时可能会收到包含 XSS 的缓存响应</p>
+</li>
+</ul>
+<p>部分参考: <a href="https://ph4ntonn.github.io/Web-Cache-Poisoning">https://ph4ntonn.github.io/Web-Cache-Poisoning</a></p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/003-redis%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF/" class="button inline prev">
+        Redis 常见数据类型的使用场景
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/networking/009-xss-attack/" class="button inline next">
+        XSS Attack
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

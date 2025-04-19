@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Vue 数据可视化 ECharts :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Element Plus 组件 1.1. 总览 &lt;!-- 物料概览卡片 --&gt; &lt;el-card class=&#34;dashboard-card&#34; shadow=&#34;hover&#34;&gt; &lt;template #header&gt; &lt;div class=&#34;card-header&#34;&gt; &lt;span&gt;物料概览&lt;/span&gt; &lt;el-button text @click=&#34;navigateToDetail(&#39;materials&#39;)&#34; &gt;查看详情&lt;/el-button &gt; &lt;/div&gt; &lt;/template&gt; &lt;div class=&#34;card-content&#34;&gt; &lt;div class=&#34;metric-item&#34;&gt; &lt;span class=&#34;metric-label&#34;&gt;物料总数&lt;/span&gt; &lt;span class=&#34;metric-value&#34;&gt;{{ materialsStats.TotalCount }}&lt;/span&gt; &lt;/div&gt; &lt;div class=&#34;metric-chart&#34;&gt; &lt;el-progress type=&#34;dashboard&#34; :percentage=&#34;materialsStats.OverdueRate&#34; :color=&#34;overdueRateColor&#34; :stroke-width=&#34;8&#34; &gt; &lt;template #default=&#34;{ percentage }&#34;&gt; &lt;div class=&#34;progress-label&#34;&gt; &lt;div&gt;逾期率&lt;/div&gt; &lt;span&gt;{{ percentage.toFixed(1) }}%&lt;/span&gt; &lt;/div&gt; &lt;/template&gt; &lt;/el-progress&gt; &lt;el-progress type=&#34;dashboard&#34; :percentage=&#34;materialsStats.EarlyCompletionRate&#34; :color=&#34;earlyCompletionColor&#34; :stroke-width=&#34;8&#34; &gt; &lt;template #default=&#34;{ percentage }&#34;&gt; &lt;div class=&#34;progress-label&#34;&gt; &lt;div&gt;提前完成率&lt;/div&gt; &lt;span&gt;{{ percentage.toFixed(1) }}%&lt;/span&gt; &lt;/div&gt; &lt;/template&gt; &lt;/el-progress&gt; &lt;/div&gt; &lt;/div&gt; &lt;/el-card&gt; 这段代码基于 Element Plus（Vue.js 的 UI 组件库）实现了一个物料概览卡片, 包含 el-card、el-progress、el-button 和 template 等组件, 这个组件并不是使用 echarts 实现的, 而是基于 Element Plus:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/frontend/vue/004-vue-%E5%9B%BE%E8%A1%A8/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Vue 数据可视化 ECharts">
+<meta property="og:description" content="1. Element Plus 组件 1.1. 总览 &lt;!-- 物料概览卡片 --&gt; &lt;el-card class=&#34;dashboard-card&#34; shadow=&#34;hover&#34;&gt; &lt;template #header&gt; &lt;div class=&#34;card-header&#34;&gt; &lt;span&gt;物料概览&lt;/span&gt; &lt;el-button text @click=&#34;navigateToDetail(&#39;materials&#39;)&#34; &gt;查看详情&lt;/el-button &gt; &lt;/div&gt; &lt;/template&gt; &lt;div class=&#34;card-content&#34;&gt; &lt;div class=&#34;metric-item&#34;&gt; &lt;span class=&#34;metric-label&#34;&gt;物料总数&lt;/span&gt; &lt;span class=&#34;metric-value&#34;&gt;{{ materialsStats.TotalCount }}&lt;/span&gt; &lt;/div&gt; &lt;div class=&#34;metric-chart&#34;&gt; &lt;el-progress type=&#34;dashboard&#34; :percentage=&#34;materialsStats.OverdueRate&#34; :color=&#34;overdueRateColor&#34; :stroke-width=&#34;8&#34; &gt; &lt;template #default=&#34;{ percentage }&#34;&gt; &lt;div class=&#34;progress-label&#34;&gt; &lt;div&gt;逾期率&lt;/div&gt; &lt;span&gt;{{ percentage.toFixed(1) }}%&lt;/span&gt; &lt;/div&gt; &lt;/template&gt; &lt;/el-progress&gt; &lt;el-progress type=&#34;dashboard&#34; :percentage=&#34;materialsStats.EarlyCompletionRate&#34; :color=&#34;earlyCompletionColor&#34; :stroke-width=&#34;8&#34; &gt; &lt;template #default=&#34;{ percentage }&#34;&gt; &lt;div class=&#34;progress-label&#34;&gt; &lt;div&gt;提前完成率&lt;/div&gt; &lt;span&gt;{{ percentage.toFixed(1) }}%&lt;/span&gt; &lt;/div&gt; &lt;/template&gt; &lt;/el-progress&gt; &lt;/div&gt; &lt;/div&gt; &lt;/el-card&gt; 这段代码基于 Element Plus（Vue.js 的 UI 组件库）实现了一个物料概览卡片, 包含 el-card、el-progress、el-button 和 template 等组件, 这个组件并不是使用 echarts 实现的, 而是基于 Element Plus:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/frontend/vue/004-vue-%E5%9B%BE%E8%A1%A8/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="前端开发" />
+
+
+  <meta property="article:published_time" content="2025-04-19 21:40:20 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/frontend/vue/004-vue-%E5%9B%BE%E8%A1%A8/">Vue 数据可视化 ECharts</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-04-19</time><span class="post-reading-time">3 分钟阅读 (440 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91/">前端开发</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/vue/">vue</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-element-plus-组件">1. Element Plus 组件<a href="#1-element-plus-组件" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="11-总览">1.1. 总览<a href="#11-总览" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/04/68bc1ea984225662de45824c2f6af1a3.jpg" alt=""></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-vue" data-lang="vue"><span style="display:flex;"><span>  <span style="color:#75715e">&lt;!--</span> <span style="color:#a6e22e">物料概览卡片</span> <span style="color:#f92672">--&gt;</span>
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">el-card</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dashboard-card&#34;</span> <span style="color:#a6e22e">shadow</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hover&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">template</span> <span style="color:#960050;background-color:#1e0010">#</span><span style="color:#a6e22e">header</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;card-header&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">span</span>&gt;<span style="color:#a6e22e">物料概览</span>&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">el-button</span> <span style="color:#a6e22e">text</span> <span style="color:#f92672">@click</span><span style="color:#e6db74">=&#34;navigateToDetail(&#39;materials&#39;)&#34;</span>
+</span></span><span style="display:flex;"><span>          &gt;<span style="color:#a6e22e">查看详情</span><span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/el-button</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>      &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">template</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;card-content&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;metric-item&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;metric-label&#34;</span>&gt;<span style="color:#a6e22e">物料总数</span>&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;metric-value&#34;</span>&gt;{{ <span style="color:#a6e22e">materialsStats</span>.<span style="color:#a6e22e">TotalCount</span> }}&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;metric-chart&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">el-progress</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dashboard&#34;</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">:percentage</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;materialsStats.OverdueRate&#34;</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">:color</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;overdueRateColor&#34;</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">:stroke-width</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;8&#34;</span>
+</span></span><span style="display:flex;"><span>        &gt;
+</span></span><span style="display:flex;"><span>          &lt;<span style="color:#f92672">template</span> <span style="color:#960050;background-color:#1e0010">#</span><span style="color:#a6e22e">default</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{ percentage }&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>            &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;progress-label&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>              &lt;<span style="color:#f92672">div</span>&gt;<span style="color:#a6e22e">逾期率</span>&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>              &lt;<span style="color:#f92672">span</span>&gt;{{ <span style="color:#a6e22e">percentage</span>.<span style="color:#a6e22e">toFixed</span>(<span style="color:#ae81ff">1</span>) }}<span style="color:#f92672">%</span>&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>            &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>          &lt;/<span style="color:#f92672">template</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;/<span style="color:#f92672">el-progress</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">el-progress</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dashboard&#34;</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">:percentage</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;materialsStats.EarlyCompletionRate&#34;</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">:color</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;earlyCompletionColor&#34;</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">:stroke-width</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;8&#34;</span>
+</span></span><span style="display:flex;"><span>        &gt;
+</span></span><span style="display:flex;"><span>          &lt;<span style="color:#f92672">template</span> <span style="color:#960050;background-color:#1e0010">#</span><span style="color:#a6e22e">default</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{ percentage }&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>            &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;progress-label&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>              &lt;<span style="color:#f92672">div</span>&gt;<span style="color:#a6e22e">提前完成率</span>&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>              &lt;<span style="color:#f92672">span</span>&gt;{{ <span style="color:#a6e22e">percentage</span>.<span style="color:#a6e22e">toFixed</span>(<span style="color:#ae81ff">1</span>) }}<span style="color:#f92672">%</span>&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span>            &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>          &lt;/<span style="color:#f92672">template</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;/<span style="color:#f92672">el-progress</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;/<span style="color:#f92672">el-card</span>&gt;
+</span></span></code></pre></div><p>这段代码基于 <strong>Element Plus</strong>（Vue.js 的 UI 组件库）实现了一个物料概览卡片, 包含 <code>el-card</code>、<code>el-progress</code>、<code>el-button</code> 和 <code>template</code> 等组件, 这个组件并不是使用 <code>echarts</code> 实现的, 而是基于 Element Plus:</p>
+<ul>
+<li>
+<p><strong>卡片容器</strong>：使用 <code>el-card</code> 提供统一的布局，包含标题和内容区域</p>
+</li>
+<li>
+<p><strong>标题区域</strong>：展示“物料概览”标题和“查看详情”按钮（<code>el-button</code>）</p>
+</li>
+<li>
+<p><strong>内容区域</strong>：展示物料总数和两个圆形进度条（<code>el-progress</code>），分别表示“逾期率”和“提前完成率”</p>
+</li>
+<li>
+<p><strong>动态数据</strong>：通过 Vue 的数据绑定（如 <code>materialsStats</code>）动态展示数值和进度</p>
+</li>
+</ul>
+<p>这些组件通过 Vue 的模板语法（template）组织，共同形成一个结构清晰、功能完整的卡片</p>
+<pre tabindex="0"><code>el-card (父组件)
+├── template #header (插槽，定义头部)
+│   ├── div.card-header
+│   │   ├── span (标题“物料概览”)
+│   │   └── el-button (子组件，“查看详情”按钮)
+├── div.card-content
+│   ├── div.metric-item
+│   │   ├── span.metric-label (“物料总数”)
+│   │   └── span.metric-value (显示 materialsStats.TotalCount)
+│   └── div.metric-chart
+│       ├── el-progress (子组件，逾期率进度条)
+│       │   └── template #default (插槽，自定义进度条内容)
+│       │       └── div.progress-label
+│       │           ├── div (“逾期率”)
+│       │           └── span (显示 percentage.toFixed(1) + %)
+│       └── el-progress (子组件，提前完成率进度条)
+│           └── template #default (插槽，自定义进度条内容)
+│               └── div.progress-label
+│                   ├── div (“提前完成率”)
+│                   └── span (显示 percentage.toFixed(1) + %)
+</code></pre><h2 id="12-template-是什么">1.2. <code>&lt;template&gt;</code> 是什么<a href="#12-template-是什么" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>定义</strong>：<code>template</code> 是 Vue.js 的模板语法，用于定义组件的 HTML 结构或插槽内容。它本身不渲染为实际的 DOM 元素，仅作为占位符组织内容</p>
+<p><strong>作用</strong>：<code>template</code> 是 Vue 的模板语法，用于定义插槽内容，<strong>连接父组件和子组件</strong></p>
+<p><strong>联系</strong>：</p>
+<ul>
+<li>在 <code>el-card</code> 中，<code>&lt;template #header&gt;</code> 定义头部，包含 <code>el-button</code> 和标题</li>
+<li>在 <code>el-progress</code> 中，<code>&lt;template #default&gt;</code> 定义进度条的自定义内容，显示文字和百分比</li>
+</ul>
+<p><strong>配合方式</strong>：</p>
+<ul>
+<li><code>template</code> 作为桥梁，将静态内容（文字）、动态数据（<code>percentage</code>）和子组件（<code>el-button</code>、<code>el-progress</code>）组织起来，确保结构清晰</li>
+</ul>
+<blockquote>
+<p>Vue 组件（如 <code>el-card</code>、<code>el-progress</code>）通常支持插槽（<code>slots</code>），允许开发者自定义特定区域的内容</p>
+<p><strong><code>el-card</code> 的插槽结构</strong></p>
+<ul>
+<li>
+<p><strong>header 插槽</strong>（#header）：用于自定义卡片的头部区域，通常包含标题或操作按钮</p>
+</li>
+<li>
+<p><strong>默认插槽</strong>（#default）：用于自定义卡片的内容区域，通常包含卡片的主要内容</p>
+</li>
+<li>
+<p>如果不写 <code>&lt;template&gt;</code>，直接写入内容，会填充组件的<strong>默认插槽</strong>（<code>#default</code>）</p>
+</li>
+</ul>
+</blockquote>
+<h2 id="2-echarts">2. ECharts<a href="#2-echarts" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="21-echarts-的组成结构总体思路">2.1. ECharts 的组成结构（总体思路）<a href="#21-echarts-的组成结构总体思路" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>ECharts 是通过一个大的 <code>option</code> 配置对象来控制图表外观和行为的, 这个对象大致可以分为：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">ECharts</span> <span style="color:#a6e22e">Option</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">title</span>              <span style="color:#75715e">// 标题
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">tooltip</span>            <span style="color:#75715e">// 提示框
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">legend</span>             <span style="color:#75715e">// 图例
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">grid</span>               <span style="color:#75715e">// 网格布局
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">xAxis</span> <span style="color:#f92672">/</span> <span style="color:#a6e22e">yAxis</span>      <span style="color:#75715e">// 坐标轴
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">series</span>             <span style="color:#75715e">// 数据序列（图表的主要部分，如折线、柱状等）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">dataZoom</span>           <span style="color:#75715e">// 数据缩放
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#960050;background-color:#1e0010">└──</span> ...<span style="color:#960050;background-color:#1e0010">（</span><span style="color:#a6e22e">还有更多其他组件</span><span style="color:#960050;background-color:#1e0010">）</span>
+</span></span></code></pre></div><h3 id="22-各部分配置详解">2.2. 各部分配置详解<a href="#22-各部分配置详解" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">option</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">title</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">└──</span> <span style="color:#a6e22e">text</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;图表标题&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">tooltip</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">└──</span> <span style="color:#a6e22e">trigger</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;axis&#39;</span> <span style="color:#75715e">// 悬浮提示，常用 &#39;item&#39; 或 &#39;axis&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">legend</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">└──</span> <span style="color:#a6e22e">data</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#39;系列1&#39;</span>, <span style="color:#e6db74">&#39;系列2&#39;</span>] <span style="color:#75715e">// 对应 series 的 name
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">grid</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">└──</span> <span style="color:#a6e22e">left</span><span style="color:#f92672">/</span><span style="color:#a6e22e">right</span><span style="color:#f92672">/</span><span style="color:#a6e22e">top</span><span style="color:#f92672">/</span><span style="color:#a6e22e">bottom</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;10%&#39;</span> <span style="color:#75715e">// 控制图表绘图区位置
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">xAxis</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">└──</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;category&#39;</span>, <span style="color:#a6e22e">data</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#39;1月&#39;</span>, <span style="color:#e6db74">&#39;2月&#39;</span>, <span style="color:#e6db74">&#39;3月&#39;</span>]
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">yAxis</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">└──</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;value&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">series</span><span style="color:#f92672">:</span> [
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">├──</span> {
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;系列1&#39;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;bar&#39;</span> <span style="color:#a6e22e">或</span> <span style="color:#e6db74">&#39;line&#39;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#a6e22e">data</span><span style="color:#f92672">:</span> [<span style="color:#ae81ff">10</span>, <span style="color:#ae81ff">20</span>, <span style="color:#ae81ff">30</span>]
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">└──</span> }
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">├──</span> <span style="color:#a6e22e">dataZoom</span><span style="color:#f92672">:</span> [
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">└──</span> { <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;slider&#39;</span>, <span style="color:#a6e22e">start</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">end</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">100</span> } <span style="color:#75715e">// 缩放
+</span></span></span></code></pre></div><h3 id="23-数据控制中心-series">2.3. 数据控制中心 <code>series</code><a href="#23-数据控制中心-series" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>ECharts 里 <code>series</code> 是用来描述“这个图要画什么数据”，它是一个数组，每一个对象代表一组数据（折线、柱状、饼图都一样）</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">series</span><span style="color:#f92672">:</span> [
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;销售额&#39;</span>,       <span style="color:#75715e">// 对应 legend 的文字，也用于 tooltip 显示
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;bar&#39;</span>,         <span style="color:#75715e">// 图表类型：bar（柱状图）/ line（折线图）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">data</span><span style="color:#f92672">:</span> [<span style="color:#ae81ff">500</span>, <span style="color:#ae81ff">700</span>, <span style="color:#ae81ff">1000</span>, <span style="color:#ae81ff">800</span>, <span style="color:#ae81ff">1200</span>]  <span style="color:#75715e">// 👈 真正的图表数据，Y 轴值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  },
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;利润&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;line&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">data</span><span style="color:#f92672">:</span> [<span style="color:#ae81ff">200</span>, <span style="color:#ae81ff">300</span>, <span style="color:#ae81ff">400</span>, <span style="color:#ae81ff">350</span>, <span style="color:#ae81ff">500</span>]
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>]
+</span></span></code></pre></div><pre tabindex="0"><code>xAxis.data （X 轴坐标）
+  ↓        对应
+series[n].data （Y 轴数据）
+</code></pre><p>你只要改 <code>series[n].data</code> 里的数组，就可以改变图上的值</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/vue/003-template%E8%AF%AD%E6%B3%95/" class="button inline prev">
+        Vue Template 语法
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/vue/002-vue-%E7%BB%84%E4%BB%B6%E5%AF%BC%E5%85%A5/" class="button inline next">
+        Vue 组件导入
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

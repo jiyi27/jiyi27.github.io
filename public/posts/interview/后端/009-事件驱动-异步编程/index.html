@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>事件驱动 非阻塞IO 异步编程的概念 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 事件驱动 Event-Driven 事件驱动编程是一种设计模式, 其中程序的执行流程由事件（如用户操作、数据到达、定时器到期等）决定, 程序会等待事件发生, 然后触发相应的处理函数或回调函数,
+事件可以理解为系统中发生的某种状态变化或动作，比如用户点击操作, 数据库读取完成、网络请求返回结果、文件读取完成等, 这些事件发生的时间是不确定的, 程序无法提前知道什么时候会触发, 所以我们需要一个监听器 (也就是事件循环) , 它不断地检查是否有事件发生, 如果有, 就调用对应的处理函数, 那这里你可能有个疑问, 为什么事件循环这个组件会知道在事件发生时调用其对应的函数呢?
+当然是因为我们写代码的时候会注册, 比如 写 JS 的时候, 我们可以通过下面的方式为一个事件注册一个回调函数, 告诉事件循环, 当此事件发生时, 执行这个函数:
+// DOM事件处理 // 方式1：使用addEventListener document.getElementById(&#39;myButton&#39;).addEventListener(&#39;click&#39;, function() { console.log(&#39;按钮被点击了&#39;); }); // 方式2：使用on属性 document.getElementById(&#39;myButton&#39;).onclick = function() { console.log(&#39;按钮被点击了&#39;); }; // 创建自定义事件 const eventEmitter = new EventTarget(); // 注册事件监听器 eventEmitter.addEventListener(&#39;customEvent&#39;, function(event) { console.log(&#39;自定义事件被触发:&#39;, event.detail); }); // 触发自定义事件 const event = new CustomEvent(&#39;customEvent&#39;, { detail: { message: &#39;这是自定义数据&#39; } }); eventEmitter.dispatchEvent(event); 2. 异步编程 异步编程在处理 I/O 密集型任务（如网络请求、文件操作、数据库查询）时特别有用, 可以显著提高程序的响应性和吞吐量:
+Python 通过 asyncio 库和 async/await 语法实现异步编程 JavaScript 使用 Promise/.then().then()、async/await 和回调函数来处理异步操作 Promise 是 JavaScript 中处理异步操作的一种机制, 它本质上是一个对象, 代表一个异步操作的最终完成（或失败）及其结果值, Promise 有三种状态：pending（等待）、fulfilled（成功）、rejected（失败）, 通过 .then() 和 .catch() 方法, 你可以注册回调函数来处理成功或失败的结果: 虽然 Promise 使用回调函数, 但它和上面的注册事件并不是一回事, 事件驱动通常是通过事件监听器（比如 addEventListener）注册回调函数, 当特定事件触发时执行, 而 Promise 更像是一种“一次性的异步任务封装”, 它的回调是在异步操作完成时由 Promise 自身调度, 而不是依赖外部事件触发。
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/009-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8-%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="事件驱动 非阻塞IO 异步编程的概念">
+<meta property="og:description" content="1. 事件驱动 Event-Driven 事件驱动编程是一种设计模式, 其中程序的执行流程由事件（如用户操作、数据到达、定时器到期等）决定, 程序会等待事件发生, 然后触发相应的处理函数或回调函数,
+事件可以理解为系统中发生的某种状态变化或动作，比如用户点击操作, 数据库读取完成、网络请求返回结果、文件读取完成等, 这些事件发生的时间是不确定的, 程序无法提前知道什么时候会触发, 所以我们需要一个监听器 (也就是事件循环) , 它不断地检查是否有事件发生, 如果有, 就调用对应的处理函数, 那这里你可能有个疑问, 为什么事件循环这个组件会知道在事件发生时调用其对应的函数呢?
+当然是因为我们写代码的时候会注册, 比如 写 JS 的时候, 我们可以通过下面的方式为一个事件注册一个回调函数, 告诉事件循环, 当此事件发生时, 执行这个函数:
+// DOM事件处理 // 方式1：使用addEventListener document.getElementById(&#39;myButton&#39;).addEventListener(&#39;click&#39;, function() { console.log(&#39;按钮被点击了&#39;); }); // 方式2：使用on属性 document.getElementById(&#39;myButton&#39;).onclick = function() { console.log(&#39;按钮被点击了&#39;); }; // 创建自定义事件 const eventEmitter = new EventTarget(); // 注册事件监听器 eventEmitter.addEventListener(&#39;customEvent&#39;, function(event) { console.log(&#39;自定义事件被触发:&#39;, event.detail); }); // 触发自定义事件 const event = new CustomEvent(&#39;customEvent&#39;, { detail: { message: &#39;这是自定义数据&#39; } }); eventEmitter.dispatchEvent(event); 2. 异步编程 异步编程在处理 I/O 密集型任务（如网络请求、文件操作、数据库查询）时特别有用, 可以显著提高程序的响应性和吞吐量:
+Python 通过 asyncio 库和 async/await 语法实现异步编程 JavaScript 使用 Promise/.then().then()、async/await 和回调函数来处理异步操作 Promise 是 JavaScript 中处理异步操作的一种机制, 它本质上是一个对象, 代表一个异步操作的最终完成（或失败）及其结果值, Promise 有三种状态：pending（等待）、fulfilled（成功）、rejected（失败）, 通过 .then() 和 .catch() 方法, 你可以注册回调函数来处理成功或失败的结果: 虽然 Promise 使用回调函数, 但它和上面的注册事件并不是一回事, 事件驱动通常是通过事件监听器（比如 addEventListener）注册回调函数, 当特定事件触发时执行, 而 Promise 更像是一种“一次性的异步任务封装”, 它的回调是在异步操作完成时由 Promise 自身调度, 而不是依赖外部事件触发。
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/009-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8-%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-03-29 13:43:26 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/009-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8-%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B/">事件驱动 非阻塞IO 异步编程的概念</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-03-29</time><span class="post-reading-time">3 分钟阅读 (481 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E9%9D%A2%E8%AF%95/">后端面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-事件驱动--event-driven">1. 事件驱动  Event-Driven<a href="#1-事件驱动--event-driven" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>事件驱动编程是一种设计模式, 其中程序的执行流程由事件（如用户操作、数据到达、定时器到期等）决定, 程序会等待事件发生, 然后触发相应的处理函数或回调函数,</p>
+<p>事件可以理解为系统中发生的某种状态变化或动作，比如用户点击操作, 数据库读取完成、网络请求返回结果、文件读取完成等, 这些事件发生的时间是不确定的, 程序无法提前知道什么时候会触发, 所以我们需要一个监听器 (也就是事件循环) , 它不断地检查是否有事件发生, 如果有, 就调用对应的处理函数, 那这里你可能有个疑问, 为什么事件循环这个组件会知道在事件发生时调用其对应的函数呢?</p>
+<p>当然是因为我们写代码的时候会注册, 比如 写 JS 的时候, 我们可以通过下面的方式为一个事件注册一个回调函数, 告诉事件循环, 当此事件发生时, 执行这个函数:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// DOM事件处理
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 方式1：使用addEventListener
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#39;myButton&#39;</span>).<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#39;click&#39;</span>, <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;按钮被点击了&#39;</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 方式2：使用on属性
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#39;myButton&#39;</span>).<span style="color:#a6e22e">onclick</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;按钮被点击了&#39;</span>);
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// 创建自定义事件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">eventEmitter</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">EventTarget</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 注册事件监听器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">eventEmitter</span>.<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#39;customEvent&#39;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">event</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;自定义事件被触发:&#39;</span>, <span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">detail</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 触发自定义事件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">event</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">CustomEvent</span>(<span style="color:#e6db74">&#39;customEvent&#39;</span>, { <span style="color:#a6e22e">detail</span><span style="color:#f92672">:</span> { <span style="color:#a6e22e">message</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;这是自定义数据&#39;</span> } });
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">eventEmitter</span>.<span style="color:#a6e22e">dispatchEvent</span>(<span style="color:#a6e22e">event</span>);
+</span></span></code></pre></div><h2 id="2-异步编程">2. 异步编程<a href="#2-异步编程" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>异步编程在处理 <strong>I/O 密集型任务</strong>（如网络请求、文件操作、数据库查询）时特别有用, 可以显著提高程序的响应性和吞吐量:</p>
+<ul>
+<li>Python 通过 <code>asyncio</code> 库和 <code>async/await</code> 语法实现异步编程</li>
+<li>JavaScript 使用 <code>Promise/.then().then()</code>、<code>async/await</code> 和回调函数来处理异步操作</li>
+</ul>
+<p>Promise 是 JavaScript 中处理异步操作的一种机制, 它<strong>本质上是一个对象</strong>, 代表一个异步操作的最终完成（或失败）及其结果值, Promise 有三种状态：pending（等待）、fulfilled（成功）、rejected（失败）, 通过 .then() 和 .catch() 方法, 你可以注册回调函数来处理成功或失败的结果: 虽然 Promise 使用回调函数, 但它和上面的注册事件并不是一回事, 事件驱动通常是通过事件监听器（比如 addEventListener）注册回调函数, 当特定事件触发时执行, 而 Promise 更像是一种“一次性的异步任务封装”, 它的回调是在异步操作完成时由 Promise 自身调度, 而不是依赖外部事件触发。</p>
+<p>Javascript 中的 <code>async/await</code> 是建立在 Promise 之上的语法糖, 目的是让异步代码看起来更像同步代码, <code>async</code> 函数返回一个 <code>Promise</code>, 而 <code>await</code> 暂停函数执行, 直到 <code>Promise</code> 解析完成, 它的核心仍然是 Promise, 因此它本质上也是异步编程的一种实现方式。</p>
+<h2 id="3-事件驱动-vs-异步编程">3. 事件驱动 vs 异步编程<a href="#3-事件驱动-vs-异步编程" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>事件驱动</strong>：强调通过事件监听器注册回调，等待外部事件（如用户点击、定时器触发、网络响应）来驱动程序执行。典型例子是 DOM 事件监听或 Node.js 中的 EventEmitter。</p>
+<p><strong>异步编程</strong>：关注如何处理耗时操作（如 I/O、网络请求），不阻塞主线程 (非阻塞 IO)。Promise 和 async/await 是异步编程的工具，解决的是“等待结果”的问题，而不是“监听事件”的问题。</p>
+<h2 id="4-为什么事件驱动模型适合做高并发web服务器">4. 为什么事件驱动模型适合做高并发web服务器<a href="#4-为什么事件驱动模型适合做高并发web服务器" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>高效的资源利用</strong></p>
+<ul>
+<li>事件驱动模型通常采用非阻塞 I/O（non-blocking I/O）和 I/O 多路复用（如 epoll, kqueue）, 使得：</li>
+<li>一个线程就可以同时处理成千上万个连接</li>
+<li>不需要为每个连接分配一个线程或进程, 避免线程上下文切换的开销和内存资源浪费</li>
+</ul>
+<p><strong>降低线程切换成本</strong></p>
+<ul>
+<li>
+<p>传统多线程模型中，每个连接一个线程，大量并发连接时会产生<strong>线程调度开销</strong></p>
+</li>
+<li>
+<p>事件驱动模型通常是<strong>单线程 + 事件循环</strong>，避免频繁线程切换，性能更稳定</p>
+</li>
+</ul>
+<p><strong>天然适配网络 I/O 特性</strong></p>
+<ul>
+<li>网络 I/O 操作大多是<strong>I/O 密集型</strong>且具有等待特性（如等待客户端数据、写入响应等）</li>
+<li>事件驱动模型能在等待 I/O 的同时继续处理其他任务，大幅提高吞吐量</li>
+</ul>
+<p><strong>实际验证的成功案例</strong> 很多高性能 Web 服务器或框架都采用事件驱动模型：</p>
+<ul>
+<li><strong>Nginx</strong>：采用 epoll + 非阻塞 I/O，单线程支持上万连接</li>
+<li><strong>Node.js</strong>：基于 libuv 的事件驱动模型，适合处理高并发的 I/O 请求</li>
+<li><strong>Netty（Java）</strong>：事件驱动网络编程框架，广泛应用于高性能 Java 服务</li>
+</ul>
+<blockquote>
+<p>Netty 是一个基于 Java NIO 的 异步、事件驱动的网络应用框架，用于快速开发高性能、高可靠性的网络服务器和客户端程序,</p>
+<p>Spring Boot 管理业务逻辑 (封装了 Web、MVC、数据库、安全等功能), Netty 负责高性能通信 (负责 TCP/UDP 网络通信): 当你使用 <code>spring-boot-starter-webflux</code> 时, 底层默认就是用 Reactor Netty 实现的服务器, 而不是 Tomcat, 所以如果你用了 WebFlux, 其实你已经在用 Netty 了,</p>
+</blockquote>
+<h2 id="5-nodejs-事件驱动-vs-spring-boot-tomcat-多线程">5. Node.js 事件驱动 vs Spring Boot Tomcat 多线程<a href="#5-nodejs-事件驱动-vs-spring-boot-tomcat-多线程" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>在处理并发请求时，Spring Boot 和 Node.js 的运行机制有什么不同？你觉得这些差异会如何影响它们的表现？</strong></p>
+<p>Spring Boot 通常用多线程, 每个请求分配一个线程, Node.js 是单线程靠事件循环处理, Spring Boot 可能更适合需要并行计算的任务, Node.js 适合网络请求多的场景</p>
+<p><strong>如果请求量突然增加到 10 倍，这些机制会有什么变化？</strong></p>
+<ul>
+<li>Spring Boot 可能会受限于线程池大小, 队列堆积
+<ul>
+<li>当线程池的线程都忙不过来了, 新来的请求就被放进 <strong>等待队列</strong>, 这就是“堆积”</li>
+</ul>
+</li>
+<li>Node.js 如果都是 I/O 操作还能应付, 但如果都是 CPU 任务就会卡住,
+<ul>
+<li>因为 CPU 任务 不是 IO 操作, 在发送网络请求之后, 或者文件IO 这些操作期间, CPU 并不需要做什么计算, 就是相当于派个任务给别人, 别人去处理了, 只用呆在那里等待结果</li>
+<li>所以 如果 都是 IO 操作, 事件驱动的 Node.js 并不会出什么问题, 但如果都是 CPU 密集型任务, 那就会导致主线程一直执行该任务, 不能完成其他任务了</li>
+</ul>
+</li>
+</ul>
+<p>在 Node.js 里, <strong>主线程是唯一能运行 JavaScript 的线程</strong>, 也是处理回调和用户请求的核心, 所以:</p>
+<ul>
+<li>只要主线程还“自由”，Node.js 就能持续处理新请求</li>
+<li>一旦主线程“被卡住”，哪怕是 1 秒，所有用户请求都得等那 1 秒过去，才轮得到执行</li>
+</ul>
+<blockquote>
+<p>为什么文件IO 适合非阻塞 IO, 而不属于计算密集型任务, 读取文件难道不是一直需要 CPU 把文件加载到内存吗?</p>
+<p>文件IO被归类为IO密集型而非计算密集型任务, 这是因为文件读写操作的瓶颈主要在于存储设备的访问速度, 而非CPU处理能力, 当程序需要读取文件时, 实际过程包含多个步骤:</p>
+<ol>
+<li>
+<p>程序发起文件读取请求</p>
+</li>
+<li>
+<p>操作系统接收请求并传递给存储设备控制器</p>
+</li>
+<li>
+<p>存储设备从磁盘读取数据</p>
+</li>
+<li>
+<p>数据通过DMA(直接内存访问)传输到内存</p>
+</li>
+<li>
+<p>操作系统通知程序数据已就绪</p>
+</li>
+</ol>
+</blockquote>
+<blockquote>
+<p>FastAPI 本身是一个 Web 框架, 它的核心是处理 HTTP 请求, 而不是管理事件, 它的异步能力依赖 asyncio, 而 asyncio 是事件驱动的（通过事件循环实现）, 但如果你用同步方式写 FastAPI 代码（def 而不是 async def）, 它就完全不涉及事件驱动, 而是阻塞式执行</p>
+<p>Node.js 的 事件循环 组件是由 libuv 库提供的, 当然 libuv 库也有自己的线程池, Node.js 使用单线程运行  libuv 库的事件循环 处理事件的回调函数, I/O 操作（如读写文件、数据库查询、网络请求）会被交给底层（如 libuv 的线程池）异步处理, 主线程不阻塞, 一直监听处理回调函数</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// 示例：文件读取操作
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fs</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;fs&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 1. JavaScript 代码在主线程执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;开始读取文件&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 2. fs.readFile 委托给 libuv
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">readFile</span>(<span style="color:#e6db74">&#39;large-file.txt&#39;</span>, (<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">data</span>) =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 4. 当文件读取完成后，这个回调被放入事件循环队列
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// 然后在主线程上执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">err</span>) <span style="color:#66d9ef">throw</span> <span style="color:#a6e22e">err</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;文件读取完成&#39;</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 3. 主线程继续执行，不会被阻塞
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;继续执行其他代码&#39;</span>);
+</span></span></code></pre></div></blockquote>
+<h2 id="6-浏览器-js-异步执行的原理">6. 浏览器 JS 异步执行的原理<a href="#6-浏览器-js-异步执行的原理" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>JavaScript V8 引擎本身的设计是以单线程方式执行 JavaScript 代码, 这与 Python 和 Java 等语言的执行模型有根本区别,</p>
+<table>
+  <thead>
+      <tr>
+          <th>语言</th>
+          <th>执行模型</th>
+          <th>线程支持</th>
+          <th>并发处理</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>JavaScript (V8)</td>
+          <td>单线程执行</td>
+          <td>不直接支持原生多线程</td>
+          <td>事件循环、回调、Promise</td>
+      </tr>
+      <tr>
+          <td>Python</td>
+          <td>多线程支持</td>
+          <td>原生 ⁠threading 模块</td>
+          <td>线程、进程、协程</td>
+      </tr>
+      <tr>
+          <td>Java</td>
+          <td>多线程支持</td>
+          <td>原生 ⁠Thread 类</td>
+          <td>线程、线程池、并发工具</td>
+      </tr>
+  </tbody>
+</table>
+<p>既然 JavaScript 的主执行线程是单线程的, 为什么浏览器可以同时执行多个任务呢？</p>
+<p>因为 JavaScript 宿主环境（浏览器、Node.js）可以是多线程的, 也就是说, “JS 是单线程的”指的是执行 JS 代码的线程只有一个, 以 Chrome 为例, 浏览器不仅有多个线程, 还有多个进程, 如渲染进程、GPU 进程和插件进程等, 而每个 tab 标签页都是一个独立的渲染进程, 所以一个 tab 异常崩溃后, 其他 tab 基本不会被影响, 作为前端开发者, 主要重点关注其渲染进程, 渲染进程下包含了 JS 引擎线程、HTTP 请求线程和定时器线程等, 这些线程为 JS 在浏览器中完成异步任务提供了基础</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/007-%E7%AA%97%E5%8F%A3%E5%87%BD%E6%95%B0-%E8%81%9A%E5%90%88%E5%87%BD%E6%95%B0/" class="button inline prev">
+        窗口函数 聚合函数
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/git/007-git-443-port/" class="button inline next">
+        git 22 端口被禁用
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

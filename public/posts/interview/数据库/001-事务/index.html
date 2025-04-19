@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>MySQL 事务 数据库锁 悲观锁 乐观锁 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 脏读 脏写 幻读 - 事务隔离级别 1.1. 脏读 - 事务隔离级别较低 脏读是指一个事务读取到了另一个事务尚未提交的数据。若后者发生回滚，则前者读取的数据实际上并不存在。
+事务 A 修改了一条记录，但尚未提交
+事务 B 读取这条记录，看到 A 的修改
+如果 A 后续回滚，那么 B 读到了不存在的数据，这就是脏读问题。
+根本原因在于事务隔离级别较低，允许一个事务读取另一个事务未提交的修改数据，缺少对数据一致性的保证。
+1.2. 脏写 脏写指的是：事务 B 在事务 A 尚未提交的更新基础上又进行了更新并提交。如果随后事务 A 回滚，但 B 已经基于 A 的“未提交更新”写入了数据库，就会导致数据库中出现了一份基于“从未真正生效的数据”所写进去的值。
+如果 B 的更新逻辑要判断某个字段是否满足条件（例如库存是否 &gt; 0 才扣减），而这个字段恰恰是由 A 更新的未提交数据
+B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存根本没增加（或者没变化），最终 B 却“凭空”把库存扣了
+这些例子都说明了：脏写本质上是写操作基于了一份并不存在（或不确定会不会存在）的中间状态，进而可能对数据一致性和业务逻辑造成破坏, 这就是为什么数据库禁止脏写的原因。
+在多数主流数据库(例如 MySQL InnoDB)的默认配置下，这种情况通常不会发生，因为对同一行记录的并发写操作自动会被加 x锁序列化：只有前一个写操作提交或回滚后，后一个事务才能对这行数据进行新的写。因此，脏写往往只在极其宽松/非常低的隔离级别（或人为关闭了某些并发控制）下，才可能被“模拟”或“测试”出来。
+1.3. 不可重复读 和 幻读 不可重复读 发生在同一行数据被更新，导致同一查询多次执行返回不同的具体数值
+幻读 则发生在范围查询中，其他事务在该范围内插入或删除数据，导致结果集的记录数发生变化
+1.4. 四种隔离级别 在SQL标准中设立了4种隔离级别, 用来解决上面的读一致性问题, 不同的隔离级别可以解决不同的读一致性问题:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/001-%E4%BA%8B%E5%8A%A1/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="MySQL 事务 数据库锁 悲观锁 乐观锁">
+<meta property="og:description" content="1. 脏读 脏写 幻读 - 事务隔离级别 1.1. 脏读 - 事务隔离级别较低 脏读是指一个事务读取到了另一个事务尚未提交的数据。若后者发生回滚，则前者读取的数据实际上并不存在。
+事务 A 修改了一条记录，但尚未提交
+事务 B 读取这条记录，看到 A 的修改
+如果 A 后续回滚，那么 B 读到了不存在的数据，这就是脏读问题。
+根本原因在于事务隔离级别较低，允许一个事务读取另一个事务未提交的修改数据，缺少对数据一致性的保证。
+1.2. 脏写 脏写指的是：事务 B 在事务 A 尚未提交的更新基础上又进行了更新并提交。如果随后事务 A 回滚，但 B 已经基于 A 的“未提交更新”写入了数据库，就会导致数据库中出现了一份基于“从未真正生效的数据”所写进去的值。
+如果 B 的更新逻辑要判断某个字段是否满足条件（例如库存是否 &gt; 0 才扣减），而这个字段恰恰是由 A 更新的未提交数据
+B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存根本没增加（或者没变化），最终 B 却“凭空”把库存扣了
+这些例子都说明了：脏写本质上是写操作基于了一份并不存在（或不确定会不会存在）的中间状态，进而可能对数据一致性和业务逻辑造成破坏, 这就是为什么数据库禁止脏写的原因。
+在多数主流数据库(例如 MySQL InnoDB)的默认配置下，这种情况通常不会发生，因为对同一行记录的并发写操作自动会被加 x锁序列化：只有前一个写操作提交或回滚后，后一个事务才能对这行数据进行新的写。因此，脏写往往只在极其宽松/非常低的隔离级别（或人为关闭了某些并发控制）下，才可能被“模拟”或“测试”出来。
+1.3. 不可重复读 和 幻读 不可重复读 发生在同一行数据被更新，导致同一查询多次执行返回不同的具体数值
+幻读 则发生在范围查询中，其他事务在该范围内插入或删除数据，导致结果集的记录数发生变化
+1.4. 四种隔离级别 在SQL标准中设立了4种隔离级别, 用来解决上面的读一致性问题, 不同的隔离级别可以解决不同的读一致性问题:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/001-%E4%BA%8B%E5%8A%A1/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-02-17 20:39:22 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/001-%E4%BA%8B%E5%8A%A1/">MySQL 事务 数据库锁 悲观锁 乐观锁</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-02-17</time><span class="post-reading-time">6 分钟阅读 (1136 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9D%A2%E8%AF%95/">数据库面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-脏读-脏写-幻读---事务隔离级别">1. 脏读 脏写 幻读 - 事务隔离级别<a href="#1-脏读-脏写-幻读---事务隔离级别" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="11-脏读---事务隔离级别较低">1.1. 脏读 - 事务隔离级别较低<a href="#11-脏读---事务隔离级别较低" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>脏读是指一个事务读取到了另一个事务尚未提交的数据。若后者发生回滚，则前者读取的数据实际上并不存在。</p>
+<ul>
+<li>
+<p>事务 A 修改了一条记录，但尚未提交</p>
+</li>
+<li>
+<p>事务 B 读取这条记录，看到 A 的修改</p>
+</li>
+</ul>
+<p>如果 A 后续回滚，那么 B 读到了不存在的数据，这就是脏读问题。</p>
+<p>根本原因在于事务隔离级别较低，<strong>允许一个事务读取另一个事务未提交的修改数据</strong>，缺少对数据一致性的保证。</p>
+<h3 id="12-脏写">1.2. 脏写<a href="#12-脏写" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>脏写指的是：事务 B 在事务 A 尚未提交的更新基础上又进行了更新并提交。如果随后事务 A 回滚，但 B 已经基于 A 的“未提交更新”写入了数据库，就会导致数据库中出现了一份基于“从未真正生效的数据”所写进去的值。</p>
+<ul>
+<li>
+<p>如果 B 的更新逻辑要判断某个字段是否满足条件（例如库存是否 &gt; 0 才扣减），而这个字段恰恰是由 A 更新的未提交数据</p>
+</li>
+<li>
+<p>B 基于 A 未提交的数据做了扣减并提交，后来 A 回滚导致库存根本没增加（或者没变化），最终 B 却“凭空”把库存扣了</p>
+</li>
+</ul>
+<p>这些例子都说明了：脏写本质上是写操作基于了一份并不存在（或不确定会不会存在）的中间状态，进而可能对数据一致性和业务逻辑造成破坏, 这就是为什么数据库禁止脏写的原因。</p>
+<blockquote>
+<p>在多数主流数据库(例如 MySQL InnoDB)的默认配置下，这种情况通常不会发生，因为对同一行记录的并发写操作自动会被加 x锁序列化：只有前一个写操作提交或回滚后，后一个事务才能对这行数据进行新的写。因此，脏写往往只在极其宽松/非常低的隔离级别（或人为关闭了某些并发控制）下，才可能被“模拟”或“测试”出来。</p>
+</blockquote>
+<h3 id="13-不可重复读-和-幻读">1.3. 不可重复读 和 幻读<a href="#13-不可重复读-和-幻读" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>
+<p><strong>不可重复读</strong> 发生在同一行数据被更新，导致同一查询多次执行返回不同的具体数值</p>
+</li>
+<li>
+<p><strong>幻读</strong> 则发生在范围查询中，其他事务在该范围内插入或删除数据，导致结果集的记录数发生变化</p>
+</li>
+</ul>
+<h3 id="14-四种隔离级别">1.4. 四种隔离级别<a href="#14-四种隔离级别" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>在<code>SQL</code>标准中设立了4种隔离级别, 用来解决上面的读一致性问题, 不同的隔离级别可以解决不同的读一致性问题:</p>
+<table>
+  <thead>
+      <tr>
+          <th>隔离级别 (Isolation Level)</th>
+          <th>脏读 (Dirty Read)</th>
+          <th>不可重复读 (Non-repeatable Read)</th>
+          <th>幻读 (Phantom Read)</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>未提交读 (READ UNCOMMITTED)</td>
+          <td>可能 (Yes)</td>
+          <td>可能 (Yes)</td>
+          <td>可能 (Yes)</td>
+      </tr>
+      <tr>
+          <td>已提交读 (READ COMMITTED)</td>
+          <td>不可能 (No)</td>
+          <td>可能 (Yes)</td>
+          <td>可能 (Yes)</td>
+      </tr>
+      <tr>
+          <td>可重复读 (REPEATABLE READ)</td>
+          <td>不可能 (No)</td>
+          <td>不可能 (No)</td>
+          <td>可能 (Yes)（对 InnoDB 不可能）</td>
+      </tr>
+      <tr>
+          <td>串行化 (SERIALIZABLE)</td>
+          <td>不可能 (No)</td>
+          <td>不可能 (No)</td>
+          <td>不可能 (No)</td>
+      </tr>
+  </tbody>
+</table>
+<blockquote>
+<p>脏写的问题严重, 数据库设计上通过删改操作默认加 x锁, 实现脏写在任何隔离级别都会避免</p>
+<p><code>InnoDB</code>支持四个隔离级别（和<code>SQL</code>标准定义的基本一致）。隔离级别越高，事务的并发度就越低。唯一的区别就在于，<code>InnoDB</code> 在<code>可重复读（REPEATABLE READ）</code>的级别就解决了幻读的问题。这也是<code>InnoDB</code>使用<code>可重复读</code> 作为事务默认隔离级别的原因。</p>
+</blockquote>
+<h2 id="2-脏读-脏写-幻读如何被解决的">2. 脏读 脏写 幻读如何被解决的<a href="#2-脏读-脏写-幻读如何被解决的" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="21-脏读-脏写">2.1. 脏读 脏写<a href="#21-脏读-脏写" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>上面提到, 数据库有四种隔离级别, 用来解决 脏读, 脏写, 不可重复读, 幻读等问题, 现在我们简单叙述一下各自的概念:</p>
+<ul>
+<li>
+<p>脏读: 一个事务读取到了另一个事务尚未提交的数据, 若未提交的数据发生回滚&hellip;</p>
+<ul>
+<li>事务隔离级别较低, 允许一个事务读取另一个事务未提交的修改数据所导致</li>
+</ul>
+</li>
+<li>
+<p>脏写: 事务 B 在事务 A 尚未提交的更新基础上又进行了更新并提交</p>
+<ul>
+<li>脏写的问题严重, 数据库设计上通过删改操作默认加 x锁, 实现脏写在任何隔离级别都会避免</li>
+</ul>
+</li>
+<li>
+<p>幻读: 发生在范围查询中，其他事务在该范围内插入或删除数据，导致结果集的记录数发生变化</p>
+</li>
+<li>
+<p>不可重复读: 发生在同一行数据被更新, 导致同一查询多次执行返回不同的具体数值</p>
+</li>
+</ul>
+<p>其中脏写在隔离级别下都被消除了, 方法是任何写操作都需要先获得 x 锁, 然后就剩脏读, 幻读, 不可重复读这三个问题,</p>
+<p>InnoDB 在第三级别 <code>可重复读（REPEATABLE READ）</code> 就解决了所有的问题, 前两个级别分别是 <code>未提交读</code>, <code>已提交读</code>, 根据名字就可以看出, <code>未提交读</code>就是允许修改的数据还没提交就允许其他事务读取, 这显然会造成脏读, <code>未提交读</code>也是最低级别的事务隔离, 第二级别就是<code>已提交读</code>, 显然该级别解决了脏读问题, 但是还不够, 此时还有幻读和不可重复读的问题没有解决,</p>
+<h3 id="22-不可重复读">2.2. 不可重复读<a href="#22-不可重复读" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>不可重复读指的是在同一个事务中，多次读取同一数据时，由于其他事务的修改并提交，导致读取结果不一致:</p>
+<ul>
+<li>
+<p>事务 A：在一个事务中需要两次读取 id = 1 的余额</p>
+</li>
+<li>
+<p>事务 B：在事务 A 执行两次读取期间修改并提交数据</p>
+</li>
+</ul>
+<p>要解决“不可重复读”问题, 需要将事务隔离级别提升到 <code>可重复读</code> 或更高的 <code>序列化</code> 级别, 这两个级别实行默认一致性读 MVCC 来避免“不可重复读“问题:</p>
+<ul>
+<li>在<code>可重复读</code>隔离级别下, 读取数据操作<strong>默认使用</strong>的是一致性读, 即通过 MVCC 机制读取数据的快照, 注意默认不是加锁读取</li>
+<li>当然也可以使用 <code>Select ... LOCK IN SHARE MODE</code> 为某行添加共享s锁, 直到当前事务结束, 这样也可以防止读取的时候数据被其他事务修改,</li>
+</ul>
+<blockquote>
+<p>x锁和 s锁是互斥的, 也就是说 当事务 A 获得某行记录的 s锁后, 其他事务想要修改该行记录, 在尝试获取 x 锁的阶段就会阻塞</p>
+</blockquote>
+<p>场景：</p>
+<ul>
+<li>事务 A：在一个事务中需要两次读取 id = 1 的余额</li>
+<li>事务 B：在事务 A 执行期间修改并提交数据</li>
+<li>隔离级别：设置为“可重复读”</li>
+</ul>
+<p>执行过程：</p>
+<ul>
+<li>
+<p>事务 A 开始</p>
+</li>
+<li>
+<p>执行 SELECT balance FROM account WHERE id = 1;</p>
+</li>
+<li>
+<p>结果：balance = 100</p>
+</li>
+<li>
+<p>数据库记录事务 A 的时间点（通过 MVCC）<strong>或</strong>对 id = 1 的行加共享锁</p>
+</li>
+<li>
+<p>事务 B 开始</p>
+</li>
+<li>
+<p>执行 UPDATE account SET balance = 200 WHERE id = 1;</p>
+</li>
+<li>
+<p>1 如果使用锁：事务 B 被阻塞，直到事务 A 结束</p>
+</li>
+<li>
+<p>2 如果使用 MVCC：事务 B 可以提交，更新 balance = 200，但事务 A 仍读取旧版本（快照）数据</p>
+</li>
+<li>
+<p>事务 A 再次读取</p>
+</li>
+<li>
+<p>再次执行 SELECT balance FROM account WHERE id = 1;</p>
+</li>
+<li>
+<p>结果：balance = 100（无论事务 B 是否提交，事务 A 读取的是一致的旧版本数据）</p>
+</li>
+<li>
+<p>事务 A 结束</p>
+</li>
+<li>
+<p>事务 A 提交或回滚后，锁（如果有）释放，或快照失效</p>
+</li>
+<li>
+<p>后续事务读取到的可能是 balance = 200</p>
+</li>
+</ul>
+<p>结果：事务 A 在整个过程中两次读取的结果都是 100, 避免了不可重复读, 但现在仍存在“幻读” 问题</p>
+<h3 id="23-幻读">2.3. 幻读<a href="#23-幻读" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><code>可重复读</code> 解决了“不可重复读”, 但没有解决“幻读”问题, 幻读是指事务读取一个范围的数据时, 另一个事务插入或删除行, 导致再次读取范围时结果不一致 例如：</p>
+<ul>
+<li>事务 A：SELECT * FROM account WHERE balance &gt; 50;（返回 1 行）</li>
+<li>事务 B：INSERT INTO account (id, balance) VALUES (2, 60); 并提交</li>
+<li>事务 A 再次执行相同查询，可能返回 2 行（幻读）</li>
+</ul>
+<p>上面我们说的是数据库上的定义, MySQL 的 InnoDB 引擎在 <code>可重复读</code> 级别下, 通过 多版本并发控制 MVCC 和 Next-Key 锁, 在一定程度上解决了幻读问题</p>
+<blockquote>
+<p>“幻读”是指一个事务在多次读取某个范围的数据时, 由于另一个事务插入或删除了数据并提交, 导致前后两次读取的结果集不一致（多了或少了行）, 它与“不可重复读”的区别在于, <strong>幻读涉及范围查询的结果集变化</strong>, 而<strong>不可重复读针对单行数据的修改</strong></p>
+</blockquote>
+<p><strong>情况 1：事务 A 使用快照读（普通 SELECT）</strong></p>
+<p>事务 A 执行：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">START</span> <span style="color:#66d9ef">TRANSACTION</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> users <span style="color:#66d9ef">WHERE</span> age <span style="color:#66d9ef">BETWEEN</span> <span style="color:#ae81ff">10</span> <span style="color:#66d9ef">AND</span> <span style="color:#ae81ff">40</span>; <span style="color:#75715e">-- 快照读
+</span></span></span></code></pre></div><p>结果：id=1, age=20 和 id=3, age=30</p>
+<p>机制：MVCC 创建一致性读视图，事务 A 只看到开始时的快照，不加锁</p>
+<p>事务 B 插入数据, 执行</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">START</span> <span style="color:#66d9ef">TRANSACTION</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> users (id, age) <span style="color:#66d9ef">VALUES</span> (<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">25</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">COMMIT</span>;
+</span></span></code></pre></div><p>结果：插入成功，表数据变为：</p>
+<pre tabindex="0"><code>id | age
+1  | 20
+2  | 25
+3  | 30
+</code></pre><p>事务 A 再次查询, 执行：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> users <span style="color:#66d9ef">WHERE</span> age <span style="color:#66d9ef">BETWEEN</span> <span style="color:#ae81ff">10</span> <span style="color:#66d9ef">AND</span> <span style="color:#ae81ff">40</span>; <span style="color:#75715e">-- 快照读
+</span></span></span></code></pre></div><p>结果：仍是 id=1, age=20 和 id=3, age=30</p>
+<p>原因：MVCC 保证快照一致性，不受事务 B 影响，幻读被避免</p>
+<p>结论：快照读通过 MVCC 避免幻读，但不加锁，事务 B 可以插入</p>
+<p><strong>情况 2：事务 A 从一开始使用 Next-Key 锁（当前读）</strong></p>
+<p>事务 A 开始并使用当前读</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">START</span> <span style="color:#66d9ef">TRANSACTION</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> users <span style="color:#66d9ef">WHERE</span> age <span style="color:#66d9ef">BETWEEN</span> <span style="color:#ae81ff">10</span> <span style="color:#66d9ef">AND</span> <span style="color:#ae81ff">40</span> <span style="color:#66d9ef">FOR</span> <span style="color:#66d9ef">UPDATE</span>; <span style="color:#75715e">-- 当前读
+</span></span></span></code></pre></div><p>结果：id=1, age=20 和 id=3, age=30</p>
+<p>机制：Next-Key 锁触发，锁定 age 在 10 到 40 的范围：</p>
+<ul>
+<li>记录锁：age=20 和 age=30</li>
+<li>间隙锁：(负无穷, 20)、(20, 30)、(30, 正无穷)</li>
+</ul>
+<p>事务 B 尝试插入</p>
+<pre tabindex="0"><code>INSERT INTO users (id, age) VALUES (2, 25);
+</code></pre><p>结果：被阻塞，因为 age=25 落在间隙 (20, 30) 中，而该间隙已被锁定。</p>
+<p>事务 A 再次查询</p>
+<pre tabindex="0"><code>SELECT * FROM users WHERE age BETWEEN 10 AND 40 FOR UPDATE; -- 当前读
+</code></pre><p>结果：仍是 id=1, age=20 和 id=3, age=30</p>
+<p>原因：事务 B 的插入被阻止，数据未改变</p>
+<p>事务 A 提交</p>
+<ul>
+<li>COMMIT;</li>
+<li>事务 B 解除阻塞，插入成功</li>
+</ul>
+<p>结论：事务 A 从一开始使用 Next-Key 锁，完全避免了幻读，因为事务 B 无法在事务 A 执行期间插入新记录</p>
+<p><strong>情况 3：事务 A 在第二次查询时使用当前读</strong></p>
+<p>事务 A 开始 执行</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">START</span> <span style="color:#66d9ef">TRANSACTION</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> users <span style="color:#66d9ef">WHERE</span> age <span style="color:#66d9ef">BETWEEN</span> <span style="color:#ae81ff">10</span> <span style="color:#66d9ef">AND</span> <span style="color:#ae81ff">40</span>; <span style="color:#75715e">-- 快照读
+</span></span></span></code></pre></div><p>结果：id=1, age=20 和 id=3, age=30</p>
+<p>事务 B 插入数据执行：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> users (id, age) <span style="color:#66d9ef">VALUES</span> (<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">25</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">COMMIT</span>;
+</span></span></code></pre></div><p>事务 A 再次查询（当前读）</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> users <span style="color:#66d9ef">WHERE</span> age <span style="color:#66d9ef">BETWEEN</span> <span style="color:#ae81ff">10</span> <span style="color:#66d9ef">AND</span> <span style="color:#ae81ff">40</span> <span style="color:#66d9ef">FOR</span> <span style="color:#66d9ef">UPDATE</span>; <span style="color:#75715e">-- 当前读
+</span></span></span></code></pre></div><p>结果：id=1, age=20、id=2, age=25 和 id=3, age=30</p>
+<p>机制：当前读读取最新提交的数据，看到事务 B 的插入。Next-Key 锁在此触发，但因插入已完成，无法阻止已存在的数据被读取</p>
+<p>结论：当前读会看到新数据，可能出现逻辑上的幻读（与第一次快照读不一致）</p>
+<h2 id="3-事务">3. 事务<a href="#3-事务" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-事务的概念">3.1. 事务的概念<a href="#31-事务的概念" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>事务是一组要么全部成功，要么全部失败的数据库操作，保证数据的一致性。</p>
+<p>假设你要从 A 账户转 100 元到 B 账户，这个过程涉及两个操作：</p>
+<ol>
+<li>从 A 账户扣 100 元</li>
+<li>给 B 账户加 100 元</li>
+</ol>
+<p>如果第一步执行了，但第二步失败了，就会导致 A 的钱少了，但 B 没收到钱，这导致了数据一致性问题。事务可以防止这种情况。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span>START TRANSACTION;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">-- 从 A 账户扣 100 元
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">UPDATE</span> accounts <span style="color:#66d9ef">SET</span> balance <span style="color:#f92672">=</span> balance <span style="color:#f92672">-</span> <span style="color:#ae81ff">100</span> <span style="color:#66d9ef">WHERE</span> name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;A&#39;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">-- 给 B 账户加 100 元
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">UPDATE</span> accounts <span style="color:#66d9ef">SET</span> balance <span style="color:#f92672">=</span> balance <span style="color:#f92672">+</span> <span style="color:#ae81ff">100</span> <span style="color:#66d9ef">WHERE</span> name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;B&#39;</span>;
+</span></span><span style="display:flex;"><span>COMMIT;
+</span></span></code></pre></div><p>如果在执行过程中出现错误（比如 B 账户不存在），可以执行回滚，撤销已经执行的操作。</p>
+<blockquote>
+<p><strong>拓展:</strong> 在 MySQL（InnoDB 存储引擎）中，单个 DML 语句（INSERT, UPDATE, DELETE）本身就是一个事务，如果 <code>AUTOCOMMIT</code> 处于默认开启状态，它会自动提交，不需要手动 <code>COMMIT</code>。</p>
+<p>在数据修改操作（Update、Delete、Insert）中, MySQL InnoDB 会<strong>自动</strong>对受影响的行加上 x 锁, 事务提交的时候(语句执行完成), x锁会被自动释放。</p>
+</blockquote>
+<blockquote>
+<p><strong>后端开发:</strong> 在 Spring Data JPA 中，事务管理是由 Spring 的事务管理器（通常是 <code>@Transactional</code> 注解）来控制的，自动回滚行为也由 Spring 决定。Spring 默认会在遇到 <strong>运行时异常（RuntimeException 及其子类）</strong> 或 <strong>错误（Error）</strong> 时自动回滚事务。</p>
+<p>如果在事务方法内部捕获了异常，并没有将异常抛出到事务管理器，那么 Spring 不会感知到异常，从而事务不会自动回滚。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Transactional</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">updateSomeData</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 一些数据库操作</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 可能抛出异常</span>
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">catch</span> (Exception e) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 捕获异常后不重新抛出，事务将按正常流程提交</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></blockquote>
+<h3 id="32-事务不是导致错误的原因而是处理错误的机制">3.2. 事务不是导致错误的原因，而是处理错误的机制<a href="#32-事务不是导致错误的原因而是处理错误的机制" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>连接类错误, 语法错误, 系统资源相关错误, 数据完整性和约束错误, 事务和锁相关错误, 前几种没什么好说的, 看一下最后两种:</p>
+<ul>
+<li>违反完整性约束的错误: 数据库自身的机制, 比如：主键重复、外键不存在、唯一约束冲突、<code>CHECK</code> 约束失败等</li>
+<li>事务和锁相关错误: 在事务操作中遇到死锁或锁等待等问题
+<ul>
+<li>两个或多个事务在等待对方持有的资源而形成循环依赖，导致系统检测到死锁。</li>
+<li>事务等待获取资源的时间超出了设定的超时时间，可能需要检查当前事务的锁竞争情况</li>
+</ul>
+</li>
+</ul>
+<p><strong>事务不是导致错误的原因，而是处理错误的机制:</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th><strong>情况</strong></th>
+          <th><strong>数据库是否报错？</strong></th>
+          <th><strong>事务是否回滚？</strong></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>主键冲突</td>
+          <td>✅ 报错</td>
+          <td>✅ 回滚（事务开启时）</td>
+      </tr>
+      <tr>
+          <td>外键约束失败</td>
+          <td>✅ 报错</td>
+          <td>✅ 回滚（事务开启时）</td>
+      </tr>
+      <tr>
+          <td>唯一约束失败</td>
+          <td>✅ 报错</td>
+          <td>✅ 回滚（事务开启时）</td>
+      </tr>
+      <tr>
+          <td>业务逻辑错误（如负余额）</td>
+          <td>✅ 报错</td>
+          <td>✅ 回滚（事务开启时）</td>
+      </tr>
+  </tbody>
+</table>
+<ol>
+<li>没开启事务时, 每条 SQL 都是独立提交的, 报错不会回滚之前的操作</li>
+<li>事务不会主动报错，报错的原因是 SQL 语句违反数据库的完整性约束</li>
+<li>事务的作用是确保错误发生时，数据不会进入不一致的状态, 事务只是处理数据库错误的工具, 并不是开启事务就万事大吉了</li>
+</ol>
+<h3 id="33-事务的特性">3.3. 事务的特性<a href="#33-事务的特性" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>原子性（Atomicity）</strong></p>
+<ul>
+<li>事务是一个不可分割的最小操作单元，要么全部执行成功，要么全部回滚</li>
+<li>以转账场景为例，一个账户的余额减少，另一个账户的余额增加，这两个操作一定是同时成功或者同时失败的</li>
+</ul>
+<p><strong>一致性（Consistency）</strong></p>
+<ul>
+<li>事务执行前后，数据库必须保持一致性状态，即不会违反数据库的完整性约束</li>
+</ul>
+<p><strong>隔离性（Isolation）</strong></p>
+<ul>
+<li>并发事务互不影响，一个事务未提交前，其他事务无法看到其变化</li>
+</ul>
+<p><strong>持久性（Durability）</strong></p>
+<ul>
+<li>事务提交后，其修改的数据会被永久保存，即使系统崩溃也不会丢失</li>
+</ul>
+<p><strong>一致性并不是事务本身的固有属性, 而更像是一种外在要求,</strong> 不难发现其他三个都是实打实的特征, 唯独一致性, 无法理解, 这里的一致性更像是一种外在要求, 而不是事务本身的固有的属性, 即是一种需要依赖业务层逻辑来实现的状态,</p>
+<p>举个不恰当的例子, 我们说一个苹果, 苹果是圆的, 苹果可以为我们提供维生素C, 这都是苹果的特征, 可是你却说, 苹果也有生吃性, 苹果必须生吃才能最大化的提供营养价值, WTF? 生不生吃苹果取决于个人啊, 这怎么能是苹果的特性呢?</p>
+<p>同理, 数据库是不是保持一致性, 这取决于业务逻辑啊, 比如需要结合锁来实现, 什么悲观锁, 乐观锁, 这怎么能是事务的特性呢?</p>
+<h2 id="4-数据一致性问题">4. 数据一致性问题<a href="#4-数据一致性问题" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="41-直接修改操作---隐式-x-锁">4.1. 直接修改操作 - 隐式 x 锁<a href="#41-直接修改操作---隐式-x-锁" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>比如常见的转账例子多个人给同一个账户转 100 块钱,  系统可能会有下面的命令:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span><span style="color:#66d9ef">UPDATE</span> account <span style="color:#66d9ef">SET</span> balance <span style="color:#f92672">=</span> balance <span style="color:#f92672">+</span> <span style="color:#ae81ff">100</span> <span style="color:#66d9ef">WHERE</span> account_id <span style="color:#f92672">=</span> <span style="color:#ae81ff">002</span>;
+</span></span></code></pre></div><p>高并发状态下, A事务读取到此时账户余额为 100, B事务 也读取到账户余额为 100,</p>
+<ul>
+<li>A 事务: 余额 = 100 + 100 = 200,</li>
+<li>B 事务:  余额 = 100 + 100 = 200</li>
+</ul>
+<p>最后账户余额仅为 200 而不是 300, 导致数据一致性问题, 因为 InnoDB 会在执行 UPDATE 时对目标行加上排它锁（X 锁）, 从而确保这些操作是串行化的,</p>
+<p>好像是告诉事务, 你想更新 <code>account_id = 002</code> 的数据? 行, 但请先获得这行数据的 X 锁, 所以不可能会有两个事务同时对同一行执行 UPDATE 操作, 也就是说使用单条 UPDATE 语句时, 不会出现多个事务都获取到相同 balance 的情况, 因为数据修改操作都是串行化的,</p>
+<blockquote>
+<p>在数据修改操作（Update、Delete、Insert）中, 事务会先尝试获得受影响行的 X 锁, 若得到, 才能进行更新, 否则只能等待, 不要忘了单个语句, 也默认属于一个事务</p>
+</blockquote>
+<h3 id="42-检查--修改操作----显式-x锁-悲观锁-或乐观锁">4.2. 检查 + 修改操作 -  显式 x锁 (悲观锁) 或乐观锁<a href="#42-检查--修改操作----显式-x锁-悲观锁-或乐观锁" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>这种属于多个事务中基于过时数据进行判断后再写入更新的场景, 读取数据与更新操作之间缺乏必要的锁机制保护, 导致多个事务基于同一份数据进行判断并更新, 从而引发数据不一致,</p>
+<p>上面的例子过于简化了, 实际系统肯定不会直接给账户加钱, 还有很多考虑, 比如检查收账人是否存在, 检查转账人的余额是不是足够, 然后进行扣款,</p>
+<p><strong>步骤 1：同时读取余额</strong></p>
+<ul>
+<li>事务 A 和事务 B 同时对转账人账户执行查询操作，读取到余额都为 100 元</li>
+<li>此时，如果没有加锁（如 <code>FOR UPDATE</code>），两个事务都基于相同的旧数据做判断</li>
+</ul>
+<p><strong>步骤 2：判断余额充足</strong></p>
+<ul>
+<li>事务 A 判断：100 元 &gt;= 转账金额 80 元，认为余额足够</li>
+<li>事务 B 同样判断：100 元 &gt;= 转账金额 60 元，也认为余额足够</li>
+</ul>
+<p><strong>步骤 3：分别执行扣款</strong></p>
+<ul>
+<li>事务 A 扣款 80 元，更新余额为 20 元</li>
+<li>事务 B 扣款 80 元，同样在自己的事务中基于最初读取到的 100 元执行更新，更新余额为 40 元</li>
+<li>最终两个事务都成功提交，导致余额可能是40, 也可能是20, 也可能是100 - 80 - 60 = -40, 导致余额出现问题（负数或不一致）。</li>
+</ul>
+<p><strong>解决办法1: 悲观锁</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span>BEGIN;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> balance <span style="color:#66d9ef">FROM</span> accounts <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#f92672">?</span> <span style="color:#66d9ef">FOR</span> <span style="color:#66d9ef">UPDATE</span>; <span style="color:#75715e">-- 加锁
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">-- 判断余额是否充足, 通过业务代码实现, SQL 无法实现逻辑判断
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">UPDATE</span> accounts <span style="color:#66d9ef">SET</span> balance <span style="color:#f92672">=</span> balance <span style="color:#f92672">-</span> <span style="color:#f92672">?</span> <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#f92672">?</span>;
+</span></span><span style="display:flex;"><span>COMMIT;
+</span></span></code></pre></div><p>这样可以确保在一个事务完成之前，其他事务必须等待，避免同时读取同一份数据进行判断。</p>
+<p><strong>解决办法2: 乐观锁</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-mysql" data-lang="mysql"><span style="display:flex;"><span>BEGIN;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> balance, version <span style="color:#66d9ef">FROM</span> accounts <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#f92672">?</span>;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">-- 判断余额是否充足, 通过业务代码实现, SQL 无法实现逻辑判断
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">UPDATE</span> accounts <span style="color:#66d9ef">SET</span> balance <span style="color:#f92672">=</span> balance <span style="color:#f92672">-</span> <span style="color:#f92672">?</span>, version <span style="color:#f92672">=</span> version <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#f92672">?</span> <span style="color:#66d9ef">AND</span> version <span style="color:#f92672">=</span> <span style="color:#f92672">?</span>;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">-- 判断 UPDATE 是否成功, 否则重试或抛出异常返回给客户端执行失败, 通过业务代码实现
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>COMMIT;
+</span></span></code></pre></div><h3 id="43-多表操作---事务原子性">4.3. 多表操作 - 事务原子性<a href="#43-多表操作---事务原子性" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>除此之外还要确保转账人的账户 -100, 收款人的账户 +100, 不能出现后者操作失败了, 导致收款人账户余额没变, 转账人账户的钱却少了 100, 这也是属于数据不一致,</p>
+<p>这种很简单, 把更新两张表的语句放到同一个事务里就行了, 因为可以利用事务的回滚保证, 若有一个操作失败, 则同时都失败,</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/001-redis-data-structure/" class="button inline prev">
+        Redis 五种数据类型
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/006-%E9%AB%98%E5%B9%B6%E5%8F%91%E7%82%B9%E8%B5%9E/" class="button inline next">
+        数据库表设计 悲观锁/乐观锁 Redis 高并发场景实践
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

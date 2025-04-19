@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Ptotocol Buffers :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Quick start Execute the following commands at your terminal, you don&rsquo;t need to execute them under your project folder, just execute them anywhere, it will install the protoc compiler and the protoc-gen-go and protoc-gen-go-grpc plugins into your $GOPATH/bin folder.
+# install protoc compiler $ brew install protobuf $ protoc --version # Ensure compiler version is 3&#43; # install plugins for $ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest $ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest Update your $PATH so that the protoc compiler can find the plugins: export PATH=&quot;$PATH:$(go env GOPATH)/bin&quot;
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/microservice/grpc/002-proto-buffer/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Ptotocol Buffers">
+<meta property="og:description" content="1. Quick start Execute the following commands at your terminal, you don&rsquo;t need to execute them under your project folder, just execute them anywhere, it will install the protoc compiler and the protoc-gen-go and protoc-gen-go-grpc plugins into your $GOPATH/bin folder.
+# install protoc compiler $ brew install protobuf $ protoc --version # Ensure compiler version is 3&#43; # install plugins for $ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest $ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest Update your $PATH so that the protoc compiler can find the plugins: export PATH=&quot;$PATH:$(go env GOPATH)/bin&quot;
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/microservice/grpc/002-proto-buffer/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="微服务" />
+
+
+  <meta property="article:published_time" content="2024-01-19 00:01:08 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/microservice/grpc/002-proto-buffer/">Ptotocol Buffers</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2024-01-19</time><span class="post-reading-time">4 分钟阅读 (645 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/">微服务</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/grpc/">grpc</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-quick-start">1. Quick start<a href="#1-quick-start" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Execute the following commands at your terminal, you don&rsquo;t need to execute them under your project folder, just execute them anywhere, it will install the <code>protoc</code> compiler and the <code>protoc-gen-go</code> and <code>protoc-gen-go-grpc</code> plugins into your <code>$GOPATH/bin</code> folder.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e"># install protoc compiler</span>
+</span></span><span style="display:flex;"><span>$ brew install protobuf
+</span></span><span style="display:flex;"><span>$ protoc --version  <span style="color:#75715e"># Ensure compiler version is 3+</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># install plugins for </span>
+</span></span><span style="display:flex;"><span>$ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+</span></span><span style="display:flex;"><span>$ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+</span></span></code></pre></div><blockquote>
+<p>Update your <code>$PATH</code> so that the protoc compiler can find the plugins: <code>export PATH=&quot;$PATH:$(go env GOPATH)/bin&quot;</code></p>
+</blockquote>
+<h2 id="2-usage">2. Usage<a href="#2-usage" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><code>protoc</code> 命令的基本用法是 <code>protoc [OPTION] PROTO_FILES</code>, 其中 <code>OPTION</code> 包括搜索路径参数, 语言插件参数等, <code>PROTO_FILES</code> 是要编译的 <code>.proto</code> 文件. 可以通过 <code>protoc --help</code> 查看所有参数. 下面主要介绍 <code>[OPTION]</code> 参数.</p>
+<h3 id="21-搜索路径参数">2.1. 搜索路径参数<a href="#21-搜索路径参数" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li><code>-IPATH</code> 或 <code>--proto_path=PATH</code>: 指定搜索 <code>.proto</code> 文件的目录
+<ul>
+<li>如: <code>-I.</code> 表示在当前目录下搜索</li>
+<li>如果不指定该参数，则默认在当前路径下进行搜索</li>
+</ul>
+</li>
+</ul>
+<h3 id="22-语言插件-protoc-gen-go">2.2. 语言插件 <code>protoc-gen-go</code><a href="#22-语言插件-protoc-gen-go" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>protoc 本身支持多种语言, &ndash;cpp_out=，&ndash;python_out=等, 但不支持 Go 由google维护，需要安装 protoc 插件：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+</span></span></code></pre></div><p><a href="https://davidzhu.xyz/post/golang/basics/000-modules-env/">之前介绍了 <code>go install</code></a>会把 <code>protoc-gen-go</code> 安装到 <code>$GOPATH/bin</code> 目录下, 之后就可以在 <code>protoc</code> 命令中使用 <code>--go_out</code> 等参数了.</p>
+<blockquote>
+<p>注意: protoc-gen-go 要求 pb (<code>.proto</code>) 文件中必须指定 go 包的路径, 例如 <code>option go_package = &quot;github.com/shwezhu/consignment-service/proto/consignment&quot;</code>.
+文件结构: <code>consignment-service/proto/consignment/consignment.proto</code></p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ protoc I. --go_out<span style="color:#f92672">=</span>. --go_opt<span style="color:#f92672">=</span>paths<span style="color:#f92672">=</span>source_relative <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --go-grpc_out<span style="color:#f92672">=</span>. --go-grpc_opt<span style="color:#f92672">=</span>paths<span style="color:#f92672">=</span>source_relative <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    chat.proto
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># or</span>
+</span></span><span style="display:flex;"><span>$ protoc I. --go_out<span style="color:#f92672">=</span>. --go_opt<span style="color:#f92672">=</span>paths<span style="color:#f92672">=</span>import <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --go-grpc_out<span style="color:#f92672">=</span>. --go-grpc_opt<span style="color:#f92672">=</span>paths<span style="color:#f92672">=</span>import <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    chat.proto
+</span></span></code></pre></div><p>解释:</p>
+<ul>
+<li><code>--go_out=.</code>
+<ul>
+<li>作用: 指定go代码生成的基本路径</li>
+<li>属于哪个插件：这个参数是为 protoc-gen-go 插件设置的</li>
+</ul>
+</li>
+<li><code>--go_opt=paths=source_relative</code>
+<ul>
+<li>属于哪个插件：这同样是为 protoc-gen-go 插件设置的</li>
+<li>一般有两个值: <code>paths=source_relative</code> 和 <code>paths=import</code></li>
+<li><code>paths=source_relative</code>: 例如你的 <code>.proto</code> 文件位于 <code>proto/myapp/myproto.proto</code>, 若使用 <code>paths=source_relative</code> 选项，生成的 Go 文件将会在类似 <code>myapp/myproto.pb.go</code> 的路径下</li>
+<li><code>paths=import</code>: 例如你在 <code>myproto.proto</code> 文件中指定了 <code>option go_package = &quot;github.com/example/project/proto&quot;;</code>，那么无论 <code>.proto</code> 文件的实际位置在哪里，生成的 Go 文件都将使用这个路径作为包路径</li>
+</ul>
+</li>
+<li><code>--go-grpc_out=.</code>
+<ul>
+<li>属于哪个插件：这个参数是为 protoc-gen-go-grpc 插件设置的</li>
+</ul>
+</li>
+<li>
+<ul>
+<li><code>--go-grpc_opt=paths=source_relative</code></li>
+<li>属于哪个插件：这是为 protoc-gen-go-grpc 插件设置的</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><code>protoc-gen-go</code> vs <code>protoc-gen-go-grpc</code>: The old-way is using <code>protoc-gen-go</code> that generates both serialization of the protobuf messages and grpc code. Now <code>protoc-gen-go</code> no longer supports generating gRPC service definitions. For gRPC code, a new plugin called <code>protoc-gen-go-grpc</code> was developed by Go gRPC project. <a href="https://stackoverflow.com/a/64849053/16317008">source</a></p>
+</blockquote>
+<h3 id="23-grpc-go-插件">2.3. grpc go 插件<a href="#23-grpc-go-插件" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><code>protoc-gen-go</code> 纯粹用来生成pb(<code>.proto</code>)序列化相关的文件, 不再承载 gRPC 代码生成功能, 生成gRPC相关代码需要安装 grpc-go 相关的插件 <code>protoc-gen-go-grpc</code>, 安装命令如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+</span></span></code></pre></div><p>插件 <code>protoc-gen-go-grpc</code> 也有两个参数, 类似 <code>protoc-gen-go</code> 插件的 <code>--go_out</code>, <code>--go_opt</code> 参数, 分别是 <code>--go-grpc_out</code>, <code>--go-grpc_opt</code>, 用法也是一样的,</p>
+<h2 id="3-example">3. Example<a href="#3-example" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>文件结构如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>❯ tree -L <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>.
+</span></span><span style="display:flex;"><span>├── Makefile
+</span></span><span style="display:flex;"><span>├── go.mod
+</span></span><span style="display:flex;"><span>├── proto
+</span></span><span style="display:flex;"><span>│   └── calculator.proto
+</span></span></code></pre></div><p><code>calculator.proto</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-protobuf" data-lang="protobuf"><span style="display:flex;"><span>syntax <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;proto3&#34;</span>;<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#75715e">// &#34;./pb&#34; 指定了生成的 Go 文件将被放置在相对路径 ./pb 的目录下
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 这里的相对路径是相对于 protoc 命令执行的目录, 而不是相对于 .proto 文件的目录
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// protoc-gen-go 要求 `.proto` 文件必须指定 go 包的路径
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">option</span> go_package <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;./pb&#34;</span>;<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">service</span> Calculator {<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>  <span style="color:#66d9ef">rpc</span> Add(CalculationRequest) <span style="color:#66d9ef">returns</span> (CalculationResponse);<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>  <span style="color:#66d9ef">rpc</span> Subtract(CalculationRequest) <span style="color:#66d9ef">returns</span> (CalculationResponse);<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>  <span style="color:#66d9ef">rpc</span> Multiply(CalculationRequest) <span style="color:#66d9ef">returns</span> (CalculationResponse);<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>  <span style="color:#66d9ef">rpc</span> Divide(CalculationRequest) <span style="color:#66d9ef">returns</span> (CalculationResponse);<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>  <span style="color:#66d9ef">rpc</span> Sum(NumbersRequest) <span style="color:#66d9ef">returns</span> (CalculationResponse);<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>}<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">message</span> <span style="color:#a6e22e">CalculationRequest</span> {<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>  <span style="color:#66d9ef">int64</span> a <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>  <span style="color:#66d9ef">int64</span> b <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>;<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>}<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">message</span> <span style="color:#a6e22e">CalculationResponse</span> { <span style="color:#66d9ef">int64</span> result <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>; }<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">message</span> <span style="color:#a6e22e">NumbersRequest</span> { <span style="color:#66d9ef">repeated</span> <span style="color:#66d9ef">int64</span> numbers <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>; }<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p><code>Makefile</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e"># run: make generate</span>
+</span></span><span style="display:flex;"><span>generate:
+</span></span><span style="display:flex;"><span>	protoc --proto_path<span style="color:#f92672">=</span>proto proto/*.proto --go_out<span style="color:#f92672">=</span>. --go-grpc_out<span style="color:#f92672">=</span>.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 1. 上面使用的所有路径都是相对 protoc 命令执行时所在的目录</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2. --proto_path=proto: 指定 .proto 文件的搜索路径, 在这，编译器会在名为 proto 的目录下查找 .proto 文件,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 你也可以使用 -IPATH 命令行参数来指定搜索路径 如 protoc -I. --go_out=. --go-grpc_out=. proto/*.proto</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># proto/*.proto : 指定要编译的 .proto 文件，这里我们指定了 proto 目录下的所有 .proto 文件,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 不指定会报错, 因为 protoc 需要知道要编译哪个文件, 你可以使用如 proto/xxx.proto</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 3. --go_out=.: 还记得我们在 .proto 文件中指定了 go_package=&#34;./pb&#34; 吗,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># --go_out=. 为 go_package 指定了所在的工作目录, 举例:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 若你使用 --go_out=abc, go_package=&#34;./pb&#34;, 则生成的文件会放在 abc/pb 目录下, 前提是你得先创建 abc 目录</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 我们在这指定的是 --go_out=., 所以最终生成的文件会放到 ./pb 目录下</span>
+</span></span></code></pre></div><p>执行 <code>make generate</code> 命令, 文件结构如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>❯ tree -L <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>.
+</span></span><span style="display:flex;"><span>├── Makefile
+</span></span><span style="display:flex;"><span>├── go.mod
+</span></span><span style="display:flex;"><span>├── pb
+</span></span><span style="display:flex;"><span>│   ├── calculator.pb.go
+</span></span><span style="display:flex;"><span>│   └── calculator_grpc.pb.go
+</span></span><span style="display:flex;"><span>├── proto
+</span></span><span style="display:flex;"><span>│   └── calculator.proto
+</span></span></code></pre></div><p>安装 grpc 包, 编写程序:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>❯ go get google.golang.org/grpc
+</span></span></code></pre></div><p>创建文件 <code>server/main.go</code> (我省略了一些代码):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">server</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">UnimplementedCalculatorServer</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">server</span>) <span style="color:#a6e22e">Add</span>(
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">in</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">CalculationRequest</span>,
+</span></span><span style="display:flex;"><span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">CalculationResponse</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">CalculationResponse</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Result</span>: <span style="color:#a6e22e">in</span>.<span style="color:#a6e22e">GetA</span>() <span style="color:#f92672">+</span> <span style="color:#a6e22e">in</span>.<span style="color:#a6e22e">GetB</span>(),
+</span></span><span style="display:flex;"><span>	}, <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">listener</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Listen</span>(<span style="color:#e6db74">&#34;tcp&#34;</span>, <span style="color:#e6db74">&#34;:8080&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalln</span>(<span style="color:#e6db74">&#34;failed to create listener:&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">grpc</span>.<span style="color:#a6e22e">NewServer</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// binds the Calculator service implementation to the gRPC server s.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">pb</span>.<span style="color:#a6e22e">RegisterCalculatorServer</span>(<span style="color:#a6e22e">s</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">server</span>{})
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Serve</span>(<span style="color:#a6e22e">listener</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalln</span>(<span style="color:#e6db74">&#34;failed to serve:&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>最后文件结构如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>❯ tree -L <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>.
+</span></span><span style="display:flex;"><span>├── Makefile
+</span></span><span style="display:flex;"><span>├── go.mod
+</span></span><span style="display:flex;"><span>├── go.sum
+</span></span><span style="display:flex;"><span>├── pb
+</span></span><span style="display:flex;"><span>│   ├── calculator.pb.go
+</span></span><span style="display:flex;"><span>│   └── calculator_grpc.pb.go
+</span></span><span style="display:flex;"><span>├── proto
+</span></span><span style="display:flex;"><span>│   └── calculator.proto
+</span></span><span style="display:flex;"><span>└── server
+</span></span><span style="display:flex;"><span>    └── main.go
+</span></span></code></pre></div><p>运行服务器:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>❯ go run server/main.go
+</span></span></code></pre></div><h2 id="4-references">4. References<a href="#4-references" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><a href="https://www.youtube.com/watch?v=_4TPM6clQjM&amp;t=5s">(1) When RESTful architecture isn&rsquo;t enough&hellip;</a></p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/js/001-nuggets-js/" class="button inline prev">
+        零碎知识 &#43; 踩坑 - Javascript
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/database/mysql/001-nuggets-mysql/" class="button inline next">
+        零碎知识 - MySQL
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Go 并发学习之实现一个 Worker Pool :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="有人认为Worker Pool在go里是anti-pattern, 不管怎样, 先实现一个简单版本来帮助理解Worker Pool的概念, 实现之前我们先看看传统的线程池相关的:
+线程池的概念: 预先创建多个线程，线程池里的线程等待处理新来的任务，处理完之后线程并不会被销毁而是等待下一个任务。 使用线程池的原因: 创建和销毁线程都消耗系统资源，如果你的程序需要频繁地创建和销毁线程那这时候就可以考虑使用线程池来提高程序的性能。 注意以上这两点针对是OS级线程的创建销毁, goroutine模型并不是这样, 很轻量, 这也是不需要 worker poll 的原因,
+另外线程池 thread pool 是不是 worker pool 看法不一, 下面这个描述感觉最贴切:
+The worker pool pattern is a design in which a fixed number of workers are given a stream of tasks to process in a queue. Go Worker Pools
+至于thread pool, 普遍看法是:
+A thread pool reuses previously created threads to execute current tasks and offers a solution to the problem of thread cycle overhead and resource thrashing. Thread Pools Java
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/practice/002-golang-worker-pools/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Go 并发学习之实现一个 Worker Pool">
+<meta property="og:description" content="有人认为Worker Pool在go里是anti-pattern, 不管怎样, 先实现一个简单版本来帮助理解Worker Pool的概念, 实现之前我们先看看传统的线程池相关的:
+线程池的概念: 预先创建多个线程，线程池里的线程等待处理新来的任务，处理完之后线程并不会被销毁而是等待下一个任务。 使用线程池的原因: 创建和销毁线程都消耗系统资源，如果你的程序需要频繁地创建和销毁线程那这时候就可以考虑使用线程池来提高程序的性能。 注意以上这两点针对是OS级线程的创建销毁, goroutine模型并不是这样, 很轻量, 这也是不需要 worker poll 的原因,
+另外线程池 thread pool 是不是 worker pool 看法不一, 下面这个描述感觉最贴切:
+The worker pool pattern is a design in which a fixed number of workers are given a stream of tasks to process in a queue. Go Worker Pools
+至于thread pool, 普遍看法是:
+A thread pool reuses previously created threads to execute current tasks and offers a solution to the problem of thread cycle overhead and resource thrashing. Thread Pools Java
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/practice/002-golang-worker-pools/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="golang" />
+
+
+  <meta property="article:published_time" content="2023-05-25 14:13:13 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/practice/002-golang-worker-pools/">Go 并发学习之实现一个 Worker Pool</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-05-25</time><span class="post-reading-time">3 分钟阅读 (565 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>有人认为<a href="https://youtu.be/5zXAHh5tJqQ">Worker Pool在go里是anti-pattern</a>, 不管怎样, 先实现一个简单版本来帮助理解Worker Pool的概念, 实现之前我们先看看传统的线程池相关的:</p>
+<ul>
+<li>线程池的概念: 预先创建多个线程，线程池里的线程等待处理新来的任务，处理完之后线程并不会被销毁而是等待下一个任务。</li>
+<li>使用线程池的原因: 创建和销毁线程都消耗系统资源，如果你的程序需要<strong>频繁地创建和销毁线程</strong>那这时候就可以考虑使用线程池来提高程序的性能。</li>
+</ul>
+<p>注意以上这两点针对是OS级线程的创建销毁, goroutine模型并不是这样, 很轻量, 这也是不需要 worker poll 的原因,</p>
+<p>另外线程池 thread pool 是不是 worker pool 看法不一, 下面这个描述感觉最贴切:</p>
+<blockquote>
+<p>The <strong>worker pool pattern</strong> is a design in which a fixed number of workers are given a stream of tasks to process in a queue. <a href="https://shopify.engineering/leveraging-go-worker-pools">Go Worker Pools</a></p>
+</blockquote>
+<p>至于thread pool, 普遍看法是:</p>
+<blockquote>
+<p>A <strong>thread pool</strong> reuses previously created threads to execute current tasks and offers a solution to the problem of thread cycle overhead and resource thrashing. <a href="https://www.geeksforgeeks.org/thread-pools-java/">Thread Pools Java</a></p>
+</blockquote>
+<p>所以这么看, worker pool也算是一个basic thread pool, 即<em>reuses previously created threads to execute current tasks</em>,</p>
+<hr>
+<p>用Go实现Worker Pool利用的是buffered channel的两个特性:即满的时候写入操作阻塞, 空的时候读取操作阻塞,</p>
+<p>具体方法是提前创建多个 goroutines, 然后这些线程持续监听同一个buffered channel, 如果该channel是空的, 那他们就阻塞等待下一个任务的到来:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// var keysChannel = make(chan int, 6)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">key</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">keysChannel</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">resultsChannel</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">doResearch</span>(<span style="color:#a6e22e">key</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>上面这个程序就是遍历一个buffered channel, 如果该channel是空的, 那该段代码就会阻塞, 直到新的数据写入<code>keysChannel</code> ,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">key</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">keysChannel</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">key</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">key</span><span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>上面这段程序即模拟持续产生数据写入到buffered channel: <code>keysChannel</code>, 若<code>keysChannel</code>满了, 那<code>keysChannel &lt;- key</code>就会阻塞,</p>
+<p>之前看到一句话描述线程池说 <em>once the threads finish the task assigned, they make themselves available again for the next task</em>, 这句话在这就很有迷惑性, 其它语言不知道线程池具体怎么实现, 但是在go里根据上面我们讨论的, 根本没有所谓的<em>make themselves (threads) available again for the next task</em>, 即线程一直都在监听, 只是他们完成一个任务后就会接着完成下一个, 直到他们监听的那个buffered channel为空, 这时候他们是阻塞状态,</p>
+<p>另外实现线程池还用到了一个struct, <code>sync.WaitGroup</code> , 主要需要了解它的三个函数, <code>wg.Add()</code>, <code>wg.Done()</code>, <code>wg.Wait()</code>, 其中<code>wg.Add(1)</code>的意思使<code>wg</code>的counter加1, <code>wg.Done()</code>使counter减1,  最后<code>wg.Wait()</code>阻塞直到counter为0, 我们一般的逻辑是创建多个线程的时候, 每创建一个线程就调用<code>wg.Add(1)</code>使counter++, 当线程要被销毁的时候调用<code>wg.Done()</code>是counter&ndash;,  然后在main线程里的最后调用<code>wg.Wait()</code>, 即等待所有线程执行完毕程序结束,</p>
+<p>注意该实现并不是oo的实现,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;sync&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;time&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">keysChannel</span> = make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>, <span style="color:#ae81ff">6</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">resultsChannel</span> = make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">string</span>, <span style="color:#ae81ff">3</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">doResearch</span>(<span style="color:#a6e22e">key</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">string</span>{
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// assume this research operation consumes a lot of time</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;One research finished, original key is: %v&#34;</span>, <span style="color:#a6e22e">key</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">createWorkerPool</span>(<span style="color:#a6e22e">numOfWorker</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">wg</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">WaitGroup</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// create numOfWorker of workers</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">numOfWorker</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// create a goroutine that looks like can be &#34;reused&#34; by listening keysChannel until keysChannel is closed</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">wg</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">WaitGroup</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// run forever until keysChannel is closed</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// because when keysChannel is empty, this code get blocked not break loop</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">key</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">keysChannel</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">resultsChannel</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">doResearch</span>(<span style="color:#a6e22e">key</span>)
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// worker() is a function represents a goroutine, before return, we should make wg--</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Done</span>()
+</span></span><span style="display:flex;"><span>		}(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">wg</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Wait</span>()
+</span></span><span style="display:flex;"><span>	close(<span style="color:#a6e22e">resultsChannel</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// when use channel, you have to figure out if you need to remind of other goroutines,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// if yes, figure out when to close</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// when use sync.WaitGroup three operations you need to do: wg--, wg.Add(1), wg.wait()</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// and don&#39;t forget to do wg--, otherwise the wg.wait() will never return</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 1. keep listening the resultChannel until resultsChannel is closed</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">done</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">bool</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">done</span> <span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">bool</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">resultsChannel</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%v\n&#34;</span>, <span style="color:#a6e22e">result</span>)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">done</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>	}(<span style="color:#a6e22e">done</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 2. keep generating key every 1 sec</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Imagine this function can continuously generate a request from a client every sec</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// And this request will be sent to keysChannel and will be processed by</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// our one of our workers that keep listening the keysChannel</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">key</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">keysChannel</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">key</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">key</span><span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 3. create worker pool, and until wg.Wait() in the last line of this function returns</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">createWorkerPool</span>(<span style="color:#ae81ff">3</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">done</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// It&#39;s OK to leave a Go channel open forever and never close it.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// When the channel is no longer used, it will be garbage collected.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Close a channel only when it is essential to</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// inform the receiving goroutines that all data has been transmitted.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// close(done)</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>参考:</p>
+<ul>
+<li><a href="https://golangbot.com/buffered-channels-worker-pools/">Buffered Channels and Worker Pools in Go - golangbot.com</a></li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/cs-basics/003-go-runtime-complie-c/" class="button inline prev">
+        说说C的编译动态静态库及Go的Runtime
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/cpp/008-operator-overloading/" class="button inline next">
+        C&#43;&#43; Operator Overloading
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

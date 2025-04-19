@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Extension Namespaces C# :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="In C#, extension namespaces are essentially used to organize extension methods. Extension methods were introduced in C# 3.0 as a feature that allows you to add new methods to existing types without modifying the original type, deriving from it, or using the decorator pattern.
+Extension methods must be defined in static classes The methods themselves must be static The first parameter is preceded by the this keyword, indicating the type being extended using System; using System.Collections.Generic; using System.Linq; // 定义包含扩展方法的命名空间 namespace ProjectUtils { // 扩展方法所在的静态类 public static class CollectionExtensions { // 为IEnumerable&lt;T&gt;添加一个扩展方法，用于安全地获取第一个元素 // 与FirstOrDefault不同，这个方法可以指定默认值 public static T GetFirstOrDefault&lt;T&gt;(this IEnumerable&lt;T&gt; source, T defaultValue) { // 检查集合是否为空 if (source == null || !source.Any()) return defaultValue; return source.First(); } } } namespace SampleApp { using ProjectUtils; // 导入包含扩展方法的命名空间 class Program { static void Main() { // 从数据库或API获取的用户列表 List&lt;User&gt; users = GetUsersFromDatabase(); // 尝试获取第一个管理员用户，如果没有则返回默认的系统管理员 User adminUser = users .Where(u =&gt; u.IsAdmin) .GetFirstOrDefault(new User { Name = &#34;系统管理员&#34;, IsAdmin = true }); Console.WriteLine($&#34;当前管理员: {adminUser.Name}&#34;); } // 模拟从数据库获取用户的方法 static List&lt;User&gt; GetUsersFromDatabase() { // 实际项目中，这里会连接数据库或调用API return new List&lt;User&gt; { new User { Name = &#34;张三&#34;, IsAdmin = false }, new User { Name = &#34;李四&#34;, IsAdmin = false }, // 假设今天没有管理员登录，列表中没有管理员 }; } } class User { public string Name { get; set; } public bool IsAdmin { get; set; } } } " />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/csharp/basics/002-%E6%8B%93%E5%B1%95%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Extension Namespaces C#">
+<meta property="og:description" content="In C#, extension namespaces are essentially used to organize extension methods. Extension methods were introduced in C# 3.0 as a feature that allows you to add new methods to existing types without modifying the original type, deriving from it, or using the decorator pattern.
+Extension methods must be defined in static classes The methods themselves must be static The first parameter is preceded by the this keyword, indicating the type being extended using System; using System.Collections.Generic; using System.Linq; // 定义包含扩展方法的命名空间 namespace ProjectUtils { // 扩展方法所在的静态类 public static class CollectionExtensions { // 为IEnumerable&lt;T&gt;添加一个扩展方法，用于安全地获取第一个元素 // 与FirstOrDefault不同，这个方法可以指定默认值 public static T GetFirstOrDefault&lt;T&gt;(this IEnumerable&lt;T&gt; source, T defaultValue) { // 检查集合是否为空 if (source == null || !source.Any()) return defaultValue; return source.First(); } } } namespace SampleApp { using ProjectUtils; // 导入包含扩展方法的命名空间 class Program { static void Main() { // 从数据库或API获取的用户列表 List&lt;User&gt; users = GetUsersFromDatabase(); // 尝试获取第一个管理员用户，如果没有则返回默认的系统管理员 User adminUser = users .Where(u =&gt; u.IsAdmin) .GetFirstOrDefault(new User { Name = &#34;系统管理员&#34;, IsAdmin = true }); Console.WriteLine($&#34;当前管理员: {adminUser.Name}&#34;); } // 模拟从数据库获取用户的方法 static List&lt;User&gt; GetUsersFromDatabase() { // 实际项目中，这里会连接数据库或调用API return new List&lt;User&gt; { new User { Name = &#34;张三&#34;, IsAdmin = false }, new User { Name = &#34;李四&#34;, IsAdmin = false }, // 假设今天没有管理员登录，列表中没有管理员 }; } } class User { public string Name { get; set; } public bool IsAdmin { get; set; } } } " />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/csharp/basics/002-%E6%8B%93%E5%B1%95%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="c#" />
+
+
+  <meta property="article:published_time" content="2025-04-18 21:07:20 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/csharp/basics/002-%E6%8B%93%E5%B1%95%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4/">Extension Namespaces C#</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-04-18</time><span class="post-reading-time">2 分钟阅读 (216 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/c#/">c#</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>In C#, <strong>extension namespaces</strong> are essentially used to <strong>organize extension methods</strong>. Extension methods <strong>were introduced in</strong> C# 3.0 <strong>as a feature</strong> that allows you to add new methods to <strong>existing types without modifying the original type</strong>, deriving from it, or using the decorator pattern.</p>
+<ul>
+<li>Extension methods must be defined in static classes</li>
+<li>The methods themselves must be static</li>
+<li>The first parameter is preceded by the <code>this</code> keyword, indicating the type being extended</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c#" data-lang="c#"><span style="display:flex;"><span><span style="color:#66d9ef">using</span> System;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">using</span> System.Collections.Generic;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">using</span> System.Linq;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 定义包含扩展方法的命名空间</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">namespace</span> ProjectUtils
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 扩展方法所在的静态类</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">CollectionExtensions</span>
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 为IEnumerable&lt;T&gt;添加一个扩展方法，用于安全地获取第一个元素</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 与FirstOrDefault不同，这个方法可以指定默认值</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> T GetFirstOrDefault&lt;T&gt;(<span style="color:#66d9ef">this</span> IEnumerable&lt;T&gt; source, T defaultValue)
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 检查集合是否为空</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> (source == <span style="color:#66d9ef">null</span> || !source.Any())
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> defaultValue;
+</span></span><span style="display:flex;"><span>                
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> source.First();
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">namespace</span> SampleApp
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">using</span> ProjectUtils; <span style="color:#75715e">// 导入包含扩展方法的命名空间</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Program</span>
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> Main()
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 从数据库或API获取的用户列表</span>
+</span></span><span style="display:flex;"><span>            List&lt;User&gt; users = GetUsersFromDatabase();
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 尝试获取第一个管理员用户，如果没有则返回默认的系统管理员</span>
+</span></span><span style="display:flex;"><span>            User adminUser = users
+</span></span><span style="display:flex;"><span>                .Where(u =&gt; u.IsAdmin)
+</span></span><span style="display:flex;"><span>                .GetFirstOrDefault(<span style="color:#66d9ef">new</span> User { Name = <span style="color:#e6db74">&#34;系统管理员&#34;</span>, IsAdmin = <span style="color:#66d9ef">true</span> });
+</span></span><span style="display:flex;"><span>                
+</span></span><span style="display:flex;"><span>            Console.WriteLine(<span style="color:#e6db74">$&#34;当前管理员: {adminUser.Name}&#34;</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 模拟从数据库获取用户的方法</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">static</span> List&lt;User&gt; GetUsersFromDatabase()
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 实际项目中，这里会连接数据库或调用API</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> List&lt;User&gt;
+</span></span><span style="display:flex;"><span>            {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">new</span> User { Name = <span style="color:#e6db74">&#34;张三&#34;</span>, IsAdmin = <span style="color:#66d9ef">false</span> },
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">new</span> User { Name = <span style="color:#e6db74">&#34;李四&#34;</span>, IsAdmin = <span style="color:#66d9ef">false</span> },
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">// 假设今天没有管理员登录，列表中没有管理员</span>
+</span></span><span style="display:flex;"><span>            };
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">User</span>
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">string</span> Name { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">bool</span> IsAdmin { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/007-%E6%B8%B8%E6%88%8F%E7%A7%AF%E5%88%86%E6%A6%9C%E5%90%84%E7%A7%8D%E6%A6%9C%E5%8D%95/" class="button inline prev">
+        游戏积分榜、直播平台礼物榜、电商热销榜
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/csharp/dot-net/003-mapper-model-binding/" class="button inline next">
+        IMapper &amp; Model Binding
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

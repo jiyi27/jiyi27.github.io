@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>An Analysis of high CPU and RAM usage caused by Go Program :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Problem description Considering the limitation of the RAM on my VPS, when user attempting to upload a large file, I want to handle the file in chunks, so that I can read the file in small pieces and write them to the disk. And this process is called streaming.
+The code snippet is like this:
+func (s *server) handleUpload(w http.ResponseWriter, r *http.Request, currentDir string) (errs []uploadError) { // limit the size of incoming request bodies. r.Body = &amp;LimitedReader{r: r.Body, n: int64(s.maxFileSize * 1024 * 1024)} reader, err := r.MultipartReader() if err != nil {...} for { // reader.NextPart() will close the previous part automatically. part, err := reader.NextPart() if err != nil {...} // not a file, move to the next part. if part.FileName() == &#34;&#34; { continue } filename := getAvailableName(currentDir, part.FileName()) dstPath := filepath.Join(currentDir, filename) dst, err := os.Create(dstPath) if err != nil {...} // io.Copy() will stream the file to dst, multipart.Part is an io.Reader. _, err = io.Copy(dst, part) if err != nil {...} if err = dst.Close(); err != nil { ... } } return } But when I try to upload a file of 1.6GB, it takes a long time to finish (about 2 minutes), I thought it may caused by the CPU speed of my VPS or the I/O speed of the disk or the network speed.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/bugs/010-post-large-file/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="An Analysis of high CPU and RAM usage caused by Go Program">
+<meta property="og:description" content="1. Problem description Considering the limitation of the RAM on my VPS, when user attempting to upload a large file, I want to handle the file in chunks, so that I can read the file in small pieces and write them to the disk. And this process is called streaming.
+The code snippet is like this:
+func (s *server) handleUpload(w http.ResponseWriter, r *http.Request, currentDir string) (errs []uploadError) { // limit the size of incoming request bodies. r.Body = &amp;LimitedReader{r: r.Body, n: int64(s.maxFileSize * 1024 * 1024)} reader, err := r.MultipartReader() if err != nil {...} for { // reader.NextPart() will close the previous part automatically. part, err := reader.NextPart() if err != nil {...} // not a file, move to the next part. if part.FileName() == &#34;&#34; { continue } filename := getAvailableName(currentDir, part.FileName()) dstPath := filepath.Join(currentDir, filename) dst, err := os.Create(dstPath) if err != nil {...} // io.Copy() will stream the file to dst, multipart.Part is an io.Reader. _, err = io.Copy(dst, part) if err != nil {...} if err = dst.Close(); err != nil { ... } } return } But when I try to upload a file of 1.6GB, it takes a long time to finish (about 2 minutes), I thought it may caused by the CPU speed of my VPS or the I/O speed of the disk or the network speed.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/bugs/010-post-large-file/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="bugs" />
+
+
+  <meta property="article:published_time" content="2024-04-12 10:42:22 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/bugs/010-post-large-file/">An Analysis of high CPU and RAM usage caused by Go Program</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2024-04-12</time><span class="post-reading-time">5 分钟阅读 (858 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/bugs/">bugs</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5/">问题排查</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-problem-description">1. Problem description<a href="#1-problem-description" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Considering the limitation of the RAM on my VPS, when user attempting to upload a large file, I want to handle the file in chunks, so that I can read the file in small pieces and write them to the disk. And this process is called <strong>streaming</strong>.</p>
+<p>The code snippet is like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">server</span>) <span style="color:#a6e22e">handleUpload</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>, <span style="color:#a6e22e">currentDir</span> <span style="color:#66d9ef">string</span>) (<span style="color:#a6e22e">errs</span> []<span style="color:#a6e22e">uploadError</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// limit the size of incoming request bodies.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Body</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">LimitedReader</span>{<span style="color:#a6e22e">r</span>: <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Body</span>, <span style="color:#a6e22e">n</span>: int64(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">maxFileSize</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">1024</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">1024</span>)}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">reader</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">MultipartReader</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {<span style="color:#f92672">...</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// reader.NextPart() will close the previous part automatically.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">part</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">reader</span>.<span style="color:#a6e22e">NextPart</span>()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {<span style="color:#f92672">...</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// not a file, move to the next part.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">part</span>.<span style="color:#a6e22e">FileName</span>() <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#34;</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">filename</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getAvailableName</span>(<span style="color:#a6e22e">currentDir</span>, <span style="color:#a6e22e">part</span>.<span style="color:#a6e22e">FileName</span>())
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">dstPath</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">filepath</span>.<span style="color:#a6e22e">Join</span>(<span style="color:#a6e22e">currentDir</span>, <span style="color:#a6e22e">filename</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">dst</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Create</span>(<span style="color:#a6e22e">dstPath</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {<span style="color:#f92672">...</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// io.Copy() will stream the file to dst, multipart.Part is an io.Reader.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Copy</span>(<span style="color:#a6e22e">dst</span>, <span style="color:#a6e22e">part</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {<span style="color:#f92672">...</span>}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">dst</span>.<span style="color:#a6e22e">Close</span>(); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> { <span style="color:#f92672">...</span> }
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>But when I try to upload a file of 1.6GB, it takes a long time to finish (about 2 minutes), I thought it may caused by the CPU speed of my VPS or the I/O speed of the disk or the network speed.</p>
+<p>But at the browser side, the uploading progress bar is always at 100%, and the browser is waiting for the response from the server, which indicates that the uploading process is finished, but the server is still processing the file.</p>
+<p>I use <code>htop</code> to check the CPU usage of my VPS, it&rsquo;s around 20% when uploading the file (consists of network IO and disk IO), which indicates that the CPU is not the bottleneck.</p>
+<p>Then I use <code>dd</code> to test the I/O speed of my disk, it&rsquo;s around 488MB/s, which is not bad.</p>
+<p>Then why the server is still processing the file so long?</p>
+<p>Besides, when my server is processing the file, if I refresh the page, the RAM and cpu usage of my VPS will increase to 100%, and the server will get killed by the OS. This is super weird.</p>
+<h2 id="2-solution-for-high-cpu-usage">2. Solution for high CPU usage<a href="#2-solution-for-high-cpu-usage" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>The error output (call stack) looks like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>goroutine <span style="color:#ae81ff">12</span> <span style="color:#f92672">[</span>running<span style="color:#f92672">]</span>:
+</span></span><span style="display:flex;"><span>runtime.systemstack_switch<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>	/Users/David/sdk/go1.20.4/src/runtime/asm_amd64.s:463 fp<span style="color:#f92672">=</span>0xc00004b7b8 sp<span style="color:#f92672">=</span>0xc00004b7b0 pc<span style="color:#f92672">=</span>0x4643e0
+</span></span><span style="display:flex;"><span>runtime.<span style="color:#f92672">(</span>*mheap<span style="color:#f92672">)</span>.alloc<span style="color:#f92672">(</span>0x1c036000?, 0xe01b?, 0x78?<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	/Users/David/sdk/go1.20.4/src/runtime/mheap.go:955 +0x65 fp<span style="color:#f92672">=</span>0xc00004b800 sp<span style="color:#f92672">=</span>0xc00004b7b8 pc<span style="color:#f92672">=</span>0x427025
+</span></span><span style="display:flex;"><span>runtime.<span style="color:#f92672">(</span>*mcache<span style="color:#f92672">)</span>.allocLarge<span style="color:#f92672">(</span>0x47047e?, 0x1c036000, 0x0<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	/Users/David/sdk/go1.20.4/src/runtime/mcache.go:234 +0x85 fp<span style="color:#f92672">=</span>0xc00004b848 sp<span style="color:#f92672">=</span>0xc00004b800 pc<span style="color:#f92672">=</span>0x4167e5
+</span></span><span style="display:flex;"><span>runtime.mallocgc<span style="color:#f92672">(</span>0x1c036000, 0x757080, 0x1<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	/Users/David/sdk/go1.20.4/src/runtime/malloc.go:1053 +0x4fe fp<span style="color:#f92672">=</span>0xc00004b8b0 sp<span style="color:#f92672">=</span>0xc00004b848 pc<span style="color:#f92672">=</span>0x40d6de
+</span></span><span style="display:flex;"><span>runtime.growslice<span style="color:#f92672">(</span>0xc05ca3c000, 0x15?, 0xc00004b9c0?, 0x1?, 0x757080<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	/Users/David/sdk/go1.20.4/src/runtime/slice.go:274 +0x4e9 fp<span style="color:#f92672">=</span>0xc00004b910 sp<span style="color:#f92672">=</span>0xc00004b8b0 pc<span style="color:#f92672">=</span>0x44c3a9
+</span></span><span style="display:flex;"><span>main.<span style="color:#f92672">(</span>*server<span style="color:#f92672">)</span>.handleUpload<span style="color:#f92672">(</span>0xc00005c240, <span style="color:#f92672">{</span>0x0?, 0x820a00?<span style="color:#f92672">}</span>, 0xc000138600, <span style="color:#f92672">{</span>0xc000098008, 0x8<span style="color:#f92672">})</span>
+</span></span><span style="display:flex;"><span>	/Users/David/Codes/GoLand/file-server/handleFile.go:87 +0x2ad fp<span style="color:#f92672">=</span>0xc00004ba00 sp<span style="color:#f92672">=</span>0xc00004b910 pc<span style="color:#f92672">=</span>0x70290d
+</span></span><span style="display:flex;"><span>main.<span style="color:#f92672">(</span>*server<span style="color:#f92672">)</span>.taskDelegation<span style="color:#f92672">(</span>0xc00005c240, <span style="color:#f92672">{</span>0x823000, 0xc000012140<span style="color:#f92672">}</span>, 0xc000138600<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	/Users/David/Codes/GoLand/file-server/route.go:25 +0x252 fp<span style="color:#f92672">=</span>0xc00004bbc0 sp<span style="color:#f92672">=</span>0xc00004ba00 pc<span style="color:#f92672">=</span>0x704652
+</span></span><span style="display:flex;"><span>main.<span style="color:#f92672">(</span>*server<span style="color:#f92672">)</span>.ServeHTTP<span style="color:#f92672">(</span>0xc00005c240, <span style="color:#f92672">{</span>0x823000, 0xc000012140<span style="color:#f92672">}</span>, 0xc000138600<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	/Users/David/Codes/GoLand/file-server/server.go:144 +0x4eb fp<span style="color:#f92672">=</span>0xc00004bca0 sp<span style="color:#f92672">=</span>0xc00004bbc0 pc<span style="color:#f92672">=</span>0x70608b
+</span></span><span style="display:flex;"><span>net/http.serverHandler.ServeHTTP<span style="color:#f92672">({</span>0xc00001a0a8?<span style="color:#f92672">}</span>, <span style="color:#f92672">{</span>0x823000, 0xc000012140<span style="color:#f92672">}</span>, 0xc000138600<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	/Users/David/sdk/go1.20.4/src/net/http/server.go:2936 +0x316 fp<span style="color:#f92672">=</span>0xc00004bd50 sp<span style="color:#f92672">=</span>0xc00004bca0 pc<span style="color:#f92672">=</span>0x6a2ff6
+</span></span><span style="display:flex;"><span>net/http.initALPNRequest.ServeHTTP<span style="color:#f92672">({{</span>0x8232b8?, 0xc0001588a0?<span style="color:#f92672">}</span>, 0xc00010e700?, <span style="color:#f92672">{</span>0xc000146000?<span style="color:#f92672">}}</span>, <span style="color:#f92672">{</span>0x823000, 0xc000012140<span style="color:#f92672">}</span>, 0xc000138600<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	/Users/David/sdk/go1.20.4/src/net/http/server.go:3545 +0x245 fp<span style="color:#f92672">=</span>0xc00004bed8 sp<span style="color:#f92672">=</span>0xc00004bd50 pc<span style="color:#f92672">=</span>0x6a4ee5
+</span></span><span style="display:flex;"><span>net/http.<span style="color:#f92672">(</span>*initALPNRequest<span style="color:#f92672">)</span>.ServeHTTP<span style="color:#f92672">(</span>0x40b5b6?, <span style="color:#f92672">{</span>0x823000?, 0xc000012140?<span style="color:#f92672">}</span>, 0x0?<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	&lt;autogenerated&gt;:1 +0x55 fp<span style="color:#f92672">=</span>0xc00004bf20 sp<span style="color:#f92672">=</span>0xc00004bed8 pc<span style="color:#f92672">=</span>0x6b3fb5
+</span></span><span style="display:flex;"><span>net/http.Handler.ServeHTTP-fm<span style="color:#f92672">({</span>0x823000?, 0xc000012140?<span style="color:#f92672">}</span>, 0xc00001c2e8?<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	&lt;autogenerated&gt;:1 +0x42 fp<span style="color:#f92672">=</span>0xc00004bf50 sp<span style="color:#f92672">=</span>0xc00004bf20 pc<span style="color:#f92672">=</span>0x6b4dc2
+</span></span></code></pre></div><p>It seems that the server is trying to allocate memory to a slice, and the size of the slice is too large, so the server is killed by the OS. Checked the code snippet I provided before, there is:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// reader.NextPart() will close the previous part automatically.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">part</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">reader</span>.<span style="color:#a6e22e">NextPart</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">EOF</span> { <span style="color:#75715e">// finish reading all parts, exit the loop</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">errs</span> = append(<span style="color:#a6e22e">errs</span>, <span style="color:#a6e22e">uploadError</span>{<span style="color:#a6e22e">Message</span>: <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;reader.NextPart(): %v&#34;</span>, <span style="color:#a6e22e">err</span>)})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>What if the error is not <code>io.EOF</code>, but other errors? Then there will be a infinite loop, this is the reason why the CPU usage is high. What I do is to limit the size of the error message:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">EOF</span> { <span style="color:#75715e">// finish reading all parts, exit the loop</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">errs</span> = append(<span style="color:#a6e22e">errs</span>, <span style="color:#a6e22e">uploadError</span>{<span style="color:#a6e22e">Message</span>: <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;reader.NextPart(): %v&#34;</span>, <span style="color:#a6e22e">err</span>)})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// too many errors, stop uploading, you must limit the number of errors in case of infinite loop.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">errs</span>) <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">10</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">errs</span> = append(<span style="color:#a6e22e">errs</span>, <span style="color:#a6e22e">uploadError</span>{<span style="color:#a6e22e">Message</span>: <span style="color:#e6db74">&#34;Maximum error limit reached&#34;</span>})
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="3-solution-for-slow-uploading-speed">3. Solution for slow uploading speed<a href="#3-solution-for-slow-uploading-speed" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>I ask this question in Go community that I joined, and I got a suggestion:</p>
+<p>Form Upload(<code>multipart/form-data</code>) is not good for large files, when uploading a large file, we usually use Binary Stream Uploads(<code>application/octet-stream</code>) instead, use <code>r.Body</code> directly to read the file content, and write the content to the disk this is real streaming.</p>
+<p>Actually, with <code>multipart/form-data</code>, the file content is read by block, not the real streaming, you can check the code I provided before: <code>part, err := reader.NextPart()</code>.</p>
+<p>So use <code>PUT</code> with <code>application/octet-stream</code> instead of <code>multipart/form-data</code> to upload large files.</p>
+<p>But after I change the code to use <code>POST</code> with <code>application/octet-stream</code>, the uploading speed is still slow.</p>
+<p>Then I monitor the disk I/O speed and network speed and found the reason, the network speed is around 7MB/s, which is the bottleneck.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>dstat -d <span style="color:#75715e"># check the disk speed at real time</span>
+</span></span><span style="display:flex;"><span>dsat -n <span style="color:#75715e"># check the network speed at real time</span>
+</span></span></code></pre></div><p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/04/c305f2b3b5b586774920af715c01f23f.jpg" alt=""></p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/04/90fe48cb6cbd4b0871421a58af25dfad.jpg" alt=""></p>
+<p>But why the speedtest-cli shows the network speed is fast but the real speed is slow?</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>Download: 298.52 Mbit/s
+</span></span><span style="display:flex;"><span>Testing upload speed......................................................................................................
+</span></span><span style="display:flex;"><span>Upload: 192.82 Mbit/s
+</span></span></code></pre></div>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/database/mongodb/000-basics-golang/" class="button inline prev">
+        MongoDB Docs - Golang Basics
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/build-website/001-domain-name-dns-records/" class="button inline next">
+        DNS 基础概念
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Jvm on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/jvm/</link>
+    <description>Recent content in Jvm on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sat, 15 Feb 2025 15:07:57 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/jvm/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>JVM 启动时都加载了哪些类 - Java 编译原理</title>
+      <link>https://blog.jiyi27.com/posts/java/basics/002-compile-java/</link>
+      <pubDate>Sat, 15 Feb 2025 15:07:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/java/basics/002-compile-java/</guid>
+      <description>&lt;h2 id=&#34;1--java-代码的执行流程&#34;&gt;1.  Java 代码的执行流程&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;源代码编译：Java 源代码（&lt;code&gt;.java&lt;/code&gt; 文件）首先由 Java 编译器 (Javac) 编译成 字节码 (Bytecode), 生成二进制的 &lt;code&gt;.class&lt;/code&gt; 文件, 字节码是一种中间表示, 不是直接的机器码&lt;/li&gt;
+&lt;li&gt;Java 源代码在编译后会变成 &lt;code&gt;.class&lt;/code&gt; 字节码文件, JVM 在执行时会采用 &lt;strong&gt;两种方式&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;解释执行 (Interpretation)：JVM 逐行翻译字节码, 并立即执行, 这就是“边翻译边执行”&lt;/li&gt;
+&lt;li&gt;JIT (Just-In-Time Compilation)：JVM 发现高频代码（如循环、热点方法）, 会使用 JIT Compiler 将其编译成本地机器码, 避免重复翻译, 提高执行效率&lt;/li&gt;
+&lt;li&gt;JIT Compiler: 如 HotSpot VM 的 C1/C2 编译器&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;扩充1:&lt;/strong&gt; 类的生命周期 主要发生在 JVM 运行时, 且仅在类第一次被使用时触发, 并不是 JVM 启动时就一次性加载所有类,&lt;/p&gt;
+&lt;p&gt;类的生命周期包括: 加载→验证→准备→解析→初始化&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;**扩充2: ** 编译时, 每个单独的 &lt;code&gt;.java&lt;/code&gt; 源码文件被认为是一个单独的编译单元, 被单独编译成一个 .class 字节码文件, 所以在 Java 项目中, 通常会被编译成多个 &lt;code&gt;.class&lt;/code&gt; 文件, 如果直接分发 &lt;code&gt;.class&lt;/code&gt; 文件, 管理起来会很麻烦, 因此, Java 提供了 &lt;code&gt;.jar&lt;/code&gt; 这种格式, 可以把多个 &lt;code&gt;.class&lt;/code&gt; 文件打包在一起, 便于 分发、部署和加载&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1--java-代码的执行流程&#34;&gt;1.  Java 代码的执行流程&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;源代码编译：Java 源代码（&lt;code&gt;.java&lt;/code&gt; 文件）首先由 Java 编译器 (Javac) 编译成 字节码 (Bytecode), 生成二进制的 &lt;code&gt;.class&lt;/code&gt; 文件, 字节码是一种中间表示, 不是直接的机器码&lt;/li&gt;
+&lt;li&gt;Java 源代码在编译后会变成 &lt;code&gt;.class&lt;/code&gt; 字节码文件, JVM 在执行时会采用 &lt;strong&gt;两种方式&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;解释执行 (Interpretation)：JVM 逐行翻译字节码, 并立即执行, 这就是“边翻译边执行”&lt;/li&gt;
+&lt;li&gt;JIT (Just-In-Time Compilation)：JVM 发现高频代码（如循环、热点方法）, 会使用 JIT Compiler 将其编译成本地机器码, 避免重复翻译, 提高执行效率&lt;/li&gt;
+&lt;li&gt;JIT Compiler: 如 HotSpot VM 的 C1/C2 编译器&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;扩充1:&lt;/strong&gt; 类的生命周期 主要发生在 JVM 运行时, 且仅在类第一次被使用时触发, 并不是 JVM 启动时就一次性加载所有类,&lt;/p&gt;
+&lt;p&gt;类的生命周期包括: 加载→验证→准备→解析→初始化&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;**扩充2: ** 编译时, 每个单独的 &lt;code&gt;.java&lt;/code&gt; 源码文件被认为是一个单独的编译单元, 被单独编译成一个 .class 字节码文件, 所以在 Java 项目中, 通常会被编译成多个 &lt;code&gt;.class&lt;/code&gt; 文件, 如果直接分发 &lt;code&gt;.class&lt;/code&gt; 文件, 管理起来会很麻烦, 因此, Java 提供了 &lt;code&gt;.jar&lt;/code&gt; 这种格式, 可以把多个 &lt;code&gt;.class&lt;/code&gt; 文件打包在一起, 便于 分发、部署和加载&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-手动编译并运行-java-程序&#34;&gt;2. 手动编译并运行 java 程序&lt;/h2&gt;
+&lt;p&gt;目录结构:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── myproject
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   └── src
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── Main.java
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       └── animal
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           └── Cat.java
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;代码内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Cat.java&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;package&lt;/span&gt; animal;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cat&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String name;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cat&lt;/span&gt;(String name) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; name;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;mew~&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Main.java&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; animal.Cat;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Main&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String &lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt;args){
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Cat cat &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Cat(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;kitty&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在&lt;code&gt;src&lt;/code&gt;下编译:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;javac Main.java
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;编译后多出了两个字节码文件,  如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── myproject
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   └── src
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── Main.class
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── Main.java
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       └── animal
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           ├── Cat.class
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           └── Cat.java
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以发现, 我们只是编译了&lt;code&gt;Main.java&lt;/code&gt;, 被其用到的类 &lt;code&gt;Cat.java&lt;/code&gt; 也被编译了, 然后在其它文件夹下执行该程序, 用 &lt;code&gt;-cp&lt;/code&gt; 来指明 classpath, 即告诉 JVM 去哪找 user-defined class 字节码文件, &lt;code&gt;-cp&lt;/code&gt; 默认值为当前文件夹: &lt;code&gt;./&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ java -cp myproject/src Main 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mew~
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; Technically, &lt;code&gt;javac&lt;/code&gt; is the program that translates Java code into bytecode (.class file). And &lt;code&gt;java&lt;/code&gt; is the program that starts the &lt;strong&gt;JVM&lt;/strong&gt;, which in turn, loads the &lt;code&gt;.class&lt;/code&gt; file, verifies the bytecode and executes it.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;3-jvm-启动时都加载了哪些类&#34;&gt;3. JVM 启动时都加载了哪些类&lt;/h2&gt;
+&lt;p&gt;The virtual machine searches for and loads classes in this order:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Bootstrap Classes 引导类, 加载核心库, 主要包含 Java 标准库的基础类 如 &lt;code&gt;java.lang.*&lt;/code&gt; (&lt;code&gt;String&lt;/code&gt;、&lt;code&gt;Object&lt;/code&gt;、&lt;code&gt;Math&lt;/code&gt;、&lt;code&gt;System&lt;/code&gt;)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Extension ClassLoader 加载扩展库&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;User classes - Classes defined by developers and third parties that do not take advantage of the extension mechanism. You identify the location of these classes using the &lt;code&gt;-classpath&lt;/code&gt; option on the command line (the preferred method) or by using the CLASSPATH environment variable.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In general, you only have to specify the location of user classes. Bootstrap classes and extension classes are found &amp;ldquo;automatically&amp;rdquo;.&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>JVM 内存结构 两种分类方式</title>
+      <link>https://blog.jiyi27.com/posts/java/basics/003-jvm-memory/</link>
+      <pubDate>Tue, 04 Feb 2025 21:50:26 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/java/basics/003-jvm-memory/</guid>
+      <description>&lt;h2 id=&#34;1-jvm-specification&#34;&gt;1. JVM Specification&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html&#34;&gt;JVM Specification&lt;/a&gt; 标准并没有提到 JVM 内存结构的概念, 只有 JVM Run-Time Data Areas, 包含以下几个主要区域：&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;程序计数器 (PC Register)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;线程私有，每个线程都有一个程序计数器，用来指示下一条将要执行的字节码指令&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Java 虚拟机栈 (Java Virtual Machine Stack)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;线程私有，为每个 Java 方法调用创建栈帧(Stack Frame)，存放局部变量表、操作数栈、方法返回值等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;本地方法栈 (Native Method Stack)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;线程私有，执行 Native 方法（JNI 等）时使用的一块栈空间&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;堆 (Heap)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;线程共享，用于存储对象实例；现代商业虚拟机通常又将堆分为年轻代 (Young) 和老年代 (Old) 等细分区域&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;方法区 (Method Area)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;线程共享，用于存储类信息、运行时常量池、方法元数据 (字节码、方法声明等)&lt;/li&gt;
+&lt;li&gt;运行时常量池 (Runtime Constant Pool) 也是方法区的一部分&lt;/li&gt;
+&lt;li&gt;HotSpot 从 Java 8 开始用 Metaspace 来实现方法区（在此之前是 PermGen）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;线程私有 (Thread Private)
+ ├─ 程序计数器 (PC Register)
+ ├─ Java 虚拟机栈 (Java Virtual Machine Stack)
+ │   └─ 栈帧 (Stack Frame)
+ │      ├─ 局部变量表 (Local Variables)
+ │      ├─ 操作数栈 (Operand Stack)
+ │      └─ 方法返回值等信息
+ └─ 本地方法栈 (Native Method Stack)
+
+线程共享 (Thread Shared)
+ ├─ 堆 (Heap)
+ │   └─ (绝大部分对象实例都在此分配)
+ └─ 方法区 (Method Area)
+     └─ 运行时常量池 (Runtime Constant Pool)
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;注意&lt;/strong&gt;：在 JVM 规范里, “运行时常量池 (Runtime Constant Pool)” 被单独列出, 但它属于方法区的一部分.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-jvm-specification&#34;&gt;1. JVM Specification&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html&#34;&gt;JVM Specification&lt;/a&gt; 标准并没有提到 JVM 内存结构的概念, 只有 JVM Run-Time Data Areas, 包含以下几个主要区域：&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;程序计数器 (PC Register)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;线程私有，每个线程都有一个程序计数器，用来指示下一条将要执行的字节码指令&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Java 虚拟机栈 (Java Virtual Machine Stack)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;线程私有，为每个 Java 方法调用创建栈帧(Stack Frame)，存放局部变量表、操作数栈、方法返回值等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;本地方法栈 (Native Method Stack)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;线程私有，执行 Native 方法（JNI 等）时使用的一块栈空间&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;堆 (Heap)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;线程共享，用于存储对象实例；现代商业虚拟机通常又将堆分为年轻代 (Young) 和老年代 (Old) 等细分区域&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;方法区 (Method Area)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;线程共享，用于存储类信息、运行时常量池、方法元数据 (字节码、方法声明等)&lt;/li&gt;
+&lt;li&gt;运行时常量池 (Runtime Constant Pool) 也是方法区的一部分&lt;/li&gt;
+&lt;li&gt;HotSpot 从 Java 8 开始用 Metaspace 来实现方法区（在此之前是 PermGen）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;线程私有 (Thread Private)
+ ├─ 程序计数器 (PC Register)
+ ├─ Java 虚拟机栈 (Java Virtual Machine Stack)
+ │   └─ 栈帧 (Stack Frame)
+ │      ├─ 局部变量表 (Local Variables)
+ │      ├─ 操作数栈 (Operand Stack)
+ │      └─ 方法返回值等信息
+ └─ 本地方法栈 (Native Method Stack)
+
+线程共享 (Thread Shared)
+ ├─ 堆 (Heap)
+ │   └─ (绝大部分对象实例都在此分配)
+ └─ 方法区 (Method Area)
+     └─ 运行时常量池 (Runtime Constant Pool)
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;注意&lt;/strong&gt;：在 JVM 规范里, “运行时常量池 (Runtime Constant Pool)” 被单独列出, 但它属于方法区的一部分.&lt;/p&gt;
+&lt;p&gt;The Run-Time Data Areas of JVM is vary from different &lt;a href=&#34;https://docs.oracle.com/javase/specs/index.html&#34;&gt;JVM specifications&lt;/a&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-hotspot-实现&#34;&gt;2. HotSpot 实现&lt;/h2&gt;
+&lt;p&gt;在日常调优或查看监控 (比如 &lt;code&gt;jmap -heap&lt;/code&gt;、&lt;code&gt;jconsole&lt;/code&gt;) , 我们更习惯使用&lt;strong&gt;堆 / 非堆&lt;/strong&gt;来区分内存：&lt;/p&gt;
+&lt;p&gt;Heap (堆内存) 用于存放 Java 对象，按年龄或回收算法又分为：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;年轻代 (Young Generation)：进一步细分为 Eden、Survivor0 (S0) 和 Survivor1 (S1)&lt;/li&gt;
+&lt;li&gt;老年代 (Old Generation)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Non-Heap (非堆内存) 大致包括：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Metaspace (方法区)：存储类元数据、运行时常量池等&lt;/li&gt;
+&lt;li&gt;Code Cache (代码缓存)：存放 JIT 编译后的机器码&lt;/li&gt;
+&lt;li&gt;线程栈 (Thread Stack)：包括 Java 虚拟机栈和本地方法栈，在运维角度往往也被认为不是堆的一部分&lt;/li&gt;
+&lt;li&gt;Direct Memory (直接内存)：通过 &lt;code&gt;Unsafe&lt;/code&gt; 或 NIO 分配的堆外内存，不在 Java 堆里，但受 &lt;code&gt;-XX:MaxDirectMemorySize&lt;/code&gt; 限制&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;线程私有 (Thread Private)
+   ├─ 程序计数器 (PC Register)
+   ├─ Java 虚拟机栈 (JVM Stack)
+   └─ 本地方法栈 (Native Method Stack)
+   
+堆 (Heap)  [线程共享]
+   ├─ Young Generation (年轻代)
+   │   ├─ Eden
+   │   ├─ Survivor 0 (S0)
+   │   └─ Survivor 1 (S1)
+   └─ Old Generation (老年代)
+
+非堆 (Non-Heap) [线程共享，笼统归类为非堆]
+   ├─ Metaspace (方法区的 HotSpot 实现)
+   │   └─ 存储类元数据、运行时常量池等
+   ├─ Code Cache (代码缓存，JIT 编译后机器码)
+   ├─ Direct Memory (直接内存，通过 NIO / Unsafe 分配)
+   └─ 其它 HotSpot 自身管理的结构
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;从“是否在 Java 堆中”的角度，Metaspace、线程栈、Code Cache、Direct Memory 都被放入了 “非堆 (Non-Heap)” 这个大筐里。所以**“非堆”并不对应 JVM 规范中的某个单一概念**，而是 HotSpot 实际实现或运维时的一种统称。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;在讨论 JVM 内存结构时，通常会看到两种“分类视角”：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;来自 JVM 规范 (Java Virtual Machine Specification) 的“运行时数据区 (Run-Time Data Areas)”&lt;/li&gt;
+&lt;li&gt;来自 HotSpot 实现/日常运维中常用的“堆 (Heap) / 非堆 (Non-Heap)”划分&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这两种视角其实是同一个问题的两种不同表述方式，不同程度地抽象了底层实现。&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>JVM 运行时常量池 - 动态链接</title>
+      <link>https://blog.jiyi27.com/posts/java/basics/005-jvm-constant-pool/</link>
+      <pubDate>Tue, 04 Feb 2025 08:50:26 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/java/basics/005-jvm-constant-pool/</guid>
+      <description>&lt;h2 id=&#34;1-前言&#34;&gt;1. 前言&lt;/h2&gt;
+&lt;p&gt;JVM 规范中只有 Run-Time Data Areas 的概念, 它的主要分类逻辑就是线程共享和线程私有区域, 而我们平时更倾向于站在堆栈传统角度对内存进行分类, 因为这样很容易理解,&lt;/p&gt;
+&lt;p&gt;在 JVM 类加载过程中 Run-Time Data Areas 方法区的 Runtime Constant Pool 很重要, 相当于编译中的符号表, 在动态链接的时候主要就靠它来告诉 JVM 该类用到了哪些标准库的东西, 外部的类和函数, 去哪加载等等元数据信息, 今天就来研究一下&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Run-Time Data Areas
+ └─ Method Area
+     └─ Runtime Constant Pool
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;2-每个-class-文件都有一个常量池&#34;&gt;2. 每个 .class 文件都有一个常量池&lt;/h2&gt;
+&lt;p&gt;在 Java 中，&lt;strong&gt;每一个 &lt;code&gt;.class&lt;/code&gt; 文件&lt;/strong&gt;里都带有一张自己的&lt;strong&gt;常量池&lt;/strong&gt;。这张常量池的存在是为了在字节码里用 “符号引用” 或 “常量” 来代替真正的类、方法、字段、字符串、数值等内容，并且让它们可以在 JVM 运行时 被 “解析” 成真实的类、方法或者对象引用。&lt;/p&gt;
+&lt;p&gt;为什么每个 &lt;code&gt;.class&lt;/code&gt; 文件都有自己的常量池？&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;每个 &lt;code&gt;.class&lt;/code&gt; 文件是一个&lt;strong&gt;独立的编译单元&lt;/strong&gt;，它可能引用不同的类、不同的方法、不同的字符串、不同的常量&lt;/li&gt;
+&lt;li&gt;在 Java 编译阶段，&lt;code&gt;javac&lt;/code&gt; 会为&lt;strong&gt;该类&lt;/strong&gt;所需的一切外部引用（类、字段、方法等）和字面量&lt;strong&gt;记录到它自己的常量池&lt;/strong&gt;中&lt;/li&gt;
+&lt;li&gt;当这个类加载到 JVM 里时候, 需要使用其中任何符号引用或常量，就会通过它&lt;strong&gt;自己&lt;/strong&gt;的常量池去做解析&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-看个例子&#34;&gt;3. 看个例子&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Demo&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String&lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt; args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello World&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;编译后执行 &lt;code&gt;javac Demo.java&lt;/code&gt;，得到 &lt;code&gt;Demo.class&lt;/code&gt;, 然后用 &lt;code&gt;javap -v Demo.class&lt;/code&gt; 查看其常量池部分：&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-前言&#34;&gt;1. 前言&lt;/h2&gt;
+&lt;p&gt;JVM 规范中只有 Run-Time Data Areas 的概念, 它的主要分类逻辑就是线程共享和线程私有区域, 而我们平时更倾向于站在堆栈传统角度对内存进行分类, 因为这样很容易理解,&lt;/p&gt;
+&lt;p&gt;在 JVM 类加载过程中 Run-Time Data Areas 方法区的 Runtime Constant Pool 很重要, 相当于编译中的符号表, 在动态链接的时候主要就靠它来告诉 JVM 该类用到了哪些标准库的东西, 外部的类和函数, 去哪加载等等元数据信息, 今天就来研究一下&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Run-Time Data Areas
+ └─ Method Area
+     └─ Runtime Constant Pool
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;2-每个-class-文件都有一个常量池&#34;&gt;2. 每个 .class 文件都有一个常量池&lt;/h2&gt;
+&lt;p&gt;在 Java 中，&lt;strong&gt;每一个 &lt;code&gt;.class&lt;/code&gt; 文件&lt;/strong&gt;里都带有一张自己的&lt;strong&gt;常量池&lt;/strong&gt;。这张常量池的存在是为了在字节码里用 “符号引用” 或 “常量” 来代替真正的类、方法、字段、字符串、数值等内容，并且让它们可以在 JVM 运行时 被 “解析” 成真实的类、方法或者对象引用。&lt;/p&gt;
+&lt;p&gt;为什么每个 &lt;code&gt;.class&lt;/code&gt; 文件都有自己的常量池？&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;每个 &lt;code&gt;.class&lt;/code&gt; 文件是一个&lt;strong&gt;独立的编译单元&lt;/strong&gt;，它可能引用不同的类、不同的方法、不同的字符串、不同的常量&lt;/li&gt;
+&lt;li&gt;在 Java 编译阶段，&lt;code&gt;javac&lt;/code&gt; 会为&lt;strong&gt;该类&lt;/strong&gt;所需的一切外部引用（类、字段、方法等）和字面量&lt;strong&gt;记录到它自己的常量池&lt;/strong&gt;中&lt;/li&gt;
+&lt;li&gt;当这个类加载到 JVM 里时候, 需要使用其中任何符号引用或常量，就会通过它&lt;strong&gt;自己&lt;/strong&gt;的常量池去做解析&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-看个例子&#34;&gt;3. 看个例子&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Demo&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String&lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt; args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello World&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;编译后执行 &lt;code&gt;javac Demo.java&lt;/code&gt;，得到 &lt;code&gt;Demo.class&lt;/code&gt;, 然后用 &lt;code&gt;javap -v Demo.class&lt;/code&gt; 查看其常量池部分：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Classfile .../Demo.class
+  Last modified ...; size ...
+  MD5 checksum ...
+public class Demo
+  minor version: 0
+  major version: 52
+  flags: ACC_PUBLIC, ACC_SUPER
+Constant pool:
+   #1 = Methodref          #7.#22         // java/io/PrintStream.println:(Ljava/lang/String;)V
+   #2 = String             #23            // Hello World
+   #3 = Fieldref           #8.#24         // java/lang/System.out:Ljava/io/PrintStream;
+   #4 = Class              #25            // Demo
+   #5 = Class              #26            // java/io/PrintStream
+   #6 = Utf8               Demo
+   #7 = Utf8               java/io/PrintStream
+   #8 = Utf8               java/lang/System
+   #9 = Utf8               main
+   #10 = Utf8              ([Ljava/lang/String;)V
+   #11 = Utf8              Code
+   ...
+   #22 = NameAndType       #27:#28        // println:(Ljava/lang/String;)V
+   #23 = Utf8              Hello World
+   #24 = NameAndType       #29:#30        // out:Ljava/io/PrintStream;
+   #25 = Utf8              Demo
+   #26 = Utf8              java/io/PrintStream
+   #27 = Utf8              println
+   #28 = Utf8              (Ljava/lang/String;)V
+   #29 = Utf8              out
+   #30 = Utf8              Ljava/io/PrintStream;
+   ...
+{
+  public Demo();
+    ...
+  public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=1, args_size=1
+         0: getstatic     #3      // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: ldc           #2      // String Hello World
+         5: invokevirtual #1      // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+         8: return
+      ...
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;4-常量池里都有啥&#34;&gt;4. 常量池里都有啥？&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;#1 = Methodref #7.#22 // java/io/PrintStream.println:(Ljava/lang/String;)V&lt;/code&gt;
+表示：这是一个 &lt;code&gt;Methodref&lt;/code&gt; 常量，指向“类 #7”与“NameAndType #22”的组合&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;“类 #7” 就是 &lt;code&gt;java/io/PrintStream&lt;/code&gt;（见后面 &lt;code&gt;#7 = Utf8 &amp;quot;java/io/PrintStream&amp;quot;&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;“NameAndType #22” 则表示方法名和方法描述符——在 &lt;code&gt;#22&lt;/code&gt; 里你会看到 &lt;code&gt;&amp;lt;println:(Ljava/lang/String;)V&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;#2 = String #23 // Hello World&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;表示：这是一个 &lt;code&gt;String&lt;/code&gt; 常量，对应了 “字符串 #23”；“#23” 实际是一个 &lt;code&gt;Utf8&lt;/code&gt; 条目，存放 &lt;code&gt;&amp;quot;Hello World&amp;quot;&lt;/code&gt; 的字符&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#3 = Fieldref #8.#24 // java/lang/System.out:Ljava/io/PrintStream;&lt;/code&gt;
+表示：这是一个 &lt;code&gt;Fieldref&lt;/code&gt; 常量，指向“类 #8”与“NameAndType #24”的组合&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;“类 #8” -&amp;gt; &lt;code&gt;java/lang/System&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;“NameAndType #24” -&amp;gt; “&lt;code&gt;out:Ljava/io/PrintStream;&lt;/code&gt;”&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;#22 = NameAndType #27:#28 // println:(Ljava/lang/String;)V&lt;/code&gt;
+表示：这是一个 &lt;code&gt;NameAndType&lt;/code&gt; 常量，&lt;code&gt;#27&lt;/code&gt; 是方法名 &lt;code&gt;println&lt;/code&gt;，&lt;code&gt;#28&lt;/code&gt; 是方法描述符 &lt;code&gt;&amp;quot;(Ljava/lang/String;)V&amp;quot;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#23 = Utf8 &amp;quot;Hello World&amp;quot;&lt;/code&gt;
+表示：这是一个存放字符串 &lt;code&gt;&amp;quot;Hello World&amp;quot;&lt;/code&gt; 的 &lt;code&gt;Utf8&lt;/code&gt; 常量&lt;/p&gt;
+&lt;p&gt;可以看到，编译器把你写的代码里所有用到的类名、方法名、字段名、描述符以及字符串字面量，都以 各种类型的 cp_info（&lt;code&gt;Methodref&lt;/code&gt;、&lt;code&gt;Fieldref&lt;/code&gt;、&lt;code&gt;NameAndType&lt;/code&gt;、&lt;code&gt;Utf8&lt;/code&gt;、&lt;code&gt;String&lt;/code&gt; 等）记录到了同一个常量池数组里。&lt;/p&gt;
+&lt;h2 id=&#34;5-这些条目在运行时怎么被用到&#34;&gt;5. 这些条目在运行时怎么被用到？&lt;/h2&gt;
+&lt;p&gt;在实际运行过程中，你可以从反汇编的字节码看到：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;0: getstatic     #3      // Field java/lang/System.out:Ljava/io/PrintStream;
+3: ldc           #2      // String Hello World
+5: invokevirtual #1      // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+8: return
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;#3&lt;/code&gt;、&lt;code&gt;#2&lt;/code&gt;、&lt;code&gt;#1&lt;/code&gt; 都是&lt;strong&gt;常量池索引&lt;/strong&gt;。当 JVM 执行到这条指令时，它会到 Demo 类的常量池里找相应记录，再看看&lt;strong&gt;那条记录&lt;/strong&gt;里描述了什么类、字段或方法名、描述符，然后去解析并链接到真实的 &lt;code&gt;System.out&lt;/code&gt; 字段或 &lt;code&gt;PrintStream.println(...)&lt;/code&gt; 方法上。&lt;/p&gt;
+&lt;h2 id=&#34;6-类的加载验证准备解析初始化&#34;&gt;6. 类的加载、验证、准备、解析、初始化&lt;/h2&gt;
+&lt;p&gt;在 Java 中，类加载（Class Loading）之后，紧随其后（或在实际使用时触发）的过程，通常称为 类的链接（Linking）和 初始化（Initialization）。而链接过程里最关键的一步就是 解析（Resolution）。有时我们也把 在&lt;strong&gt;运行时将常量池符号引用转成直接引用&lt;/strong&gt; 称为动态链接（Dynamic Linking），因为它跟 C/C++ 的 “编译期/链接期绑定” 不一样，而是在Java 程序执行期间由 JVM 来完成。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;第 4 步的解析（Resolution）往往就是我们所说的“动态链接”的核心：把&lt;strong&gt;字节码中符号形式的引用&lt;/strong&gt;——例如 “&lt;code&gt;java/lang/System&lt;/code&gt;” 、“&lt;code&gt;out&lt;/code&gt;” 、“&lt;code&gt;println&lt;/code&gt;”——&lt;strong&gt;映射到 JVM 内部真正的方法、字段、类结构&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;编译后字节码（通过 &lt;code&gt;javap -v&lt;/code&gt;）大概是：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;0: getstatic     #3      // Field java/lang/System.out:Ljava/io/PrintStream;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;3: ldc           #2      // String Hello World
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;5: invokevirtual #1      // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;8: return
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这里的 &lt;code&gt;#3&lt;/code&gt;, &lt;code&gt;#2&lt;/code&gt;, &lt;code&gt;#1&lt;/code&gt; 是常量池索引, 当 JVM 在解释或JIT 编译这些指令时，如果某个索引还没解析，就会触发解析逻辑。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;解析 &lt;code&gt;#3&lt;/code&gt; (getstatic …)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;#3&lt;/code&gt; 在常量池中是一个 &lt;code&gt;Fieldref&lt;/code&gt;，比如 “&lt;code&gt;java/lang/System.out:Ljava/io/PrintStream;&lt;/code&gt;”&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;JVM 首先看 这个类 &lt;code&gt;java/lang/System&lt;/code&gt; 加载了没？如果没有，就让 Bootstrap ClassLoader 去加载并验证、准备（以及后续可能触发解析和初始化）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;找到它后，在 &lt;code&gt;java.lang.System&lt;/code&gt; 的元数据里查找名为 &lt;code&gt;out&lt;/code&gt;、描述符 &lt;code&gt;Ljava/io/PrintStream;&lt;/code&gt;、并且是 &lt;code&gt;static&lt;/code&gt; 的字段&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;若能找到，就把这个常量池引用标记为已解析，并存储一个指向 &lt;code&gt;System.out&lt;/code&gt; 字段的内部标识（可能是一个指针/偏移量）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;此时还要检查 &lt;code&gt;System&lt;/code&gt; 类是否已经初始化过。如果没初始化，就先初始化 &lt;code&gt;System&lt;/code&gt;（调用其 &lt;code&gt;&amp;lt;clinit&amp;gt;&lt;/code&gt;）。在 &lt;code&gt;&amp;lt;clinit&amp;gt;&lt;/code&gt; 里会将 &lt;code&gt;System.out&lt;/code&gt; 赋值为一个新的 &lt;code&gt;PrintStream&lt;/code&gt; 对象。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;执行 &lt;code&gt;getstatic #3&lt;/code&gt; 时，JVM 发现“已解析”，就能直接去拿 &lt;code&gt;System.out&lt;/code&gt; 这个静态字段的对象引用&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;2.2 解析 &lt;code&gt;#2&lt;/code&gt; (ldc …)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;#2&lt;/code&gt; 在常量池中是一个 &lt;code&gt;String&lt;/code&gt; 类型常量，如 “Hello World”&lt;/li&gt;
+&lt;li&gt;当执行 &lt;code&gt;ldc #2&lt;/code&gt; 时，如果还没解析，就去常量池里取出对应的 UTF-8 字符串，将其intern或放到字符串池，生成一个 &lt;code&gt;java.lang.String&lt;/code&gt; 实例（或从已有字符串池中返回）&lt;/li&gt;
+&lt;li&gt;然后把这个 &lt;code&gt;String&lt;/code&gt; 对象引用压栈，用于后续 &lt;code&gt;println&lt;/code&gt; 调用。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;2.3 解析 &lt;code&gt;#1&lt;/code&gt; (invokevirtual …)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;#1&lt;/code&gt; 在常量池是一个 &lt;code&gt;Methodref&lt;/code&gt;，如 “&lt;code&gt;java/io/PrintStream.println:(Ljava/lang/String;)V&lt;/code&gt;”&lt;/li&gt;
+&lt;li&gt;JVM 会检查 &lt;code&gt;java.io.PrintStream&lt;/code&gt; 这个类加载了吗？没的话，去加载它&lt;/li&gt;
+&lt;li&gt;在它的元数据里找到对应的方法表项 &lt;code&gt;println(String)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;若找到，就把常量池条目更新为已解析，后续执行指令 &lt;code&gt;invokevirtual #1&lt;/code&gt; 时，就能通过对象的类型信息 + 方法表来跳转到 &lt;code&gt;PrintStream.println(String)&lt;/code&gt; 的实现&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;以上步骤就是“解析 + 动态链接”最本质的行为：从常量池的“符号引用”（例如 “&lt;code&gt;Field java/lang/System.out&lt;/code&gt;” 或 “&lt;code&gt;Method java/io/PrintStream.println&lt;/code&gt;”）转成 JVM 内部可执行、可定位的实际字段或方法引用&lt;/p&gt;
+&lt;h2 id=&#34;7-动态链接-vs-静态链接&#34;&gt;7. 动态链接 VS. 静态链接&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;静态链接（C/C++）&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;编译和链接器阶段就把对 &lt;code&gt;printf&lt;/code&gt; 等函数的调用解析到某个符号表里，生成可执行文件，运行时再由 OS 的动态加载器做符号重定位，最终把 &lt;code&gt;printf&lt;/code&gt; 的地址映射到可执行程序里。&lt;/li&gt;
+&lt;li&gt;也就是说，C/C++ 大部分链接工作在编译期/链接期就做好了，运行时只剩下操作系统层面的动态库装载、重定位&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Java 的动态链接&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;.class&lt;/code&gt; 文件只保留对 &lt;code&gt;System.out&lt;/code&gt;、&lt;code&gt;println(String)&lt;/code&gt; 等的符号引用&lt;/strong&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;真正的解析、绑定过程在JVM 运行时发生：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;加载对应的类（可能还要加载该类所依赖的其他类），&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;验证和准备，&lt;/li&gt;
+&lt;li&gt;在用到这些常量池引用时触发“解析”，最终把它指向 JVM 内部的真实方法或字段对象&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;这使得 Java 可以做到“类的动态加载”：运行中可以从网络或别的地方得到一个 &lt;code&gt;.class&lt;/code&gt;，用自定义 ClassLoader 加载并解析它。而不需要像 C++ 一样必须在编译/链接时就知道所有符号&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

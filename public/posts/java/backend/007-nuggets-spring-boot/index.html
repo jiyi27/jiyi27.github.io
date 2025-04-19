@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Spring Boot 踩坑汇总 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. ResponseStatusException 总是返回 403 Service 层的部分代码:
+if (isPostLiked(postId, userId)) { throw new ResponseStatusException(HttpStatus.CONFLICT, &#34;已经点赞过该帖子&#34;); } ... 可是每次执行到这里, 客户端收到的总是 403 forbidden, 而不是 409, 刚开始猜想是这个异常被框架的某个部分吞了, 然后全都自动翻译成 403, 其实并不是这样, 我在官方文档找到了对应的描述:
+The AuthorizationFilter runs not just on every request, but on every dispatch. This means that the REQUEST dispatch needs authorization, but also FORWARDs, ERRORs, and INCLUDEs.
+当 ResponseStatusException 被抛出时, Spring MVC 不会直接把 409 发送给客户端, 而是会触发 ERROR Dispatch, 注意 ERROR dispatch 不是一个真正的 HTTP 请求, 而是在服务器内部重新分发请求的机制, 这个机制不是客户端发起的，而是服务器自己创建的, 目的是：
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/java/backend/007-nuggets-spring-boot/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Spring Boot 踩坑汇总">
+<meta property="og:description" content="1. ResponseStatusException 总是返回 403 Service 层的部分代码:
+if (isPostLiked(postId, userId)) { throw new ResponseStatusException(HttpStatus.CONFLICT, &#34;已经点赞过该帖子&#34;); } ... 可是每次执行到这里, 客户端收到的总是 403 forbidden, 而不是 409, 刚开始猜想是这个异常被框架的某个部分吞了, 然后全都自动翻译成 403, 其实并不是这样, 我在官方文档找到了对应的描述:
+The AuthorizationFilter runs not just on every request, but on every dispatch. This means that the REQUEST dispatch needs authorization, but also FORWARDs, ERRORs, and INCLUDEs.
+当 ResponseStatusException 被抛出时, Spring MVC 不会直接把 409 发送给客户端, 而是会触发 ERROR Dispatch, 注意 ERROR dispatch 不是一个真正的 HTTP 请求, 而是在服务器内部重新分发请求的机制, 这个机制不是客户端发起的，而是服务器自己创建的, 目的是：
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/java/backend/007-nuggets-spring-boot/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="spring boot" />
+
+
+  <meta property="article:published_time" content="2025-02-16 12:49:20 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/java/backend/007-nuggets-spring-boot/">Spring Boot 踩坑汇总</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-02-16</time><span class="post-reading-time">2 分钟阅读 (251 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/spring-boot/">spring boot</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/bugs/">bugs</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9B%B6%E7%A2%8E%E7%9F%A5%E8%AF%86/">零碎知识</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-responsestatusexception-总是返回-403">1. <code>ResponseStatusException</code> 总是返回 403<a href="#1-responsestatusexception-总是返回-403" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Service 层的部分代码:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (isPostLiked(postId, userId)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> ResponseStatusException(HttpStatus.<span style="color:#a6e22e">CONFLICT</span>, <span style="color:#e6db74">&#34;已经点赞过该帖子&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p>可是每次执行到这里, 客户端收到的总是 403 forbidden, 而不是 409, 刚开始猜想是这个异常被框架的某个部分吞了, 然后全都自动翻译成 403, 其实并不是这样, 我在<a href="https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html#_all_dispatches_are_authorized">官方文档</a>找到了对应的描述:</p>
+<blockquote>
+<p>The <code>AuthorizationFilter</code> runs not just on every request, but on every dispatch. This means that the <code>REQUEST</code> dispatch needs authorization, but also <code>FORWARD</code>s, <code>ERROR</code>s, and <code>INCLUDE</code>s.</p>
+</blockquote>
+<p>当 ResponseStatusException 被抛出时, Spring MVC <strong>不会直接把 409 发送给客户端</strong>, 而是会<strong>触发 <code>ERROR</code> Dispatch</strong>, 注意 <code>ERROR</code> dispatch 不是一个真正的 HTTP 请求, 而是在服务器内部重新分发请求的机制, 这个机制不是客户端发起的，而是服务器自己创建的, 目的是：</p>
+<ul>
+<li>让 Spring 的全局异常处理（比如 <code>@ControllerAdvice</code>）有机会处理这个错误</li>
+<li>让 <code>/error</code> 端点（如果有）可以生成友好的错误页面或 JSON 响应</li>
+</ul>
+<p>Spring Security 认为 <code>ERROR</code> dispatch 是新的请求, 默认情况下，<code>ERROR</code> dispatch 需要单独授权, 否则可能会被拦截, 导致 <code>403 Forbidden</code>,</p>
+<p>所以直接修改 Spring Security 配置代码:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>http.<span style="color:#a6e22e">authorizeHttpRequests</span>(auth <span style="color:#f92672">-&gt;</span> auth
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">requestMatchers</span>(<span style="color:#e6db74">&#34;/api/users/login&#34;</span>, <span style="color:#e6db74">&#34;/api/users/register&#34;</span>).<span style="color:#a6e22e">permitAll</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 允许所有人访问错误页面（防止 Spring Security 拦截 500, 400 等错误页面）</span>
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">dispatcherTypeMatchers</span>(DispatcherType.<span style="color:#a6e22e">ERROR</span>).<span style="color:#a6e22e">permitAll</span>()
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">anyRequest</span>().<span style="color:#a6e22e">authenticated</span>()
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><p>可以在 <code>application.properties</code> 里打开 Spring 的 <code>DispatcherServlet</code> 日志：</p>
+<pre tabindex="0"><code>logging.level.org.springframework.web.servlet.DispatcherServlet=DEBUG
+</code></pre><p>然后在 Controller 里故意抛出 <code>ResponseStatusException</code>，查看日志：</p>
+<pre tabindex="0"><code>DEBUG org.springframework.web.servlet.DispatcherServlet: &#34;ERROR&#34; dispatch for GET &#34;/like&#34;
+</code></pre><p>参考: <a href="https://stackoverflow.com/a/76951737/16317008">Why is Spring ResponseStatusException 400 translated into 403</a></p>
+<h2 id="2-spring-data-jpa-命名规则">2. Spring Data JPA 命名规则<a href="#2-spring-data-jpa-命名规则" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Spring Data JPA 会根据 方法名 解析出 SQL 查询语句, 它的解析规则是：</p>
+<ol>
+<li><code>findBy + 字段名</code> → 根据字段名查询</li>
+<li><code>findBy + 字段名1 + And + 字段名2</code> → 根据多个字段查询</li>
+<li><code>findBy + 字段名 + OrderBy + 排序字段 + Desc/Asc</code> → 带排序的查询</li>
+<li><code>countBy + 字段名</code> → 统计数量</li>
+<li><code>existsBy + 字段名</code> → 判断数据是否存在</li>
+</ol>
+<p>所以在查询的时候 JPA 只解析 <code>find（实体）By（字段）</code>, 不会解析 <code>find（字段）By（字段）</code>, 也就是说如果你想查询某个字段, 抱歉只能通过 <code>@Query</code>, 单凭 JPA 解析方法自动生成 SQL 并不行, 因为 JPA 只可以查询实体, 比如下面这个:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">UserRepository</span> <span style="color:#66d9ef">extends</span> JpaRepository<span style="color:#f92672">&lt;</span>User, Long<span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>  List<span style="color:#f92672">&lt;</span>User<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findByName</span>(String name);
+</span></span><span style="display:flex;"><span>  List<span style="color:#f92672">&lt;</span>User<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findByNameAndAge</span>(String name, Integer age);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这样的可以自动解析, 因为要查询的是单个或者多个 <code>User</code>, 如果你要是想查询 name, 写出下面的语句:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>List<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">findNamesByAge</span>(Integer age);
+</span></span></code></pre></div><p>编译时不报错, 等到运行的时候就会抛出异常, 到时候你会发现此方法最后返回的并不是 <code>List&lt;String&gt;</code> 而是 <code>User</code> 类型, 意外吧, 是的, 你的函数声明只是个摆设, Spring Data JPA 解析的 SQL 才决定了最终返回的类型,</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/006-%E9%AB%98%E5%B9%B6%E5%8F%91%E7%82%B9%E8%B5%9E/" class="button inline prev">
+        数据库表设计 悲观锁/乐观锁 Redis 高并发场景实践
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/java/basics/002-compile-java/" class="button inline next">
+        JVM 启动时都加载了哪些类 - Java 编译原理
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

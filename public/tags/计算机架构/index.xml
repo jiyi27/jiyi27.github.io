@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>计算机架构 on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%9E%B6%E6%9E%84/</link>
+    <description>Recent content in 计算机架构 on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 28 May 2023 17:48:19 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%9E%B6%E6%9E%84/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Go Scheduler (1)</title>
+      <link>https://blog.jiyi27.com/posts/golang/advance/003-go-scheduler/</link>
+      <pubDate>Sun, 28 May 2023 17:48:19 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/golang/advance/003-go-scheduler/</guid>
+      <description>&lt;p&gt;Source: &lt;a href=&#34;https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html&#34;&gt;Scheduling In Go : Part I - OS Scheduler&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;1-os-scheduler&#34;&gt;1. OS scheduler&lt;/h2&gt;
+&lt;p&gt;Your program is just a series of machine instructions that need to be executed one after the other sequentially. To make that happen, the operating system uses the concept of a Thread. It’s the job of the Thread to account for and sequentially execute the set of instructions it’s assigned. Execution continues until there are no more instructions for the Thread to execute. &lt;strong&gt;This is why I call a Thread, “a path of execution”.&lt;/strong&gt;&lt;/p&gt;</description>
+      <content>&lt;p&gt;Source: &lt;a href=&#34;https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html&#34;&gt;Scheduling In Go : Part I - OS Scheduler&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;1-os-scheduler&#34;&gt;1. OS scheduler&lt;/h2&gt;
+&lt;p&gt;Your program is just a series of machine instructions that need to be executed one after the other sequentially. To make that happen, the operating system uses the concept of a Thread. It’s the job of the Thread to account for and sequentially execute the set of instructions it’s assigned. Execution continues until there are no more instructions for the Thread to execute. &lt;strong&gt;This is why I call a Thread, “a path of execution”.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Every program you run creates a Process and each Process is given an initial Thread. Threads have the ability to create more Threads. All these different Threads run independently of each other and scheduling decisions are made at the Thread level, not at the Process level. Threads can run concurrently (each taking a turn on an individual core), or in parallel (each running at the same time on different cores). Threads also maintain their own state to allow for the safe, local, and independent execution of their instructions.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;The OS scheduler is responsible for making sure cores are not idle if there are Threads that can be executing&lt;/strong&gt;. It must also create the illusion that all the Threads (that can execute) are executing at the same time. In the process of creating this illusion, the scheduler needs to run Threads with a higher priority over lower priority Threads. However, Threads with a lower priority can’t be starved of execution time. The scheduler also needs to minimize scheduling latencies as much as possible by making quick and smart decisions.&lt;/p&gt;
+&lt;p&gt;To understand all of this better, it’s good to describe and define a few concepts that are important.&lt;/p&gt;
+&lt;h2 id=&#34;2-program-counter---pc&#34;&gt;2. Program counter - PC&lt;/h2&gt;
+&lt;p&gt;The &lt;a href=&#34;https://en.wikipedia.org/wiki/Program_counter&#34;&gt;program counter&lt;/a&gt; (PC), which is sometimes called the instruction pointer (IP), is what allows the Thread to keep track of the next instruction to execute. In most processors, the PC points to the next instruction and not the current instruction.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/ff70b7a094d6a0a307fbd467d313b8ef.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-thread-states&#34;&gt;3. Thread states&lt;/h2&gt;
+&lt;p&gt;Another important concept is Thread state, which dictates the role the scheduler takes with the Thread. A Thread can be in one of three states: Waiting, Runnable or Executing.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Waiting&lt;/strong&gt;: This means the Thread is stopped and waiting for something in order to continue. This could be for reasons like, waiting for the hardware (disk, network), the operating system (system calls) or synchronization calls (atomic, mutexes). These types of &lt;a href=&#34;https://en.wikipedia.org/wiki/Latency_%28engineering%29&#34;&gt;latencies&lt;/a&gt; are a root cause for bad performance.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Runnable&lt;/strong&gt;: This means the Thread wants time on a core so it can execute its assigned machine instructions.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Executing&lt;/strong&gt;: &amp;hellip;&lt;/p&gt;
+&lt;h2 id=&#34;4-types-of-work&#34;&gt;4. Types of work&lt;/h2&gt;
+&lt;p&gt;There are two types of work a Thread can do. The first is called CPU-Bound and the second is called IO-Bound.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;CPU-Bound&lt;/strong&gt;: This is work that &lt;strong&gt;never creates a situation&lt;/strong&gt; where the Thread may &lt;strong&gt;be placed&lt;/strong&gt; in Waiting states. This is work that is constantly making calculations. A Thread calculating Pi to the Nth digit would be CPU-Bound.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;IO-Bound&lt;/strong&gt;: This is work that causes Threads to enter into Waiting states. This is work that consists in requesting access to a resource over the network or making system calls into the operating system. A Thread that needs to access a database would be IO-Bound. I would include synchronization events (mutexes, atomic), that cause the Thread to wait as part of this category.&lt;/p&gt;
+&lt;p&gt;The term CPU-bound describes a scenario where the execution of a task or program is highly dependent on the CPU. In contrast, a task or program is I/O bound if its execution is dependent on the input-output system and its resources, such as disk drives and peripheral devices.&lt;/p&gt;
+&lt;h2 id=&#34;5-context-switching&#34;&gt;5. Context switching&lt;/h2&gt;
+&lt;p&gt;If you are running on Linux, Mac or Windows, you are running on an OS that has a &lt;strong&gt;preemptive scheduler&lt;/strong&gt;. This means a few important things. First, it means the scheduler is unpredictable when it comes to what Threads will be chosen to run at any given time. Thread priorities together with events, (like receiving data on the network) make it impossible to determine what the scheduler will choose to do and when. Second, it means you must never write code based on some perceived behavior that you have been lucky to experience but is not guaranteed to take place every time. It is easy to allow yourself to think, because I’ve seen this happen the same way 1000 times, this is guaranteed behavior. You must control the &lt;strong&gt;synchronization&lt;/strong&gt; and &lt;strong&gt;orchestration&lt;/strong&gt; of Threads if you need determinism in your application.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;The physical act of swapping Threads on a core is called a context switch.&lt;/strong&gt; A context switch happens when the scheduler pulls an Executing thread off a core and replaces it with a Runnable Thread. The Thread that was selected from the run queue moves into an Executing state. The Thread that was pulled can move back into a Runnable state (if it still has the ability to run), or into a Waiting state (if was replaced because of an IO-Bound type of request).&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Context switches are considered to be expensive because it takes times to swap Threads on and off a core&lt;/strong&gt;. The amount of latency incurrent during a context switch depends on different factors but it’s not unreasonable for it to take between &lt;a href=&#34;https://eli.thegreenplace.net/2018/measuring-context-switching-and-memory-overheads-for-linux-threads/&#34;&gt;~1000 and ~1500 nanoseconds&lt;/a&gt;. Considering the hardware should be able to reasonably execute (on average) &lt;a href=&#34;https://www.youtube.com/watch?v=jEG4Qyo_4Bc&amp;amp;feature=youtu.be&amp;amp;t=266&#34;&gt;12 instructions per nanosecond&lt;/a&gt; per core, a context switch can cost you ~12k to ~18k instructions of latency. In essence, your program is losing the ability to execute a large number of instructions during a context switch.&lt;/p&gt;
+&lt;p&gt;If you have a program that is focused on &lt;strong&gt;IO-Bound&lt;/strong&gt; work, then context switches are going to be an advantage. Once a Thread moves into a Waiting state, another Thread in a Runnable state is there to take its place.** This allows the core to always be doing work. This is one of the most important aspects of scheduling. Don’t allow a core to go idle if there is work (Threads in a Runnable state) to be done. 还记得文章第一个加粗的那段话吗, OS Scheduler的作用, 然后再看看段句话,&lt;/p&gt;
+&lt;p&gt;If your program is focused on &lt;strong&gt;CPU-Bound&lt;/strong&gt; work, then context switches are going to be a performance nightmare. Since the Thead always has work to do, the context switch is stopping that work from progressing. This situation is in stark contrast with what happens with an IO-Bound workload&lt;/p&gt;
+&lt;h2 id=&#34;6-less-is-more&#34;&gt;6. Less is more&lt;/h2&gt;
+&lt;p&gt;In the early days when processors had only one core, scheduling wasn’t overly complicated. Because you had a single processor with a single core, only one Thread could execute at any given time. The idea was to define a &lt;a href=&#34;https://lwn.net/Articles/404993/&#34;&gt;scheduler period&lt;/a&gt; and attempt to execute all the Runnable Threads within that period of time. No problem: take the scheduling period and divide it by the number of Threads that need to execute.&lt;/p&gt;
+&lt;p&gt;As an example, if you define your scheduler period to be 1000ms (1 second) and you have 10 Threads, then each thread gets 100ms. If you have 100 Threads, each Thread gets 10ms. However, what happens when you have 1000 Threads? Giving each Thread a &lt;strong&gt;time slice&lt;/strong&gt; of 1ms doesn’t work because &lt;strong&gt;the percentage of time you’re spending in context switches will be significant related to the amount of time you’re spending on application work&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;What you need is to set a limit on how small a given time slice can be. In the last scenario, if the minimum time slice was 10ms and you have 1000 Threads, the scheduler period needs to increase to 10000ms (10 seconds). What if there were 10,000 Threads, now you are looking at a scheduler period of 100000ms (100 seconds). At 10,000 threads, with a minimal time slice of 10ms, it takes 100 seconds for all the Threads to run once in this simple example if each Thread uses its full time slice.&lt;/p&gt;
+&lt;p&gt;Be aware this is a very simple view of the world. There are more things that need to be considered and handled by the scheduler when making &lt;a href=&#34;https://blog.acolyer.org/2016/04/26/the-linux-scheduler-a-decade-of-wasted-cores/&#34;&gt;scheduling decisions&lt;/a&gt;. You control the number of Threads you use in your application. When there are more Threads to consider, and IO-Bound work happening, there is more chaos and nondeterministic behavior. Things take longer to schedule and execute.&lt;/p&gt;
+&lt;p&gt;This is why the rule of the game is “Less is More”. Less Threads in a Runnable state means less scheduling overhead and more time each Thread gets over time. More Threads in a Runnable state mean less time each Thread gets over time. That means less of your work is getting done over time as well.&lt;/p&gt;
+&lt;h2 id=&#34;7-find-the-balance&#34;&gt;7. Find the balance&lt;/h2&gt;
+&lt;p&gt;There is a balance you need to find between the number of cores you have and the number of Threads you need to get the best throughput for your application. When it comes to managing this balance, &lt;strong&gt;Thread pools&lt;/strong&gt; were a great answer. &lt;strong&gt;I will show you in &lt;a href=&#34;https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part2.html&#34;&gt;part II&lt;/a&gt; that this is no longer necessary with Go.&lt;/strong&gt; I think this is one of the nice things Go did to make multithreaded application development easier.&lt;/p&gt;
+&lt;p&gt;Prior to coding in Go, I wrote code in C++ and C# on NT. On that operating system, the use of IOCP (IO Completion Ports) thread pools were critical to writing multithreaded software. As an engineer, you needed to figure out how many Thread pools you needed and the max number of Threads for any given pool to maximize throughput for the number of cores that you were given.&lt;/p&gt;
+&lt;p&gt;When writing web services that talked to a database, the magic number of 3 Threads per core seemed to always give the best throughput on NT. In other words, 3 Threads per core minimized the latency costs of context switching while maximizing execution time on the cores. When creating an IOCP Thread pool, I knew to start with a minimum of 1 Thread and a maximum of 3 Threads for every core I identified on the host machine.&lt;/p&gt;
+&lt;p&gt;If I used 2 Threads per core, it took longer to get all the work done, because I had idle time when I could have been getting work done. If I used 4 Threads per core, it also took longer, because I had more latency in context switches. The balance of 3 Threads per core, for whatever reason, always seemed to be the magic number on NT.&lt;/p&gt;
+&lt;p&gt;What if your service is doing a lot of different types of work? That could create different and inconsistent latencies. Maybe it also creates a lot of different system-level events that need to be handled. It might not be possible to find a magic number that works all the time for all the different work loads. When it comes to using Thread pools to tune the performance of a service, it can get very complicated to find the right consistent configuration.&lt;/p&gt;
+&lt;h2 id=&#34;8-cache-lines&#34;&gt;8. Cache lines&lt;/h2&gt;
+&lt;p&gt;Accessing data from main memory has &lt;strong&gt;such&lt;/strong&gt; a high latency cost (100&lt;del&gt;300 clock cycles) &lt;strong&gt;that&lt;/strong&gt; processors and cores have local caches to keep data close to the hardware threads that need it. Accessing data from caches have a much lower cost (3&lt;/del&gt;40 clock cycles) depending on the cache being accessed. Today, one aspect of performance is about how efficiently you can get data into the processor to reduce these data-access latencies. Writing multithreaded applications that mutate state need to consider the mechanics of the caching system.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/fdd6c3eb2f8294b7b43b1013e1b6b6e8.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Data is exchanged between the processor and main memory using &lt;a href=&#34;https://www.youtube.com/watch?v=WDIkqP4JbkE&#34;&gt;cache lines&lt;/a&gt;. A cache line is a 64-byte chunk of memory that is exchanged between main memory and the caching system. Each core is given its own copy of any cache line it needs, which means the hardware uses &lt;a href=&#34;https://www.ardanlabs.com/blog/2017/06/design-philosophy-on-data-and-semantics.html&#34;&gt;value semantics&lt;/a&gt;. This is why mutations to memory in multithreaded applications can create performance nightmares.&lt;/p&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html&#34;&gt;Scheduling In Go : Part I - OS Scheduler&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.baeldung.com/cs/cpu-io-bound&#34;&gt;Guide to the “Cpu-Bound” and “I/O Bound” Terms | Baeldung on Computer Science&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Related articles:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/2023/05/28/Operating-System/CPU-Architecture/&#34;&gt;多核 CPU 之 Hyper Threading | 橘猫小八的鱼&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/2023/05/27/Operating-System/Context-Switching/&#34;&gt;并发学习之 Context Switching | 橘猫小八的鱼&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/2023/05/27/Operating-System/Thread-Process/&#34;&gt;并发学习之线程进程及Hyper-Threading | 橘猫小八的鱼&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Hyper-Threading &amp; Physical Threads</title>
+      <link>https://blog.jiyi27.com/posts/cs-basics/006-cpu-architecture/</link>
+      <pubDate>Sun, 28 May 2023 15:47:18 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cs-basics/006-cpu-architecture/</guid>
+      <description>&lt;h2 id=&#34;1-cpu-structure&#34;&gt;1. CPU structure&lt;/h2&gt;
+&lt;p&gt;Single core CPU:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/838e3b5018958914f986430b086270e2.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The CPU core consists of three parts: ALU, CU and Memory (Register + Cache), The multiple cores CPU has more than one core (ALU, CU, Memory (Register + Cache)) to execute instructions:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/8556c886045ef0f880cf279f3724c1ef.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-hyper-threading&#34;&gt;2. Hyper-threading&lt;/h2&gt;
+&lt;p&gt;A single physical core with hyper-threading or simultaneous multithreading technology appears as two logical cores to an operating system. The CPU is still a single CPU, so it’s a little bit of a cheat. This can speed things up somewhat — if one virtual CPU is stalled and waiting, the other virtual CPU can borrow its execution resources.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-cpu-structure&#34;&gt;1. CPU structure&lt;/h2&gt;
+&lt;p&gt;Single core CPU:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/838e3b5018958914f986430b086270e2.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The CPU core consists of three parts: ALU, CU and Memory (Register + Cache), The multiple cores CPU has more than one core (ALU, CU, Memory (Register + Cache)) to execute instructions:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/8556c886045ef0f880cf279f3724c1ef.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-hyper-threading&#34;&gt;2. Hyper-threading&lt;/h2&gt;
+&lt;p&gt;A single physical core with hyper-threading or simultaneous multithreading technology appears as two logical cores to an operating system. The CPU is still a single CPU, so it’s a little bit of a cheat. This can speed things up somewhat — if one virtual CPU is stalled and waiting, the other virtual CPU can borrow its execution resources.&lt;/p&gt;
+&lt;p&gt;Most processors can use a process called simultaneous multithreading or, if it’s an Intel processor, &lt;strong&gt;Hyper-threading&lt;/strong&gt; (the two terms mean the same thing) to &lt;strong&gt;split a core into virtual cores, which are called threads&lt;/strong&gt;. For example, AMD CPUs with four cores use simultaneous multithreading to provide eight threads, and most Intel CPUs with two cores use Hyper-threading to provide four threads.&lt;/p&gt;
+&lt;p&gt;Some apps take better advantage of multiple threads than others. Lightly-threaded apps, like games, don&amp;rsquo;t benefit from a lot of cores, while most video editing and animation programs can run much faster with extra threads.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; Strictly speaking, &lt;em&gt;only&lt;/em&gt; Intel processors have hyper-threading, however, the term is sometimes used colloquially to refer to any kind of simultaneous multithreading.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The Windows Task Manager shows this fairly well. Here, for example, you can see that this system has one actual CPU (socket) and 8 cores. Simultaneous multithreading makes each core look like two CPUs to the operating system, so it shows 16 logical processors.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/75888124d5efc121b0ad287ac5b197aa.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;logical-core-vs-os-thread&#34;&gt;Logical core vs OS thread&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;OS Thread（操作系统线程）&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;线程由操作系统内核管理，它可以调度线程在不同的 CPU 核心或逻辑处理器上运行。&lt;/li&gt;
+&lt;li&gt;线程的调度和管理涉及 context switching, priority scheduling&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Hyper-threading（超线程）&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Hyper-threading 是 Intel 提供的一种硬件级别的技术，它允许单个物理 CPU 核心模拟出两个逻辑处理器。&lt;/li&gt;
+&lt;li&gt;当启用 Hyper-threading 时，操作系统会看到比实际物理核心数更多的处理器。例如，一个拥有 4 个物理核心的 CPU 可能会显示为 8 个逻辑处理器。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;在操作系统管理线程的过程中，它会将多个 OS thread 分配给可用的 CPU 核心，包括通过 Hyper-threading 技术创建的逻辑处理器。这个分配过程考虑了多个因素，包括线程的优先级、CPU 亲和性（affinity）、以及核心的当前负载情况。因此，操作系统线程与 Hyper-threading 是协同工作的两个不同层面的概念：一个属于软件层面（操作系统管理），另一个属于硬件层面（CPU 架构）。&lt;/p&gt;
+&lt;p&gt;参考:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.howtogeek.com/194756/cpu-basics-multiple-cpus-cores-and-hyper-threading-explained/&#34;&gt;CPU Basics: What Are Cores, Hyper-Threading, and Multiple CPUs?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/cs/core-vs-cpu&#34;&gt;Differences Between Core and CPU | Baeldung on Computer Science&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.tomshardware.com/news/cpu-core-definition,37658.html&#34;&gt;What Is a CPU Core? A Basic Definition | Tom&amp;rsquo;s Hardware&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

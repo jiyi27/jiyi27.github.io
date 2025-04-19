@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>交叉编译 on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/</link>
+    <description>Recent content in 交叉编译 on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Wed, 26 Feb 2025 18:31:22 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>通过交叉编译理解 Docker 运行原理</title>
+      <link>https://blog.jiyi27.com/posts/docker/004-docker-has-arch/</link>
+      <pubDate>Wed, 26 Feb 2025 18:31:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/docker/004-docker-has-arch/</guid>
+      <description>&lt;p&gt;假设我们在 M1 的 Mac 上构建 Docker 镜像:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; golang:alpine&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./ ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go mod download&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; CGO_ENABLED&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;amd64 go build -o /server .&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;1-docker-build-阶段&#34;&gt;1. &lt;code&gt;docker build&lt;/code&gt; 阶段&lt;/h2&gt;
+&lt;h3 id=&#34;11-拉取基础镜像-golangalpine&#34;&gt;1.1 拉取基础镜像 &lt;code&gt;golang:alpine&lt;/code&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;在 &lt;strong&gt;M1 Mac (arm64)&lt;/strong&gt; 上执行 &lt;code&gt;docker build -t myserver .&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Docker 引擎会看到 &lt;code&gt;FROM golang:alpine&lt;/code&gt; 并去 Docker Hub 拉取对应的镜像&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;关键点&lt;/strong&gt;：&lt;code&gt;golang:alpine&lt;/code&gt; 是一个多架构（multi-arch）镜像名，里面包含了 &lt;code&gt;amd64&lt;/code&gt;、&lt;code&gt;arm64&lt;/code&gt; 等不同架构的版本&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Docker 会自动检测到宿主机是 arm64, 于是它会拉取并使用 arm64 版的 &lt;code&gt;golang:alpine&lt;/code&gt;, 这样, 构建时运行的容器基础环境就是 &lt;strong&gt;arm64&lt;/strong&gt; 的 Alpine + Go&lt;/p&gt;</description>
+      <content>&lt;p&gt;假设我们在 M1 的 Mac 上构建 Docker 镜像:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; golang:alpine&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./ ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go mod download&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; CGO_ENABLED&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;amd64 go build -o /server .&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;1-docker-build-阶段&#34;&gt;1. &lt;code&gt;docker build&lt;/code&gt; 阶段&lt;/h2&gt;
+&lt;h3 id=&#34;11-拉取基础镜像-golangalpine&#34;&gt;1.1 拉取基础镜像 &lt;code&gt;golang:alpine&lt;/code&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;在 &lt;strong&gt;M1 Mac (arm64)&lt;/strong&gt; 上执行 &lt;code&gt;docker build -t myserver .&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Docker 引擎会看到 &lt;code&gt;FROM golang:alpine&lt;/code&gt; 并去 Docker Hub 拉取对应的镜像&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;关键点&lt;/strong&gt;：&lt;code&gt;golang:alpine&lt;/code&gt; 是一个多架构（multi-arch）镜像名，里面包含了 &lt;code&gt;amd64&lt;/code&gt;、&lt;code&gt;arm64&lt;/code&gt; 等不同架构的版本&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Docker 会自动检测到宿主机是 arm64, 于是它会拉取并使用 arm64 版的 &lt;code&gt;golang:alpine&lt;/code&gt;, 这样, 构建时运行的容器基础环境就是 &lt;strong&gt;arm64&lt;/strong&gt; 的 Alpine + Go&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;12-在容器arm64里执行构建步骤&#34;&gt;1.2 在容器（arm64）里执行构建步骤&lt;/h3&gt;
+&lt;p&gt;进入到 &lt;code&gt;WORKDIR /app&lt;/code&gt; 后，&lt;code&gt;COPY&lt;/code&gt; 源码、&lt;code&gt;RUN go mod download&lt;/code&gt; 都是在 &lt;strong&gt;arm64&lt;/strong&gt; 架构的 Alpine 容器里进行的，没什么特别&lt;/p&gt;
+&lt;h3 id=&#34;13-编译-golang-源代码&#34;&gt;1.3 编译 golang 源代码&lt;/h3&gt;
+&lt;p&gt;现在最有意思的是这一行 &lt;code&gt;CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server .&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;GOOS=linux：目标操作系统是 Linux（容器实际就是 Linux，但这里做了“明确指定”）&lt;/li&gt;
+&lt;li&gt;GOARCH=amd64：目标 CPU 架构是 x86_64（amd64）&lt;/li&gt;
+&lt;li&gt;容器自身是 arm64 的 Go 工具链，但是 Go 提供了「交叉编译」能力，所以它可以编译出一个「amd64」二进制&lt;/li&gt;
+&lt;li&gt;因此此步骤结束后，容器中 &lt;code&gt;./server&lt;/code&gt; 这个可执行文件将是&lt;strong&gt;amd64 架构&lt;/strong&gt;的 Linux ELF&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;14-结果&#34;&gt;1.4. 结果&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;生成的二进制是「amd64」的&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;但它坐落在一个「arm64」用户态系统（Alpine）里&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;如果你在这个容器里尝试 &lt;code&gt;./server&lt;/code&gt; 立即运行，很可能会报错：&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“exec format error” (因为是 amd64 指令集，无法在 arm64 CPU 上原生执行)。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;然而在 &lt;code&gt;docker build&lt;/code&gt; 阶段，Docker 不会去实际“运行”这个二进制（除了 CMD/ENTRYPOINT 之外），它只是把文件打包进镜像。&lt;/p&gt;
+&lt;h3 id=&#34;15-构建生成的镜像&#34;&gt;1.5 构建生成的镜像&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;docker build&lt;/code&gt; 成功后，会产出一个新的镜像，里头包含：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;基础镜像那一套 arm64 的 Alpine Linux&lt;/li&gt;
+&lt;li&gt;以及我们刚刚编译好的 &lt;strong&gt;amd64&lt;/strong&gt; 可执行文件 &lt;code&gt;/server&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这就导致了镜像本身是“arm64 用户态系统 + amd64 二进制”的“混搭”状态。&lt;/p&gt;
+&lt;h2 id=&#34;2-docker-run-阶段&#34;&gt;2. &lt;code&gt;docker run&lt;/code&gt; 阶段&lt;/h2&gt;
+&lt;p&gt;当你在 M1 Mac 上执行 &lt;code&gt;docker run myserver&lt;/code&gt; 时，Docker 会尝试：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;启动一个容器，它的用户态依旧是「arm64 Alpine」&lt;/li&gt;
+&lt;li&gt;在启动时，会执行 &lt;code&gt;CMD [&amp;quot;./server&amp;quot;]&lt;/code&gt;（即 &lt;code&gt;/server&lt;/code&gt;），这是一个 &lt;strong&gt;amd64&lt;/strong&gt; 的二进制&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;此时，如果没有任何额外的配置，容器内会试图在 arm64 环境中直接跑 amd64 的 ELF 文件，通常会出现：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;standard_init_linux.go:xxx: exec user process caused: exec format error
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;为什么？&lt;/strong&gt; 因为 arm64 CPU 无法直接执行 amd64 指令集的二进制。&lt;/p&gt;
+&lt;h2 id=&#34;3-在-ubuntu--amd64-cpu-上&#34;&gt;3. 在 Ubuntu + amd64 CPU 上&lt;/h2&gt;
+&lt;h3 id=&#34;31-docker-pull&#34;&gt;3.1. docker pull&lt;/h3&gt;
+&lt;p&gt;假设 &lt;code&gt;yourrepo/myserver:latest&lt;/code&gt; 是一个「多架构 manifest」镜像，包含了 &lt;strong&gt;arm64&lt;/strong&gt; 和 &lt;strong&gt;amd64&lt;/strong&gt; 两个版本&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;docker pull yourrepo/myserver:latest
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当 Ubuntu（amd64）端尝试拉取时，Docker 会先匹配你本地主机是 &lt;code&gt;amd64&lt;/code&gt;，接着去仓库搜 &lt;code&gt;myserver&lt;/code&gt; 镜像是否包含 &lt;code&gt;linux/amd64&lt;/code&gt; 的 manifest,&lt;/p&gt;
+&lt;p&gt;最终下载下来的实际上是&lt;strong&gt;amd64&lt;/strong&gt; 的用户态环境（如果用的是 Alpine，则它里面的 &lt;code&gt;/bin/sh&lt;/code&gt;、&lt;code&gt;/usr/bin/go&lt;/code&gt; 等都是 amd64 编译的）,&lt;/p&gt;
+&lt;p&gt;与在 M1 Mac 上「自动拿到 arm64 版」是同样的机制，只是目标架构不同,&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Docker Hub 上的很多官方镜像（例如 &lt;code&gt;golang:alpine&lt;/code&gt;）是做了多架构支持的：它们在同一个镜像名后面，通过一个多架构 manifest，指向了多个真正的镜像文件（比如 amd64 版、arm64 版等）&lt;/p&gt;
+&lt;p&gt;当你 &lt;code&gt;docker pull&lt;/code&gt; 时，Docker 会根据你当前的宿主机架构，去拉取并解压相匹配的镜像层（layer）。这就是为什么“同一个名称”的镜像，能自动匹配不同架构&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;32-运行容器-docker-run&#34;&gt;3.2. 运行容器 docker run&lt;/h3&gt;
+&lt;p&gt;执行 &lt;code&gt;CMD [&amp;quot;./server&amp;quot;]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;因为容器是「amd64 Alpine」, 里面的 &lt;code&gt;/server&lt;/code&gt; 也是 amd64 二进制, CPU 指令集、用户态环境全部匹配，&lt;code&gt;./server&lt;/code&gt; 可以直接原生执行, 不会出现在 M1 Mac 场景下的“exec format error”问题。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;我们拉取的镜像已经是一个微型系统了, 而且包含了我们在 M1 系统编译好的 server amd64 架构的可执行文件,  执行 docker run 的时候, 只会执行: &lt;code&gt;CMD [&amp;quot;./server&amp;quot;]&lt;/code&gt;, 上面的指令比如 &lt;code&gt;FROM&lt;/code&gt;、&lt;code&gt;WORKDIR&lt;/code&gt;、&lt;code&gt;COPY&lt;/code&gt;、&lt;code&gt;RUN go mod download&lt;/code&gt; 都是在&lt;strong&gt;构建阶段 (&lt;code&gt;docker build&lt;/code&gt;)&lt;/strong&gt; 执行的, 用来生产最终镜像。&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>CGO Compile Error Building Docker Image</title>
+      <link>https://blog.jiyi27.com/posts/bugs/006-cgo-docker-image-build-error/</link>
+      <pubDate>Sat, 21 Oct 2023 10:24:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/006-cgo-docker-image-build-error/</guid>
+      <description>&lt;p&gt;I choose a sqilte3 library which uses cgo, the Dockerfile:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; golang:alpine&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./ ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go mod download&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; CGO_ENABLED&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;amd64 go build -o /server .&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;在使用 docker 运行 golang 相关的程序的时候, 我们需要先选择基础镜像, 比如: &lt;code&gt;FROM golang:alpine&lt;/code&gt;, 编译 golang 源码的时候, 需要指定构建的目的系统和CPU架构, 比如: &lt;code&gt;GOOS=linux&lt;/code&gt;, 此时 选择 GOOS=linux 是因为我们选择基础镜像是 &lt;code&gt;golang:alpine&lt;/code&gt; 是 Linux 系统, 而 &lt;code&gt;GOARCH=amd64&lt;/code&gt; 是因为宿主机 CPU 架构是 amd64, 容器里的程序只能跑在与宿主机 CPU 架构兼容的环境上,&lt;/p&gt;
+&lt;p&gt;When cgo is enabled, the binary may link dynamically to C libraries, which can add dependencies on system-specific libraries. Disabling cgo (by setting &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;) helps produce a more self-contained binary, making cross-platform deployment easier.&lt;/p&gt;</description>
+      <content>&lt;p&gt;I choose a sqilte3 library which uses cgo, the Dockerfile:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; golang:alpine&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./ ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go mod download&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; CGO_ENABLED&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;amd64 go build -o /server .&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;在使用 docker 运行 golang 相关的程序的时候, 我们需要先选择基础镜像, 比如: &lt;code&gt;FROM golang:alpine&lt;/code&gt;, 编译 golang 源码的时候, 需要指定构建的目的系统和CPU架构, 比如: &lt;code&gt;GOOS=linux&lt;/code&gt;, 此时 选择 GOOS=linux 是因为我们选择基础镜像是 &lt;code&gt;golang:alpine&lt;/code&gt; 是 Linux 系统, 而 &lt;code&gt;GOARCH=amd64&lt;/code&gt; 是因为宿主机 CPU 架构是 amd64, 容器里的程序只能跑在与宿主机 CPU 架构兼容的环境上,&lt;/p&gt;
+&lt;p&gt;When cgo is enabled, the binary may link dynamically to C libraries, which can add dependencies on system-specific libraries. Disabling cgo (by setting &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;) helps produce a more self-contained binary, making cross-platform deployment easier.&lt;/p&gt;
+&lt;p&gt;Learn more:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/golang/advance/012-statically-linking/&#34;&gt;Static Linking Go Programs - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/golang/advance/011-cross-compilation/&#34;&gt;Cross Compilation - Go - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;After build successfully and run image:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run -p 80:80 shwezhu/file-station:v1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;2023/10/10 02:15:15 /app/main.go:12
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;error&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; failed to initialize database, got error Binary was compiled with &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CGO_ENABLED=0&amp;#39;&lt;/span&gt;, go-sqlite3 requires cgo to work. This is a stub
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see, apparently I will get an error, because my Go code use the &lt;code&gt;go-sqlite3 &lt;/code&gt; package which implemented by pure cgo, if I disable cgo with &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, this will wrong. Then I change the dockerfile to:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Install gcc to compile cgo&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; apk add --no-cache --update go gcc g++&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go build -o /server .&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;And build image with command:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker build -t shwezhu/file-station:v2 .
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;There is an error when run the image on EC2 server:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run -p 80:80 shwezhu/file-station:v1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;WARNING: The requested image&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;s platform &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;linux/arm64&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; does not match the detected host platform &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;linux/amd64&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; and no specific platform was requested
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Because my local machine is arm64, which means the image will be built to arm64 by default, but my EC2 server is linux/amd64, so there is an error occurred. With &lt;code&gt;--platform&lt;/code&gt;, you can specify the platform this image built for:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker build --platform linux/amd64 -t shwezhu/file-station:v2 .
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;Go&lt;/em&gt; is a statically &lt;em&gt;compiled&lt;/em&gt; language. To execute a &lt;em&gt;Go&lt;/em&gt; binary on a machine, it must be &lt;em&gt;compiled&lt;/em&gt; for the matching operating system and processor architecture. So there is cross-compilation in Go. &lt;code&gt;--platform&lt;/code&gt; is used to build &lt;a href=&#34;https://docs.docker.com/build/building/multi-platform/&#34;&gt;multi-platform docker images&lt;/a&gt;, not build Go for another platform. You should know the difference between these concepts.&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Cross Compilation - Go</title>
+      <link>https://blog.jiyi27.com/posts/golang/advance/011-cross-compilation/</link>
+      <pubDate>Tue, 10 Oct 2023 11:09:35 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/golang/advance/011-cross-compilation/</guid>
+      <description>&lt;h2 id=&#34;1-what-is-cross-compilation&#34;&gt;1. What is cross compilation?&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;http://en.wikipedia.org/wiki/Cross_compilation&#34;&gt;Cross-compilation&lt;/a&gt; is the process of compiling code for runing on a different OS.&lt;/p&gt;
+&lt;h2 id=&#34;2-an-example&#34;&gt;2. An example&lt;/h2&gt;
+&lt;p&gt;There is &lt;a href=&#34;https://stackoverflow.com/questions/23072889/why-go-programs-need-runtime-support/23072968#23072968&#34;&gt;a question&lt;/a&gt; on Stackoverflow:&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s said that Golang is the &lt;em&gt;compiled&lt;/em&gt; language, but what does it mean by &lt;em&gt;compiled&lt;/em&gt;? If golang application is compiled to machine code, why can&amp;rsquo;t I just distribute the binary (of course on corresponding arch and platform) instead of &lt;code&gt;go install&lt;/code&gt; stuff?&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Once you compile a binary you &lt;em&gt;can&lt;/em&gt; distribute it onto machines with the same architecture. You don&amp;rsquo;t need go real time envorionment such as &lt;code&gt;go install,&lt;/code&gt; &lt;code&gt;go run,&lt;/code&gt; etc, which are just necessary for compilation.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-what-is-cross-compilation&#34;&gt;1. What is cross compilation?&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;http://en.wikipedia.org/wiki/Cross_compilation&#34;&gt;Cross-compilation&lt;/a&gt; is the process of compiling code for runing on a different OS.&lt;/p&gt;
+&lt;h2 id=&#34;2-an-example&#34;&gt;2. An example&lt;/h2&gt;
+&lt;p&gt;There is &lt;a href=&#34;https://stackoverflow.com/questions/23072889/why-go-programs-need-runtime-support/23072968#23072968&#34;&gt;a question&lt;/a&gt; on Stackoverflow:&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s said that Golang is the &lt;em&gt;compiled&lt;/em&gt; language, but what does it mean by &lt;em&gt;compiled&lt;/em&gt;? If golang application is compiled to machine code, why can&amp;rsquo;t I just distribute the binary (of course on corresponding arch and platform) instead of &lt;code&gt;go install&lt;/code&gt; stuff?&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Once you compile a binary you &lt;em&gt;can&lt;/em&gt; distribute it onto machines with the same architecture. You don&amp;rsquo;t need go real time envorionment such as &lt;code&gt;go install,&lt;/code&gt; &lt;code&gt;go run,&lt;/code&gt; etc, which are just necessary for compilation.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The go code:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;srv&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;NewServeMux&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;srv&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;HandleFunc&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;ResponseWriter&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Request&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fprintln&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;hello world&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	})
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;running...&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;ListenAndServe&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;:8080&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;srv&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Compile go program on my local machine MacOS:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ go  build -o server main.go 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file server 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server: Mach-O 64-bit executable arm64
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ uname -m
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;arm64
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then copy this file to my Ubuntu server and try to run it:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~ [13:38:04] &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ uname -m
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;x86_64
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~ [13:38:09] &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file server
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server: Mach-O 64-bit arm64 executable, flags:&amp;lt;|DYLDLINK|PIE&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~ [13:38:17] &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ./server 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;zsh: exec format error: ./serve
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then I tried add &lt;code&gt;GOOS=linux&lt;/code&gt; when compile it on my Mac,  and it works:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;amd64 go build -o server main.go 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Run on my Ubuntu server:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Note the output &amp;#39;statically linked&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file server 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server: ELF 64-bit LSB executable, x86-64, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SYSV&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;, statically linked, Go BuildID&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;UPJ7jqIdP4OxbRX0df1Y/Xoh0f7edlCBhoN_dKDuV/xIAf8LzXqSyYE4r7v3Rq/Jq_3l1_5WQhsiIkApqgj, with debug_info, not stripped
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ./server
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;running...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;So once you compile a binary you &lt;em&gt;can&lt;/em&gt; distribute it onto machines &lt;strong&gt;with the same architecture&lt;/strong&gt;. You don&amp;rsquo;t need go real time envorionment to run it. This is the power of compiled language.&lt;/p&gt;
+&lt;h2 id=&#34;3-cross-compilation&#34;&gt;3. Cross-compilation&lt;/h2&gt;
+&lt;p&gt;I found &lt;a href=&#34;https://opensource.com/article/21/1/go-cross-compiling&#34;&gt;a post&lt;/a&gt;, share it here:&lt;/p&gt;
+&lt;p&gt;The Bash shell and the Python interpreter are available on most Linux servers of any architecture. Hence, everything had worked well before.&lt;/p&gt;
+&lt;p&gt;However, now I was dealing with a &lt;strong&gt;compiled language&lt;/strong&gt;, Go, which produces an executable binary. The compiled binary consists of &lt;a href=&#34;https://en.wikipedia.org/wiki/Opcode&#34;&gt;opcodes&lt;/a&gt; or assembly instructions that &lt;strong&gt;are tied to a specific architecture&lt;/strong&gt;. That&amp;rsquo;s why I got the format error. Since the Arm64 CPU (where I ran the binary) could not interpret the binary&amp;rsquo;s x86-64 instructions, it errored out. Previously, the shell and Python interpreter took care of the underlying opcodes or architecture-specific instructions for me.&lt;/p&gt;
+&lt;p&gt;I checked the Golang docs and discovered that to produce an Arm64 binary, all I had to do was set two environment variables when compiling the Go program before running the &lt;code&gt;go build&lt;/code&gt; command.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;GOOS&lt;/code&gt; refers to the operating system (Linux, Windows, BSD, etc.), while &lt;code&gt;GOARCH&lt;/code&gt; refers to the architecture to build for.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ env GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;arm64 go build -o prepnode_arm64
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;31-what-about-other-architectures&#34;&gt;3.1. What about other architectures?&lt;/h3&gt;
+&lt;p&gt;x86 and Arm are two of the five architectures I test software on. I was worried that Go might not support the other ones, but that was not the case. You can find out which architectures Go supports with:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ go tool dist list
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;aix/ppc64
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;android/386
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;android/amd64
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;android/arm
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;android/arm64
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;darwin/amd64
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;darwin/arm64
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;windows/386
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;windows/amd64
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;.....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Generatiing binaries for all of the architectures under my test is as simple as writing a tiny shell script from my x86 laptop:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/usr/bin/bash
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;archs&lt;span style=&#34;color:#f92672&#34;&gt;=(&lt;/span&gt;amd64 arm64 ppc64le ppc64 s390x&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; arch in &lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;archs&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;do&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	env GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;arch&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt; go build -o prepnode_&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;arch&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;done&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+    </item>
+    
+  </channel>
+</rss>

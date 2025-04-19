@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Why a Component Needs to be a Pure Function - React.js :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content=" 永恒不变的真理: 默认情况下, 当一个组件重新渲染时, React 将递归渲染它的所有子组件
+Pure 函数就是 只要输入相同, 则输出一定相同, 在 React Component 中 pure component 可以理解为 只要传入的 props 相同, 用户操作(比如点击按钮) 相同, 那 render 阶段返回的 html 就应该相同, 可能总结也不准确, 所以我们来讨论什么行为是 impure, 只要不犯错, 那做的都是对的
+错误做法:
+// ❌ Bad: Modifying props during render function RichTextEditor({ content }) { // 开发者想在每次渲染时更新内容的最后修改时间 content.lastModified = Date.now(); content.version&#43;&#43;; return &lt;div&gt; &lt;Editor content={content} /&gt; &lt;div&gt;Last modified: {content.lastModified}&lt;/div&gt; &lt;/div&gt;; } 正确做法：
+// 让父组件传入一个修改函数控制更新 function RichTextEditor({ content, onContentChange }) { const handleChange = (newContent) =&gt; { onContentChange({ ...newContent, lastModified: Date.now(), version: (newContent.version || 0) &#43; 1 }); }; return &lt;div&gt; &lt;Editor content={localContent} onChange={handleChange} /&gt; &lt;div&gt;Last modified: {localContent.lastModified}&lt;/div&gt; &lt;/div&gt;; } 为什么这么操作是 pure?
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/frontend/next-js/006-why-pure-react/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Why a Component Needs to be a Pure Function - React.js">
+<meta property="og:description" content=" 永恒不变的真理: 默认情况下, 当一个组件重新渲染时, React 将递归渲染它的所有子组件
+Pure 函数就是 只要输入相同, 则输出一定相同, 在 React Component 中 pure component 可以理解为 只要传入的 props 相同, 用户操作(比如点击按钮) 相同, 那 render 阶段返回的 html 就应该相同, 可能总结也不准确, 所以我们来讨论什么行为是 impure, 只要不犯错, 那做的都是对的
+错误做法:
+// ❌ Bad: Modifying props during render function RichTextEditor({ content }) { // 开发者想在每次渲染时更新内容的最后修改时间 content.lastModified = Date.now(); content.version&#43;&#43;; return &lt;div&gt; &lt;Editor content={content} /&gt; &lt;div&gt;Last modified: {content.lastModified}&lt;/div&gt; &lt;/div&gt;; } 正确做法：
+// 让父组件传入一个修改函数控制更新 function RichTextEditor({ content, onContentChange }) { const handleChange = (newContent) =&gt; { onContentChange({ ...newContent, lastModified: Date.now(), version: (newContent.version || 0) &#43; 1 }); }; return &lt;div&gt; &lt;Editor content={localContent} onChange={handleChange} /&gt; &lt;div&gt;Last modified: {localContent.lastModified}&lt;/div&gt; &lt;/div&gt;; } 为什么这么操作是 pure?
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/frontend/next-js/006-why-pure-react/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="前端开发" />
+
+
+  <meta property="article:published_time" content="2024-12-12 08:38:30 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/frontend/next-js/006-why-pure-react/">Why a Component Needs to be a Pure Function - React.js</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2024-12-12</time><span class="post-reading-time">3 分钟阅读 (613 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91/">前端开发</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/react/">react</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <blockquote>
+<p>永恒不变的真理: 默认情况下, 当一个组件重新渲染时, React 将递归渲染它的所有子组件</p>
+</blockquote>
+<p>Pure 函数就是 只要输入相同, 则输出一定相同, 在 React Component 中 pure component 可以理解为 只要传入的 props 相同, 用户操作(比如点击按钮) 相同, 那 render 阶段返回的 html 就应该相同, 可能总结也不准确, 所以我们来讨论什么行为是 impure, 只要不犯错, 那做的都是对的</p>
+<hr>
+<p>错误做法:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#75715e">// ❌ Bad: Modifying props during render
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">RichTextEditor</span>({ <span style="color:#a6e22e">content</span> }) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 开发者想在每次渲染时更新内容的最后修改时间
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">content</span>.<span style="color:#a6e22e">lastModified</span> <span style="color:#f92672">=</span> Date.<span style="color:#a6e22e">now</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">content</span>.<span style="color:#a6e22e">version</span><span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">Editor</span> <span style="color:#a6e22e">content</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">content</span>} /&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">div</span>&gt;<span style="color:#a6e22e">Last</span> <span style="color:#a6e22e">modified</span><span style="color:#f92672">:</span> {<span style="color:#a6e22e">content</span>.<span style="color:#a6e22e">lastModified</span>}&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;/<span style="color:#f92672">div</span>&gt;;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>正确做法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#75715e">// 让父组件传入一个修改函数控制更新
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">RichTextEditor</span>({ <span style="color:#a6e22e">content</span>, <span style="color:#a6e22e">onContentChange</span> }) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">handleChange</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">newContent</span>) <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">onContentChange</span>({
+</span></span><span style="display:flex;"><span>      ...<span style="color:#a6e22e">newContent</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">lastModified</span>: <span style="color:#66d9ef">Date.now</span>(),
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">version</span><span style="color:#f92672">:</span> (<span style="color:#a6e22e">newContent</span>.<span style="color:#a6e22e">version</span> <span style="color:#f92672">||</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">Editor</span> 
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">content</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">localContent</span>}
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">onChange</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">handleChange</span>}
+</span></span><span style="display:flex;"><span>    /&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">div</span>&gt;<span style="color:#a6e22e">Last</span> <span style="color:#a6e22e">modified</span><span style="color:#f92672">:</span> {<span style="color:#a6e22e">localContent</span>.<span style="color:#a6e22e">lastModified</span>}&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;/<span style="color:#f92672">div</span>&gt;;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>为什么这么操作是 pure?</p>
+<p>这个组件在渲染过程中只做了两件事：</p>
+<ol>
+<li>定义了一个事件处理函数 handleChange</li>
+<li>返回 JSX</li>
+</ol>
+<p>关键是：它没有直接修改传入的 content 对象, handleChange 虽然会触发修改，但它是事件处理函数，不是在渲染过程中执行的</p>
+<hr>
+<p>错误做法:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#75715e">// ❌ Bad: Modifying props during render
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">SignupForm</span>({ <span style="color:#a6e22e">formData</span> }) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 开发者想在渲染时添加验证状态
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">formData</span>.<span style="color:#a6e22e">errors</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">validateFields</span>(<span style="color:#a6e22e">formData</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">formData</span>.<span style="color:#a6e22e">isValid</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">keys</span>(<span style="color:#a6e22e">formData</span>.<span style="color:#a6e22e">errors</span>).<span style="color:#a6e22e">length</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">form</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">formData</span>.<span style="color:#a6e22e">email</span>} /&gt;
+</span></span><span style="display:flex;"><span>    {<span style="color:#a6e22e">formData</span>.<span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">email</span> <span style="color:#f92672">&amp;&amp;</span> &lt;<span style="color:#f92672">span</span>&gt;{<span style="color:#a6e22e">formData</span>.<span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">email</span>}&lt;/<span style="color:#f92672">span</span>&gt;}
+</span></span><span style="display:flex;"><span>  &lt;/<span style="color:#f92672">form</span>&gt;;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>正确做法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">SignupForm</span>({ <span style="color:#a6e22e">initialData</span> }) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">formData</span>, <span style="color:#a6e22e">setFormData</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>(<span style="color:#a6e22e">initialData</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">errors</span>, <span style="color:#a6e22e">setErrors</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>(...);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">handleChange</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">e</span>) <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">value</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">target</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setFormData</span>(<span style="color:#a6e22e">prev</span> <span style="color:#f92672">=&gt;</span> ({
+</span></span><span style="display:flex;"><span>      ...<span style="color:#a6e22e">prev</span>,
+</span></span><span style="display:flex;"><span>      [<span style="color:#a6e22e">name</span>]<span style="color:#f92672">:</span> <span style="color:#a6e22e">value</span>
+</span></span><span style="display:flex;"><span>    }));
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">newErrors</span> <span style="color:#f92672">=</span> {};
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">name</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;email&#39;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#e6db74">/^\S+@\S+$/i</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">value</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">newErrors</span>.<span style="color:#a6e22e">email</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;请输入有效的邮箱&#39;</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setErrors</span>(<span style="color:#a6e22e">newErrors</span>);
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">form</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#f92672">input</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;email&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">formData</span>.<span style="color:#a6e22e">email</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;&#39;</span>}
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">onChange</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">handleChange</span>}
+</span></span><span style="display:flex;"><span>      /&gt;
+</span></span><span style="display:flex;"><span>      {<span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">email</span> <span style="color:#f92672">&amp;&amp;</span> &lt;<span style="color:#f92672">span</span>&gt;{<span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">email</span>}&lt;/<span style="color:#f92672">span</span>&gt;}
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">form</span>&gt;
+</span></span><span style="display:flex;"><span>  );
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<p>修改 props 有两个选择</p>
+<p>第一种: 父组件传递一个 修改函数, 然后在子组件的 event handler 调用这个函数来修改 props, 如第一个例子</p>
+<p>第二种: 通过 useState() 创建一个 props 副本, 在 event handler 种调用 setState 修改, 如第二个例子</p>
+</blockquote>
+<hr>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#75715e">// ❌ Impure: Performing side effects during render phase
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">SearchBar() {</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Wrong: API call during render
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">results</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`/api/search?q=test`</span>);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">div</span>&gt;{<span style="color:#a6e22e">results</span>}&lt;/<span style="color:#f92672">div</span>&gt;;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ✅ Pure: Move side effect to event handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">SearchBar() {</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">results</span>, <span style="color:#a6e22e">setResults</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>(<span style="color:#66d9ef">null</span>);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">handleSearch</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">query</span>) <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`/api/search?q=</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">query</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setResults</span>(<span style="color:#a6e22e">data</span>);
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">onChange</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">e</span> <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">handleSearch</span>(<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">target</span>.<span style="color:#a6e22e">value</span>)} /&gt;
+</span></span><span style="display:flex;"><span>    {<span style="color:#a6e22e">results</span> <span style="color:#f92672">&amp;&amp;</span> &lt;<span style="color:#f92672">div</span>&gt;{<span style="color:#a6e22e">results</span>}&lt;/<span style="color:#f92672">div</span>&gt;}
+</span></span><span style="display:flex;"><span>  &lt;/<span style="color:#f92672">div</span>&gt;;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ❌ Impure: Modifying DOM in render
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">NotificationBell() {</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Wrong: DOM manipulation during render
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">hasNewNotifications</span>) {
+</span></span><span style="display:flex;"><span>    document.<span style="color:#a6e22e">title</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`(</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">count</span><span style="color:#e6db74">}</span><span style="color:#e6db74">) New Messages`</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">bell</span><span style="color:#960050;background-color:#1e0010">-</span><span style="color:#a6e22e">icon</span> /&gt;;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ✅ Pure: Handle in click event
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">NotificationBell() {</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">handleClick</span> <span style="color:#f92672">=</span> () <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// OK to modify DOM in event handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    document.<span style="color:#a6e22e">title</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`(</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">count</span><span style="color:#e6db74">}</span><span style="color:#e6db74">) New Messages`</span>;
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">bell</span><span style="color:#960050;background-color:#1e0010">-</span><span style="color:#a6e22e">icon</span> <span style="color:#a6e22e">onClick</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">handleClick</span>} /&gt;;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ❌ Impure: Local storage operations during render
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">UserPreferences</span>({ <span style="color:#a6e22e">theme</span> }) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Wrong: localStorage operation during render
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">localStorage</span>.<span style="color:#a6e22e">setItem</span>(<span style="color:#e6db74">&#39;theme&#39;</span>, <span style="color:#a6e22e">theme</span>);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">theme</span>}&gt;...&lt;/<span style="color:#f92672">div</span>&gt;;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ✅ Pure: Handle in effect or event
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">UserPreferences</span>({ <span style="color:#a6e22e">theme</span> }) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Option 1: Handle in effect if needs to sync with prop
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">useEffect</span>(() <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">localStorage</span>.<span style="color:#a6e22e">setItem</span>(<span style="color:#e6db74">&#39;theme&#39;</span>, <span style="color:#a6e22e">theme</span>);
+</span></span><span style="display:flex;"><span>  }, [<span style="color:#a6e22e">theme</span>]);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Option 2: Handle in event if user-triggered
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">handleThemeChange</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">newTheme</span>) <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">localStorage</span>.<span style="color:#a6e22e">setItem</span>(<span style="color:#e6db74">&#39;theme&#39;</span>, <span style="color:#a6e22e">newTheme</span>);
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">theme</span>}&gt;
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">onClick</span><span style="color:#f92672">=</span>{() <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">handleThemeChange</span>(<span style="color:#e6db74">&#39;dark&#39;</span>)}&gt;<span style="color:#a6e22e">Dark</span>&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;/<span style="color:#f92672">div</span>&gt;;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ❌ Impure: WebSocket connection during render
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">ChatRoom() {</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Wrong: Creating WebSocket during render
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">ws</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">WebSocket</span>(<span style="color:#e6db74">&#39;ws://chat&#39;</span>);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">div</span>&gt;<span style="color:#a6e22e">Chat</span> <span style="color:#a6e22e">Room</span>&lt;/<span style="color:#f92672">div</span>&gt;;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ✅ Pure: Handle connection in effect
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">ChatRoom() {</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">useEffect</span>(() <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">ws</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">WebSocket</span>(<span style="color:#e6db74">&#39;ws://chat&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> () <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">ws</span>.<span style="color:#a6e22e">close</span>(); <span style="color:#75715e">// Cleanup on unmount
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  }, []);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">div</span>&gt;<span style="color:#a6e22e">Chat</span> <span style="color:#a6e22e">Room</span>&lt;/<span style="color:#f92672">div</span>&gt;;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<p>In React, <strong>side effects usually belong inside <a href="https://react.dev/learn/responding-to-events">event handlers.</a></strong> Event handlers are functions that React runs when you perform some action—for example, when you click a button. Even though event handlers are defined <em>inside</em> your component, they don’t run <em>during</em> rendering! <strong>So event handlers don’t need to be pure.</strong></p>
+<p>If you’ve exhausted all other options and can’t find the right event handler for your side effect, you can still attach it to your returned JSX with a <a href="https://react.dev/reference/react/useEffect"><code>useEffect</code></a> call in your component. This tells React to execute it later, after rendering, when side effects are allowed. <strong>However, this approach should be your last resort.</strong></p>
+</blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/next-js/008-apis-react/" class="button inline prev">
+        APIs React - Next.js
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/next-js/007-hooks-react/" class="button inline next">
+        Hooks React - Next.js
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

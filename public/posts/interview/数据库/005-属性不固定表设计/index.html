@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>属性不固定如何设计 MySQL MongoDB -- 软件开发一面 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. MySQL 首先来看看 MySQL 的实现, 当时没有想到这个实现方式, 只说了会用 MongoDB 来做存储, 问为什么也没能说出个所以然, 于是研究一下, 简单讨论一下, 假设我们需要设计一个系统来存储“商品信息”。商品的基本属性包括“名称”和“价格”，但不同类型的商品可能会有额外的属性（比如衣服有“尺码”和“颜色”，电子产品有“电压”和“功率”），而且这些属性可能会随着业务需求频繁增加或修改。
+1.1. EAV 模型 Entity-Attribute-Value products 表：存储商品基本信息
+id | name | price ---|------------|------- 1 | T-shirt | 20.00 2 | Laptop | 999.99 product_attributes 表：存储动态属性
+product_id | attribute_name | attribute_value -----------|----------------|----------------- 1 | size | M 1 | color | Blue 2 | voltage | 220V 2 | power | 65W 获取 T-shirt 的所有属性：
+SELECT attribute_name, attribute_value FROM product_attributes WHERE product_id = 1; 缺点：
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/005-%E5%B1%9E%E6%80%A7%E4%B8%8D%E5%9B%BA%E5%AE%9A%E8%A1%A8%E8%AE%BE%E8%AE%A1/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="属性不固定如何设计 MySQL MongoDB -- 软件开发一面">
+<meta property="og:description" content="1. MySQL 首先来看看 MySQL 的实现, 当时没有想到这个实现方式, 只说了会用 MongoDB 来做存储, 问为什么也没能说出个所以然, 于是研究一下, 简单讨论一下, 假设我们需要设计一个系统来存储“商品信息”。商品的基本属性包括“名称”和“价格”，但不同类型的商品可能会有额外的属性（比如衣服有“尺码”和“颜色”，电子产品有“电压”和“功率”），而且这些属性可能会随着业务需求频繁增加或修改。
+1.1. EAV 模型 Entity-Attribute-Value products 表：存储商品基本信息
+id | name | price ---|------------|------- 1 | T-shirt | 20.00 2 | Laptop | 999.99 product_attributes 表：存储动态属性
+product_id | attribute_name | attribute_value -----------|----------------|----------------- 1 | size | M 1 | color | Blue 2 | voltage | 220V 2 | power | 65W 获取 T-shirt 的所有属性：
+SELECT attribute_name, attribute_value FROM product_attributes WHERE product_id = 1; 缺点：
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/005-%E5%B1%9E%E6%80%A7%E4%B8%8D%E5%9B%BA%E5%AE%9A%E8%A1%A8%E8%AE%BE%E8%AE%A1/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-03-10 09:50:19 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/005-%E5%B1%9E%E6%80%A7%E4%B8%8D%E5%9B%BA%E5%AE%9A%E8%A1%A8%E8%AE%BE%E8%AE%A1/">属性不固定如何设计 MySQL MongoDB &ndash; 软件开发一面</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-03-10</time><span class="post-reading-time">3 分钟阅读 (431 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9D%A2%E8%AF%95/">数据库面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-mysql">1. MySQL<a href="#1-mysql" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>首先来看看 MySQL 的实现, 当时没有想到这个实现方式, 只说了会用 MongoDB 来做存储, 问为什么也没能说出个所以然, 于是研究一下, 简单讨论一下, 假设我们需要设计一个系统来存储“商品信息”。商品的基本属性包括“名称”和“价格”，但不同类型的商品可能会有额外的属性（比如衣服有“尺码”和“颜色”，电子产品有“电压”和“功率”），而且这些属性可能会随着业务需求频繁增加或修改。</p>
+<h3 id="11-eav-模型-entity-attribute-value">1.1. EAV 模型 Entity-Attribute-Value<a href="#11-eav-模型-entity-attribute-value" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>products 表：存储商品基本信息</p>
+<pre tabindex="0"><code>id | name       | price
+---|------------|-------
+1  | T-shirt    | 20.00
+2  | Laptop     | 999.99
+</code></pre><p>product_attributes 表：存储动态属性</p>
+<pre tabindex="0"><code>product_id | attribute_name | attribute_value
+-----------|----------------|-----------------
+1          | size          | M
+1          | color         | Blue
+2          | voltage       | 220V
+2          | power         | 65W
+</code></pre><p>获取 T-shirt 的所有属性：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> attribute_name, attribute_value 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span> product_attributes 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">WHERE</span> product_id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span></code></pre></div><p><strong>缺点</strong>：</p>
+<ul>
+<li>
+<p>需要通过多表连接或多次查询来获取完整信息，当数据量很大时，EAV 表的查询效率较低</p>
+</li>
+<li>
+<p><code>attribute_value</code> 通常是 <code>TEXT</code> 或 <code>VARCHAR</code>, 而不是更具体的数据类型, 原因是不同属性的数据类型可能不同:</p>
+</li>
+</ul>
+<pre tabindex="0"><code>| user_id | attr_name  | attr_value  |
+|---------|-----------|------------|
+| 1       | age       | 25         |  (应为 INT)
+| 1       | phone     | &#34;1234567890&#34; |  (应为 STRING)
+| 2       | birthdate | &#34;1995-10-20&#34; |  (应为 DATE)
+</code></pre><p><code>attr_value</code> 只能选择 一个 数据类型</p>
+<h3 id="12-预留扩展列">1.2. 预留扩展列<a href="#12-预留扩展列" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>在表中预留一些通用列（如 extra1, extra2），用于存储不确定的属性</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span>id <span style="color:#f92672">|</span> name       <span style="color:#f92672">|</span> price  <span style="color:#f92672">|</span> extra1 <span style="color:#f92672">|</span> extra2 <span style="color:#f92672">|</span> extra3
+</span></span><span style="display:flex;"><span><span style="color:#75715e">---|------------|--------|--------|--------|-------
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">1</span>  <span style="color:#f92672">|</span> T<span style="color:#f92672">-</span>shirt    <span style="color:#f92672">|</span> <span style="color:#ae81ff">20</span>.<span style="color:#ae81ff">00</span>  <span style="color:#f92672">|</span> M      <span style="color:#f92672">|</span> Blue   <span style="color:#f92672">|</span> <span style="color:#66d9ef">NULL</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span>  <span style="color:#f92672">|</span> Laptop     <span style="color:#f92672">|</span> <span style="color:#ae81ff">999</span>.<span style="color:#ae81ff">99</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">220</span>V   <span style="color:#f92672">|</span> <span style="color:#ae81ff">65</span>W    <span style="color:#f92672">|</span> <span style="color:#66d9ef">NULL</span>
+</span></span></code></pre></div><p><strong>扩展性差</strong>：预留列数量有限，如果属性超过预留列数，需要修改表结构</p>
+<h3 id="13-为什么-mysql-不支持属性经常变化直接修改-schema-不就行了吗">1.3. 为什么 MySQL 不支持属性经常变化？直接修改 <code>schema</code> 不就行了吗？<a href="#13-为什么-mysql-不支持属性经常变化直接修改-schema-不就行了吗" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>
+<p>如果每次新属性都 <code>ALTER TABLE</code>，很快表结构会变得难以维护，每次新增字段都要修改数据库代码</p>
+</li>
+<li>
+<p>MySQL 在 InnoDB 引擎下，某些 <code>ALTER TABLE</code> 操作（如 <code>ADD COLUMN</code>）可能会导致表锁，阻止其他写操作，特别是对 大表 影响更明显</p>
+</li>
+<li>
+<p>如果表里有 百万级数据，<code>ALTER TABLE</code> 可能需要 几秒甚至几分钟，在生产环境中这会阻塞业务操作</p>
+</li>
+</ul>
+<h2 id="2-mongodb-文档型数据库">2. MongoDB 文档型数据库<a href="#2-mongodb-文档型数据库" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>每个商品存储为一个文档, 属性以键值对的形式直接嵌入文档中, 文档结构无固定 schema，可以随时添加或删除字段</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;_id&#34;</span>: <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;T-shirt&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;price&#34;</span>: <span style="color:#ae81ff">20.00</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;size&#34;</span>: <span style="color:#e6db74">&#34;M&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;color&#34;</span>: <span style="color:#e6db74">&#34;Blue&#34;</span>
+</span></span><span style="display:flex;"><span>}<span style="color:#960050;background-color:#1e0010">,</span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;_id&#34;</span>: <span style="color:#ae81ff">2</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;Laptop&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;price&#34;</span>: <span style="color:#ae81ff">999.99</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;voltage&#34;</span>: <span style="color:#e6db74">&#34;220V&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;power&#34;</span>: <span style="color:#e6db74">&#34;65W&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>缺点：</strong></p>
+<ul>
+<li>存储空间开销：重复的字段名会增加存储成本 比如每个文档都存储 size 的键名</li>
+<li>事务支持较弱，如果需要 ACID 事务，MongoDB 不如 MySQL</li>
+</ul>
+<h2 id="3-分析优缺点">3. 分析优缺点<a href="#3-分析优缺点" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-mysql-分析">3.1. MySQL 分析<a href="#31-mysql-分析" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>首先对方给定的场景是大模型开发训练, 存储信息, 如果在这个场景下,</p>
+<p>EAV 显然不可以采用了, 因为其缺点就是查询效率低, 大模型训练, 应该会经常查询, 数据量也不低, 所以 EAV 不可以采用, 当然如果数据量不大, 也可以采用</p>
+<p>直接采用每次增加列也不太好, 因为每次增加列, 就要修改表的 schema, 修改表的 shcema 倒也没什么问题, 毕竟我们不是电商平台, 宕机一会维护也没什么问题, 可是表结构的频繁变化也意味着业务逻辑代码跟着变, 这就很麻烦了, 所以不能推荐,</p>
+<p>那采用预留扩展列呢, 预留列数量有限, 如果属性超过预留列数, 需要修改表结构, 另外我们也不知道预留的列的数据类型, 另外表的 shcema 一旦确定, 修改就需要修改对应的业务代码, 比如刚开始的列名 extra1, extra2, 写了就不能改了, 想改, 就得连着业务代码一起改, 还是麻烦,</p>
+<p>所以如果数据量不大, 且数据类型都相同, 可以选 EAV, 如果修改不频繁, 直接增加列也行,</p>
+<h3 id="32-mongodb-的文档等于-mysql-中的行吗">3.2. MongoDB 的文档等于 MySQL 中的行吗?<a href="#32-mongodb-的文档等于-mysql-中的行吗" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>在很多常见场景下, “文档”与“行”的概念可能看起来很像——一个文档对应数据库里的一行, 但是在 MongoDB 中, 文档可以远比传统数据库的一条“行”更大、更复杂, 例如：</p>
+<ul>
+<li>你可能把用户信息、历史订单、偏好、嵌套数组等全都存在同一个文档里</li>
+<li>在 MySQL 中，通常会拆成多张表，分别管理用户基本信息、订单信息、偏好设置等等</li>
+</ul>
+<h3 id="33--mongodb-的文档锁为何在冲突场景下开销更大">3.3.  MongoDB 的“文档锁”为何在冲突场景下开销更大？<a href="#33--mongodb-的文档锁为何在冲突场景下开销更大" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>如果多个并发操作同时想要修改同一个文档，就会发生锁冲突——MongoDB 必须保证多字段更新的原子性和一致性，只能让一个事务/请求在同一时刻对文档进行写操作。所以它要申请<strong>文档锁</strong>，其他请求只能等待该锁释放。假如这个文档非常大，或者更新的字段非常多，整个更新流程持续时间就会更长，导致等待的其他请求排队更久。在高并发时，这种排队/等待就会累积，拖慢响应。</p>
+<p>MongoDB 的文档锁其实对应的就是 MySQL 的行锁 x锁, 只是 InnoDB 的行通常更“轻量” 就是某张表里的一条记录, MVCC（多版本并发控制）在很多场景下可以让读和写“并行”工作：写事务锁住行在做更新时，读事务可以去读取旧版本，不被阻塞, 这就使得 InnoDB 对单行更新的“锁持有时间”通常较短, 也更容易并发执行其他事务, 换句话说, 在竞争同一个行时, MySQL 能更有效地减少彼此等待</p>
+<h3 id="34--事务日志与回滚机制为什么-mongodb-在多文档事务下会更重">3.4.  事务日志与回滚机制：为什么 MongoDB 在多文档事务下会更“重”？<a href="#34--事务日志与回滚机制为什么-mongodb-在多文档事务下会更重" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>当 MongoDB 开启多文档事务时, 需要在内部维护更多的事务上下文、事务标识、和分布式复制信息, 具体来讲：</p>
+<ul>
+<li>
+<p><strong>事务边界的记录</strong>：开始事务时，需要标记事务 ID、会话 ID 等信息</p>
+</li>
+<li>
+<p><strong>执行过程中</strong>：每次写操作，除了写入数据，还要在 oplog 中添加相应的操作（以便其他副本集节点重放），并且加上事务相关的标记</p>
+</li>
+<li>
+<p><strong>提交/回滚时</strong>：需要把事务提交的边界或回滚动作写到 oplog，其他节点才能正确得知某个事务是提交成功了还是被回滚了</p>
+</li>
+</ul>
+<h3 id="35-mongodb-事务不如-mysql">3.5. MongoDB 事务不如 MySQL?<a href="#35-mongodb-事务不如-mysql" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>首先 MongoDB 事务不如  MySQL, MySQL 支持 ACID 事务, 事务可以跨多张表、多个行, 事务操作完成后, 可以 <code>COMMIT</code> 提交, 也可以 <code>ROLLBACK</code> 回滚, 当然 MongoDB 也支持这些, 但 MongoDB 的事务性能开销较大, 相比 MySQL 事务要慢,</p>
+<p>但是我们训练大模型, 又不是金融, 支付, 多文档事务好像不是那么经常发生(涉及多表操作), 当然如果多文档事务经常发生, 那可能就要选择 MySQL 了, 这里假设多文档事务不经常发生,</p>
+<p>所以虽然 MySQL 事务优于 MongoDB, 但是对于我们不是那么重要,</p>
+<h3 id="36-mongodb-和-mysql-写入性能对比">3.6. MongoDB 和 MySQL 写入性能对比<a href="#36-mongodb-和-mysql-写入性能对比" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>业务场景：如日志系统、埋点数据收集、IoT（物联网）设备数据上报、大量实时写入操作等</p>
+<p>需求特征：数据量增长速度快、数据结构可能较为灵活、对写入延迟较敏感但对强一致性要求相对一般</p>
+<ul>
+<li>
+<p>文档型存储，易于水平扩展：MongoDB 天生支持集群（Sharding），对高并发写入时能够通过分片策略进行分布式水平扩展，扩容相对容易，整体吞吐量可以有效提升</p>
+</li>
+<li>
+<p>模式灵活，数据模型简化：MongoDB 不需要进行严格的表结构变更操作，写入时对新字段的兼容成本较低；在开发层面减少了重复的 DDL 操作，通常能更快地进行数据落地</p>
+</li>
+<li>
+<p>批量插入：MongoDB 提供了批量插入 API，在高并发批量写场景下也有很好的表现</p>
+</li>
+<li>
+<p>事务完整性：在需要强事务、一致性写入保证时，MySQL 通常有更完善的方案。事务隔离级别控制在写入并发和一致性之间做取舍</p>
+</li>
+<li>
+<p>MySQL：适合关系复杂、需要强一致性事务、结构化并发读写的元数据场景</p>
+</li>
+</ul>
+<blockquote>
+<p>简单/灵活数据写入，大规模水平扩展，MongoDB 往往更方便；如海量日志、传感器数据写入等，MongoDB 倾向能“跑”得更快、更灵活。对强事务、高度结构化要求高的场景，或单机性能调优等，MySQL 依旧具备非常成熟的写入能力</p>
+</blockquote>
+<h3 id="37-mongodb-和-mysql-常见场景和选择建议">3.7. MongoDB 和 MySQL 常见场景和选择建议<a href="#37-mongodb-和-mysql-常见场景和选择建议" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>海量日志/传感器/埋点数据收集</strong></p>
+<ul>
+<li>典型特征：超大规模写入、数据结构灵活、查询方式主要以“根据 ID、时间区间”读取为主</li>
+<li>推荐：MongoDB 更方便进行水平扩展，文档模式灵活，更适合存储不固定或变动的字段。MySQL 也可用，但需要分库分表、NoSQL 化设计，运维成本相对大一些</li>
+</ul>
+<p><strong>内容管理系统（CMS）、电商商品信息、用户个人资料</strong></p>
+<ul>
+<li>典型特征：字段较灵活，如商品的规格属性不统一、用户资料字段可变；还需要快速的查询和更新</li>
+<li>推荐：MongoDB 文档化存储更省事，支持嵌套结构；若查询需要多维度或嵌套索引，一定要事先规划好索引</li>
+<li>补充：如果业务需要强事务（比如订单管理、支付流水等），则核心交易部分依旧通常采用 MySQL</li>
+</ul>
+<p><strong>传统的财务系统、银行、订单管理系统</strong></p>
+<ul>
+<li>典型特征：强事务、多表之间有严密的关系和复杂的 JOIN、对数据一致性要求极高</li>
+<li>推荐：MySQL 等关系型数据库。MongoDB 近年也在提升事务能力，但在这种极度依赖关系型操作的场景中，MySQL 的成熟度和生态更具优势</li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/010-java-%E5%A4%9A%E7%BA%BF%E7%A8%8B/" class="button inline prev">
+        Java 多线程 并发编程
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/004-mysql-redis-%E6%95%B0%E6%8D%AE%E4%B8%80%E8%87%B4%E6%80%A7/" class="button inline next">
+        Redis 和 MySQL 如何实现数据一致性
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

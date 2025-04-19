@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>SwiftUI UNUserNotificationCenterDelegate, UIApplicationDelegate, UISceneDelegate 协议 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. UNUserNotificationCenterDelegate &amp; UIApplicationDelegate 使用 UNUserNotificationCenterDelegate 时, 要记得初始化, 因为其方法都是在特定条件下被系统自动调用的, 如果你不告诉系统谁是你的 通知代表, 系统只会调用默认 通知代表的方法, 即什么都不做.
+更新: 最简单的初始化方法, 放在@main的View的 init 函数中: UNUserNotificationCenter.current().delegate = yourDelegate.self 即可, 下面只是为了解释 UNUserNotificationCenterDelegate 和 UIApplicationDelegate 是如何使用的, 另外 UIApplicationDelegate 的一些方法也都被 SceneDelegate 取代了, 了解更多: https://stackoverflow.com/a/56508769/16317008
+初始化方法一, 在实现 UNUserNotificationCenterDelegate 接口的类的 init() 函数中指定, 然后在程序启动时创建改该类的实例 (间接调用 init 函数)
+class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate { // 单例模式 static let shared = NotificationDelegate() override init() { super.init() // 告诉系统谁是你的 通知代表 是谁 UNUserNotificationCenter.current().delegate = self } func userNotificationCenter(willPresent notification...) { // In App, no sound, just banner. completionHandler([.banner]) } ... } class AppDelegate: NSObject, UIApplicationDelegate { // 应用 launch (杀后台再进) 时被调用, 从后台切入不会被调用 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -&gt; Bool { // 确保 NotificationDelegate 的 init 函数被调用, 即初始化 NotificationDelegate.shared _ = NotificationDelegate.shared return true } // 进入前台 active 的时候被调用 func applicationWillEnterForeground(_ application: UIApplication) { print(&#34;aaa&#34;) NotificationManager.clearBadges() } } @main struct todolistApp: App { // ApplicationDelegate 被指定为 AppDelegate, 程序启动会调用其application(...) 函数, 也就会初始化 NotificationDelegate.shared @UIApplicationDelegateAdaptor(AppDelegate.self) var appDeleagte init() { NotificationManager.requestNotificationPermission() } var body: some Scene { WindowGroup { HomeView() } } 方法二, 合并 UNUserNotificationCenterDelegate 和 UIApplicationDelegate
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/ios/swiftui/009-some-delegates/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="SwiftUI UNUserNotificationCenterDelegate, UIApplicationDelegate, UISceneDelegate 协议">
+<meta property="og:description" content="1. UNUserNotificationCenterDelegate &amp; UIApplicationDelegate 使用 UNUserNotificationCenterDelegate 时, 要记得初始化, 因为其方法都是在特定条件下被系统自动调用的, 如果你不告诉系统谁是你的 通知代表, 系统只会调用默认 通知代表的方法, 即什么都不做.
+更新: 最简单的初始化方法, 放在@main的View的 init 函数中: UNUserNotificationCenter.current().delegate = yourDelegate.self 即可, 下面只是为了解释 UNUserNotificationCenterDelegate 和 UIApplicationDelegate 是如何使用的, 另外 UIApplicationDelegate 的一些方法也都被 SceneDelegate 取代了, 了解更多: https://stackoverflow.com/a/56508769/16317008
+初始化方法一, 在实现 UNUserNotificationCenterDelegate 接口的类的 init() 函数中指定, 然后在程序启动时创建改该类的实例 (间接调用 init 函数)
+class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate { // 单例模式 static let shared = NotificationDelegate() override init() { super.init() // 告诉系统谁是你的 通知代表 是谁 UNUserNotificationCenter.current().delegate = self } func userNotificationCenter(willPresent notification...) { // In App, no sound, just banner. completionHandler([.banner]) } ... } class AppDelegate: NSObject, UIApplicationDelegate { // 应用 launch (杀后台再进) 时被调用, 从后台切入不会被调用 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -&gt; Bool { // 确保 NotificationDelegate 的 init 函数被调用, 即初始化 NotificationDelegate.shared _ = NotificationDelegate.shared return true } // 进入前台 active 的时候被调用 func applicationWillEnterForeground(_ application: UIApplication) { print(&#34;aaa&#34;) NotificationManager.clearBadges() } } @main struct todolistApp: App { // ApplicationDelegate 被指定为 AppDelegate, 程序启动会调用其application(...) 函数, 也就会初始化 NotificationDelegate.shared @UIApplicationDelegateAdaptor(AppDelegate.self) var appDeleagte init() { NotificationManager.requestNotificationPermission() } var body: some Scene { WindowGroup { HomeView() } } 方法二, 合并 UNUserNotificationCenterDelegate 和 UIApplicationDelegate
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/ios/swiftui/009-some-delegates/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="ios" />
+
+
+  <meta property="article:published_time" content="2024-07-03 10:37:20 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/ios/swiftui/009-some-delegates/">SwiftUI UNUserNotificationCenterDelegate, UIApplicationDelegate, UISceneDelegate 协议</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2024-07-03</time><span class="post-reading-time">5 分钟阅读 (1014 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/ios/">ios</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/swiftui/">swiftui</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/uikit/">uikit</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-unusernotificationcenterdelegate--uiapplicationdelegate">1. UNUserNotificationCenterDelegate &amp; UIApplicationDelegate<a href="#1-unusernotificationcenterdelegate--uiapplicationdelegate" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>使用 <code>UNUserNotificationCenterDelegate</code> 时, 要记得初始化, 因为其方法都是在特定条件下被系统自动调用的, 如果你不告诉系统谁是你的 通知代表, 系统只会调用默认 通知代表的方法, 即什么都不做.</p>
+<blockquote>
+<p>更新: 最简单的初始化方法, 放在@main的View的 init 函数中: <code>UNUserNotificationCenter.current().delegate = yourDelegate.self</code> 即可, 下面只是为了解释 UNUserNotificationCenterDelegate 和 UIApplicationDelegate 是如何使用的, 另外 UIApplicationDelegate 的一些方法也都被 SceneDelegate 取代了, 了解更多: <a href="https://stackoverflow.com/a/56508769/16317008">https://stackoverflow.com/a/56508769/16317008</a></p>
+</blockquote>
+<p>初始化方法一, 在实现 UNUserNotificationCenterDelegate 接口的类的 init() 函数中指定, 然后在程序启动时创建改该类的实例 (间接调用 init 函数)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">NotificationDelegate</span>: NSObject, UNUserNotificationCenterDelegate {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 单例模式</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">let</span> shared = NotificationDelegate()
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">override</span> <span style="color:#66d9ef">init</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">super</span>.<span style="color:#66d9ef">init</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 告诉系统谁是你的 通知代表 是谁</span>
+</span></span><span style="display:flex;"><span>    UNUserNotificationCenter.current().delegate = <span style="color:#66d9ef">self</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">userNotificationCenter</span>(willPresent notification...) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// In App, no sound, just banner.</span>
+</span></span><span style="display:flex;"><span>        completionHandler([.banner])
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">AppDelegate</span>: NSObject, UIApplicationDelegate {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 应用 launch (杀后台再进) 时被调用, 从后台切入不会被调用</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">application</span>(<span style="color:#66d9ef">_</span> application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = <span style="color:#66d9ef">nil</span>) -&gt; Bool {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 确保 NotificationDelegate 的 init 函数被调用, 即初始化 NotificationDelegate.shared</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">_</span> = NotificationDelegate.shared
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 进入前台 active 的时候被调用</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">applicationWillEnterForeground</span>(<span style="color:#66d9ef">_</span> application: UIApplication) {
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;aaa&#34;</span>)
+</span></span><span style="display:flex;"><span>        NotificationManager.clearBadges()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>@main
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">todolistApp</span>: App {
+</span></span><span style="display:flex;"><span>     <span style="color:#75715e">// ApplicationDelegate 被指定为 AppDelegate, 程序启动会调用其application(...) 函数, 也就会初始化 NotificationDelegate.shared</span>
+</span></span><span style="display:flex;"><span>    @UIApplicationDelegateAdaptor(AppDelegate.<span style="color:#66d9ef">self</span>) <span style="color:#66d9ef">var</span> appDeleagte
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">init</span>() {
+</span></span><span style="display:flex;"><span>        NotificationManager.requestNotificationPermission()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> body: some Scene {
+</span></span><span style="display:flex;"><span>        WindowGroup {
+</span></span><span style="display:flex;"><span>            HomeView()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>方法二, 合并  UNUserNotificationCenterDelegate 和 UIApplicationDelegate</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">UIKit</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">AppDelegate</span>: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// </span><span style="color:#75715e">MARK:</span><span style="color:#75715e"> - UIApplicationDelegate</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 应用 launch (杀后台再进) 时被调用, 从后台切入不会被调用</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">application</span>(<span style="color:#66d9ef">_</span> application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = <span style="color:#66d9ef">nil</span>) -&gt; Bool {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 这行代码很重要</span>
+</span></span><span style="display:flex;"><span>        UNUserNotificationCenter.current().delegate = <span style="color:#66d9ef">self</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">applicationWillEnterForeground</span>(<span style="color:#66d9ef">_</span> application: UIApplication) {
+</span></span><span style="display:flex;"><span>        NotificationManager.clearBadges()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// </span><span style="color:#75715e">MARK:</span><span style="color:#75715e"> - UNUserNotificationCenterDelegate</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Tells the delegate how to handle a notification that arrived while the app was running in the foreground. </span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">userNotificationCenter</span>(<span style="color:#66d9ef">_</span> center: UNUserNotificationCenter,
+</span></span><span style="display:flex;"><span>                                willPresent notification: UNNotification,
+</span></span><span style="display:flex;"><span>                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -&gt; Void) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// In App, no sound, just banner.</span>
+</span></span><span style="display:flex;"><span>        completionHandler([.banner])
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// When there is a notification, and user click the notification, this function will be called.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">userNotificationCenter</span>(<span style="color:#66d9ef">_</span> center: UNUserNotificationCenter,
+</span></span><span style="display:flex;"><span>                                didReceive response: UNNotificationResponse,
+</span></span><span style="display:flex;"><span>                                withCompletionHandler completionHandler: @escaping () -&gt; Void) {
+</span></span><span style="display:flex;"><span>        completionHandler()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// @main...</span>
+</span></span><span style="display:flex;"><span>@UIApplicationDelegateAdaptor(AppDelegate.<span style="color:#66d9ef">self</span>) <span style="color:#66d9ef">var</span> appDeleagte
+</span></span></code></pre></div><blockquote>
+<p>UIApplicationDelegate,  UNUserNotificationCenterDelegate 的方法都是在特定场景被自动调用的, 我们只需要写好方法体内的逻辑就好了, 要做的就是指定 UIApplicationDelegate 是谁, UNUserNotificationCenterDelegate  是谁:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#75715e">// 指定 UNUserNotificationCenterDelegate </span>
+</span></span><span style="display:flex;"><span>UNUserNotificationCenter.current().delegate = <span style="color:#66d9ef">self</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 指定 UIApplicationDelegate</span>
+</span></span><span style="display:flex;"><span>@UIApplicationDelegateAdaptor(AppDelegate.<span style="color:#66d9ef">self</span>) <span style="color:#66d9ef">var</span> appDeleagte
+</span></span></code></pre></div></blockquote>
+<h2 id="2-uiapplicationdelegate-不起作用">2. UIApplicationDelegate 不起作用?<a href="#2-uiapplicationdelegate-不起作用" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>我们的类实现了  <code>application(...)</code> 和 <code>applicationWillEnterForeground(...)</code>, 每次重启应用时, <code>application(...)</code> 确实被调用了, 但是每次切入进软件 (background -&gt; foreground) 时,  applicationWillEnterForeground() 并没有按预期被调用,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">AppDelegate</span>: NSObject, UIApplicationDelegate {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 应用 launch (杀后台再进) 时被调用, 从后台切入不会被调用</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">application</span>(<span style="color:#66d9ef">_</span> application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = <span style="color:#66d9ef">nil</span>) -&gt; Bool {
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;aaa&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">applicationWillEnterForeground</span>(<span style="color:#66d9ef">_</span> application: UIApplication) {
+</span></span><span style="display:flex;"><span>        NotificationManager.clearBadges()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>找到了<a href="https://stackoverflow.com/a/56508769/16317008">答案</a>:</p>
+<p>Here&rsquo;s how it works: If you have an &ldquo;<strong>Application Scene Manifest</strong>&rdquo; in your <code>Info.plist</code> and your app delegate has a <code>configurationForConnectingSceneSession</code> method, the <code>UIApplication</code> won&rsquo;t send background and foreground lifecycle messages to your app delegate. That means the code in these methods won&rsquo;t run:</p>
+<ul>
+<li><code>applicationDidBecomeActive</code></li>
+<li><code>applicationWillResignActive</code></li>
+<li><code>applicationDidEnterBackground</code></li>
+<li><code>applicationWillEnterForeground</code></li>
+</ul>
+<p>The app delegate will still receive the <code>willFinishLaunchingWithOptions:</code> and <code>didFinishLaunchingWithOptions:</code> method calls so any code in those methods will work as before.</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/07/27b6cf8dbd446ef169f0d7ced56bbb5d.jpg" alt=""></p>
+<p>我把 Application Scene Manifest 删除了, 依然不能正常工作, 好奇怪, 打算直接用 onReceive 或者复杂的情况使用 SceneDelegate.</p>
+<p>更新: 可能没办法根除 scene 吧? 刚开始学习, 太复杂了, 还是留着以后解决吧,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#75715e">// @main...</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> body: some Scene {
+</span></span><span style="display:flex;"><span>    WindowGroup {
+</span></span><span style="display:flex;"><span>        HomeView()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="3-app-三个状态的区别">3. APP 三个状态的区别<a href="#3-app-三个状态的区别" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>再看一下 applicationWillEnterForeground 文档:</p>
+<blockquote>
+<p>In iOS 4.0 and later, UIKit calls this method as part of the transition from the <strong>background</strong> to the <strong>active</strong> state.</p>
+</blockquote>
+<p><a href="https://developer.apple.com/documentation/uikit/uiapplication/state/">Apple Documents</a>对 state 的表述等于没说, 看到一个<a href="https://stackoverflow.com/a/40001368/16317008">很好解释</a>:</p>
+<ul>
+<li>
+<p><code>UIApplicationState.Active</code> - App is running in foreground. Simple.</p>
+</li>
+<li>
+<p><code>UIApplicationState.Inactive</code> - E.g. App was in the background and is opening through a push notification (transitioning atm). Or the control/notification center is presented above your app. You kind of see it, is in foreground.</p>
+</li>
+<li>
+<p><code>UIApplicationState.Background</code> - App is in the background, but still running. E.g. playing music. Then - this can take a while or not (depending on process you are running in background), but in one point your app is killed. You will see app&rsquo;s snapshot and icon between minimized apps, but the app will be <strong>launch</strong> again first.</p>
+</li>
+</ul>
+<p>注意, launch 和 简单的从后台切入到app页面不一样,</p>
+<h2 id="4-uiscenedelegate">4. UISceneDelegate<a href="#4-uiscenedelegate" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Before iOS 13, the main entry point for your app was the AppDelegate, and it was in charge of many logic and state handling. Now the work of the AppDelegate has been split, between the AppDelegate and the SceneDelegate [1 Dev].</p>
+<p>The AppDelegate being only responsible for the initial app setup, the SceneDelegate will handle and manage the way your app is shown [1 Dev].</p>
+<p>As an app could have multiple instances, a SceneDelegate will be called every time an instance of your app is created [1 Dev].</p>
+<blockquote>
+<p>Don’t create <code>UISceneDelegate</code> objects directly. Instead, specify the name of your custom delegate class as part of the configuration data for your scenes.</p>
+<p>You can specify this information in your app’s <code>Info.plist</code> file, <strong>or</strong> in the UISceneConfiguration object you return from your app delegate’s <code>application:configurationForConnectingSceneSession:options:</code> method [2 App].</p>
+</blockquote>
+<p>For the adivice of Apple Docs, we can write code like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">AppDelegate</span>: NSObject, UIApplicationDelegate {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">application</span>(<span style="color:#66d9ef">_</span> application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -&gt; UISceneConfiguration {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> sceneConfig = UISceneConfiguration(name: <span style="color:#66d9ef">nil</span>, sessionRole: connectingSceneSession.role)
+</span></span><span style="display:flex;"><span>        sceneConfig.delegateClass = SceneDelegate.<span style="color:#66d9ef">self</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> sceneConfig
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SceneDelegate</span>: NSObject, UIWindowSceneDelegate {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">sceneWillEnterForeground</span>(<span style="color:#66d9ef">_</span> scene: UIScene) {
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;App is entering the foreground&#34;</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>@main
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">MyApp</span>: App {
+</span></span><span style="display:flex;"><span>    @UIApplicationDelegateAdaptor(AppDelegate.<span style="color:#66d9ef">self</span>) <span style="color:#66d9ef">var</span> appDelegate
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="5-conclusion">5. Conclusion<a href="#5-conclusion" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>After iOS 13, the management responsibilities for app states were subdivided. Previously, all tasks were handled by the AppDelegate, but now they are divided between the AppDelegate and the SceneDelegate. The AppDelegate primarily handles initial setup, such as startup initialization, while the SceneDelegate manages the logic for scene transitions, such as moving the app from the foreground to the background, or from an active state to an inactive state.</p>
+<p>If you have setup tasks, asign them to AppDelegate, like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-swift" data-lang="swift"><span style="display:flex;"><span><span style="color:#66d9ef">final</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">AppDelegate</span>: NSObject, UIApplicationDelegate {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Get called when app launchs, launch is not simply from background to foreground.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">application</span>(<span style="color:#66d9ef">_</span> application: UIApplication, 
+</span></span><span style="display:flex;"><span>                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = <span style="color:#66d9ef">nil</span>) -&gt; Bool {
+</span></span><span style="display:flex;"><span>        NotificationManager.requestNotificationPermission()
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Specify user notification delegate.</span>
+</span></span><span style="display:flex;"><span>        UNUserNotificationCenter.current().delegate = <span style="color:#66d9ef">self</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">application</span>(<span style="color:#66d9ef">_</span> application: UIApplication, 
+</span></span><span style="display:flex;"><span>                     configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -&gt; UISceneConfiguration {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Specify scene delegate.</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> sceneConfig = UISceneConfiguration(name: <span style="color:#66d9ef">nil</span>, sessionRole: connectingSceneSession.role)
+</span></span><span style="display:flex;"><span>        sceneConfig.delegateClass = SceneDelegate.<span style="color:#66d9ef">self</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> sceneConfig
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>If you want do something for scene transitions, implement SceneDelegate.</p>
+<p><strong>References:</strong></p>
+<p>[1Dev] <a href="https://dev.to/kevinmaarek/add-a-scene-delegate-to-your-current-project-5on">Add a Scene Delegate to your current project - DEV Community</a></p>
+<p>[2App] <a href="https://developer.apple.com/documentation/uikit/uiscenedelegate?language=objc">UISceneDelegate | Apple Developer Documentation</a></p>
+<p>举例解释如何在 SwiftUI 中使用 UISceneDelegate 的 <strong>sceneWillEnterForeground() 方法</strong></p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/ios/swiftui/010-containers/" class="button inline prev">
+        SwiftUI Containers
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/ios/swiftui/008-errors/" class="button inline next">
+        Bugs
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

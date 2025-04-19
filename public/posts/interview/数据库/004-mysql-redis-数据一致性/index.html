@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Redis 和 MySQL 如何实现数据一致性 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. MySQL 的数据一致性 事务（Transaction）：MySQL 支持 ACID（原子性、一致性、隔离性、持久性）事务。通过 BEGIN、COMMIT 和 ROLLBACK，可以确保一组操作要么全部成功，要么全部回滚
+锁机制：MySQL 使用行锁、表锁或 MVCC（多版本并发控制）来处理并发访问，保证数据一致性。例如，InnoDB 引擎通过 MVCC 避免脏读和不可重复读
+主从复制：在主从架构中，MySQL 通过 binlog（二进制日志）记录所有写操作，主库将 binlog 同步到从库。虽然可能存在主从延迟（异步复制），可以通过配置半同步复制或同步复制来提高一致性
+2. Redis 的数据一致性 2.1. 单线程模型 - 天然原子性 Redis 的核心特性之一是单线程执行命令, 所有命令按顺序执行, 不存在并发竞争问题, 天然保证了操作的原子性和一致性,
+假设有两个客户端同时对同一个键 counter 执行 INCR（自增）操作, 由于单线程模型，Redis 会顺序处理这两个请求，最终结果一定是 counter 增加 2，而不是出现并发覆盖导致的错误值
+2.2. 超卖 秒杀系统 - 分布式锁 / Lua脚本 分布式锁 如基于 Redis 的 SETNX 或 ZooKeeper, SETNX 是 Redis 中的一个字符串操作命令, 全称是 &ldquo;SET if Not eXists&rdquo;, 常见流程:
+获取分布式锁（比如 Redis SETNX lock_key 1）
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/004-mysql-redis-%E6%95%B0%E6%8D%AE%E4%B8%80%E8%87%B4%E6%80%A7/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Redis 和 MySQL 如何实现数据一致性">
+<meta property="og:description" content="1. MySQL 的数据一致性 事务（Transaction）：MySQL 支持 ACID（原子性、一致性、隔离性、持久性）事务。通过 BEGIN、COMMIT 和 ROLLBACK，可以确保一组操作要么全部成功，要么全部回滚
+锁机制：MySQL 使用行锁、表锁或 MVCC（多版本并发控制）来处理并发访问，保证数据一致性。例如，InnoDB 引擎通过 MVCC 避免脏读和不可重复读
+主从复制：在主从架构中，MySQL 通过 binlog（二进制日志）记录所有写操作，主库将 binlog 同步到从库。虽然可能存在主从延迟（异步复制），可以通过配置半同步复制或同步复制来提高一致性
+2. Redis 的数据一致性 2.1. 单线程模型 - 天然原子性 Redis 的核心特性之一是单线程执行命令, 所有命令按顺序执行, 不存在并发竞争问题, 天然保证了操作的原子性和一致性,
+假设有两个客户端同时对同一个键 counter 执行 INCR（自增）操作, 由于单线程模型，Redis 会顺序处理这两个请求，最终结果一定是 counter 增加 2，而不是出现并发覆盖导致的错误值
+2.2. 超卖 秒杀系统 - 分布式锁 / Lua脚本 分布式锁 如基于 Redis 的 SETNX 或 ZooKeeper, SETNX 是 Redis 中的一个字符串操作命令, 全称是 &ldquo;SET if Not eXists&rdquo;, 常见流程:
+获取分布式锁（比如 Redis SETNX lock_key 1）
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/004-mysql-redis-%E6%95%B0%E6%8D%AE%E4%B8%80%E8%87%B4%E6%80%A7/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-03-08 09:50:19 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/004-mysql-redis-%E6%95%B0%E6%8D%AE%E4%B8%80%E8%87%B4%E6%80%A7/">Redis 和 MySQL 如何实现数据一致性</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-03-08</time><span class="post-reading-time">4 分钟阅读 (714 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9D%A2%E8%AF%95/">数据库面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-mysql-的数据一致性">1. MySQL 的数据一致性<a href="#1-mysql-的数据一致性" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>事务（Transaction）</strong>：MySQL 支持 ACID（原子性、一致性、隔离性、持久性）事务。通过 BEGIN、COMMIT 和 ROLLBACK，可以确保一组操作要么全部成功，要么全部回滚</p>
+<p><strong>锁机制</strong>：MySQL 使用行锁、表锁或 MVCC（多版本并发控制）来处理并发访问，保证数据一致性。例如，InnoDB 引擎通过 MVCC 避免脏读和不可重复读</p>
+<p><strong>主从复制</strong>：在主从架构中，MySQL 通过 binlog（二进制日志）记录所有写操作，主库将 binlog 同步到从库。虽然可能存在主从延迟（异步复制），可以通过配置半同步复制或同步复制来提高一致性</p>
+<h2 id="2-redis-的数据一致性">2. Redis 的数据一致性<a href="#2-redis-的数据一致性" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="21-单线程模型---天然原子性">2.1. 单线程模型 - 天然原子性<a href="#21-单线程模型---天然原子性" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Redis 的核心特性之一是单线程执行命令, 所有命令按顺序执行, 不存在并发竞争问题, 天然保证了操作的原子性和一致性,</p>
+<p>假设有两个客户端同时对同一个键 counter 执行 INCR（自增）操作, 由于单线程模型，Redis 会顺序处理这两个请求，最终结果一定是 counter 增加 2，而不是出现并发覆盖导致的错误值</p>
+<h3 id="22-超卖-秒杀系统---分布式锁--lua脚本">2.2. 超卖 秒杀系统 - 分布式锁 / Lua脚本<a href="#22-超卖-秒杀系统---分布式锁--lua脚本" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>分布式锁 如基于 Redis 的 <code>SETNX</code> 或 ZooKeeper, <code>SETNX</code> 是 Redis 中的一个<strong>字符串操作命令</strong>, 全称是 &ldquo;SET if Not eXists&rdquo;, 常见流程:</p>
+<ul>
+<li>
+<p>获取分布式锁（比如 <code>Redis SETNX lock_key 1</code>）</p>
+</li>
+<li>
+<p>检查库存（<code>SELECT stock FROM inventory WHERE id = 1</code>）</p>
+</li>
+<li>
+<p>如果库存足够，更新库存（<code>UPDATE inventory SET stock = stock - 1 WHERE id = 1 AND stock &gt; 0</code>）</p>
+</li>
+<li>
+<p>释放锁（<code>DEL lock_key</code>）</p>
+</li>
+</ul>
+<p>假设库存存储在 MySQL 中, 初始值为 10:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#75715e">-- 线程 1
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>SETNX lock_key <span style="color:#ae81ff">1</span>  <span style="color:#75715e">-- 获取锁成功
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">SELECT</span> stock <span style="color:#66d9ef">FROM</span> inventory <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>  <span style="color:#75715e">-- 返回 10
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">UPDATE</span> inventory <span style="color:#66d9ef">SET</span> stock <span style="color:#f92672">=</span> stock <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">AND</span> stock <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>  <span style="color:#75715e">-- 更新为 9
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>DEL lock_key  <span style="color:#75715e">-- 释放锁
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">-- 线程 2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>SETNX lock_key <span style="color:#ae81ff">1</span>  <span style="color:#75715e">-- 获取锁失败，等待
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">-- 锁释放后重试上述步骤
+</span></span></span></code></pre></div><blockquote>
+<p>分布式锁是传统解决方案, 而 Lua 脚本是一种更高效的替代方案, 需要注意的是 Lua 脚本只能在 Redis 服务器内部执行, 操作的数据必须是 Redis 中的键值对, 因此, 库存数据必须存储在 Redis 中, 更新也仅发生在 Redis 层面, 如果业务需要更新 MySQL 等持久化存储, 还需要额外的同步机制（比如将 Redis 更新结果异步写入 MySQL）, 如果宕机或数据未及时同步到 MySQL, 可能丢失更新</p>
+<p>而分布式锁的方案中, 我们只需要在业务逻辑获取分布式锁, 然后直接操作 MySQL 就行了</p>
+<p>Lua 脚本可以实现的原因是 Redis 是单线程模型, 而 Lua 脚本在 Redis 作为一个整体执行, 所以根本不存在数据竞争问题, 每个 Lua 脚本都是按顺序执行的</p>
+</blockquote>
+<h3 id="23-lua-脚本---类似回滚">2.3. Lua 脚本 - 类似回滚<a href="#23-lua-脚本---类似回滚" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Redis 的 Lua 脚本作为一个整体在 Redis 内部执行, 中间不会被打断, 是完全原子性的, Lua 脚本没有显式的“回滚”机制, 单若 Lua 脚本失败时整个脚本不生效, 因此无需回滚</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-lua" data-lang="lua"><span style="display:flex;"><span><span style="color:#75715e">-- Lua 脚本</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">local</span> key <span style="color:#f92672">=</span> KEYS[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>redis.call(<span style="color:#e6db74">&#39;SET&#39;</span>, key, <span style="color:#e6db74">&#39;value1&#39;</span>)
+</span></span><span style="display:flex;"><span>redis.call(<span style="color:#e6db74">&#39;SET&#39;</span>, key<span style="color:#f92672">..</span><span style="color:#e6db74">&#39;x&#39;</span>, <span style="color:#e6db74">&#39;value2&#39;</span>)  <span style="color:#75715e">-- 假设这里会失败</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;done&#39;</span>
+</span></span></code></pre></div><p>如果 <code>redis.call('SET', key..'x', 'value2')</code> 失败, 整个脚本中止, <code>key</code> 的值不会被设置为 <code>value1</code>, <strong>这不是回滚，而是脚本整体未提交</strong>,</p>
+<blockquote>
+<p>Redis 通过 MULTI 和 EXEC 提供有限的事务支持, 仅保证一组命令原子执行, 但<strong>不支持回滚</strong></p>
+<pre tabindex="0"><code>MULTI
+DECRBY account:A 100
+INCRBY account:B 100
+EXEC
+</code></pre></blockquote>
+<h3 id="24-持久化-主从复制">2.4. 持久化 主从复制<a href="#24-持久化-主从复制" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Redis 支持异步主从复制, 主节点将写操作异步同步到从节点, 虽然简单高效, 但可能导致<strong>短暂的数据不一致</strong>,</p>
+<p>Redis 通过持久化（RDB 和 AOF）和主从复制来增强数据一致性和可靠性，虽然这更多是针对数据持久性而非实时一致性</p>
+<ul>
+<li>
+<p><strong>RDB</strong>：通过生成数据库的快照来实现持久化, 它会将某个时间点 Redis 内存中的数据以二进制格式保存到一个 .rdb 文件中</p>
+<ul>
+<li>如果服务器在两次快照之间崩溃，可能会丢失部分数据（取决于快照频率）</li>
+<li>数据丢失可接受的场景</li>
+</ul>
+</li>
+<li>
+<p><strong>AOF</strong>：记录每条写命令, 当 Redis 宕机并重启时, 读取 AOF 文件, 从头到尾<strong>重新执行这些命令</strong>, 从而重建内存中的数据状态</p>
+<ul>
+<li>AOF 记录每条写命令，配合 appendfsync always 几乎不会丢失数据，即使是 everysec 也只可能丢失 1 秒的数据</li>
+<li>写命令需要追加到文件，同步策略（如 always）会增加磁盘 I/O，影响性能</li>
+</ul>
+</li>
+<li>
+<p><strong>主从复制</strong>：主节点将写操作同步到从节点，保证多副本一致性（最终一致性）</p>
+</li>
+</ul>
+<h2 id="3-mysql-和-redis-数据不同步">3. MySQL 和 Redis 数据不同步<a href="#3-mysql-和-redis-数据不同步" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>当 MySQL 数据更新（插入、修改、删除）时，Redis 中的缓存未及时更新或未更新，导致查询 Redis 时返回旧数据</p>
+<h3 id="31-缓存失效策略">3.1. <strong>缓存失效策略</strong><a href="#31-缓存失效策略" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li><strong>方法</strong>：在更新 MySQL 时，主动删除 Redis 中的对应缓存（而不是直接更新）</li>
+<li>步骤
+<ol>
+<li>更新 MySQL 数据</li>
+<li>删除 Redis 中对应的缓存键（DEL key）</li>
+<li>下次查询时，从 MySQL 重新加载数据到 Redis</li>
+</ol>
+</li>
+<li><strong>优点</strong>：避免了更新 Redis 的复杂逻辑，适合<strong>读多写少</strong>的场景</li>
+</ul>
+<h3 id="32-使用事务或消息队列">3.2. <strong>使用事务或消息队列</strong><a href="#32-使用事务或消息队列" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li><strong>方法</strong>：通过事务或消息队列（如 Kafka、RabbitMQ）确保 MySQL 和 Redis 的更新顺序一致</li>
+<li>步骤
+<ol>
+<li>将 MySQL 更新操作写入事务</li>
+<li>更新成功后，通过消息队列通知 Redis 更新</li>
+<li>消费消息并更新 Redis</li>
+</ol>
+</li>
+<li><strong>优点</strong>：解耦 MySQL 和 Redis 操作，支持分布式系统，容错性高</li>
+</ul>
+<h3 id="33-双写一致性cache-aside-模式">3.3. 双写一致性（Cache Aside 模式）<a href="#33-双写一致性cache-aside-模式" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ol>
+<li>读数据：先查 Redis，若命中则返回；若未命中，从 MySQL 查询并写入 Redis</li>
+<li>写数据：先更新 MySQL, 再删除 Redis 缓存</li>
+</ol>
+<blockquote>
+<p><strong>为什么先更新 MySQL, 再删除或更新 Redis 缓存?</strong></p>
+<p>在 MySQL 和 Redis 的组合中，MySQL 保存的是“权威数据”（source of truth），而 Redis 是缓存，用于提升性能。缓存的数据本质上是 MySQL 的副本。如果先更新 Redis 而 MySQL 更新失败（例如事务回滚、数据库宕机），会导致 Redis 中的数据是“脏数据”，与 MySQL 不一致。用户后续从缓存读取到错误数据，影响业务逻辑</p>
+</blockquote>
+<p><strong>双写一致性可能导致的问题</strong></p>
+<p><strong>T1</strong>: 线程 A 更新 MySQL, 将 balance 改为 200</p>
+<p><strong>T2</strong>: 线程 B 查询 Redis, 发现缓存中 balance 还是 100（因为线程 A 还没来得及删除缓存）</p>
+<p><strong>T3</strong>: 线程 B 返回旧值 100 给客户端</p>
+<p><strong>T4</strong>: 线程 A 删除 Redis 缓存</p>
+<ul>
+<li>在 T2 到 T4 这段时间，Redis 返回的是旧值 100，而 MySQL 已经是新值 200，出现了短暂的数据不一致</li>
+<li>不一致通常只存在于“更新 MySQL”和“删除 Redis”之间的短暂时间（通常是<strong>毫秒级</strong>）</li>
+<li>根本原因: 更新 MySQL 和删除 Redis 是两个独立的操作，无法保证原子性</li>
+</ul>
+<p><strong>解决方案1：配合分布式锁</strong></p>
+<p>思路：通过锁机制（例如分布式锁）确保更新操作和读取操作不会同时发生，避免并发竞争</p>
+<ul>
+<li>在更新操作时，获取一个针对该数据的锁（例如 Redis 分布式锁）</li>
+<li>更新 MySQL 和删除 Redis 完成后释放锁</li>
+<li>读取操作也需要检查锁，若被占用则等待</li>
+</ul>
+<p><strong>解决方案 2：先删除 Redis, 再更新 MySQL</strong></p>
+<p>可以先删除 Redis, 再更新 MySQL, 但更新 MySQL 之后 需要再删一次缓存</p>
+<ul>
+<li>
+<p>线程 A 删除 Redis 缓存</p>
+</li>
+<li>
+<p>线程 B 查询时未命中缓存, 从 MySQL 读取旧值并写回 Redis</p>
+</li>
+<li>
+<p>线程 A 更新 MySQL 为新值</p>
+</li>
+<li>
+<p>结果：Redis 又变成了旧值 (与 MySQL 不一致)</p>
+</li>
+</ul>
+<p>延迟双删的目的正是为了在后续操作中纠正这种不一致, 确保系统最终达到一致性, 在 “先删除 Redis，再更新 MySQL” 的基础上, 更新 MySQL 后再延迟一段时间再次删除 Redis 缓存, 以清理可能被其他线程回写的脏数据:</p>
+<p><strong>T1</strong>: 线程 A 删除 Redis 缓存</p>
+<p><strong>T2</strong>: 线程 B 查询, 未命中缓存, 从 MySQL 读取旧值 100 并写回 Redis</p>
+<p><strong>T3</strong>: 线程 A 更新 MySQL 为 200</p>
+<p><strong>T4</strong>: 线程 A 延迟 500ms 后再次删除 Redis 缓存</p>
+<p><strong>T5</strong>: 下次查询从 MySQL 加载新值 200</p>
+<p><strong>缺点</strong>：仍然存在短暂不一致的风险（T2 到 T4 的窗口）</p>
+<h2 id="4-综合实践-秒杀系统">4. 综合实践 秒杀系统<a href="#4-综合实践-秒杀系统" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>延迟双删是为了保证缓存和数据库的一致性, 而 分布式锁机制 是为了 保证数据库的数据一致性, 在秒杀系统中, 商品库存是一个核心数据, 假设某个商品初始库存为100件, 用户通过秒杀活动购买, 每次购买会减少库存, 我们需要确保:</p>
+<ol>
+<li>数据库的数据一致性：库存不会超卖, 即高并发下不会出现多个线程同时扣减库存导致负值的情况</li>
+<li>缓存与数据库的一致性：Redis缓存中的库存数据与MySQL数据库中的库存数据最终一致</li>
+</ol>
+<p><strong>系统架构</strong></p>
+<ul>
+<li>数据库（MySQL）：存储商品的实际库存</li>
+<li>缓存（Redis）：存储库存的缓存数据，用于快速查询</li>
+<li>分布式锁：通过Redis（如SETNX命令）实现分布式锁，确保高并发下对数据库的操作是串行化的</li>
+</ul>
+<p><strong>操作流程</strong></p>
+<ol>
+<li><strong>线程 A</strong> 尝试获取商品 1001 的分布式锁（例如 <code>lock_{1001}</code>），抢锁成功</li>
+<li><strong>线程 A</strong> 删除 Redis 缓存（Key = <code>product_stock_{1001}</code>）</li>
+<li><strong>线程 A</strong> 从数据库查询当前库存（假设查到的是 100），进行库存检查 → 大于 0，则更新库存为 99（<code>UPDATE ... SET stock = 99 WHERE product_id = 1001</code>）</li>
+<li><strong>线程 A</strong> 提交事务，数据库此时真正更新为库存 99</li>
+<li><strong>线程 A</strong> 处理完数据库更新后，开启一个线程或通过定时任务，<strong>延迟</strong>一段时间（比如 500ms~1000ms）后，再执行一次“删除 Redis 缓存（Key = <code>product_stock_{1001}</code>）”的操作</li>
+<li><strong>线程 A</strong> 释放分布式锁</li>
+</ol>
+<p>此时，如果在 A 更新完数据库与“延迟删除缓存”之间，有<strong>线程 B</strong>进来要操作库存，会发生什么呢？</p>
+<ul>
+<li>线程 B 试图抢锁，如果抢锁成功了（说明 A 已经释放了锁）：
+<ul>
+<li>线程 B 也会先删缓存，然后去读数据库，此时读到的已经是更新后的库存 <code>99</code>，并做后续检查 + 更新操作</li>
+<li>同理，B 更新完也会再延迟双删，以保证缓存后续查询一定能用到最新数据</li>
+</ul>
+</li>
+</ul>
+<p>由于有分布式锁的存在，在“检查 + 更新”整个过程<strong>都是串行化</strong>的，不会出现两条并发写操作抢数据库，导致超卖或脏写。同时，“延迟双删”依然起到确保“缓存最终一致”的作用。</p>
+<p><strong>当我们使用了分布式锁, 延迟双删 还有必要吗?</strong></p>
+<p>因为我的想法是, 线程A获取分布式锁, 然后检查 + 更新, 而更新由 (比如删除缓存 + 更新数据库)组成, 之后 A 释放锁, 为什么 线程B 会读取到缓存里的旧数据?</p>
+<p>我忽略了一个情况, 我们的分布式锁一般都是在业务逻辑上实现的, 比如某个方法, 比如用户购买, 我们为了防止 检查 + 更新 操作造成的数据不一致, 可是, 我忽略了有的方法可能只是为了读数据 (读缓存, 如不存在, 读取数据库, 然后写入缓存), 这样的情况分布式锁是避免不了的, 因为我们不可能所有操作读写都加锁, 这样会限制性能, 所以为了防止 在 线程 A 删除缓存 和 更新数据库 这个时间之间, 有其他线程因 仅读取数据造成 旧数据 又重新写会 缓存, 线程 A 在执行 删除缓存 + 庚勋数据库操作之后, 需要再进行一次删除, 即延迟双删,</p>
+<p>除此之外, 当 A 删除缓存后更新数据库 → <strong>与</strong> → B 抢锁失败 / 等待 → <strong>与</strong> → A 延迟再删缓存期间，假如出现一些读请求（比如线程 C），可能读到的还是旧值——如果在线程A第二次删除缓存后, 线程C才进行旧数据回写, 又出现缓存旧数据问题了, 不过这概率很小</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/005-%E5%B1%9E%E6%80%A7%E4%B8%8D%E5%9B%BA%E5%AE%9A%E8%A1%A8%E8%AE%BE%E8%AE%A1/" class="button inline prev">
+        属性不固定如何设计 MySQL MongoDB -- 软件开发一面
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/006-spring-cloud-building/" class="button inline next">
+        Spring Cloud 核心组件和配置
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

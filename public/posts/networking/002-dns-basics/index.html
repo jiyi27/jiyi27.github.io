@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>DNS Concepts (NameServer(NS), DNS Records and Caching) :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. DNS DNS stands for Domain Name System, and it is a distributed hierarchical system that translates human-readable domain names into IP addresses. The process of DNS resolution involves converting a hostname (such as www.example.com) into a computer-friendly IP address (such as 192.168.1.1).
+The main components of the DNS are DNS servers. All DNS servers fall into one of four categories: Recursive resolvers, root nameservers, TLD nameservers, and authoritative nameservers.
+1.1. DNS stub resolver Before introduce the DNS servers, there is a software runs on the client whcih called DNS stub resolver should be noted.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/networking/002-dns-basics/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="DNS Concepts (NameServer(NS), DNS Records and Caching)">
+<meta property="og:description" content="1. DNS DNS stands for Domain Name System, and it is a distributed hierarchical system that translates human-readable domain names into IP addresses. The process of DNS resolution involves converting a hostname (such as www.example.com) into a computer-friendly IP address (such as 192.168.1.1).
+The main components of the DNS are DNS servers. All DNS servers fall into one of four categories: Recursive resolvers, root nameservers, TLD nameservers, and authoritative nameservers.
+1.1. DNS stub resolver Before introduce the DNS servers, there is a software runs on the client whcih called DNS stub resolver should be noted.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/networking/002-dns-basics/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="计算机网络" />
+
+
+  <meta property="article:published_time" content="2023-10-31 09:50:20 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/networking/002-dns-basics/">DNS Concepts (NameServer(NS), DNS Records and Caching)</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-10-31</time><span class="post-reading-time">6 分钟阅读 (1091 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/dns/">dns</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-dns">1. DNS<a href="#1-dns" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>DNS stands for Domain Name System, and it is a distributed hierarchical system that translates human-readable domain names into IP addresses. The process of <strong>DNS resolution</strong> involves converting a hostname (such as <a href="https://www.example.com">www.example.com</a>) into a computer-friendly IP address (such as 192.168.1.1).</p>
+<p>The main components of the DNS are DNS servers. All DNS servers fall into one of four categories: Recursive resolvers, root nameservers, TLD nameservers, and authoritative nameservers.</p>
+<h3 id="11-dns-stub-resolver">1.1. DNS stub resolver<a href="#11-dns-stub-resolver" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Before introduce the DNS servers, there is a software runs on the client whcih called DNS stub resolver should be noted.</p>
+<p>DNS stub resolver runs on the client machine, which is used to initiate DNS queries, and it sends the DNS query to the recursive resolver, which then performs the actual DNS resolution process (usually provided by your internet service provider (ISP) or a public DNS resolver like Google&rsquo;s 8.8.8.8 or Cloudflare&rsquo;s 1.1.1.1).</p>
+<p>Learn more: <a href="https://davidzhu.xyz/post/network/002-dns/">DNS Stub and Recursive Resolver - Config Files - David&rsquo;s Blog</a></p>
+<h3 id="12-recursive-resolver">1.2. Recursive resolver<a href="#12-recursive-resolver" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>As we mentioned above, recursive resolver performs the actual <strong>DNS resolution</strong> process, and it&rsquo;s a DNS server actually, usually provided by your internet service provider (ISP) or a public DNS resolver like Google&rsquo;s <code>8.8.8.8</code> or Cloudflare&rsquo;s <code>1.1.1.1</code>.</p>
+<p>A recursive resolver (also known as a DNS recursor) is the first stop in a DNS query. The recursive resolver acts as a middleman between a client and a DNS nameserver. When a recursive resolver receives a query from a stub resolver, a recursive resolver will either respond with cached data, or send a request to a <em>root nameserver</em>, followed by another request to a <em>TLD nameserver</em>, and then one last request to an <em>authoritative nameserver</em>. After receiving a response from the authoritative nameserver containing the requested IP address, the recursive resolver then sends a response to the client.</p>
+<p>During this process, <strong>the recursive resolver will cache information received from authoritative nameservers</strong>. When a client requests the IP address of a domain name that was recently requested by another client, the resolver can circumvent the process of communicating with the nameservers, and just deliver the client the requested record from its cache.</p>
+<h3 id="13-root-nameserver--tld-nameserver">1.3. Root nameserver &amp; TLD nameserver<a href="#13-root-nameserver--tld-nameserver" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>The 13 DNS root nameservers are known to every recursive resolver, and they are the first stop in a recursive resolver’s quest for DNS records. A root server accepts a recursive resolver’s query which includes a domain name, and the root nameserver responds by directing the recursive resolver to a TLD nameserver, based on the extension of that domain (.com, .net, .org, etc.).</p>
+<p>A TLD nameserver maintains information for all the domain names that share a common domain extension, such as .com, .net, or whatever comes after the last dot in a URL. For example, a .com TLD nameserver contains information for every website that ends in ‘.com’. If a user was searching for google.com, after receiving a response from a root nameserver, the recursive resolver would then send a query to a .com TLD nameserver, which would respond by pointing to the authoritative nameserver (see below) for that domain.</p>
+<h3 id="14-authoritative-nameserver">1.4. Authoritative nameserver<a href="#14-authoritative-nameserver" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>When a recursive resolver <strong>receives a response from</strong> a TLD nameserver, that response will direct the resolver to an authoritative nameserver.</p>
+<p>The authoritative nameserver contains information specific to the domain name it serves (e.g. google.com) and it can provide a recursive resolver with the IP address of that server found in the <a href="https://www.cloudflare.com/learning/dns/dns-records/dns-a-record/">DNS A record</a>, or if the domain has a <a href="https://www.cloudflare.com/learning/dns/dns-records/dns-cname-record/">CNAME record</a> (alias) it will provide the recursive resolver with an alias domain, at which point the recursive resolver will have to perform a whole new DNS lookup to procure a record from an authoritative nameserver (often an A record containing an IP address).</p>
+<blockquote>
+<p>DNS A record is actually a map between the domain name and its ipv4 address.</p>
+<p>DNS CNAME record is an alias for that domain.</p>
+</blockquote>
+<p>After buy a domain on a website, the most common operations we use are that <strong>change its nameservers</strong> and <strong>update its DNS records</strong>:</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/c9d1480f89adaf900fcc9d104cb8e921.png" alt=""></p>
+<p>Here, Change the NameServers option if to change the <strong>authoritative nameserver</strong> of your domain, and update the DNS records is to set ip address (A record) or alias (CNAME record) for your domain.</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/660f9f8211ebaeac8ffea3c050c94d78.png" alt=""></p>
+<h2 id="2-dns-queries">2. DNS queries<a href="#2-dns-queries" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<ol>
+<li><strong>Recursive query</strong> - In a recursive query, a DNS client requires that a DNS server (typically a DNS recursive resolver) will respond to the client with either the requested resource record or an error message if the resolver can&rsquo;t find the record.</li>
+<li><strong>Iterative query</strong> - in this situation the DNS client will allow a DNS server to return the best answer it can.</li>
+<li><strong>Non-recursive query</strong>: learn more: <a href="https://www.cloudflare.com/learning/dns/what-is-dns/">What is DNS? | How DNS works | Cloudflare</a></li>
+</ol>
+<h2 id="3-dns-caching">3. DNS caching<a href="#3-dns-caching" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-browser-dns-caching">3.1. Browser DNS caching<a href="#31-browser-dns-caching" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Modern web browsers are designed by default to cache DNS records for a set amount of time. The purpose here is obvious; the closer the DNS caching occurs to the web browser, the fewer processing steps must be taken in order to check the cache and make the correct requests to an IP address. When a request is made for a DNS record, the browser cache is the first location checked for the requested record.</p>
+<p>In Chrome, you can see the status of your DNS cache by going to <code>chrome://net-internals/#dns</code>.</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/6666ce8db7adb7bc4e333d94ae70cb1d.png" alt=""></p>
+<h4 id="32-operating-system-os-level-dns-caching">3.2. Operating system (OS) level DNS caching<a href="#32-operating-system-os-level-dns-caching" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p>The operating system level DNS resolver is the second and last local stop before a DNS query leaves your machine. The process inside your operating system that is designed to handle this query is commonly called a “<strong>stub resolver</strong>” or <strong>DNS client</strong>. When a stub resolver gets a request from an application, it first checks its own cache to see if it has the record. If it does not, it then sends a DNS query (with a recursive flag set), outside the local network to a DNS recursive resolver inside the Internet service provider (ISP).</p>
+<p>When the recursive resolver inside the ISP receives a DNS query, like all previous steps, it will also check to see if the requested host-to-IP-address translation is already stored inside its local persistence layer.</p>
+<p>Source: <a href="https://www.cloudflare.com/learning/dns/what-is-dns/">What is DNS? | How DNS works | Cloudflare</a></p>
+<blockquote>
+<p>Note that checking <code>/etc/hosts</code> happens before DNS.</p>
+</blockquote>
+<h3 id="33-recursive-resolver-caching">3.3. Recursive resolver caching<a href="#33-recursive-resolver-caching" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>We have mentioned above, during DNS resolution process, <strong>the recursive resolver will cache information received from authoritative nameservers</strong>.</p>
+<p>A DNS resolver will save responses to IP address queries for a certain amount of time. In this way, the resolver can respond to future queries much more quickly, without needing to communicate with the many servers involved in the typical DNS resolution process.</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/networking/006-commands-in-network/" class="button inline prev">
+        Tools Commonly Used in Networking
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/networking/003-dhcp/" class="button inline next">
+        DHCP Basics
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

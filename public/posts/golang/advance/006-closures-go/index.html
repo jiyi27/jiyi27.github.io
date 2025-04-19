@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Function Closures - Go :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. What is closure Go functions may be closures. A closure is a function value that references variables from outside its body. The function may access and assign to the referenced variables; in this sense the function is &ldquo;bound&rdquo; to the variables.
+Closures - A Tour of Go
+func adder() func(int) (int, *int) { sum := 0 return func(x int) (int, *int) { sum &#43;= x return sum, &amp;sum } } func main() { pos, neg := adder(), adder() for i := 1; i &lt;= 3; i&#43;&#43; { sum, addr := pos(i) fmt.Println(&#34;pos: &#34;, sum, &#34; &#34;, addr) sum, addr = neg(-i) fmt.Println(&#34;neg: &#34;, sum, &#34; &#34;, addr) } } //-------------------------- pos: 1 0x140000b0018 neg: -1 0x140000b0020 pos: 3 0x140000b0018 neg: -3 0x140000b0020 pos: 6 0x140000b0018 neg: -6 0x140000b0020 As we see above, when the anonymous function defined in the adder() access sum, it looks like accessing a global variable, even the function adder() has returned we still can access variable sum. However, there are &ldquo;two&rdquo; sum actually, they are isolated and each has its own address.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/advance/006-closures-go/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Function Closures - Go">
+<meta property="og:description" content="1. What is closure Go functions may be closures. A closure is a function value that references variables from outside its body. The function may access and assign to the referenced variables; in this sense the function is &ldquo;bound&rdquo; to the variables.
+Closures - A Tour of Go
+func adder() func(int) (int, *int) { sum := 0 return func(x int) (int, *int) { sum &#43;= x return sum, &amp;sum } } func main() { pos, neg := adder(), adder() for i := 1; i &lt;= 3; i&#43;&#43; { sum, addr := pos(i) fmt.Println(&#34;pos: &#34;, sum, &#34; &#34;, addr) sum, addr = neg(-i) fmt.Println(&#34;neg: &#34;, sum, &#34; &#34;, addr) } } //-------------------------- pos: 1 0x140000b0018 neg: -1 0x140000b0020 pos: 3 0x140000b0018 neg: -3 0x140000b0020 pos: 6 0x140000b0018 neg: -6 0x140000b0020 As we see above, when the anonymous function defined in the adder() access sum, it looks like accessing a global variable, even the function adder() has returned we still can access variable sum. However, there are &ldquo;two&rdquo; sum actually, they are isolated and each has its own address.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/advance/006-closures-go/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="golang" />
+
+
+  <meta property="article:published_time" content="2023-09-18 23:32:55 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/advance/006-closures-go/">Function Closures - Go</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-09-18</time><span class="post-reading-time">7 分钟阅读 (1473 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%97%AD%E5%8C%85/">闭包</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-what-is-closure">1. What is closure<a href="#1-what-is-closure" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<blockquote>
+<p>Go functions may be closures. A closure is a function value that references variables from outside its body. The function may access and assign to the referenced variables; in this sense the function is &ldquo;bound&rdquo; to the variables.</p>
+<p><a href="https://go.dev/tour/moretypes/25">Closures - A Tour of Go</a></p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">adder</span>() <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">int</span>) (<span style="color:#66d9ef">int</span>, <span style="color:#f92672">*</span><span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">sum</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">x</span> <span style="color:#66d9ef">int</span>) (<span style="color:#66d9ef">int</span>, <span style="color:#f92672">*</span><span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sum</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">x</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">sum</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">sum</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">pos</span>, <span style="color:#a6e22e">neg</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">adder</span>(), <span style="color:#a6e22e">adder</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">3</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sum</span>, <span style="color:#a6e22e">addr</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">pos</span>(<span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;pos:  &#34;</span>, <span style="color:#a6e22e">sum</span>, <span style="color:#e6db74">&#34; &#34;</span>, <span style="color:#a6e22e">addr</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sum</span>, <span style="color:#a6e22e">addr</span> = <span style="color:#a6e22e">neg</span>(<span style="color:#f92672">-</span><span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;neg: &#34;</span>, <span style="color:#a6e22e">sum</span>, <span style="color:#e6db74">&#34; &#34;</span>, <span style="color:#a6e22e">addr</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//--------------------------</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pos</span>:   <span style="color:#ae81ff">1</span>   <span style="color:#ae81ff">0x140000b0018</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">neg</span>:  <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>   <span style="color:#ae81ff">0x140000b0020</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pos</span>:   <span style="color:#ae81ff">3</span>   <span style="color:#ae81ff">0x140000b0018</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">neg</span>:  <span style="color:#f92672">-</span><span style="color:#ae81ff">3</span>   <span style="color:#ae81ff">0x140000b0020</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pos</span>:   <span style="color:#ae81ff">6</span>   <span style="color:#ae81ff">0x140000b0018</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">neg</span>:  <span style="color:#f92672">-</span><span style="color:#ae81ff">6</span>   <span style="color:#ae81ff">0x140000b0020</span>
+</span></span></code></pre></div><p>As we see above,  when the anonymous function defined in the <code>adder()</code> access <code>sum</code>, it looks like accessing a global variable, even the function <code>adder()</code> has returned we still can access variable <code>sum</code>. However, there are &ldquo;two&rdquo; <code>sum</code> actually, they are isolated and each has its own address.</p>
+<p>You should note that we return an anonymous function here, function is first-class citizen in golang just like javascript, it&rsquo;s a gift don&rsquo;t fear it.</p>
+<h2 id="2-use-cases">2. Use cases<a href="#2-use-cases" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h2 id="21-pass-behaviour">2.1. Pass behaviour<a href="#21-pass-behaviour" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Mux</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mu</span>    <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">Mutex</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">conns</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>]<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">conn</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">conns</span>[<span style="color:#a6e22e">conn</span>.<span style="color:#a6e22e">RemoteAddr</span>()] = <span style="color:#a6e22e">conn</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">Remove</span>(<span style="color:#a6e22e">addr</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>	delete(<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">conns</span>, <span style="color:#a6e22e">addr</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">SendMsg</span>(<span style="color:#a6e22e">msg</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">conn</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">conns</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">WriteString</span>(<span style="color:#a6e22e">conn</span>, <span style="color:#a6e22e">msg</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Is this what we call idiomatic in Go? Maybe. This is our first proverb <strong>don&rsquo;t mediate the access to shared memory with locks and mutexes</strong> instead share that memory by communicating.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Mux</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">add</span>     <span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">remove</span>  <span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">sendMsg</span> <span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">conn</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">add</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">conn</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">Remove</span>(<span style="color:#a6e22e">addr</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">remove</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">addr</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">SendMsg</span>(<span style="color:#a6e22e">msg</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">sendMsg</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">msg</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">loop</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// only one goroutine can access this map, </span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// don&#39;t need lock</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">conns</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>]<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">select</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">conn</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">add</span>:
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">conns</span>[<span style="color:#a6e22e">conn</span>.<span style="color:#a6e22e">RemoteAddr</span>()] = <span style="color:#a6e22e">conn</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">addr</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">remove</span>:
+</span></span><span style="display:flex;"><span>			delete(<span style="color:#a6e22e">conns</span>, <span style="color:#a6e22e">addr</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">msg</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">sendMsg</span>:
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">conn</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">conns</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">WriteString</span>(<span style="color:#a6e22e">conn</span>, <span style="color:#a6e22e">msg</span>)
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>We don&rsquo;t need the mutex anymore because the shared sate this <code>conns</code> map is now local to the <code>loop()</code> function, it can&rsquo;t be mutated by anybody else. There cannot be a (data) race because it only exists within the scope of that function.</p>
+<p>But there&rsquo;s still a lot of hard-coded logic in here, <code>loop()</code> only knows how to do three things, it only knows how to <code>add</code>, <code>remove</code> and <code>sendMsg</code>. If we wanted to extend our <code>Mux</code>,  it would involve three things</p>
+<ul>
+<li>adding a channel</li>
+<li>adding a helper (function) to send data over that channel</li>
+<li>and then opening up the <code>select</code> logic inside loop and adding the knowledge of how to process  that data</li>
+</ul>
+<p>But we can rewrite our <code>Mux</code> to use first-class functions <strong>to pass the behavior we want to be executed</strong> not the data to interpret.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Mux</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ops</span> <span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>]<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">conn</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">ops</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">m</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>]<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">m</span>[<span style="color:#a6e22e">conn</span>.<span style="color:#a6e22e">RemoteAddr</span>()] = <span style="color:#a6e22e">conn</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">Remove</span>(<span style="color:#a6e22e">addr</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">ops</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">m</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>]<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>) {
+</span></span><span style="display:flex;"><span>		delete(<span style="color:#a6e22e">m</span>, <span style="color:#a6e22e">addr</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">SendMsg</span>(<span style="color:#a6e22e">msg</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">ops</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">m</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>]<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">conn</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">m</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">WriteString</span>(<span style="color:#a6e22e">conn</span>, <span style="color:#a6e22e">msg</span>)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">loop</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">conns</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>]<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">op</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">ops</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">op</span>(<span style="color:#a6e22e">conns</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>But there are a few little problems to fix, the lack of error handling inside <code>sendMsg</code>,  if there&rsquo;s an error of writing to one of the connections that&rsquo;s just going to be discarded. To handle the error generated inside the anonymous function that we pass into loop we need to create a channel to communicate with the result of the operation.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">SendMsg</span>(<span style="color:#a6e22e">msg</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">result</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">error</span>, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">ops</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">m</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>]<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">conn</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">m</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">WriteString</span>(<span style="color:#a6e22e">conn</span>, <span style="color:#a6e22e">msg</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">result</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">result</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">result</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">PrivateMsg</span>(<span style="color:#a6e22e">addr</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>, <span style="color:#a6e22e">msg</span> <span style="color:#66d9ef">string</span>) (<span style="color:#66d9ef">int</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">result</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">ops</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">m</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>]<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">result</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">m</span>[<span style="color:#a6e22e">addr</span>]
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">conn</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">result</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">conn</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;client %v not registered&#34;</span>, <span style="color:#a6e22e">addr</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">WriteString</span>(<span style="color:#a6e22e">conn</span>, <span style="color:#a6e22e">msg</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>I was wondering can I just replace the channel with just a error value in <code>sendMsg()</code> method, like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mux</span>) <span style="color:#a6e22e">SendMsg</span>(<span style="color:#a6e22e">msg</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">result</span> <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">ops</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">m</span> <span style="color:#66d9ef">map</span>[<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Addr</span>]<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">conn</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">m</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">WriteString</span>(<span style="color:#a6e22e">conn</span>, <span style="color:#a6e22e">msg</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">result</span> = <span style="color:#a6e22e">err</span>
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">result</span> = <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">result</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The answer is no, I cann&rsquo;t, the <code>result</code> has to be a channel here. Because the closure defined in <code>SendMsg</code> is sent somewhere else (via the <code>m.ops</code> chan) to get executed - I need to get the <code>result</code> from the channel to block the <code>SendMsg</code> at the last <code>return &lt;-result</code> - the <code>result</code> channel is a synchronization point. <a href="https://www.reddit.com/r/golang/comments/16mfvne/comment/k19lmtm/?utm_source=share&amp;utm_medium=web2x&amp;context=3">source</a></p>
+<ul>
+<li>First class functions let you pass around behaviour, not just dead data that must be interpreted.</li>
+<li>First class functions aren&rsquo;t new or novel.</li>
+<li>Like the other features, first class functions should be used with restraint.</li>
+<li>First class functions are something that every Go programmer should have in their toolbox.</li>
+<li>First class functions aren&rsquo;t hard, just a little unfamiliar, and that is something that can be overcome with practice.</li>
+</ul>
+<blockquote>
+<p>Next time you define an API it has just one method I want you to ask yourself: should this really just be a function.</p>
+</blockquote>
+<p>Don&rsquo;t overuse channel, learn more: <a href="https://davidzhu.xyz/post/golang/advance/008-do-not-overuse-cahnnel">https://davidzhu.xyz/post/golang/advance/008-do-not-overuse-cahnnel</a></p>
+<p>Source: <a href="https://www.youtube.com/watch?v=5buaPyJ0XeQ&amp;list=WL&amp;index=1">dotGo 2016 - Dave Cheney - Do not fear first class functions</a></p>
+<pre><code>&lt;div style=&quot;position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;&quot;&gt;
+  &lt;iframe allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; allowfullscreen=&quot;allowfullscreen&quot; loading=&quot;eager&quot; referrerpolicy=&quot;strict-origin-when-cross-origin&quot; src=&quot;https://www.youtube.com/embed/5buaPyJ0XeQ?autoplay=0&amp;amp;controls=1&amp;amp;end=0&amp;amp;loop=0&amp;amp;mute=0&amp;amp;start=0&quot; style=&quot;position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;&quot; title=&quot;YouTube video&quot;&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+</code></pre>
+<h2 id="22-creating-middleware">2.2. Creating middleware<a href="#22-creating-middleware" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Middleware is basically a fancy term for reusable function that can run code both before and after your code designed to handle a web requst. In Go these are typically accomplished with closures, but in different programming languages they may be achieved in other ways.</p>
+<p>Middleware is very helpful in scenarios where we need to perform common tasks on incoming HTTP requests, such as authentication, authorization, request validation, and logging. Middleware allows us to apply these tasks consistently across our application, reducing code duplication and making it easier to maintain and modify our code.</p>
+<p>There are several middleware functions that are commonly used in web applications, including:</p>
+<ol>
+<li><strong>Authentication middleware</strong>: This middleware checks whether the user is authenticated and authorized to access the requested resource.</li>
+<li><strong>Logging middleware</strong>: This middleware logs information about incoming requests, including request method, URL, headers, and response status.</li>
+<li><strong>Error handling middleware</strong>: This middleware catches errors that occur during request handling and returns an appropriate error response to the client.</li>
+<li><strong>Request validation middleware</strong>: This middleware validates incoming requests to ensure that they meet certain criteria, such as HTTP method, headers, query parameters, and request body content.</li>
+<li><strong>Caching middleware:</strong> This middleware caches responses to certain requests to improve performance and reduce server load.</li>
+<li><strong>Request Tracing</strong>: This middleware is used to trace the path of a request through a web application. It captures relevant information about the request and logs it for monitoring and debugging purposes.</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;/hello&#34;</span>, <span style="color:#a6e22e">timed</span>(<span style="color:#a6e22e">hello</span>))
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:3000&#34;</span>, <span style="color:#66d9ef">nil</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">timed</span>(<span style="color:#a6e22e">f</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>)) <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">start</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">f</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">r</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">end</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;The request took&#34;</span>, <span style="color:#a6e22e">end</span>.<span style="color:#a6e22e">Sub</span>(<span style="color:#a6e22e">start</span>))
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">hello</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Fprintln</span>(<span style="color:#a6e22e">w</span>, <span style="color:#e6db74">&#34;&lt;h1&gt;Hello!&lt;/h1&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Notice that our <code>timed()</code> function takes in a function that could be used as a handler function, and returns a function of the same type, but the returned function is different that the one passed it. The closure being returned logs the current time, calls the original function, and finally logs the end time and prints out the duration of the request. All while being agnostic to what is actually happening inside of our handler function.</p>
+<p>Now all we need to do to time our handlers is to wrap them in <code>timed(handler)</code> and pass the closure to the <code>http.HandleFunc()</code> function call.</p>
+<p>References:</p>
+<ul>
+<li><a href="https://www.calhoun.io/5-useful-ways-to-use-closures-in-go/">5 Useful Ways to Use Closures in Go - Calhoun.io</a></li>
+<li><a href="https://medium.com/@ansujain/mastering-middleware-in-go-tips-tricks-and-real-world-use-cases-79215e72b4a8">Mastering Middleware in Go: Tips, Tricks, and Real-World Use Cases | by ansu jain | Medium</a></li>
+<li><a href="https://go.dev/tour/moretypes/25">Function Closures - A Tour of Go</a></li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/http/005-curl/" class="button inline prev">
+        Curl Basics
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/git/005-git-rebase-merge/" class="button inline next">
+        git merge vs git rebase
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

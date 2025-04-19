@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Concurrency with Shared Variables :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Concurrency Safe In a program with two or more goroutines, the steps within each goroutine happen in the familiar order, but in general we don’t know whether an event x in one goroutine happens before an event y in another goroutine, or happens after it, or is simultaneous with it. When we cannot confidently say that one event happens before the other, then the events x and y are concurrent.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/advance/002-concurrency-with-shared-variables/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Concurrency with Shared Variables">
+<meta property="og:description" content="1. Concurrency Safe In a program with two or more goroutines, the steps within each goroutine happen in the familiar order, but in general we don’t know whether an event x in one goroutine happens before an event y in another goroutine, or happens after it, or is simultaneous with it. When we cannot confidently say that one event happens before the other, then the events x and y are concurrent.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/advance/002-concurrency-with-shared-variables/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="golang" />
+
+
+  <meta property="article:published_time" content="2023-08-24 19:16:59 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/advance/002-concurrency-with-shared-variables/">Concurrency with Shared Variables</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-08-24</time><span class="post-reading-time">12 分钟阅读 (2448 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-concurrency-safe">1. Concurrency Safe<a href="#1-concurrency-safe" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>In a program with two or more goroutines, the steps within each goroutine happen in the familiar order, but in general we don’t know whether an event <em>x</em> in one goroutine happens before an event <em>y</em> in another goroutine, or happens after it, or is simultaneous with it. When we cannot confidently say that one event <em>happens before</em> the other, then the events <em>x</em> and <em>y</em> are <em><strong>concurrent</strong></em>.</p>
+<p>That function is <em><strong>concurrency-safe</strong></em> if it continues to work correctly even when called concurrently, that is, from two or more goroutines with no additional synchronization. We can generalize this notion to a set of collaborating functions, such as the methods and operations of a particular type. A type is <em><strong>concurrency-safe</strong></em> if all its accessible methods and operations are concurrency-safe.</p>
+<p>Concurrency-safe types are the exception rather than the rule, so you should access a variable concurrently only if the documentation for its type says that this is safe. We avoid concurrent access to most variables either by <em>confining</em> them to a single goroutine or by maintaining a higher-level invariant of <em>mutual exclusion</em>.</p>
+<p>In contrast, exported package-level functions <em>are</em> generally expected to be concurrency-safe. Since package-level variables cannot be confined to a single goroutine, functions that modify them must enforce <em><strong>mutual exclusion</strong></em>.</p>
+<h2 id="2-data-race">2. Data Race<a href="#2-data-race" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>A <em><strong>data race</strong></em> occurs whenever two goroutines access the same variable <em><strong>concurrently</strong></em> and at least one of the accesses is a write. Notice that &ldquo;access the same variable concurrently&rdquo; means: there are two or more goroutines (threads) to access a same variable <code>x</code>, and we cannot assure the order of accessing variable <code>x</code>.</p>
+<p>Aussume we have these code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">balance</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Deposit</span>(<span style="color:#a6e22e">amount</span> <span style="color:#66d9ef">int</span>) { <span style="color:#a6e22e">balance</span> = <span style="color:#a6e22e">balance</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">amount</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Balance</span>() <span style="color:#66d9ef">int</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">balance</span> }
+</span></span></code></pre></div><p>And there are two goroutines access <code>balance</code>  concurrently,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Alice:</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">bank</span>.<span style="color:#a6e22e">Deposit</span>(<span style="color:#ae81ff">200</span>)                <span style="color:#75715e">// A1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;=&#34;</span>, <span style="color:#a6e22e">bank</span>.<span style="color:#a6e22e">Balance</span>()) <span style="color:#75715e">// A2</span>
+</span></span><span style="display:flex;"><span>}()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Bob:</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#a6e22e">bank</span>.<span style="color:#a6e22e">Deposit</span>(<span style="color:#ae81ff">100</span>)                 <span style="color:#75715e">// B</span>
+</span></span></code></pre></div><p>Alice deposits $200, then checks her balance, while Bob deposits $100. Since the steps <code>A1</code> and <code>A2</code> occur <em><strong>concurrently</strong></em> with <code>B</code>, we cannot predict the order in which they happen. Intuitively, it might seem that there are only three possible orderings, which we’ll call “Alice first,” “Bob first,” and “Alice/Bob/Alice.” The following table shows the value of the <code>balance</code> variable after each step. The quoted strings represent the printed balance slips.</p>
+<p>In all cases the final balance is $300. The only variation is whether Alice’s balance slip includes Bob’s transaction or not, but the customers are satisfied either way.</p>
+<p>But this intuition is wrong. There is a fourth possible outcome, in which Bob’s deposit occurs in the middle of Alice’s deposit, after the balance has been read (<code>balance + amount</code>) but before it has been updated (<code>balance = ...</code>), causing Bob’s transaction to disappear. This is because Alice’s deposit operation <code>A1</code> is really a sequence of two operations, a read and a write; call them <code>A1r</code> and <code>A1w</code>. Here’s the problematic interleaving:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>Data race
+</span></span><span style="display:flex;"><span>         <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>A1r      <span style="color:#ae81ff">0</span>          ... <span style="color:#f92672">=</span> balance + amount
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># happend in the middle, balance = 100 but A1 will make balance = balance + amount which equals to 200 above</span>
+</span></span><span style="display:flex;"><span>B      <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span>A1w    <span style="color:#ae81ff">200</span>          balance <span style="color:#f92672">=</span> ...
+</span></span><span style="display:flex;"><span>A2  <span style="color:#e6db74">&#34;= 200&#34;</span>
+</span></span></code></pre></div><p>After <code>A1r</code>, the expression <code>balance + amount</code> evaluates to 200, so this is the value written during <code>A1w</code>, despite the intervening deposit. The final balance is only $200.</p>
+<p>We’ll repeat the definition, since it is so important: A data race occurs whenever two goroutines access the same variable concurrently and at least one of the accesses is a write. It follows from this definition that there are three ways to avoid a data race:</p>
+<ul>
+<li>first way: not to write the variable
+<ul>
+<li>try to use read only variable</li>
+</ul>
+</li>
+<li>second way: avoid accessing the variable from multiple goroutines (<em>confined</em> to a single goroutine)
+<ul>
+<li>access the variable need to write in only one goroutine which called monitor goroutine</li>
+<li>other goroutine want to modify this variable can notify the monitor goroutine of that variable</li>
+<li>Since other goroutines cannot access the variable directly, they must use a channel to send the confining goroutine a request to query or update the variable. This is what is meant by the Go mantra “Do not communicate by sharing memory; instead, share memory by communicating.”</li>
+</ul>
+</li>
+</ul>
+<p>Here’s the bank example rewritten with the <code>balance</code> variable confined to a monitor goroutine called <code>teller</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Package bank provides a concurrency-safe bank with one account.</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">bank</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">deposits</span> = make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>) <span style="color:#75715e">// send amount to deposit</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">balances</span> = make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>) <span style="color:#75715e">// receive balance</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Deposit</span>(<span style="color:#a6e22e">amount</span> <span style="color:#66d9ef">int</span>) { <span style="color:#a6e22e">deposits</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">amount</span> }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Balance</span>() <span style="color:#66d9ef">int</span>       { <span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">balances</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">teller</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">balance</span> <span style="color:#66d9ef">int</span> <span style="color:#75715e">// balance is confined to teller goroutine</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">select</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">amount</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">deposits</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">balance</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">amount</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">balances</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">balance</span>:
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">init</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">teller</span>() <span style="color:#75715e">// start the monitor goroutine</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>You can see, when there are some variables in a package, we better tell user if it is concurrency-safe.</p>
+<p>The third way to avoid a data race is to allow many goroutines to access the variable, but only one at a time. This approach is known as <em><strong>mutual exclusion</strong></em>.</p>
+<h2 id="3-mutual-exclusion">3. Mutual Exclusion<a href="#3-mutual-exclusion" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-mutex-vs-semaphore">3.1. Mutex vs Semaphore<a href="#31-mutex-vs-semaphore" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>A semaphore is a non-negative integer variable that is shared between various threads. Mutex is a specific kind of binary semaphore that is used to provide a locking mechanism.</p>
+<pre tabindex="0"><code>P(mutex);
+execute CS;
+V(mutex);
+</code></pre><table>
+  <thead>
+      <tr>
+          <th style="text-align: center">Mutex</th>
+          <th style="text-align: center">Semaphore</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">A mutex is an object.</td>
+          <td style="text-align: center">A semaphore is an integer.</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Mutex works upon the locking mechanism.</td>
+          <td style="text-align: center">Semaphore uses signaling mechanism</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Operations on mutex:LockUnlock</td>
+          <td style="text-align: center">Operation on semaphore:WaitSignal</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Mutex doesn’t have any subtypes.</td>
+          <td style="text-align: center">Semaphore is of two types:Counting SemaphoreBinary Semaphore</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">A mutex can only be modified by the process that is requesting or releasing a resource.</td>
+          <td style="text-align: center">Semaphore work with two atomic operations (Wait, signal) which can modify it.</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">If the mutex is locked then the process needs to wait in the process queue, and mutex can only be accessed once the lock is released.</td>
+          <td style="text-align: center">If the process needs a resource, and no resource is free. So, the process needs to perform a wait operation until the semaphore value is greater than zero.</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="32-mutual-exclusion-syncmutex">3.2. Mutual Exclusion: <code>sync.Mutex</code><a href="#32-mutual-exclusion-syncmutex" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>In <a href="https://learning.oreilly.com/library/view/the-go-programming/9780134190570/ebook_split_081.html#id-exampleconcurrentwebcrawler">Section 8.6</a>, we used a buffered channel as a <em><strong>counting semaphore</strong></em> to ensure that no more than 20 goroutines made simultaneous HTTP requests. With the same idea, we can use a channel of capacity 1 to ensure that at most one goroutine accesses a shared variable at a time. A semaphore that counts only to 1 is called a <em><strong>binary semaphore</strong></em>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sema</span>    = make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">struct</span>{}, <span style="color:#ae81ff">1</span>) <span style="color:#75715e">// a binary semaphore guarding balance</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">balance</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Deposit</span>(<span style="color:#a6e22e">amount</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sema</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">struct</span>{}{} <span style="color:#75715e">// acquire token</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">balance</span> = <span style="color:#a6e22e">balance</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">amount</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">sema</span> <span style="color:#75715e">// release token</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Balance</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sema</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">struct</span>{}{} <span style="color:#75715e">// acquire token</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">b</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">balance</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">sema</span> <span style="color:#75715e">// release token</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">b</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>This pattern of <em>mutual exclusion</em> is so useful that it is supported directly by the <code>Mutex</code> type from the <code>sync</code> package. Its <code>Lock</code> method acquires the token (called a <em>lock</em>) and its <code>Unlock</code> method releases it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;sync&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mu</span>      <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">Mutex</span> <span style="color:#75715e">// guards balance</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">balance</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Deposit</span>(<span style="color:#a6e22e">amount</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">balance</span> = <span style="color:#a6e22e">balance</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">amount</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Balance</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">b</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">balance</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">b</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="33-readwrite-mutexes-syncrwmutex">3.3. Read/Write Mutexes: <code>sync.RWMutex</code><a href="#33-readwrite-mutexes-syncrwmutex" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Since the <code>Balance</code> function only needs to <em>read</em> the state of the variable, it would in fact be safe for multiple <code>Balance</code> calls to run concurrently, so long as no <code>Deposit</code> or <code>Withdraw</code> call is running. In this scenario we need a special kind of lock that allows read-only operations to proceed in parallel with each other, but write operations to have fully exclusive access. This lock is called a <em>multiple readers</em>, <em>single writer</em> lock, and in Go it’s provided by <code>sync.RWMutex</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">mu</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">RWMutex</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">balance</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Balance</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">RLock</span>() <span style="color:#75715e">// readers lock</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">RUnlock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">balance</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="4-memory-synchronization">4. Memory Synchronization<a href="#4-memory-synchronization" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>You may wonder why the <code>Balance</code> method needs mutual exclusion, either channel-based or mutex-based. After all, unlike <code>Deposit</code>, it consists only of a single operation, so there is no danger of another goroutine executing “in the middle” of it.</p>
+<p>The reason is that synchronization is about more than just the order of execution of multiple goroutines; synchronization also affects memory.</p>
+<p>In a modern computer there may be dozens of processors, <strong>each with its own local cache of the main memory</strong>. <strong>For efficiency, writes to memory are buffered</strong> within each processor and flushed out to main memory only when necessary. <em><strong>Synchronization primitives</strong></em> like <em><strong>channel communications</strong></em> and <em><strong>mutex operations</strong></em> cause the processor to flush out and commit all its accumulated writes so that the effects of goroutine execution up to that point <strong>are guaranteed to be visible to</strong> goroutines running on other processors.</p>
+<p>Consider the possible outputs of the following snippet of code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">x</span>, <span style="color:#a6e22e">y</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">x</span> = <span style="color:#ae81ff">1</span>                   <span style="color:#75715e">// A1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;y:&#34;</span>, <span style="color:#a6e22e">y</span>, <span style="color:#e6db74">&#34; &#34;</span>) <span style="color:#75715e">// A2</span>
+</span></span><span style="display:flex;"><span>}()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">y</span> = <span style="color:#ae81ff">1</span>                   <span style="color:#75715e">// B1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;x:&#34;</span>, <span style="color:#a6e22e">x</span>, <span style="color:#e6db74">&#34; &#34;</span>) <span style="color:#75715e">// B2</span>
+</span></span><span style="display:flex;"><span>}()
+</span></span></code></pre></div><p>Since these two goroutines are concurrent and access shared variables without mutual exclusion, there is a data race, so we should not be surprised that the program is not deterministic.</p>
+<pre tabindex="0"><code>y:0 x:1
+x:0 y:1
+x:1 y:1
+y:1 x:1
+</code></pre><p>The fourth line could be explained by the sequence <code>A1,B1,A2,B2</code> or by <code>B1,A1,A2,B2</code>, for example. However, these two outcomes might come as a surprise:</p>
+<pre tabindex="0"><code>x:0 y:0
+y:0 x:0
+</code></pre><p>but depending on the compiler, CPU, and many other factors, they can happen too. What possible interleaving of the four statements could explain them?</p>
+<p>Within a single goroutine, the effects of each statement are guaranteed to occur in the order of execution; goroutines are <em>sequentially consistent</em>. But in the absence of explicit synchronization using a channel or mutex, there is no guarantee that events are seen in the same order by all goroutines. Although goroutine <em>A</em> must observe the effect of the write <code>x = 1</code> before it reads the value of <code>y</code>, it does not necessarily observe the write to <code>y</code> done by goroutine <em>B</em>, so <em>A</em> may print a <em>stale</em> value of <code>y</code>.</p>
+<p>It is tempting to try to understand concurrency as if it corresponds to <em>some</em> interleaving of the statements of each goroutine, but as the example above shows, this is not how a modern compiler or CPU works. Because the assignment and the <code>Print</code> refer to different variables, <strong>a compiler may conclude that the order of the two statements</strong> cannot affect the result, and swap them. If the two goroutines execute on different CPUs, each with its own cache, writes by one goroutine <strong>are not visible to</strong> the other goroutine’s <code>Print</code> until the caches are synchronized with main memory.</p>
+<p>All these concurrency problems can be avoided by the consistent use of simple, established patterns. Where possible, confine variables to a single goroutine; for all other variables, use mutual exclusion.</p>
+<h2 id="5-race-conditions-vs-data-race">5. Race Conditions vs Data Race<a href="#5-race-conditions-vs-data-race" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>A <em><strong>race condition</strong></em> is a flaw that occurs when the timing or ordering of events affects a program’s correctness. Generally speaking, some kind of external timing or ordering non-determinism is needed to produce a race condition; typical examples are context switches, OS signals, memory operations on a multiprocessor, and hardware interrupts.</p>
+<p>A <em><strong>data race</strong></em> occurs whenever two goroutines access the same variable <em><strong>concurrently</strong></em> and at least one of the accesses is a write.</p>
+<p>Race conditions are pernicious because they may remain latent in a program and appear infrequently, perhaps only under heavy load or when using certain compilers, platforms, or architectures. This makes them hard to reproduce and diagnose.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">transfer1</span> (<span style="color:#a6e22e">amount</span>, <span style="color:#a6e22e">account_from</span>, <span style="color:#a6e22e">account_to</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">account_from</span>.<span style="color:#a6e22e">balance</span> &lt; <span style="color:#a6e22e">amount</span>) <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">NOPE</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">account_to</span>.<span style="color:#a6e22e">balance</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">amount</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">account_from</span>.<span style="color:#a6e22e">balance</span> <span style="color:#f92672">-=</span> <span style="color:#a6e22e">amount</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">YEP</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Of course this is not how banks really move money, but the example is useful anyway because we understand intuitively that account balances should be non-negative and that a transfer must not create or lose money. When called from multiple threads without external synchronization, this function admits both data races (multiple threads can concurrently try to update an account balance) and race conditions (in a parallel context it will create or lose money). We can try to fix it like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">transfer2</span> (<span style="color:#a6e22e">amount</span>, <span style="color:#a6e22e">account_from</span>, <span style="color:#a6e22e">account_to</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">atomic</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">bal</span> = <span style="color:#a6e22e">account_from</span>.<span style="color:#a6e22e">balance</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">bal</span> &lt; <span style="color:#a6e22e">amount</span>) <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">NOPE</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">atomic</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">account_to</span>.<span style="color:#a6e22e">balance</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">amount</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">atomic</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">account_from</span>.<span style="color:#a6e22e">balance</span> <span style="color:#f92672">-=</span> <span style="color:#a6e22e">amount</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">YEP</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Here “atomic” is implemented by the language runtime, perhaps simply by acquiring a thread mutex at the start of the atomic block and releasing it at the end, perhaps using some sort of transaction, or perhaps by disabling interrupts — for purposes of the example it doesn’t matter as long as the code inside the block executes atomically.</p>
+<p>transfer2 has no data races when called by multiple threads, but obviously it is an extremely silly function containing race conditions that will cause it to create or lose money almost as badly as the unsynchronized function. From a technical point of view, the problem with transfer2 is that it permits other threads to see memory states where a key invariant — conservation of money — is broken.</p>
+<p>To preserve the invariant, we have to use a better locking strategy. As long as atomic’s semanatics are to end the atomic section on any exit from the block, the solution can be blunt:</p>
+<pre tabindex="0"><code>transfer3 (amount, account_from, account_to) {
+  atomic {
+    if (account_from.balance &lt; amount) return NOPE;
+    account_to.balance += amount;
+    account_from.balance -= amount;
+    return YEP;
+  }
+}
+</code></pre><p>This function is free of data races and also of race conditions.</p>
+<p>Everything in this post is pretty obvious, but I’ve observed real confusion about the distinction between data race and race condition by people who should know better (for example because they are doing research on concurrency correctness). Muddying the waters further, even when people are perfectly clear on the underlying concepts, they sometimes say “race condition” when the really mean “data race.” Certainly I’ve caught myself doing this.</p>
+<h2 id="6-conclusion">6. Conclusion<a href="#6-conclusion" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<ul>
+<li>
+<p><em><strong>concurrent</strong></em> envolves two or more threads, and it&rsquo;s all about the <em>unpredictable</em> order of the execution.</p>
+</li>
+<li>
+<p><em><strong>concurrency-safe type</strong></em> if that all its accessible methods and operations are concurrency-safe.</p>
+</li>
+<li>
+<p>A <em><strong>data race</strong></em> occurs whenever two goroutines access the same variable <em><strong>concurrently</strong></em> and at least one of the accesses is a write.</p>
+<ul>
+<li>data race can cause data lost, the bank example</li>
+<li>when there is data race, you&rsquo;d better use <em><strong>Mutual Exclusion</strong></em>: <code>sync.RWMutex</code>,  <code>sync.Mutex</code></li>
+</ul>
+</li>
+<li>
+<p>Mutex vs Semaphore</p>
+</li>
+<li>
+<p>A <em><strong>race condition</strong></em> is a flaw that occurs when the timing or ordering of events affects a program’s correctness.</p>
+</li>
+</ul>
+<p>References:</p>
+<ul>
+<li><a href="https://learning.oreilly.com/library/view/the-go-programming/9780134190570/ebook_split_087.html">9.1 Race Conditions | The Go Programming Language</a></li>
+<li><a href="https://www.geeksforgeeks.org/mutex-vs-semaphore/">Mutex vs Semaphore - GeeksforGeeks</a></li>
+<li><a href="https://blog.regehr.org/archives/490">Race Condition vs. Data Race – Embedded in Academia</a></li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/linux/bash/002-shell-expansion/" class="button inline prev">
+        Shell Expansion
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/golang/advance/001-why-goroutines/" class="button inline next">
+        Goroutines Model
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

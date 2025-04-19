@@ -1,0 +1,940 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>编译原理 on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/</link>
+    <description>Recent content in 编译原理 on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sat, 15 Feb 2025 15:07:57 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>JVM 启动时都加载了哪些类 - Java 编译原理</title>
+      <link>https://blog.jiyi27.com/posts/java/basics/002-compile-java/</link>
+      <pubDate>Sat, 15 Feb 2025 15:07:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/java/basics/002-compile-java/</guid>
+      <description>&lt;h2 id=&#34;1--java-代码的执行流程&#34;&gt;1.  Java 代码的执行流程&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;源代码编译：Java 源代码（&lt;code&gt;.java&lt;/code&gt; 文件）首先由 Java 编译器 (Javac) 编译成 字节码 (Bytecode), 生成二进制的 &lt;code&gt;.class&lt;/code&gt; 文件, 字节码是一种中间表示, 不是直接的机器码&lt;/li&gt;
+&lt;li&gt;Java 源代码在编译后会变成 &lt;code&gt;.class&lt;/code&gt; 字节码文件, JVM 在执行时会采用 &lt;strong&gt;两种方式&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;解释执行 (Interpretation)：JVM 逐行翻译字节码, 并立即执行, 这就是“边翻译边执行”&lt;/li&gt;
+&lt;li&gt;JIT (Just-In-Time Compilation)：JVM 发现高频代码（如循环、热点方法）, 会使用 JIT Compiler 将其编译成本地机器码, 避免重复翻译, 提高执行效率&lt;/li&gt;
+&lt;li&gt;JIT Compiler: 如 HotSpot VM 的 C1/C2 编译器&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;扩充1:&lt;/strong&gt; 类的生命周期 主要发生在 JVM 运行时, 且仅在类第一次被使用时触发, 并不是 JVM 启动时就一次性加载所有类,&lt;/p&gt;
+&lt;p&gt;类的生命周期包括: 加载→验证→准备→解析→初始化&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;**扩充2: ** 编译时, 每个单独的 &lt;code&gt;.java&lt;/code&gt; 源码文件被认为是一个单独的编译单元, 被单独编译成一个 .class 字节码文件, 所以在 Java 项目中, 通常会被编译成多个 &lt;code&gt;.class&lt;/code&gt; 文件, 如果直接分发 &lt;code&gt;.class&lt;/code&gt; 文件, 管理起来会很麻烦, 因此, Java 提供了 &lt;code&gt;.jar&lt;/code&gt; 这种格式, 可以把多个 &lt;code&gt;.class&lt;/code&gt; 文件打包在一起, 便于 分发、部署和加载&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1--java-代码的执行流程&#34;&gt;1.  Java 代码的执行流程&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;源代码编译：Java 源代码（&lt;code&gt;.java&lt;/code&gt; 文件）首先由 Java 编译器 (Javac) 编译成 字节码 (Bytecode), 生成二进制的 &lt;code&gt;.class&lt;/code&gt; 文件, 字节码是一种中间表示, 不是直接的机器码&lt;/li&gt;
+&lt;li&gt;Java 源代码在编译后会变成 &lt;code&gt;.class&lt;/code&gt; 字节码文件, JVM 在执行时会采用 &lt;strong&gt;两种方式&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;解释执行 (Interpretation)：JVM 逐行翻译字节码, 并立即执行, 这就是“边翻译边执行”&lt;/li&gt;
+&lt;li&gt;JIT (Just-In-Time Compilation)：JVM 发现高频代码（如循环、热点方法）, 会使用 JIT Compiler 将其编译成本地机器码, 避免重复翻译, 提高执行效率&lt;/li&gt;
+&lt;li&gt;JIT Compiler: 如 HotSpot VM 的 C1/C2 编译器&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;扩充1:&lt;/strong&gt; 类的生命周期 主要发生在 JVM 运行时, 且仅在类第一次被使用时触发, 并不是 JVM 启动时就一次性加载所有类,&lt;/p&gt;
+&lt;p&gt;类的生命周期包括: 加载→验证→准备→解析→初始化&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;**扩充2: ** 编译时, 每个单独的 &lt;code&gt;.java&lt;/code&gt; 源码文件被认为是一个单独的编译单元, 被单独编译成一个 .class 字节码文件, 所以在 Java 项目中, 通常会被编译成多个 &lt;code&gt;.class&lt;/code&gt; 文件, 如果直接分发 &lt;code&gt;.class&lt;/code&gt; 文件, 管理起来会很麻烦, 因此, Java 提供了 &lt;code&gt;.jar&lt;/code&gt; 这种格式, 可以把多个 &lt;code&gt;.class&lt;/code&gt; 文件打包在一起, 便于 分发、部署和加载&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-手动编译并运行-java-程序&#34;&gt;2. 手动编译并运行 java 程序&lt;/h2&gt;
+&lt;p&gt;目录结构:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── myproject
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   └── src
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── Main.java
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       └── animal
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           └── Cat.java
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;代码内容:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Cat.java&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;package&lt;/span&gt; animal;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cat&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    String name;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Cat&lt;/span&gt;(String name) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; name;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;mew~&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Main.java&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; animal.Cat;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Main&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String &lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt;args){
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        Cat cat &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Cat(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;kitty&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在&lt;code&gt;src&lt;/code&gt;下编译:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;javac Main.java
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;编译后多出了两个字节码文件,  如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;├── myproject
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│   └── src
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── Main.class
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       ├── Main.java
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│       └── animal
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           ├── Cat.class
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;│           └── Cat.java
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以发现, 我们只是编译了&lt;code&gt;Main.java&lt;/code&gt;, 被其用到的类 &lt;code&gt;Cat.java&lt;/code&gt; 也被编译了, 然后在其它文件夹下执行该程序, 用 &lt;code&gt;-cp&lt;/code&gt; 来指明 classpath, 即告诉 JVM 去哪找 user-defined class 字节码文件, &lt;code&gt;-cp&lt;/code&gt; 默认值为当前文件夹: &lt;code&gt;./&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ java -cp myproject/src Main 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;mew~
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; Technically, &lt;code&gt;javac&lt;/code&gt; is the program that translates Java code into bytecode (.class file). And &lt;code&gt;java&lt;/code&gt; is the program that starts the &lt;strong&gt;JVM&lt;/strong&gt;, which in turn, loads the &lt;code&gt;.class&lt;/code&gt; file, verifies the bytecode and executes it.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;3-jvm-启动时都加载了哪些类&#34;&gt;3. JVM 启动时都加载了哪些类&lt;/h2&gt;
+&lt;p&gt;The virtual machine searches for and loads classes in this order:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Bootstrap Classes 引导类, 加载核心库, 主要包含 Java 标准库的基础类 如 &lt;code&gt;java.lang.*&lt;/code&gt; (&lt;code&gt;String&lt;/code&gt;、&lt;code&gt;Object&lt;/code&gt;、&lt;code&gt;Math&lt;/code&gt;、&lt;code&gt;System&lt;/code&gt;)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Extension ClassLoader 加载扩展库&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;User classes - Classes defined by developers and third parties that do not take advantage of the extension mechanism. You identify the location of these classes using the &lt;code&gt;-classpath&lt;/code&gt; option on the command line (the preferred method) or by using the CLASSPATH environment variable.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In general, you only have to specify the location of user classes. Bootstrap classes and extension classes are found &amp;ldquo;automatically&amp;rdquo;.&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>JVM 运行时常量池 - 动态链接</title>
+      <link>https://blog.jiyi27.com/posts/java/basics/005-jvm-constant-pool/</link>
+      <pubDate>Tue, 04 Feb 2025 08:50:26 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/java/basics/005-jvm-constant-pool/</guid>
+      <description>&lt;h2 id=&#34;1-前言&#34;&gt;1. 前言&lt;/h2&gt;
+&lt;p&gt;JVM 规范中只有 Run-Time Data Areas 的概念, 它的主要分类逻辑就是线程共享和线程私有区域, 而我们平时更倾向于站在堆栈传统角度对内存进行分类, 因为这样很容易理解,&lt;/p&gt;
+&lt;p&gt;在 JVM 类加载过程中 Run-Time Data Areas 方法区的 Runtime Constant Pool 很重要, 相当于编译中的符号表, 在动态链接的时候主要就靠它来告诉 JVM 该类用到了哪些标准库的东西, 外部的类和函数, 去哪加载等等元数据信息, 今天就来研究一下&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Run-Time Data Areas
+ └─ Method Area
+     └─ Runtime Constant Pool
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;2-每个-class-文件都有一个常量池&#34;&gt;2. 每个 .class 文件都有一个常量池&lt;/h2&gt;
+&lt;p&gt;在 Java 中，&lt;strong&gt;每一个 &lt;code&gt;.class&lt;/code&gt; 文件&lt;/strong&gt;里都带有一张自己的&lt;strong&gt;常量池&lt;/strong&gt;。这张常量池的存在是为了在字节码里用 “符号引用” 或 “常量” 来代替真正的类、方法、字段、字符串、数值等内容，并且让它们可以在 JVM 运行时 被 “解析” 成真实的类、方法或者对象引用。&lt;/p&gt;
+&lt;p&gt;为什么每个 &lt;code&gt;.class&lt;/code&gt; 文件都有自己的常量池？&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;每个 &lt;code&gt;.class&lt;/code&gt; 文件是一个&lt;strong&gt;独立的编译单元&lt;/strong&gt;，它可能引用不同的类、不同的方法、不同的字符串、不同的常量&lt;/li&gt;
+&lt;li&gt;在 Java 编译阶段，&lt;code&gt;javac&lt;/code&gt; 会为&lt;strong&gt;该类&lt;/strong&gt;所需的一切外部引用（类、字段、方法等）和字面量&lt;strong&gt;记录到它自己的常量池&lt;/strong&gt;中&lt;/li&gt;
+&lt;li&gt;当这个类加载到 JVM 里时候, 需要使用其中任何符号引用或常量，就会通过它&lt;strong&gt;自己&lt;/strong&gt;的常量池去做解析&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-看个例子&#34;&gt;3. 看个例子&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Demo&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String&lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt; args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello World&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;编译后执行 &lt;code&gt;javac Demo.java&lt;/code&gt;，得到 &lt;code&gt;Demo.class&lt;/code&gt;, 然后用 &lt;code&gt;javap -v Demo.class&lt;/code&gt; 查看其常量池部分：&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-前言&#34;&gt;1. 前言&lt;/h2&gt;
+&lt;p&gt;JVM 规范中只有 Run-Time Data Areas 的概念, 它的主要分类逻辑就是线程共享和线程私有区域, 而我们平时更倾向于站在堆栈传统角度对内存进行分类, 因为这样很容易理解,&lt;/p&gt;
+&lt;p&gt;在 JVM 类加载过程中 Run-Time Data Areas 方法区的 Runtime Constant Pool 很重要, 相当于编译中的符号表, 在动态链接的时候主要就靠它来告诉 JVM 该类用到了哪些标准库的东西, 外部的类和函数, 去哪加载等等元数据信息, 今天就来研究一下&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Run-Time Data Areas
+ └─ Method Area
+     └─ Runtime Constant Pool
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;2-每个-class-文件都有一个常量池&#34;&gt;2. 每个 .class 文件都有一个常量池&lt;/h2&gt;
+&lt;p&gt;在 Java 中，&lt;strong&gt;每一个 &lt;code&gt;.class&lt;/code&gt; 文件&lt;/strong&gt;里都带有一张自己的&lt;strong&gt;常量池&lt;/strong&gt;。这张常量池的存在是为了在字节码里用 “符号引用” 或 “常量” 来代替真正的类、方法、字段、字符串、数值等内容，并且让它们可以在 JVM 运行时 被 “解析” 成真实的类、方法或者对象引用。&lt;/p&gt;
+&lt;p&gt;为什么每个 &lt;code&gt;.class&lt;/code&gt; 文件都有自己的常量池？&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;每个 &lt;code&gt;.class&lt;/code&gt; 文件是一个&lt;strong&gt;独立的编译单元&lt;/strong&gt;，它可能引用不同的类、不同的方法、不同的字符串、不同的常量&lt;/li&gt;
+&lt;li&gt;在 Java 编译阶段，&lt;code&gt;javac&lt;/code&gt; 会为&lt;strong&gt;该类&lt;/strong&gt;所需的一切外部引用（类、字段、方法等）和字面量&lt;strong&gt;记录到它自己的常量池&lt;/strong&gt;中&lt;/li&gt;
+&lt;li&gt;当这个类加载到 JVM 里时候, 需要使用其中任何符号引用或常量，就会通过它&lt;strong&gt;自己&lt;/strong&gt;的常量池去做解析&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-看个例子&#34;&gt;3. 看个例子&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Demo&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String&lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt; args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello World&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;编译后执行 &lt;code&gt;javac Demo.java&lt;/code&gt;，得到 &lt;code&gt;Demo.class&lt;/code&gt;, 然后用 &lt;code&gt;javap -v Demo.class&lt;/code&gt; 查看其常量池部分：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Classfile .../Demo.class
+  Last modified ...; size ...
+  MD5 checksum ...
+public class Demo
+  minor version: 0
+  major version: 52
+  flags: ACC_PUBLIC, ACC_SUPER
+Constant pool:
+   #1 = Methodref          #7.#22         // java/io/PrintStream.println:(Ljava/lang/String;)V
+   #2 = String             #23            // Hello World
+   #3 = Fieldref           #8.#24         // java/lang/System.out:Ljava/io/PrintStream;
+   #4 = Class              #25            // Demo
+   #5 = Class              #26            // java/io/PrintStream
+   #6 = Utf8               Demo
+   #7 = Utf8               java/io/PrintStream
+   #8 = Utf8               java/lang/System
+   #9 = Utf8               main
+   #10 = Utf8              ([Ljava/lang/String;)V
+   #11 = Utf8              Code
+   ...
+   #22 = NameAndType       #27:#28        // println:(Ljava/lang/String;)V
+   #23 = Utf8              Hello World
+   #24 = NameAndType       #29:#30        // out:Ljava/io/PrintStream;
+   #25 = Utf8              Demo
+   #26 = Utf8              java/io/PrintStream
+   #27 = Utf8              println
+   #28 = Utf8              (Ljava/lang/String;)V
+   #29 = Utf8              out
+   #30 = Utf8              Ljava/io/PrintStream;
+   ...
+{
+  public Demo();
+    ...
+  public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=1, args_size=1
+         0: getstatic     #3      // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: ldc           #2      // String Hello World
+         5: invokevirtual #1      // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+         8: return
+      ...
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;4-常量池里都有啥&#34;&gt;4. 常量池里都有啥？&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;#1 = Methodref #7.#22 // java/io/PrintStream.println:(Ljava/lang/String;)V&lt;/code&gt;
+表示：这是一个 &lt;code&gt;Methodref&lt;/code&gt; 常量，指向“类 #7”与“NameAndType #22”的组合&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;“类 #7” 就是 &lt;code&gt;java/io/PrintStream&lt;/code&gt;（见后面 &lt;code&gt;#7 = Utf8 &amp;quot;java/io/PrintStream&amp;quot;&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;“NameAndType #22” 则表示方法名和方法描述符——在 &lt;code&gt;#22&lt;/code&gt; 里你会看到 &lt;code&gt;&amp;lt;println:(Ljava/lang/String;)V&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;#2 = String #23 // Hello World&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;表示：这是一个 &lt;code&gt;String&lt;/code&gt; 常量，对应了 “字符串 #23”；“#23” 实际是一个 &lt;code&gt;Utf8&lt;/code&gt; 条目，存放 &lt;code&gt;&amp;quot;Hello World&amp;quot;&lt;/code&gt; 的字符&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#3 = Fieldref #8.#24 // java/lang/System.out:Ljava/io/PrintStream;&lt;/code&gt;
+表示：这是一个 &lt;code&gt;Fieldref&lt;/code&gt; 常量，指向“类 #8”与“NameAndType #24”的组合&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;“类 #8” -&amp;gt; &lt;code&gt;java/lang/System&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;“NameAndType #24” -&amp;gt; “&lt;code&gt;out:Ljava/io/PrintStream;&lt;/code&gt;”&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;#22 = NameAndType #27:#28 // println:(Ljava/lang/String;)V&lt;/code&gt;
+表示：这是一个 &lt;code&gt;NameAndType&lt;/code&gt; 常量，&lt;code&gt;#27&lt;/code&gt; 是方法名 &lt;code&gt;println&lt;/code&gt;，&lt;code&gt;#28&lt;/code&gt; 是方法描述符 &lt;code&gt;&amp;quot;(Ljava/lang/String;)V&amp;quot;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#23 = Utf8 &amp;quot;Hello World&amp;quot;&lt;/code&gt;
+表示：这是一个存放字符串 &lt;code&gt;&amp;quot;Hello World&amp;quot;&lt;/code&gt; 的 &lt;code&gt;Utf8&lt;/code&gt; 常量&lt;/p&gt;
+&lt;p&gt;可以看到，编译器把你写的代码里所有用到的类名、方法名、字段名、描述符以及字符串字面量，都以 各种类型的 cp_info（&lt;code&gt;Methodref&lt;/code&gt;、&lt;code&gt;Fieldref&lt;/code&gt;、&lt;code&gt;NameAndType&lt;/code&gt;、&lt;code&gt;Utf8&lt;/code&gt;、&lt;code&gt;String&lt;/code&gt; 等）记录到了同一个常量池数组里。&lt;/p&gt;
+&lt;h2 id=&#34;5-这些条目在运行时怎么被用到&#34;&gt;5. 这些条目在运行时怎么被用到？&lt;/h2&gt;
+&lt;p&gt;在实际运行过程中，你可以从反汇编的字节码看到：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;0: getstatic     #3      // Field java/lang/System.out:Ljava/io/PrintStream;
+3: ldc           #2      // String Hello World
+5: invokevirtual #1      // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+8: return
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;#3&lt;/code&gt;、&lt;code&gt;#2&lt;/code&gt;、&lt;code&gt;#1&lt;/code&gt; 都是&lt;strong&gt;常量池索引&lt;/strong&gt;。当 JVM 执行到这条指令时，它会到 Demo 类的常量池里找相应记录，再看看&lt;strong&gt;那条记录&lt;/strong&gt;里描述了什么类、字段或方法名、描述符，然后去解析并链接到真实的 &lt;code&gt;System.out&lt;/code&gt; 字段或 &lt;code&gt;PrintStream.println(...)&lt;/code&gt; 方法上。&lt;/p&gt;
+&lt;h2 id=&#34;6-类的加载验证准备解析初始化&#34;&gt;6. 类的加载、验证、准备、解析、初始化&lt;/h2&gt;
+&lt;p&gt;在 Java 中，类加载（Class Loading）之后，紧随其后（或在实际使用时触发）的过程，通常称为 类的链接（Linking）和 初始化（Initialization）。而链接过程里最关键的一步就是 解析（Resolution）。有时我们也把 在&lt;strong&gt;运行时将常量池符号引用转成直接引用&lt;/strong&gt; 称为动态链接（Dynamic Linking），因为它跟 C/C++ 的 “编译期/链接期绑定” 不一样，而是在Java 程序执行期间由 JVM 来完成。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;第 4 步的解析（Resolution）往往就是我们所说的“动态链接”的核心：把&lt;strong&gt;字节码中符号形式的引用&lt;/strong&gt;——例如 “&lt;code&gt;java/lang/System&lt;/code&gt;” 、“&lt;code&gt;out&lt;/code&gt;” 、“&lt;code&gt;println&lt;/code&gt;”——&lt;strong&gt;映射到 JVM 内部真正的方法、字段、类结构&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;编译后字节码（通过 &lt;code&gt;javap -v&lt;/code&gt;）大概是：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;0: getstatic     #3      // Field java/lang/System.out:Ljava/io/PrintStream;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;3: ldc           #2      // String Hello World
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;5: invokevirtual #1      // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;8: return
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这里的 &lt;code&gt;#3&lt;/code&gt;, &lt;code&gt;#2&lt;/code&gt;, &lt;code&gt;#1&lt;/code&gt; 是常量池索引, 当 JVM 在解释或JIT 编译这些指令时，如果某个索引还没解析，就会触发解析逻辑。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;解析 &lt;code&gt;#3&lt;/code&gt; (getstatic …)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;#3&lt;/code&gt; 在常量池中是一个 &lt;code&gt;Fieldref&lt;/code&gt;，比如 “&lt;code&gt;java/lang/System.out:Ljava/io/PrintStream;&lt;/code&gt;”&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;JVM 首先看 这个类 &lt;code&gt;java/lang/System&lt;/code&gt; 加载了没？如果没有，就让 Bootstrap ClassLoader 去加载并验证、准备（以及后续可能触发解析和初始化）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;找到它后，在 &lt;code&gt;java.lang.System&lt;/code&gt; 的元数据里查找名为 &lt;code&gt;out&lt;/code&gt;、描述符 &lt;code&gt;Ljava/io/PrintStream;&lt;/code&gt;、并且是 &lt;code&gt;static&lt;/code&gt; 的字段&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;若能找到，就把这个常量池引用标记为已解析，并存储一个指向 &lt;code&gt;System.out&lt;/code&gt; 字段的内部标识（可能是一个指针/偏移量）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;此时还要检查 &lt;code&gt;System&lt;/code&gt; 类是否已经初始化过。如果没初始化，就先初始化 &lt;code&gt;System&lt;/code&gt;（调用其 &lt;code&gt;&amp;lt;clinit&amp;gt;&lt;/code&gt;）。在 &lt;code&gt;&amp;lt;clinit&amp;gt;&lt;/code&gt; 里会将 &lt;code&gt;System.out&lt;/code&gt; 赋值为一个新的 &lt;code&gt;PrintStream&lt;/code&gt; 对象。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;执行 &lt;code&gt;getstatic #3&lt;/code&gt; 时，JVM 发现“已解析”，就能直接去拿 &lt;code&gt;System.out&lt;/code&gt; 这个静态字段的对象引用&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;2.2 解析 &lt;code&gt;#2&lt;/code&gt; (ldc …)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;#2&lt;/code&gt; 在常量池中是一个 &lt;code&gt;String&lt;/code&gt; 类型常量，如 “Hello World”&lt;/li&gt;
+&lt;li&gt;当执行 &lt;code&gt;ldc #2&lt;/code&gt; 时，如果还没解析，就去常量池里取出对应的 UTF-8 字符串，将其intern或放到字符串池，生成一个 &lt;code&gt;java.lang.String&lt;/code&gt; 实例（或从已有字符串池中返回）&lt;/li&gt;
+&lt;li&gt;然后把这个 &lt;code&gt;String&lt;/code&gt; 对象引用压栈，用于后续 &lt;code&gt;println&lt;/code&gt; 调用。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;2.3 解析 &lt;code&gt;#1&lt;/code&gt; (invokevirtual …)&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;#1&lt;/code&gt; 在常量池是一个 &lt;code&gt;Methodref&lt;/code&gt;，如 “&lt;code&gt;java/io/PrintStream.println:(Ljava/lang/String;)V&lt;/code&gt;”&lt;/li&gt;
+&lt;li&gt;JVM 会检查 &lt;code&gt;java.io.PrintStream&lt;/code&gt; 这个类加载了吗？没的话，去加载它&lt;/li&gt;
+&lt;li&gt;在它的元数据里找到对应的方法表项 &lt;code&gt;println(String)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;若找到，就把常量池条目更新为已解析，后续执行指令 &lt;code&gt;invokevirtual #1&lt;/code&gt; 时，就能通过对象的类型信息 + 方法表来跳转到 &lt;code&gt;PrintStream.println(String)&lt;/code&gt; 的实现&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;以上步骤就是“解析 + 动态链接”最本质的行为：从常量池的“符号引用”（例如 “&lt;code&gt;Field java/lang/System.out&lt;/code&gt;” 或 “&lt;code&gt;Method java/io/PrintStream.println&lt;/code&gt;”）转成 JVM 内部可执行、可定位的实际字段或方法引用&lt;/p&gt;
+&lt;h2 id=&#34;7-动态链接-vs-静态链接&#34;&gt;7. 动态链接 VS. 静态链接&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;静态链接（C/C++）&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;编译和链接器阶段就把对 &lt;code&gt;printf&lt;/code&gt; 等函数的调用解析到某个符号表里，生成可执行文件，运行时再由 OS 的动态加载器做符号重定位，最终把 &lt;code&gt;printf&lt;/code&gt; 的地址映射到可执行程序里。&lt;/li&gt;
+&lt;li&gt;也就是说，C/C++ 大部分链接工作在编译期/链接期就做好了，运行时只剩下操作系统层面的动态库装载、重定位&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Java 的动态链接&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;.class&lt;/code&gt; 文件只保留对 &lt;code&gt;System.out&lt;/code&gt;、&lt;code&gt;println(String)&lt;/code&gt; 等的符号引用&lt;/strong&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;真正的解析、绑定过程在JVM 运行时发生：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;加载对应的类（可能还要加载该类所依赖的其他类），&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;验证和准备，&lt;/li&gt;
+&lt;li&gt;在用到这些常量池引用时触发“解析”，最终把它指向 JVM 内部的真实方法或字段对象&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;这使得 Java 可以做到“类的动态加载”：运行中可以从网络或别的地方得到一个 &lt;code&gt;.class&lt;/code&gt;，用自定义 ClassLoader 加载并解析它。而不需要像 C++ 一样必须在编译/链接时就知道所有符号&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Typing in Programming Language</title>
+      <link>https://blog.jiyi27.com/posts/cs-basics/000-languge-types-design/</link>
+      <pubDate>Tue, 28 Nov 2023 20:30:17 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cs-basics/000-languge-types-design/</guid>
+      <description>&lt;h2 id=&#34;1-compiled-vs-interpreted-language&#34;&gt;1. Compiled vs interpreted language&lt;/h2&gt;
+&lt;p&gt;Programming languages are for humans to read and understand. The program (source code) must be translated into machine language so that the computer can execute the program. &lt;strong&gt;The time when this translation occurs&lt;/strong&gt; depends on whether the programming language is a &lt;strong&gt;compiled language&lt;/strong&gt; or an &lt;strong&gt;interpreted language&lt;/strong&gt;. Instead of translating the source code into machine language before the executable file is created, an interpreter converts the source code into machine language at the same time the program runs. So you can&amp;rsquo;t say a language doesn’t have compilation step, because any language needs to be translated to machine code.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-compiled-vs-interpreted-language&#34;&gt;1. Compiled vs interpreted language&lt;/h2&gt;
+&lt;p&gt;Programming languages are for humans to read and understand. The program (source code) must be translated into machine language so that the computer can execute the program. &lt;strong&gt;The time when this translation occurs&lt;/strong&gt; depends on whether the programming language is a &lt;strong&gt;compiled language&lt;/strong&gt; or an &lt;strong&gt;interpreted language&lt;/strong&gt;. Instead of translating the source code into machine language before the executable file is created, an interpreter converts the source code into machine language at the same time the program runs. So you can&amp;rsquo;t say a language doesn’t have compilation step, because any language needs to be translated to machine code.&lt;/p&gt;
+&lt;h2 id=&#34;2-statically-vs-dynamically-typing&#34;&gt;2. Statically vs dynamically typing&lt;/h2&gt;
+&lt;p&gt;Also know as statically/dynamically typed, &lt;strong&gt;static/dynamic language&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Static Typing:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;In statically typed languages, the type of a variable is known at compile time.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The programmer must explicitly declare the data type of each variable.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Examples of statically typed languages include Java, C, C++, and Go.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Static typing allows for early detection of type-related errors during the compilation process.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Dynamic Typing:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;In dynamically typed languages, the type of a variable is determined at runtime.&lt;/li&gt;
+&lt;li&gt;The programmer does not need to explicitly declare the data type of each variable.&lt;/li&gt;
+&lt;li&gt;Examples of dynamically typed languages include Python, JavaScript, Ruby, and PHP.&lt;/li&gt;
+&lt;li&gt;Type checking occurs during runtime, which means that type-related errors may only be discovered when the code is executed.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;For example in Java:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;String str = &amp;#34;Hello&amp;#34;;  //statically typed as string
+str = 5;               //would throw an error since java is statically typed
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Whereas in a &lt;strong&gt;dynamically typed language&lt;/strong&gt; the type is &lt;em&gt;dynamic&lt;/em&gt;, meaning after you set a variable to a type, you CAN change it. That is because typing is associated with the value rather than the variable. For example in Python:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;str = &amp;#34;Hello&amp;#34; # it is a string
+str = 5       # now it is an integer; perfectly OK
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;3-strong-vs-weak-typing&#34;&gt;3. Strong vs weak typing&lt;/h2&gt;
+&lt;p&gt;The strong/weak typing in a language is related to &lt;strong&gt;implicit type conversions&lt;/strong&gt; (partly taken from @Dario&amp;rsquo;s answer):&lt;/p&gt;
+&lt;p&gt;For example in Python:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;str = 5 + &amp;#34;hello&amp;#34; 
+# would throw an error since it does not want to cast one type to the other implicitly. 
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;whereas in PHP:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;$str = 5 + &amp;#34;hello&amp;#34;; // equals 5 because &amp;#34;hello&amp;#34; is implicitly casted to 0 
+// PHP is weakly typed, thus is a very forgiving language.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Static typing allows for checking type correctness at compile time. Statically typed languages are usually compiled, and dynamically typed languages are interpreted. Therefore, dynamicly typed languages can check typing at run time.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://stackoverflow.com/a/34004765/16317008&#34;&gt;https://stackoverflow.com/a/34004765/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-conclusion&#34;&gt;4. Conclusion&lt;/h2&gt;
+&lt;p&gt;Dynamically typing languages (where type checking happens at run time) can also be strongly typed (Python for example).&lt;/p&gt;
+&lt;p&gt;Note that in dynamically checking languages, &lt;strong&gt;values have types&lt;/strong&gt;, not variables (have types). Whereas, in statically checking languages, variables have types.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;Static/Dynamic Typing&lt;/em&gt; is about &lt;strong&gt;when&lt;/strong&gt; type information is acquired (Either at compile time or at runtime)&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Strong/Weak Typing&lt;/em&gt; is about &lt;strong&gt;how strictly&lt;/strong&gt; types are distinguished (e.g. whether the language tries to do an implicit conversion from strings to numbers).&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Static Linking vs Dynamic Linking</title>
+      <link>https://blog.jiyi27.com/posts/cs-basics/002-statically-linking/</link>
+      <pubDate>Fri, 03 Nov 2023 10:49:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cs-basics/002-statically-linking/</guid>
+      <description>&lt;h2 id=&#34;1-compilation-process-in-c&#34;&gt;1. Compilation process in C&lt;/h2&gt;
+&lt;p&gt;C/C++ programs are built in two main phases (ignore the preprocess, assemble):&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Compilation - produces object code (&lt;code&gt;.obj&lt;/code&gt;, &lt;code&gt;.o&lt;/code&gt;)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Compile source code into an object file without linking:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;gcc -c path/to/source.c
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;The extension of the &lt;em&gt;&lt;strong&gt;object file&lt;/strong&gt;&lt;/em&gt; in DOS is &lt;code&gt;.obj&lt;/code&gt;, and in UNIX, the extension is &lt;code&gt;.o&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Linking - produces executable code (.exe or .dll)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;&lt;strong&gt;executable file&lt;/strong&gt;&lt;/em&gt; with an extension of &lt;code&gt;exe&lt;/code&gt; in DOS and &lt;code&gt;.out&lt;/code&gt; in UNIX OSL&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;2-static-linking-and-dynamic-linking&#34;&gt;2. Static linking and dynamic linking&lt;/h2&gt;
+&lt;h3 id=&#34;21-static-linking---portable-fast&#34;&gt;2.1. Static linking - portable, fast&lt;/h3&gt;
+&lt;p&gt;Mainly, all the programs written in C use library functions. These library functions are pre-compiled, and the object code of these library files is stored with &lt;code&gt;.lib&lt;/code&gt; (or &lt;code&gt;.a&lt;/code&gt;) extension. &lt;strong&gt;The main working of the linker&lt;/strong&gt; is to combine the &lt;em&gt;&lt;strong&gt;object code&lt;/strong&gt;&lt;/em&gt; of library files with the &lt;em&gt;&lt;strong&gt;object code&lt;/strong&gt;&lt;/em&gt; of our program. The output of the linker is the executable file. So the &lt;strong&gt;static Linking creates larger binary files&lt;/strong&gt;.  Note that this is the process of static linking, and &lt;code&gt;.lib&lt;/code&gt; and &lt;code&gt;.a&lt;/code&gt; is static library in windows and linux respectively.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-compilation-process-in-c&#34;&gt;1. Compilation process in C&lt;/h2&gt;
+&lt;p&gt;C/C++ programs are built in two main phases (ignore the preprocess, assemble):&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Compilation - produces object code (&lt;code&gt;.obj&lt;/code&gt;, &lt;code&gt;.o&lt;/code&gt;)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Compile source code into an object file without linking:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;gcc -c path/to/source.c
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;The extension of the &lt;em&gt;&lt;strong&gt;object file&lt;/strong&gt;&lt;/em&gt; in DOS is &lt;code&gt;.obj&lt;/code&gt;, and in UNIX, the extension is &lt;code&gt;.o&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Linking - produces executable code (.exe or .dll)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;&lt;strong&gt;executable file&lt;/strong&gt;&lt;/em&gt; with an extension of &lt;code&gt;exe&lt;/code&gt; in DOS and &lt;code&gt;.out&lt;/code&gt; in UNIX OSL&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;2-static-linking-and-dynamic-linking&#34;&gt;2. Static linking and dynamic linking&lt;/h2&gt;
+&lt;h3 id=&#34;21-static-linking---portable-fast&#34;&gt;2.1. Static linking - portable, fast&lt;/h3&gt;
+&lt;p&gt;Mainly, all the programs written in C use library functions. These library functions are pre-compiled, and the object code of these library files is stored with &lt;code&gt;.lib&lt;/code&gt; (or &lt;code&gt;.a&lt;/code&gt;) extension. &lt;strong&gt;The main working of the linker&lt;/strong&gt; is to combine the &lt;em&gt;&lt;strong&gt;object code&lt;/strong&gt;&lt;/em&gt; of library files with the &lt;em&gt;&lt;strong&gt;object code&lt;/strong&gt;&lt;/em&gt; of our program. The output of the linker is the executable file. So the &lt;strong&gt;static Linking creates larger binary files&lt;/strong&gt;.  Note that this is the process of static linking, and &lt;code&gt;.lib&lt;/code&gt; and &lt;code&gt;.a&lt;/code&gt; is static library in windows and linux respectively.&lt;/p&gt;
+&lt;p&gt;In static linking, everything is bundled into your application, you don’t have to worry that the client will have the right library (and version) available on their system. Since all library code have connected at compile time, the final executable has no dependencies on the library at run time. You have everything under your control and there is no dependency.&lt;/p&gt;
+&lt;p&gt;One major advantage of static libraries being preferred even now “is speed”. There will be no dynamic querying of symbols in static libraries.&lt;/p&gt;
+&lt;p&gt;One drawback of static libraries is, for any change(up-gradation) in the static libraries, you have to recompile the main program every time.&lt;/p&gt;
+&lt;h3 id=&#34;22-dynamic-linking---smaller-binary&#34;&gt;2.2. Dynamic linking - smaller binary&lt;/h3&gt;
+&lt;p&gt;Dynamic Linking doesn’t require the code to be copied, it is done by just placing name of the library in the binary file. The actual linking happens when the program is run, when both the binary file and the library are in memory.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://www.geeksforgeeks.org/static-vs-dynamic-libraries/&#34;&gt;Static and Dynamic Libraries | Set 1 - GeeksforGeeks&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-static-library-vs-dynamic-library&#34;&gt;3. Static library vs dynamic library&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Static library: windows &lt;code&gt;.lib&lt;/code&gt;,  linux &lt;code&gt;.a&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Dynamic library (shared library): windows &lt;code&gt;.dll&lt;/code&gt;, linux &lt;code&gt;.so&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Static library &lt;code&gt;.lib&lt;/code&gt; is just a bundle of &lt;code&gt;.obj&lt;/code&gt; files and therefore isn&amp;rsquo;t a complete program. It hasn&amp;rsquo;t undergone the second (linking) phase of building a program. Dlls, on the other hand, are like exe&amp;rsquo;s and therefore are complete programs.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;If you build a static library&lt;/strong&gt;, it isn&amp;rsquo;t linked yet and therefore consumers of your static library will have to use the same compiler that you used (if you used g++, they will have to use g++). If the static library uses C++ library, such as &lt;code&gt;#include &amp;lt;iostream&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;If instead you built a dll (and built it &lt;a href=&#34;http://www.codeproject.com/Articles/28969/HowTo-Export-C-classes-from-a-DLL&#34;&gt;correctly&lt;/a&gt;), you have built a complete program that all consumers can use, no matter which compiler they are using. There are several restrictions though, on exporting from a dll, if cross compiler compatibility is desired.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://stackoverflow.com/a/25209275/16317008&#34;&gt;https://stackoverflow.com/a/25209275/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-example-in-practice&#34;&gt;4. Example in practice&lt;/h2&gt;
+&lt;p&gt;Dynamic linking means the use of shared libraries. Shared libraries usually end with &lt;code&gt;.so&lt;/code&gt; (short for &amp;ldquo;shared object&amp;rdquo;) or &lt;code&gt;.dylib&lt;/code&gt; on MacOS.&lt;/p&gt;
+&lt;p&gt;Another thing to note is that when a bug is fixed in a shared library, every application that references this library will profit from it. This also means that if the bug remains undetected, each referencing application will suffer from it (if the application uses the affected parts).&lt;/p&gt;
+&lt;p&gt;It can be very hard for beginners &lt;strong&gt;when an application requires a specific version of the library, but the linker only knows the location of an incompatible versio&lt;/strong&gt;n. In this case, you must help the linker find the path to the correct version.&lt;/p&gt;
+&lt;p&gt;Although this is not an everyday issue, understanding dynamic linking will surely help you in fixing such problems.&lt;/p&gt;
+&lt;p&gt;Fortunately, the mechanics for this are quite straightforward. To detect which libraries are required for an application to start, you can use &lt;code&gt;ldd&lt;/code&gt;, which will print out the shared libraries used by a given file.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;$ ldd my_app 
+	linux-vdso.so.1 (0x00007ffd1299c000)
+	libmy_shared.so =&amp;gt; not found
+	libc.so.6 =&amp;gt; /lib64/libc.so.6 (0x00007f56b869b000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007f56b8881000)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Note that the library &lt;code&gt;libmy_shared.so&lt;/code&gt; is part of the repository but is not found. This is because the &lt;strong&gt;dynamic linker&lt;/strong&gt;, which is responsible for loading all dependencies into memory before executing the application, cannot find this library in the standard locations it searches.&lt;/p&gt;
+&lt;p&gt;Errors associated with linkers finding incompatible versions of common libraries (like &lt;code&gt;bzip2&lt;/code&gt;, for example) can be quite confusing for a new user. One way around this is to add the repository folder to the environment variable &lt;code&gt;LD_LIBRARY_PATH&lt;/code&gt; to tell the linker where to look for the correct version. In this case, the right version is in this folder, so you can export it:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ LD_LIBRARY_PATH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;$(&lt;/span&gt;pwd&lt;span style=&#34;color:#66d9ef&#34;&gt;)&lt;/span&gt;:$LD_LIBRARY_PATH
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ export LD_LIBRARY_PATH
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Now the dynamic linker knows where to find the library, and the application can be executed. You can rerun &lt;code&gt;ldd&lt;/code&gt; to invoke the dynamic linker, which inspects the application&amp;rsquo;s dependencies and loads them into memory. The memory address is shown after the object path:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ldd my_app 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	linux-vdso.so.1 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x00007ffd385f7000&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	libmy_shared.so &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&amp;gt; /home/stephan/library_sample/libmy_shared.so &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x00007f3fad401000&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	libc.so.6 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&amp;gt; /lib64/libc.so.6 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x00007f3fad21d000&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/lib64/ld-linux-x86-64.so.2 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x00007f3fad408000&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;To find out which linker is invoked, you can use &lt;code&gt;file&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file my_app 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;my_app: ELF 64-bit LSB executable, x86-64, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SYSV&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;, dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;sha1&lt;span style=&#34;color:#f92672&#34;&gt;]=&lt;/span&gt;26c677b771122b4c99f0fd9ee001e6c743550fa6, &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; GNU/Linux 3.2.0, not stripped
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The linker &lt;code&gt;/lib64/ld-linux-x86–64.so.2&lt;/code&gt; is a symbolic link to &lt;code&gt;ld-2.30.so&lt;/code&gt;, which is the default linker for my Linux distribution:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file /lib64/ld-linux-x86-64.so.2 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/lib64/ld-linux-x86-64.so.2: symbolic link to ld-2.31.so
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Looking back to the output of &lt;code&gt;ldd&lt;/code&gt;, you can also see (next to &lt;code&gt;libmy_shared.so&lt;/code&gt;) that each dependency ends with a number (e.g., &lt;code&gt;/lib64/libc.so.6&lt;/code&gt;). The usual naming scheme of shared objects is:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-text&#34; data-lang=&#34;text&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;**lib** XYZ.so **.&amp;lt;MAJOR&amp;gt;** . **&amp;lt;MINOR&amp;gt;**
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;On my system, &lt;code&gt;libc.so.6&lt;/code&gt; is also a symbolic link to the shared object &lt;code&gt;libc-2.30.so&lt;/code&gt; in the same folder:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file /lib64/libc.so.6 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/lib64/libc.so.6: symbolic link to libc-2.31.so
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;If you are facing the issue that an application will not start because the loaded library has the wrong version, it is very likely that you can fix this issue by inspecting and rearranging the symbolic links or specifying the correct search path (see &amp;ldquo;The dynamic loader: ld.so&amp;rdquo; below).&lt;/p&gt;
+&lt;p&gt;For more information, look on the &lt;a href=&#34;https://www.man7.org/linux/man-pages/man1/ldd.1.html&#34;&gt;&lt;code&gt;ldd&lt;/code&gt; man page&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://opensource.com/article/20/6/linux-libraries&#34;&gt;How to handle dynamic and static libraries in Linux | Opensource.com&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that the dynamic linker on MacOS is called &lt;code&gt;dyld&lt;/code&gt;, try &lt;code&gt;man dyld&lt;/code&gt; to check the details. Learn more: &lt;a href=&#34;https://stackoverflow.com/a/34905091/16317008&#34;&gt;https://stackoverflow.com/a/34905091/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;hello&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// go build -o server main.go&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then check the shared libraries this executable file &lt;code&gt;server&lt;/code&gt; required:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# otool -L: print shared libraries used&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ otool -L server           
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/usr/lib/libSystem.B.dylib &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;compatibility version 0.0.0, current version 0.0.0&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/usr/lib/libresolv.9.dylib &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;compatibility version 0.0.0, current version 0.0.0&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;ldd&lt;/code&gt; is on linux, on MaxOS you should use &lt;code&gt;otool&lt;/code&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>C 标准库 运行时库(动静态链接库) 浅析</title>
+      <link>https://blog.jiyi27.com/posts/cs-basics/002-standard-library/</link>
+      <pubDate>Tue, 17 Oct 2023 17:58:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cs-basics/002-standard-library/</guid>
+      <description>&lt;h2 id=&#34;1-iso-制定标准库规范&#34;&gt;1. ISO 制定标准库规范&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;ISO/IEC&lt;/strong&gt; 制定 C 和 C++ 编程语言的标准，其中包括&lt;strong&gt;标准库&lt;/strong&gt;的规范。这些标准定义了语言的语法、语义以及标准库中包含的函数、类型和宏&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;标准库&lt;/strong&gt;是标准定义的一组函数和类型, 标准库的规范只定义了接口（即函数原型、类型定义等），而没有定义具体的实现&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;glibc&lt;/strong&gt;（GNU C Library）是 GNU 项目为 GNU 系统（包括 Linux）提供的 C 语言标准库的&lt;strong&gt;一种实现&lt;/strong&gt;, 它是 Linux 系统中最常用的 C 库, 提供了符合 ISO C 标准的函数和类型, 以及一些 Linux 特有的扩展&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;MSVCRT&lt;/strong&gt;（Microsoft Visual C Runtime）是 Microsoft 为 Windows 操作系统提供的 C 和 C++ 运行时库, 其中包含了 C 语言标准库的&lt;strong&gt;一种实现&lt;/strong&gt;, 它与 Microsoft Visual Studio 编译器紧密集成，为 Windows 应用程序提供必要的运行时支持。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;ISO 定义了标准库的规范, glibc 和 MSVCRT 是标准库的不同实现, 分别用于不同的操作系统（Linux 和 Windows）&lt;/p&gt;
+&lt;p&gt;为什么要实现不同版本的运行时库: There are functions for memory allocation, creating threads, and input/output operations (such as those in &lt;code&gt;stdio.h&lt;/code&gt;)  in C language. All of these functions rely on system calls. Therefore, when third-party manufacturers implement the standard library of C language, they must create different versions for the different OS because each OS has its own set of system calls.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-iso-制定标准库规范&#34;&gt;1. ISO 制定标准库规范&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;ISO/IEC&lt;/strong&gt; 制定 C 和 C++ 编程语言的标准，其中包括&lt;strong&gt;标准库&lt;/strong&gt;的规范。这些标准定义了语言的语法、语义以及标准库中包含的函数、类型和宏&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;标准库&lt;/strong&gt;是标准定义的一组函数和类型, 标准库的规范只定义了接口（即函数原型、类型定义等），而没有定义具体的实现&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;glibc&lt;/strong&gt;（GNU C Library）是 GNU 项目为 GNU 系统（包括 Linux）提供的 C 语言标准库的&lt;strong&gt;一种实现&lt;/strong&gt;, 它是 Linux 系统中最常用的 C 库, 提供了符合 ISO C 标准的函数和类型, 以及一些 Linux 特有的扩展&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;MSVCRT&lt;/strong&gt;（Microsoft Visual C Runtime）是 Microsoft 为 Windows 操作系统提供的 C 和 C++ 运行时库, 其中包含了 C 语言标准库的&lt;strong&gt;一种实现&lt;/strong&gt;, 它与 Microsoft Visual Studio 编译器紧密集成，为 Windows 应用程序提供必要的运行时支持。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;ISO 定义了标准库的规范, glibc 和 MSVCRT 是标准库的不同实现, 分别用于不同的操作系统（Linux 和 Windows）&lt;/p&gt;
+&lt;p&gt;为什么要实现不同版本的运行时库: There are functions for memory allocation, creating threads, and input/output operations (such as those in &lt;code&gt;stdio.h&lt;/code&gt;)  in C language. All of these functions rely on system calls. Therefore, when third-party manufacturers implement the standard library of C language, they must create different versions for the different OS because each OS has its own set of system calls.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-运行时-runtime-库&#34;&gt;2. 运行时 (runtime) 库&lt;/h2&gt;
+&lt;p&gt;运行时库分为静态链接库和动态链接库两种形式, 我们在源代码中使用 printf 时, 编译器看到的只是一个函数声明, 这些函数(比如 printf、malloc 等)的真正实现代码在运行时库文件中, 在 &lt;strong&gt;链接 阶段&lt;/strong&gt;, 链接器会把运行时库中我们用到的函数实现和我们的代码链接到一起, 然后&lt;strong&gt;生成可执行文件&lt;/strong&gt;, 有两种链接方式:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;静态链接方式：编译阶段 直接把 静态链接库文件 和obj 二进制文件链接, 生成可执行文件&lt;/li&gt;
+&lt;li&gt;动态链接方式：程序运行时从动态链接库文件中加载运行时库的代码&lt;/li&gt;
+&lt;/ul&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;&lt;/th&gt;
+          &lt;th&gt;静态链接库&lt;/th&gt;
+          &lt;th&gt;动态链接库&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Windows 扩展名&lt;/td&gt;
+          &lt;td&gt;.lib&lt;/td&gt;
+          &lt;td&gt;.dll (Dynamic Link Library)&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Linux/Unix 扩展名&lt;/td&gt;
+          &lt;td&gt;.a (archive)&lt;/td&gt;
+          &lt;td&gt;.so (Shared Object)&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;加载时机&lt;/td&gt;
+          &lt;td&gt;编译时完整复制到可执行文件&lt;/td&gt;
+          &lt;td&gt;程序运行时才加载&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;优点&lt;/td&gt;
+          &lt;td&gt;程序独立性强，不依赖外部环境&lt;/td&gt;
+          &lt;td&gt;• 可执行文件较小&lt;!-- raw HTML omitted --&gt;• 多个程序可共享同一库文件&lt;!-- raw HTML omitted --&gt;• 库文件更新不需重新编译程序&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;缺点&lt;/td&gt;
+          &lt;td&gt;生成的可执行文件较大，内存占用较多&lt;/td&gt;
+          &lt;td&gt;• 程序运行依赖特定动态链接库&lt;!-- raw HTML omitted --&gt;• 可能出现版本兼容性问题&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;C语言标准库示例&lt;/td&gt;
+          &lt;td&gt;• Linux/Unix: libc.a&lt;!-- raw HTML omitted --&gt;• Windows: libcmt.lib&lt;/td&gt;
+          &lt;td&gt;• Linux/Unix: libc.so&lt;!-- raw HTML omitted --&gt;• Windows: msvcrt.dll&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;The term &lt;code&gt;library&lt;/code&gt; (runtime library) and &lt;code&gt;header&lt;/code&gt; are not same&lt;/strong&gt;. &lt;code&gt;Library&lt;/code&gt; are the implementations of the &lt;code&gt;header&lt;/code&gt;, which exist as binary files (the static library &lt;code&gt;.a&lt;/code&gt;/&lt;code&gt;.lib&lt;/code&gt; or the dynamic library &lt;code&gt;.so&lt;/code&gt;/&lt;code&gt;.dll&lt;/code&gt; ), whereas headers are &lt;code&gt;.h&lt;/code&gt; files. Therefore, we usually cannot find the source code of the implementation of C standard library, such as function &lt;code&gt;printf()&lt;/code&gt;. Because the implementation of these functions are provided as compiled binary files. But you can find the glibc&amp;rsquo;s implementation of &lt;code&gt;printf()&lt;/code&gt; on  the internet, because glibc is open source.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;3-libca-va-libcso&#34;&gt;3. libc.a va libc.so&lt;/h2&gt;
+&lt;p&gt;The size of libc.a is &lt;code&gt;5.8 MB&lt;/code&gt; which is huge for codes, &lt;code&gt;libc.a&lt;/code&gt; is a static library, also known as a &amp;ldquo;archive&amp;rdquo; library, It contains compiled object code that gets linked into the final executable at compile time.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ls -lh /usr/lib/x86_64-linux-gnu/libc.a
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-rw-r--r-- &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; root root 5.8M Sep &lt;span style=&#34;color:#ae81ff&#34;&gt;25&lt;/span&gt; 14:45 /usr/lib/x86_64-linux-gnu/libc.a
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Don&amp;#39;t archive libc.a directly, archive it on a different folder&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ar -x libc.a
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ls | grep printf
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;printf.o
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sprintf.o
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;为什么静态运行库里面一个目标文件只包含一个函数？比如libc.a里面printf.o只有printf()函数、strlen.o只有strlen()函数，为什么要这样组织？&lt;/p&gt;
+&lt;p&gt;链接器在链接静态库的时候是以目标文件为单位的, 比如我们引用了&lt;code&gt;printf()&lt;/code&gt;函数, 如果进行静态链接的话, 那么链接器就只会把库中包含printf()函数的那个目标文件链接进来, 由于运行库有成百上千个函数, 如果把这些函数都放在一个目标文件中就会很大&amp;hellip;&lt;/p&gt;
+&lt;p&gt;如果把整个链接过程比作一台计算机, 那么ld链接器就是计算机的CPU, 所有的目标文件、库文件就是输入, 链接结果输出的可执行文件就是输出, 而链接控制脚本正是这台计算机的“程序”, 它控制CPU的运行, 以“程序”要求的方式将输入加工成所须要的输出结果.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt;libc.so&lt;/code&gt; is a shared library, often referred to as a &amp;ldquo;dynamic link library.&amp;rdquo; It contains compiled code that is loaded into memory at runtime, allowing multiple programs to share the same code in memory.&lt;/p&gt;
+&lt;p&gt;Both &lt;code&gt;libc.a&lt;/code&gt; and &lt;code&gt;libc.so&lt;/code&gt; are implementations of the C library, but they differ in their form and how they are linked to programs.&lt;/p&gt;
+&lt;p&gt;When we staticlly compile a source file, then &lt;code&gt;libc.a&lt;/code&gt; will be used at compiled time, if we dynamically compile a source file (compile with dynamically linked) then &lt;code&gt;libc.so&lt;/code&gt; will be used at runtime.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ gcc -static -o main main.c         
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file main
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;main: ELF 64-bit LSB executable, x86-64, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;GNU/Linux&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;, statically linked, BuildID&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;sha1&lt;span style=&#34;color:#f92672&#34;&gt;]=&lt;/span&gt;7fd47f129d345aa2ef6c44b06ffa01be4174d098, &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; GNU/Linux 3.2.0, not stripped
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ls -lh main
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-rwxrwxr-x &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ubuntu ubuntu 880K Oct &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; 00:51 main
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ gcc -o main main.c 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file main
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;main: ELF 64-bit LSB pie executable, x86-64, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SYSV&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;, dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;sha1&lt;span style=&#34;color:#f92672&#34;&gt;]=&lt;/span&gt;f14bf2e15cabc179d82a09a2de5bf15da6e5b75c, &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; GNU/Linux 3.2.0, not stripped
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ls -lh main
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;-rwxrwxr-x &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; ubuntu ubuntu 16K Oct &lt;span style=&#34;color:#ae81ff&#34;&gt;18&lt;/span&gt; 00:54 main
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see, the dynamically linked binary is very small just 1&lt;code&gt;6k&lt;/code&gt; compared with the statically linked binary &lt;code&gt;880K&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;4-glibc-vs-libc&#34;&gt;4. glibc vs libc&lt;/h2&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;特性&lt;/th&gt;
+          &lt;th&gt;libc&lt;/th&gt;
+          &lt;th&gt;glibc&lt;/th&gt;
+          &lt;th&gt;其他libc实现(如musl/uClibc)&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;定义&lt;/td&gt;
+          &lt;td&gt;C标准库的接口规范&lt;/td&gt;
+          &lt;td&gt;GNU项目开发的libc具体实现&lt;/td&gt;
+          &lt;td&gt;轻量级/嵌入式场景的libc实现&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;性质&lt;/td&gt;
+          &lt;td&gt;概念性称呼&lt;/td&gt;
+          &lt;td&gt;实际库文件&lt;/td&gt;
+          &lt;td&gt;实际库文件&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;使用范围&lt;/td&gt;
+          &lt;td&gt;-&lt;/td&gt;
+          &lt;td&gt;Linux系统主流实现&lt;/td&gt;
+          &lt;td&gt;嵌入式系统、资源受限环境&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;体积&lt;/td&gt;
+          &lt;td&gt;-&lt;/td&gt;
+          &lt;td&gt;较大&lt;/td&gt;
+          &lt;td&gt;小巧精简&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;功能&lt;/td&gt;
+          &lt;td&gt;定义基础接口&lt;/td&gt;
+          &lt;td&gt;完整的功能实现，特性丰富&lt;/td&gt;
+          &lt;td&gt;基础功能实现，针对性优化&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;运行环境&lt;/td&gt;
+          &lt;td&gt;-&lt;/td&gt;
+          &lt;td&gt;主要用于桌面和服务器&lt;/td&gt;
+          &lt;td&gt;嵌入式设备、IoT设备等&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;特点&lt;/td&gt;
+          &lt;td&gt;-&lt;/td&gt;
+          &lt;td&gt;功能全面，向后兼容性好&lt;/td&gt;
+          &lt;td&gt;启动快、内存占用小&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;5-conclusion&#34;&gt;5. Conclusion&lt;/h2&gt;
+&lt;p&gt;程序如何使用操作系统提供的API(system call)? 在一般的情况下，一种语言的开发环境往往会附带有语言库（Language Library也可以说是标准库,运行时库）。这些库就是对操作系统的API的包装，比如我们经典的C语言版“Hello World”程序，它使用C语言标准库的“printf”函数来输出一个字符串，“printf”函数对字符串进行一些必要的处理以后，最后会调用操作系统提供的API。各个操作系统下，往终端输出字符串的API都不一样，在Linux下，它是一个“write”的系统调用，而在Windows下它是“WriteConsole”系统API。&lt;strong&gt;标准库函数(运行库)依赖的是system call&lt;/strong&gt;。库里面还带有那些很常用的函数，比如C语言标准库里面有很常用一个函数取得一个字符串的长度叫strlen()，该函数即遍历整个字符串后返回字符串长度，这个函数并没有调用任何操作系统的API，也没有做任何输入输出。但是很大一部分库函数(运行库)都是要调用操作系统的API的.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“Any problem in computer science can be solved by another layer of indirection.”&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/1f35f2b6abb298af70e6c922f5be2f32.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;每个层次之间都须要相互通信，既然须要通信就必须有一个通信的协议，我们一般将其称为接口（Interface），接口的下面那层是接口的提供者，由它定义接口；接口的上面那层是接口的使用者，它使用该接口来实现所需要的功能.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;运行时库(标准库, static library, dynamic library) 依赖 system call, 它提供头文件(&lt;code&gt;stdio.h&lt;/code&gt;, &lt;code&gt;math.h&lt;/code&gt;)供我们使用. 所以它很重要, 它在应用层和操作系统中间. 我们使用它提供的接口(&lt;code&gt;printf()&lt;/code&gt;)和操作系统进行交流(通过system call).&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;我们的软件体系中，位于最上层的是应用程序，比如我们平时用到的网络浏览器、Email客户端、多媒体播放器、图片浏览器等。从整个层次结构上来看，开发工具与应用程序是属于同一个层次的，因为它们都使用一个接口，那就是操作系统应用程序编程接口（Application Programming Interface, 就是标准库的头文件）。应用程序接口(头文件)的提供者是运行库，什么样的运行库提供什么样的API，比如Linux下的Glibc库提供POSIX的API；Windows的运行库提供Windows API，最常见的32位Windows提供的API又被称为Win32。&lt;/p&gt;
+&lt;p&gt;运行库使用操作系统提供的系统调用接口（System call Interface），系统调用接口在实现中往往以软件中断（Software Interrupt）的方式提供，比如Linux使用0x80号中断作为系统调用接口，Windows使用0x2E号中断作为系统调用接口（从Windows XP Sp2开始，Windows开始采用一种新的系统调用方式）。&lt;/p&gt;
+&lt;p&gt;操作系统内核层对于硬件层来说是硬件接口的使用者，而硬件是接口的定义者，硬件的接口定义决定了操作系统内核，具体来讲就是驱动程序如何操作硬件，如何与硬件进行通信。这种接口往往被叫做硬件规格（Hardware Specification），硬件的生产厂商负责提供硬件规格，操作系统和驱动程序的开发者通过阅读硬件规格文档所规定的各种硬件编程接口标准来编写操作系统和驱动程序。&lt;/p&gt;
+&lt;p&gt;&amp;mdash;程序员的自我修养：链接、装载与库&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Static Linking Go Programs</title>
+      <link>https://blog.jiyi27.com/posts/golang/advance/012-statically-linking/</link>
+      <pubDate>Tue, 10 Oct 2023 12:09:35 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/golang/advance/012-statically-linking/</guid>
+      <description>&lt;h2 id=&#34;1-static-linking-on-linux&#34;&gt;1. Static linking on linux&lt;/h2&gt;
+&lt;p&gt;Go creates &lt;strong&gt;static binaries&lt;/strong&gt; by default unless you use cgo to call C code, in which case it will create a dynamically linked binary. The easiest way to check if your program is statically compiled is to run &lt;code&gt;file&lt;/code&gt; on it.&lt;/p&gt;
+&lt;p&gt;standard packages &lt;code&gt;os/user&lt;/code&gt; and &lt;code&gt;net&lt;/code&gt;  use cgo, so importing either (directly or indirectly) will result in a dynamic binary.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that &lt;code&gt;net&lt;/code&gt; use cgo does&amp;rsquo;t mean that all the codes in &lt;code&gt;net&lt;/code&gt; are cgo, cgo is just used for Name Resolution(resolving domain names) and some teivial features in &lt;code&gt;net&lt;/code&gt;. &lt;a href=&#34;https://pkg.go.dev/net#section-documentation&#34;&gt;https://pkg.go.dev/net#section-documentation&lt;/a&gt;&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-static-linking-on-linux&#34;&gt;1. Static linking on linux&lt;/h2&gt;
+&lt;p&gt;Go creates &lt;strong&gt;static binaries&lt;/strong&gt; by default unless you use cgo to call C code, in which case it will create a dynamically linked binary. The easiest way to check if your program is statically compiled is to run &lt;code&gt;file&lt;/code&gt; on it.&lt;/p&gt;
+&lt;p&gt;standard packages &lt;code&gt;os/user&lt;/code&gt; and &lt;code&gt;net&lt;/code&gt;  use cgo, so importing either (directly or indirectly) will result in a dynamic binary.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that &lt;code&gt;net&lt;/code&gt; use cgo does&amp;rsquo;t mean that all the codes in &lt;code&gt;net&lt;/code&gt; are cgo, cgo is just used for Name Resolution(resolving domain names) and some teivial features in &lt;code&gt;net&lt;/code&gt;. &lt;a href=&#34;https://pkg.go.dev/net#section-documentation&#34;&gt;https://pkg.go.dev/net#section-documentation&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;I do this test on my Ubuntu server firstly without cgo:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;package&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;hello&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~/codes [19:40:23] &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ go build -o server main.go
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~/codes [19:40:31] &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file server 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server: ELF 64-bit LSB executable, x86-64, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SYSV&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;, statically linked, Go BuildID&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;hjbIteBvAg_rZ86av_gy/k1xYD8duMhRTtrThDrrX/5yBtTaOBDsf4F2IOwADX/U1b5vnivY9rWcRUWpC_A, with debug_info, not stripped
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~/codes [19:40:36] &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ldd server 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	not a dynamic executable
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see, I just use &lt;code&gt;fmt&lt;/code&gt; package, and the executable file is statically linked.&lt;/p&gt;
+&lt;p&gt;And then I change the go code to:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;package&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;net/http&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;srv&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;NewServeMux&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;srv&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;HandleFunc&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;ResponseWriter&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Request&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fprintln&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;hello world&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	})
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;running...&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;ListenAndServe&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;:8080&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;srv&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then build it on Ubtutu machine:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~/codes [19:47:06]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ go build -o server main.go
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~/codes [19:47:31] &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file server 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server: ELF 64-bit LSB executable, x86-64, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SYSV&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;, dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, Go BuildID&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;KCFaacb5_zSot7hqkTv8/oYQa-0nbl_Gq2_YxF6JO/BnF2hmfFNgVx-UHRKxMt/Oj91sMcK9_or35yi4Xd0, with debug_info, not stripped
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~/codes [19:47:39] &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ldd server 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	linux-vdso.so.1 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x00007fff10cfb000&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	libc.so.6 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&amp;gt; /lib/x86_64-linux-gnu/libc.so.6 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x00007f4cd6200000&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/lib64/ld-linux-x86-64.so.2 &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;0x00007f4cd6612000&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The binary file is dynamically linked as we expected.&lt;/p&gt;
+&lt;h3 id=&#34;11-disable-dynamically-linking-with--cgo_enabled0&#34;&gt;1.1. Disable dynamically linking with &lt;code&gt; CGO_ENABLED=0&lt;/code&gt;&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~/codes [19:48:57] &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ CGO_ENABLED&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; go build -o server main.go
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~/codes [20:11:01] &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file server 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server: ELF 64-bit LSB executable, x86-64, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SYSV&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;, statically linked, Go BuildID&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;wGRY1RH-HeASVOwzThcj/lQNxgqzqGUe1P8n_WjN7/cEcN362GspK8XKl2L0AG/F7hVHMJfVIyYcLM6Jhz1, with debug_info, not stripped
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;Note that the &lt;code&gt;CGO_ENABLED=0&lt;/code&gt; is to disable cgo. It is disabled by default when cross-compiling. You can control this by setting the CGO_ENABLED environment variable when running the go tool: set it to 1 to enable the use of cgo, and to 0 to disable it.&lt;/p&gt;
+&lt;p&gt;If CGO_ENABLED=0 is set, the Go net package will not use cgo, and instead, it will use a pure Go implementation for its networking functionality.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://go-review.googlesource.com/c/go/&amp;#43;/12603/2/src/cmd/cgo/doc.go&#34;&gt;https://go-review.googlesource.com/c/go/+/12603/2/src/cmd/cgo/doc.go&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-static-linking-on-osx&#34;&gt;2. Static linking on osx&lt;/h2&gt;
+&lt;p&gt;On Mac, the behavior is totoally different, even don&amp;rsquo;t use cgo the final executable will be dynamically linked.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;package&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;hello&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Build on &lt;strong&gt;MacOS machine&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ go build -o server main.go
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file server 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server: Mach-O 64-bit executable arm64
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# otool is similar to &amp;#39;ldd&amp;#39; on linux&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# -L print shared libraries used&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ otool -L server
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/usr/lib/libSystem.B.dylib &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;compatibility version 0.0.0, current version 0.0.0&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	/usr/lib/libresolv.9.dylib &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;compatibility version 0.0.0, current version 0.0.0&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;CGO_ENABLED=0&lt;/code&gt; won&amp;rsquo;t help on MaxOS&lt;/strong&gt;. And I found something could be explain this:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;I think this won&amp;rsquo;t work on macOS, where &lt;strong&gt;fully static builds are not allowed/supported by Apple&lt;/strong&gt;. Binaries should always go through libSystem, which is also why we changed the way Go calls the kernel in Go 1.12. So, pure Go binaries are already as static as they can be, as far as I can tell.&lt;/p&gt;
+&lt;p&gt;I propose that on macOS &lt;code&gt;go build -static&lt;/code&gt; simply tries to statically link cgo libraries, so that the final binary doesn&amp;rsquo;t depend on third-party. So but just on system libraries. To do this, unfortunately, it looks like it&amp;rsquo;s not sufficient to add the output of &lt;code&gt;pkg-config --static --libs&lt;/code&gt; to &lt;code&gt;LDFLAGS&lt;/code&gt; because that output still refers to each library as &lt;code&gt;-L/path/to -lfoo&lt;/code&gt; (as this is the correct syntax when &lt;code&gt;--static&lt;/code&gt; is passed to the linker, which we are not going to do in macOS). So, the output of &lt;code&gt;pkg-config&lt;/code&gt; should be rewritten as &lt;code&gt;/path/to/libfoo.a&lt;/code&gt; (using a similar library path search algorithm that the linker does).&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://github.com/golang/go/issues/26492#issuecomment-525527016&#34;&gt;https://github.com/golang/go/issues/26492#issuecomment-525527016&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Yes, I agree with Volker&amp;rsquo;s comment that some systems don&amp;rsquo;t really allow static binaries.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://stackoverflow.com/a/61324538/16317008&#34;&gt;https://stackoverflow.com/a/61324538/16317008&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Note that fully static builds are not allowed/supported by Apple doesn&amp;rsquo;t mean we cannot create statically linked binaries on Mac, we can build the binary executable on other platforms, linux, for example.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;package&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;net/http&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;srv&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;NewServeMux&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;srv&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;HandleFunc&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;ResponseWriter&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Request&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fprintln&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;hello world&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	})
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;running...&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;_&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;ListenAndServe&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;:8080&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;srv&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Build on MacOS machine with some flags:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux go build -o server main.go
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file server                          
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server: ELF 64-bit LSB executable, ARM aarch64, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SYSV&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;, statically linked, Go BuildID&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;qAraNfnU-cYn-2KsoFx7/rrJYFJTR911CeHr08Y4E/uoFKsYV1LH9as_7QdMc7/fJ71_ARZOiNg7b4tLPIt, with debug_info, not stripped
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see, even we use the &lt;code&gt;net&lt;/code&gt; package which uses cgo, it still can be statically with &lt;code&gt;GOOS=linux&lt;/code&gt; flag, this is called cross compilation, learn more: &lt;a href=&#34;https://davidzhu.xyz/post/golang/advance/011-cross-compilation/&#34;&gt;Cross Compilation - Go - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;But the arch is arm64, not amd64, if you want build binary gonna runs on amd64, you should add &lt;code&gt;GOARCH=amd64&lt;/code&gt; :&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;amd64 go build -o server main.go
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3--extldflags-static&#34;&gt;3. &lt;code&gt;&amp;quot;-extldflags=-static&amp;quot;&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;In previous part, we know that &lt;code&gt;CGO_ENABLED=0&lt;/code&gt; will disable cgo, if we use &lt;code&gt;net&lt;/code&gt; and we want statically linking, it&amp;rsquo;s fine we just pass &lt;code&gt;CGO_ENABLED=0&lt;/code&gt; to go build, then we will use pure go implementation of &lt;code&gt;net&lt;/code&gt;. But what if we use a third party package that only implemented by cgo, &lt;a href=&#34;https://github.com/mattn/go-sqlite3&#34;&gt;mattn/go-sqlite3&lt;/a&gt; for example, and we want make it linked statically, apparently we can&amp;rsquo;t use &lt;code&gt;CGO_ENABLED=0&lt;/code&gt; to disable cgo.&lt;/p&gt;
+&lt;p&gt;A simle cgo:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;package&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// typedef int (*intFunc) ();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;//&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// int&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// bridge_int_func(intFunc f)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// {&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;//		return f();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// }&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;//&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// int fortytwo()&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// {&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;//	    return 42;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// }&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;C&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;f&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;C&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;intFunc&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;C&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;fortytwo&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(int(&lt;span style=&#34;color:#a6e22e&#34;&gt;C&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;bridge_int_func&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;f&lt;/span&gt;)))
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// Output: 42&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then compile it with &lt;code&gt;CGO_ENABLED=0&lt;/code&gt; on Ubuntu machine:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ CGO_ENABLED&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; go build -o server main.go
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;go: no Go source files
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~/codes [20:58:50] C:1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ go build -o server main.go 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~/codes [21:00:15] &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file server 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server: ELF 64-bit LSB executable, x86-64, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SYSV&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;, dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;sha1&lt;span style=&#34;color:#f92672&#34;&gt;]=&lt;/span&gt;da0674602632e4f540cfe58f0be1ffa261f2eefe, &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; GNU/Linux 3.2.0, with debug_info, not stripped
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Then we can use &lt;code&gt;-ldflags&lt;/code&gt; to tell the C linker to statically link with &lt;code&gt;-extldflags&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ldflags&lt;/span&gt;=&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;-extldflags=-static&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~/codes [21:00:18] &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ go build -ldflags&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;-extldflags=-static&amp;#34;&lt;/span&gt; -o server main.go
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228 in ~/codes [21:01:41] &lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ file server 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;server: ELF 64-bit LSB executable, x86-64, version &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;GNU/Linux&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;, statically linked, BuildID&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;sha1&lt;span style=&#34;color:#f92672&#34;&gt;]=&lt;/span&gt;4031763b8f09ffcd1455840afe89c4644eca0088, &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; GNU/Linux 3.2.0, with debug_info, not stripped
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Now it&amp;rsquo;s statically linked.&lt;/p&gt;
+&lt;p&gt;I hope you can understand the difference between &lt;code&gt;CGO_ENABLED=0&lt;/code&gt; and &lt;code&gt;-ldflags=&amp;quot;-extldflags=-static&amp;quot;&lt;/code&gt; flag, and when you should use which one. Besides, you should know the different behavior on MacOS and Linux for statically linking in Go. And the two common command &lt;code&gt;ldd&lt;/code&gt;,  &lt;code&gt;otool&lt;/code&gt;, &lt;code&gt;file&lt;/code&gt; will help you.&lt;/p&gt;
+&lt;p&gt;Learn more:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.arp242.net/static-go.html&#34;&gt;Statically compiling Go programs&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.hashbangbash.com/2014/04/linking-golang-statically/&#34;&gt;#!bash blog/2014/04/linking-golang-statically/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dave.cheney.net/tag/cgo&#34;&gt;cgo | Dave Cheney&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://mt165.co.uk/blog/static-link-go/index.html&#34;&gt;Matt Turner - Statically Linking Go in 2022&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>说说C的编译动态静态库及Go的Runtime</title>
+      <link>https://blog.jiyi27.com/posts/cs-basics/003-go-runtime-complie-c/</link>
+      <pubDate>Thu, 25 May 2023 18:50:14 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/cs-basics/003-go-runtime-complie-c/</guid>
+      <description>&lt;p&gt;最近看线程总是看到 goroutine managed by go runtime, &amp;hellip; runtime, 也看到问题 Does Go has a runtime? 刚好Go在官方FAQs有回答, 就在这记录一下,&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Does Go have a runtime?&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Go does have an extensive library, called the &lt;em&gt;runtime&lt;/em&gt;, that is part of every Go program. The runtime library implements garbage collection, concurrency, stack management, and other critical features of the Go language. Although it is more central to the language, Go&amp;rsquo;s runtime is analogous to &lt;code&gt;libc&lt;/code&gt;, the C library.&lt;/p&gt;</description>
+      <content>&lt;p&gt;最近看线程总是看到 goroutine managed by go runtime, &amp;hellip; runtime, 也看到问题 Does Go has a runtime? 刚好Go在官方FAQs有回答, 就在这记录一下,&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Does Go have a runtime?&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Go does have an extensive library, called the &lt;em&gt;runtime&lt;/em&gt;, that is part of every Go program. The runtime library implements garbage collection, concurrency, stack management, and other critical features of the Go language. Although it is more central to the language, Go&amp;rsquo;s runtime is analogous to &lt;code&gt;libc&lt;/code&gt;, the C library.&lt;/p&gt;
+&lt;p&gt;It is important to understand, however, that Go&amp;rsquo;s runtime does not include a virtual machine, such as is provided by the Java runtime. Go programs are compiled ahead of time to native machine code (or JavaScript or WebAssembly, for some variant implementations). Thus, although the term is often used to describe the virtual environment in which a program runs, in Go the word “runtime” is just the name given to the library providing critical language services.&lt;/p&gt;
+&lt;p&gt;所以, runtime在go里指的就是它的标准库,&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;另外说一下什么是runtime library, it&amp;rsquo;s a collection of functions, 它是static lib和dynamic lib的集合, 运行时是什么? 即程序运行的时候, 所以不要觉得编译的链接阶段就把静态库和我们的代码链接到一起了, 就认为静态库不属于runtime library, 难道你运行的时候不用静态库里的&lt;code&gt;printf&lt;/code&gt;函数吗? 静态动态库只是和程序结合的时间不一样, 但运行的时候都会用到,&lt;/p&gt;
+&lt;p&gt;所以C Runtime Library里的函数就很多了, 就是我们能用到的那些C的头文件里的函数呗, 你如: &lt;code&gt;printf&lt;/code&gt;, &lt;code&gt;malloc&lt;/code&gt;, &lt;code&gt;abs&lt;/code&gt;, &lt;code&gt;min&lt;/code&gt;, &lt;code&gt;assert&lt;/code&gt;, 可以去微软看看他们的C Library的实现, 感受下微软实现的Runtime Library的函数都是哪些: &lt;a href=&#34;https://learn.microsoft.com/en-us/cpp/c-runtime-library/c-run-time-library-reference?view=msvc-170&#34;&gt;C runtime library reference | Microsoft Learn&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;那libc是什么? 就是C的标准库, 或者说C的运行时库, 其实这你都可以认为是同义词, 不用太多纠结, 关键是知道编译的过程做了什么, 没人非要你区分哪个库具体包含啥, 重要的是分清楚静态库&lt;code&gt;.a&lt;/code&gt;, &lt;code&gt;lib&lt;/code&gt;, 动态库&lt;code&gt;.so&lt;/code&gt;, &lt;code&gt;.dll&lt;/code&gt;参与了编译和运行时的哪个阶段.&lt;/p&gt;
+&lt;p&gt;MacOS下C标准库位置: &lt;code&gt;/Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;参考:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://go.dev/doc/faq#goroutines&#34;&gt;Go FAQs&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://learn.microsoft.com/en-us/cpp/c-runtime-library/c-run-time-library-reference?view=msvc-170&#34;&gt;C runtime library reference | Microsoft Learn&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;p&gt;想到之前读的石河子的一本书, 程序员的自我修养, 不仅感叹写的真的很好, 只是那时候才大一, 看不懂, 在这再说一下:&lt;/p&gt;
+&lt;p&gt;程序如何使用操作系统提供的API(system call)? 在一般的情况下，一种语言的开发环境往往会附带有语言库（Language Library也可以说是标准库,运行时库）。这些库就是对操作系统的API的包装，比如我们经典的C语言版“Hello World”程序，它使用C语言标准库的“printf”函数来输出一个字符串，“printf”函数对字符串进行一些必要的处理以后，最后会调用操作系统提供的API。各个操作系统下，往终端输出字符串的API都不一样，在Linux下，它是一个“write”的系统调用，而在Windows下它是“WriteConsole”系统API。&lt;strong&gt;标准库函数(运行库)依赖的是system call&lt;/strong&gt;。库里面还带有那些很常用的函数，比如C语言标准库里面有很常用一个函数取得一个字符串的长度叫strlen()，该函数即遍历整个字符串后返回字符串长度，这个函数并没有调用任何操作系统的API，也没有做任何输入输出。但是很大一部分库函数(运行库)都是要调用操作系统的API的.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“Any problem in computer science can be solved by another layer of indirection.”&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/003-go-runtime-complie-c/b.png&#34; alt=&#34;b&#34;&gt;&lt;/p&gt;
+&lt;p&gt;每个层次之间都须要相互通信，既然须要通信就必须有一个通信的协议，我们一般将其称为接口（Interface），接口的下面那层是接口的提供者，由它定义接口；接口的上面那层是接口的使用者，它使用该接口来实现所需要的功能.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;运行时库(标准库, static library, dynamic library) 依赖 system call, 它提供头文件(&lt;code&gt;stdio.h&lt;/code&gt;, &lt;code&gt;math.h&lt;/code&gt;)供我们使用. 所以它很重要, 它在应用层和操作系统中间. 我们使用它提供的接口(&lt;code&gt;printf()&lt;/code&gt;)和操作系统进行交流(通过system call).&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;我们的软件体系中，位于最上层的是应用程序，比如我们平时用到的网络浏览器、Email客户端、多媒体播放器、图片浏览器等。从整个层次结构上来看，开发工具与应用程序是属于同一个层次的，因为它们都使用一个接口，那就是操作系统应用程序编程接口（Application Programming Interface, 就是标准库的头文件）。应用程序接口(头文件)的提供者是运行库，什么样的运行库提供什么样的API，比如Linux下的Glibc库提供POSIX的API；Windows的运行库提供Windows API，最常见的32位Windows提供的API又被称为Win32。&lt;/p&gt;
+&lt;p&gt;运行库使用操作系统提供的系统调用接口（System call Interface），系统调用接口在实现中往往以软件中断（Software Interrupt）的方式提供，比如Linux使用0x80号中断作为系统调用接口，Windows使用0x2E号中断作为系统调用接口（从Windows XP Sp2开始，Windows开始采用一种新的系统调用方式）。&lt;/p&gt;
+&lt;p&gt;操作系统内核层对于硬件层来说是硬件接口的使用者，而硬件是接口的定义者，硬件的接口定义决定了操作系统内核，具体来讲就是驱动程序如何操作硬件，如何与硬件进行通信。这种接口往往被叫做硬件规格（Hardware Specification），硬件的生产厂商负责提供硬件规格，操作系统和驱动程序的开发者通过阅读硬件规格文档所规定的各种硬件编程接口标准来编写操作系统和驱动程序。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;strong&gt;ISO and Standards&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;先来看看ISO: The International Organization for Standardization, ISO每年discuss然后得出语言的standards, C99, C11 standards也就是这么来的, standards主要介绍了两部分内容, 语言本身功能和该语言的standard library. 对, 只是介绍, 剩下的实现由其他人完成(glibc, MSVCRT是c standard library的实现). 即ISO出版standards, standard包括standard library,&lt;/p&gt;
+&lt;p&gt;比如99年他们讨论的结果就是这个C99 standard: &lt;a href=&#34;https://www.google.com/url?sa=t&amp;amp;rct=j&amp;amp;q=&amp;amp;esrc=s&amp;amp;source=web&amp;amp;cd=&amp;amp;cad=rja&amp;amp;uact=8&amp;amp;ved=2ahUKEwjo5rzimd_6AhVIa94KHe1PDMsQFnoECCMQAQ&amp;amp;url=https%3A%2F%2Fwww.dii.uchile.cl%2F~daespino%2Ffiles%2FIso_C_1999_definition.pdf&amp;amp;usg=AOvVaw1MPepaWR9aWSbzO1gNwbST&#34;&gt;ISO/IEC 9899:1999(E) &amp;ndash; Programming Languages &amp;ndash; C&lt;/a&gt;), C99 standard内容包括两部分:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;the C/C++ features and functionalities;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;the C/C++ API — a collection of classes, functions and macros that developers use in their C/C++ programs. It is called the Standard Library.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;strong&gt;Static Library and Dynamic Library&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Shared libraries(dynamic library) are&lt;code&gt;.so&lt;/code&gt; (or in Windows &lt;code&gt;.dll&lt;/code&gt;, or in OS X &lt;code&gt;.dylib&lt;/code&gt;) files. All the code relating to the library is in this file, and it is referenced by programs using it at run-time. A program using a shared library only makes reference to the code that it uses in the shared library.&lt;/p&gt;
+&lt;p&gt;Static libraries are &lt;code&gt;.a&lt;/code&gt; (or in Windows &lt;code&gt;.lib&lt;/code&gt;) files. All the code relating to the library is in this file, and it is directly linked into the program at compile time. A program using a static library takes copies of the code that it uses from the static library and makes it part of the program.&lt;/p&gt;
+&lt;p&gt;在这说一下&lt;code&gt;libc.a&lt;/code&gt;文件:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;源代码经过预处理, 编译, 汇编后编程一个&lt;code&gt;.o&lt;/code&gt;目标文件, 这个目标文件需要和其他libraries(&lt;code&gt;libc.a&lt;/code&gt;是由多个&lt;code&gt;.o&lt;/code&gt;目标文件压缩得到的)进行最后一步 链接 才能得到最终的可执行文件.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://blog.jiyi27.com/003-go-runtime-complie-c/a.png&#34; alt=&#34;a&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Linux下, 人们用&lt;code&gt;ar&lt;/code&gt;程序把很多目标文件压缩到了静态库&lt;code&gt;libc.a&lt;/code&gt;(glibc的c标准库), 比如输入输出有printf.o，scanf.o；文件操作有fread.o，fwrite.o；时间日期有date.o，time.o；内存管理有malloc.o等。&lt;/p&gt;
+&lt;p&gt;为什么静态运行库里面一个目标文件只包含一个函数？比如libc.a里面printf.o只有printf()函数、strlen.o只有strlen()函数，为什么要这样组织？&lt;/p&gt;
+&lt;p&gt;链接器在链接静态库的时候是以目标文件为单位的。比如我们引用了静态库中的&lt;code&gt;printf()&lt;/code&gt;函数，那么链接器就只会把库中包含printf()函数的那个目标文件链接进来，由于运行库有成百上千个函数，如果把这些函数都放在一个目标文件中&amp;hellip;&lt;/p&gt;
+&lt;p&gt;如果把整个链接过程比作一台计算机，那么&lt;code&gt;ld&lt;/code&gt;链接器就是计算机的CPU，所有的目标文件、库文件就是输入，链接结果输出的可执行文件就是输出，而链接控制脚本正是这台计算机的“程序”，它控制CPU的运行，以“程序”要求的方式将输入加工成所须要的输出结果.&lt;/p&gt;
+&lt;p&gt;参考:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://stackoverflow.com/questions/2649334/difference-between-static-and-shared-libraries&#34;&gt;Difference between static and shared libraries?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.linkedin.com/pulse/c-static-libraries-how-work-why-we-use-them-create-one-chatti-iheb/&#34;&gt;C Static libraries, How they work; Why and how we use them and how to create one&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;strong&gt;Implementation of Standard Library&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;我们知道C有个分配内存的函数, 还有创建线程, 输入输出(&lt;code&gt;stdio.h&lt;/code&gt;), 这些都必须依赖system call. 所以第三方厂商实现standard library的时候, 要根据不同的OS来实现不同版本, 因为它们有不同的system call.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;GNU/Linux implementation&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;The GNU C Library和glibc是同义词, 是C的runtime library也是standard library.&lt;/p&gt;
+&lt;p&gt;其实这个概念有必要澄清一下: runtime library包括static library, daynamic library. runtime library更像是个泛指.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;printf()&lt;/code&gt;和&lt;code&gt;malloc()&lt;/code&gt;等函数的声明在头文件&lt;code&gt;stdio.h&lt;/code&gt;, &lt;code&gt;stdlib.h&lt;/code&gt;中, 而它们的具体实现就在静态库&lt;code&gt;.a&lt;/code&gt;中 (&lt;code&gt;libc.a&lt;/code&gt;是由多个&lt;code&gt;.o&lt;/code&gt;目标文件压缩得到的), 即头文件 + 对应实现 = standard library.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;严格来说library和header不是一个东西, library是目标文件, header就是.h文件. 但是我们都说standard library包括包括printf等函数, 然后这些函数又被声明在这些标准头文件中. 所以这个library,&lt;/p&gt;
+&lt;p&gt;标准库为你写代码提供一些现成的方法、宏等使用，这些方法被封装在动态链接库或静态链接库或直接在头文件里，然后由头文件声明供程序员使用。&lt;/p&gt;
+&lt;p&gt;MacOS下c的头文件位置: &lt;code&gt;/Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Mac and iOS Implementation&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;On Mac and iOS the C Standard Library implementation is part of &lt;code&gt;libSystem&lt;/code&gt;, a core library located in &lt;code&gt;/usr/lib/libSystem.dylib&lt;/code&gt;. LibSystem includes other components such as the math library, the thread library and other low-level utilities. 注意我查了一下, mac上的C标准库好像不在说的这个文件夹了, 有人说在&lt;code&gt;/usr/lib/system/&lt;/code&gt;我看了下, 但不知道是不是他们实现的C标准库.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Windows Implementation&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;On Windows the implementation of the Standard Libraries has always been strictly bound to &lt;strong&gt;Visual Studio&lt;/strong&gt;, the official Microsoft compiler. They use to call it &lt;strong&gt;C/C++ Run-time Library&lt;/strong&gt; (CRT) and it covers both implementations.&lt;/p&gt;
+&lt;p&gt;参考: &lt;a href=&#34;https://www.internalpointers.com/post/c-c-standard-library&#34;&gt;https://www.internalpointers.com/post/c-c-standard-library&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

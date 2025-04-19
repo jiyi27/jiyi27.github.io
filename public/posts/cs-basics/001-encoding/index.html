@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>编码和乱码 UTF-8 Unicode :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="编码问题很常见, 有时候读文件打开是乱码, 有的语言说自己字符串采用unicode表示字符, 可又来utf-8编码, 这都是什么?
+1. 编码和乱码 (unicode vs ascii) 电脑只能看懂二进制数, 所以得想办法把人类语言用二进制表示, 这就是编码的目的. ASCII 规定数字65代表字符A, 66代表字符B依次类推, 所以ASCII表就是一个map, 每个字符对应一个数, 把字符按照预定规则对应到数字的过程就叫编码.
+到后来计算机普及, 全世界都使用不同语言, 出现了问题, 比如我们用36代表汉字牛, 韩国说用36代表字符&amp;, 当我输入牛, 软件就把0010 0100存入磁盘, 然后我把文件传给韩国的朋友, 他们的程序认为36即0010 0100代表&amp;, 这就产生了乱码: 软件尝试使用与文件编码不同的编码方式来解码文件,
+所以我们需要一个新的标准, 可以涵盖全世界字符的那种, 然后所有软件都遵守这个标准, 这样才能无差错沟通, 我发送一串二进制在我这代表字符A, 你的软件收到这串二进制后翻译出的也是字符A, 而不是B或C,
+这时候 Unicode 就出来了, 它就是使用0~0x10FFFF的数字来表示世界上所有的字符, 如汉字 在 的Unicode值是 0x5728, 注意0x代表值5728是十六进制, 又如字符 A 的Unicode值是0x41, 这里说一下, Unicode表示的字符里英文字符的值和ASCII表是相同的,
+Unicode 和 ASCII 都是字符集, 但是 ASCII 只包含 128 个字符, 而 Unicode 包含很多很多个字符.
+2. Unicode vs UTF-8 vs UTF-16 2.1. Unicode 定义和目的： Unicode 是一个国际标准，用于不同系统和程序间统一表示文本数据。 它为世界上几乎所有的字符和文本符号分配了唯一的 code point。 Unicode standard describes how characters are represented by code points. A code point value is an integer in the range 0 to 0x10FFFF. In the standard and in this document, a code point is written using the notation U&#43;265E to mean the character with value 0x265e (9,822 in decimal).
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/cs-basics/001-encoding/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="编码和乱码 UTF-8 Unicode">
+<meta property="og:description" content="编码问题很常见, 有时候读文件打开是乱码, 有的语言说自己字符串采用unicode表示字符, 可又来utf-8编码, 这都是什么?
+1. 编码和乱码 (unicode vs ascii) 电脑只能看懂二进制数, 所以得想办法把人类语言用二进制表示, 这就是编码的目的. ASCII 规定数字65代表字符A, 66代表字符B依次类推, 所以ASCII表就是一个map, 每个字符对应一个数, 把字符按照预定规则对应到数字的过程就叫编码.
+到后来计算机普及, 全世界都使用不同语言, 出现了问题, 比如我们用36代表汉字牛, 韩国说用36代表字符&amp;, 当我输入牛, 软件就把0010 0100存入磁盘, 然后我把文件传给韩国的朋友, 他们的程序认为36即0010 0100代表&amp;, 这就产生了乱码: 软件尝试使用与文件编码不同的编码方式来解码文件,
+所以我们需要一个新的标准, 可以涵盖全世界字符的那种, 然后所有软件都遵守这个标准, 这样才能无差错沟通, 我发送一串二进制在我这代表字符A, 你的软件收到这串二进制后翻译出的也是字符A, 而不是B或C,
+这时候 Unicode 就出来了, 它就是使用0~0x10FFFF的数字来表示世界上所有的字符, 如汉字 在 的Unicode值是 0x5728, 注意0x代表值5728是十六进制, 又如字符 A 的Unicode值是0x41, 这里说一下, Unicode表示的字符里英文字符的值和ASCII表是相同的,
+Unicode 和 ASCII 都是字符集, 但是 ASCII 只包含 128 个字符, 而 Unicode 包含很多很多个字符.
+2. Unicode vs UTF-8 vs UTF-16 2.1. Unicode 定义和目的： Unicode 是一个国际标准，用于不同系统和程序间统一表示文本数据。 它为世界上几乎所有的字符和文本符号分配了唯一的 code point。 Unicode standard describes how characters are represented by code points. A code point value is an integer in the range 0 to 0x10FFFF. In the standard and in this document, a code point is written using the notation U&#43;265E to mean the character with value 0x265e (9,822 in decimal).
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/cs-basics/001-encoding/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="计算机基础" />
+
+
+  <meta property="article:published_time" content="2023-06-01 22:13:25 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/cs-basics/001-encoding/">编码和乱码 UTF-8 Unicode</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-06-01</time><span class="post-reading-time">3 分钟阅读 (566 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/python/">python</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E7%BC%96%E7%A0%81/">编码</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>编码问题很常见, 有时候读文件打开是乱码, 有的语言说自己字符串采用unicode表示字符, 可又来utf-8编码, 这都是什么?</p>
+<h2 id="1-编码和乱码-unicode-vs-ascii">1. 编码和乱码 (unicode vs ascii)<a href="#1-编码和乱码-unicode-vs-ascii" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>电脑只能看懂二进制数, 所以得想办法把人类语言用二进制表示, 这就是编码的目的. ASCII 规定数字<code>65</code>代表字符<code>A</code>, <code>66</code>代表字符<code>B</code>依次类推, 所以ASCII表就是一个map, 每个字符对应一个数, <strong>把字符按照预定规则对应到数字的过程就叫编码</strong>.</p>
+<p>到后来计算机普及, 全世界都使用不同语言, 出现了问题, 比如我们用<code>36</code>代表汉字<code>牛</code>, 韩国说用<code>36</code>代表字符<code>&amp;</code>, 当我输入<code>牛</code>, 软件就把<code>0010 0100</code>存入磁盘, 然后我把文件传给韩国的朋友, 他们的程序认为<code>36</code>即<code>0010 0100</code>代表<code>&amp;</code>, 这就产生了乱码: <strong>软件尝试使用与文件编码不同的编码方式来解码文件</strong>,</p>
+<p>所以我们需要一个新的标准, 可以涵盖全世界字符的那种, 然后所有软件都遵守这个标准, 这样才能无差错沟通, 我发送一串二进制在我这代表字符<code>A</code>, 你的软件收到这串二进制后翻译出的也是字符<code>A</code>, 而不是<code>B</code>或<code>C</code>,</p>
+<p>这时候 Unicode 就出来了, 它就是使用<code>0~0x10FFFF</code>的数字来表示世界上所有的字符, 如汉字 <code>在</code> 的Unicode值是 <code>0x5728</code>, 注意<code>0x</code>代表值<code>5728</code>是十六进制, 又如字符 <code>A</code> 的Unicode值是<code>0x41</code>, 这里说一下, Unicode表示的字符里英文字符的值和ASCII表是相同的,</p>
+<blockquote>
+<p>Unicode 和 ASCII 都是字符集, 但是 ASCII 只包含 128 个字符, 而 Unicode 包含很多很多个字符.</p>
+</blockquote>
+<h2 id="2-unicode-vs-utf-8-vs-utf-16">2. Unicode vs UTF-8 vs UTF-16<a href="#2-unicode-vs-utf-8-vs-utf-16" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="21-unicode">2.1. Unicode<a href="#21-unicode" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ol>
+<li><strong>定义和目的</strong>：
+<ul>
+<li>Unicode 是一个国际标准，用于不同系统和程序间统一表示文本数据。</li>
+<li>它为世界上几乎所有的字符和文本符号分配了唯一的 code point。</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>Unicode standard describes how characters are represented by <strong>code points</strong>. A code point value is an integer in the range 0 to 0x10FFFF. In the standard and in this document, a code point is written using the notation <code>U+265E</code> to mean the character with value <code>0x265e</code> (9,822 in decimal).</p>
+</blockquote>
+<ol start="2">
+<li>
+<p><strong>Code point 范围</strong>：</p>
+<ul>
+<li>从 <code>U+0000</code> 到 <code>U+10FFFF</code>，包括了超过 100,000 个字符。</li>
+</ul>
+</li>
+<li>
+<p><strong>重点</strong>：</p>
+<ul>
+<li>Unicode 是字符集（character set），定义了字符和 code point 之间的映射，但不规定具体如何在计算机中存储这些code point。</li>
+</ul>
+</li>
+</ol>
+<h3 id="22-utf-8">2.2. UTF-8<a href="#22-utf-8" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ol>
+<li>
+<p><strong>定义和特点</strong>：</p>
+<ul>
+<li>UTF-8（8-bit Unicode Transformation Format）是一种对 Unicode code point 进行编码的方式。</li>
+<li>它是一种可变长度的字符编码方法，使用 1 到 4 个字节来表示一个 Unicode code point。</li>
+</ul>
+</li>
+<li>
+<p><strong>优势</strong>：</p>
+<ul>
+<li>兼容性好，ASCII 编码的字符在 UTF-8 中保持单字节形式，与传统 ASCII 编码兼容。</li>
+<li>在存储英文文本时空间效率高。因为英文字符在 UTF-8 中只占用 1 个字节。</li>
+</ul>
+</li>
+</ol>
+<h3 id="23-utf-16">2.3. UTF-16<a href="#23-utf-16" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ol>
+<li>
+<p><strong>定义和特点</strong>：</p>
+<ul>
+<li>UTF-16（16-bit Unicode Transformation Format）是另一种对 Unicode code point进行编码的格式。</li>
+<li>使用 2 个或 4 个字节来表示一个 Unicode code point。</li>
+<li>在UTF-16中，字符可以用一个或两个16位的 <strong>code units</strong> 来表示.</li>
+</ul>
+</li>
+<li>
+<p><strong>特性</strong>：</p>
+<ul>
+<li>在处理某些语言（如中文、日文、韩文）时可能比 UTF-8 更加空间高效。</li>
+<li>因为多数汉字在 UTF-16 中只占用 2 个字节。</li>
+</ul>
+</li>
+</ol>
+<h3 id="24-主要区别">2.4. 主要区别<a href="#24-主要区别" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li><strong>编码长度</strong>：
+<ul>
+<li>UTF-8 是可变长度的，从 1 到 4 个字节不等。</li>
+<li>UTF-16 通常使用 2 个或 4 个字节。</li>
+</ul>
+</li>
+<li><strong>兼容性</strong>：
+<ul>
+<li>UTF-8 与传统 ASCII 编码完全兼容。</li>
+<li>UTF-16 与 ASCII 不兼容。</li>
+</ul>
+</li>
+<li><strong>空间效率</strong>：
+<ul>
+<li>对于主要包含 ASCII 字符的文本，UTF-8 更加高效。</li>
+<li>对于包含大量非西方字符的文本，UTF-16 可能更加高效。</li>
+</ul>
+</li>
+</ul>
+<p>总的来说，Unicode 是一个广泛的字符集，定义了全球各种字符的 code point。而 UTF-8 和 UTF-16 是这些code point在计算机存储和传输中的具体编码实现方式。选择哪种编码方式取决于特定的应用场景和空间效率需求。</p>
+<p>关于 utf-8 这里举个例子, 汉字<code>汉</code>的Unicode值是两字节即 <code>6C49</code>, 二进制为: <code>0110 1100 0100 1001</code>, 因为 utf-8 规定汉字占 3 字节, 因此选择第三行进行编码, 根据上标经过utf-8编码变成 <code>11100110 10110001 10001001</code>,  因此最终写入文件的是其三字节的 utf-8 encoding <code>11100110 10110001 10001001</code>, 而不是其Unicode <code>0110 1100 0100 1001</code> , 可以使用 <code>xxd</code> 查看文件的16进制内容,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ xxd text.md
+</span></span><span style="display:flex;"><span>00000000: e6b1 <span style="color:#ae81ff">89</span>  
+</span></span><span style="display:flex;"><span>$ file text.md
+</span></span><span style="display:flex;"><span>text.md: Unicode text, UTF-8 text
+</span></span></code></pre></div><p><code>e6b1 89</code>  = <code>11100110 10110001 10001001</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">Binary</span> <span style="color:#a6e22e">format</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">bytes</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">sequence</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span><span style="color:#a6e22e">st</span> <span style="color:#a6e22e">Byte</span>    <span style="color:#ae81ff">2</span><span style="color:#a6e22e">nd</span> <span style="color:#a6e22e">Byte</span>    <span style="color:#ae81ff">3</span><span style="color:#a6e22e">rd</span> <span style="color:#a6e22e">Byte</span>    <span style="color:#ae81ff">4</span><span style="color:#a6e22e">th</span> <span style="color:#a6e22e">Byte</span>    Number <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">Free</span> <span style="color:#a6e22e">Bits</span>   <span style="color:#a6e22e">Maximum</span> <span style="color:#a6e22e">Expressible</span> <span style="color:#a6e22e">Unicode</span> <span style="color:#a6e22e">Value</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">0</span><span style="color:#a6e22e">xxxxxxx</span>                                                <span style="color:#ae81ff">7</span>             <span style="color:#ae81ff">007</span><span style="color:#a6e22e">F</span> <span style="color:#a6e22e">hex</span> (<span style="color:#ae81ff">127</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">110</span><span style="color:#a6e22e">xxxxx</span>    <span style="color:#ae81ff">10</span><span style="color:#a6e22e">xxxxxx</span>                                (<span style="color:#ae81ff">5</span><span style="color:#f92672">+</span><span style="color:#ae81ff">6</span>)<span style="color:#f92672">=</span><span style="color:#ae81ff">11</span>          <span style="color:#ae81ff">07</span><span style="color:#a6e22e">FF</span> <span style="color:#a6e22e">hex</span> (<span style="color:#ae81ff">2047</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1110</span><span style="color:#a6e22e">xxxx</span>    <span style="color:#ae81ff">10</span><span style="color:#a6e22e">xxxxxx</span>    <span style="color:#ae81ff">10</span><span style="color:#a6e22e">xxxxxx</span>                  (<span style="color:#ae81ff">4</span><span style="color:#f92672">+</span><span style="color:#ae81ff">6</span><span style="color:#f92672">+</span><span style="color:#ae81ff">6</span>)<span style="color:#f92672">=</span><span style="color:#ae81ff">16</span>          <span style="color:#a6e22e">FFFF</span> <span style="color:#a6e22e">hex</span> (<span style="color:#ae81ff">65535</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">11110</span><span style="color:#a6e22e">xxx</span>    <span style="color:#ae81ff">10</span><span style="color:#a6e22e">xxxxxx</span>    <span style="color:#ae81ff">10</span><span style="color:#a6e22e">xxxxxx</span>    <span style="color:#ae81ff">10</span><span style="color:#a6e22e">xxxxxx</span>    (<span style="color:#ae81ff">3</span><span style="color:#f92672">+</span><span style="color:#ae81ff">6</span><span style="color:#f92672">+</span><span style="color:#ae81ff">6</span><span style="color:#f92672">+</span><span style="color:#ae81ff">6</span>)<span style="color:#f92672">=</span><span style="color:#ae81ff">21</span>          <span style="color:#ae81ff">10</span><span style="color:#a6e22e">FFFF</span> <span style="color:#a6e22e">hex</span> (<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">114</span>,<span style="color:#ae81ff">111</span>)
+</span></span></code></pre></div><p>读到<a href="http://www.imkevinyang.com/2010/06/%E5%85%B3%E4%BA%8E%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81%EF%BC%8C%E4%BD%A0%E6%89%80%E9%9C%80%E8%A6%81%E7%9F%A5%E9%81%93%E7%9A%84.html">一篇文章</a>总结的很好 分享片段:</p>
+<p>在Unicode出现之前，所有的字符集都是和具体编码方案绑定在一起的，都是直接将字符和最终字节流绑定死了，例如ASCII编码系统规定使用7比特来编码ASCII字符集；GB2312以及GBK字符集，限定了使用最多2个字节来编码所有字符，并且规定了字节序。这样的编码系统通常用简单的查表，也就是通过代码页就可以直接将字符映射为存储设备上的字节流了。例如下面这个例子：</p>
+<p><img src="/001-encoding/a.png" alt="a"></p>
+<p>这种方式的缺点在于，字符和字节流之间耦合得太紧密了，从而限定了字符集的扩展能力。假设以后火星人入住地球了，要往现有字符集中加入火星文就变得很难甚至不可能了，而且很容易破坏现有的编码规则。</p>
+<p>因此Unicode在设计上考虑到了这一点，<strong>将字符集和字符编码方案分离开</strong>:</p>
+<p><img src="/001-encoding/b.png" alt="b"></p>
+<p>也就是说，<strong>虽然每个字符在Unicode字符集中都能找到唯一确定的编号（字符码，又称Unicode码），但是决定最终字节流的却是具体的字符编码</strong>。例如同样是对Unicode字符“A”进行编码，UTF-8字符编码得到的字节流是0x41，而UTF-16（大端模式）得到的是0x00 0x41。</p>
+<h3 id="3-修改文件编码方式">3. 修改文件编码方式<a href="#3-修改文件编码方式" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>如果你直接把utf-8编码的文件转为其它编码比如gbk, 那转换之后你的文件肯定是乱码, 因为在你写入一些内容比如<code>汉</code>到你的文本文件, 此时这个文件的编码方式为<code>utf-8</code>, 那你保存此文件后, 此文件的内容已经是经过utf-8编码二进制数, 即:<code>11100110 10110001 10001001</code>也就是<code>e6b1 89</code>就是上面的汉字<code>汉</code>, 此时你硬要把文件的编码方式改为gbk, 而gbk采用完全与utf-8不同的编码方式(2字节1个字符),  此时当其他软件是图打开你这个文本文件时, 就会查看你文件的编码信息, 他们看到是gbk编码, 那就会把<code>11100110 10110001 10001001</code>即<code>e6b1 89</code>中的前两个字节解释为一个字符, 然后他们查找<code>11100110 10110001</code>即<code>e6b1</code>, 那肯定匹配不到<code>汉</code>, 就会把<code>11100110 10110001</code>解释为不可打印字符或者英文或者其它语言,,,</p>
+<p>但也可以实现不同编码的安全转换, 一个思路是, 假如知道文件是用的utf-8编码, 所以我们先把该文件的字符转换为unicode code point, 然后再利用gbk进行编码这些unicode code, 具体做法如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>file_path <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;article_1.md&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(file_path, encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;utf-8&#34;</span>) <span style="color:#66d9ef">as</span> f:
+</span></span><span style="display:flex;"><span>    utf_8_str <span style="color:#f92672">=</span> f<span style="color:#f92672">.</span>read()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> utf_8_str <span style="color:#f92672">is</span> <span style="color:#66d9ef">None</span>:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;Contents of Text cannot be None!&#34;</span>)
+</span></span><span style="display:flex;"><span>        sys<span style="color:#f92672">.</span>exit()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>        gbk_str <span style="color:#f92672">=</span> utf_8_str<span style="color:#f92672">.</span>encode(<span style="color:#e6db74">&#34;gbk&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#34;article_2.md&#34;</span>, <span style="color:#e6db74">&#34;wb&#34;</span>) <span style="color:#66d9ef">as</span> f:
+</span></span><span style="display:flex;"><span>    f<span style="color:#f92672">.</span>write(gbk_str)
+</span></span><span style="display:flex;"><span>    f<span style="color:#f92672">.</span>encoding <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;gbk&#34;</span>
+</span></span></code></pre></div><p>注意, 上面代码<code>utf_8_str = f.read()</code>, 此时<code>utf_8_str</code>已经是unicode code, 第二我们写如文件时, 要以二进制写入, 不然你写入的就是长得像16进制数的字符串, 而不是真正的写入二进制数据,</p>
+<h3 id="4-python-中的编码">4. Python 中的编码<a href="#4-python-中的编码" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>电脑只能存储二进制数, 而python也有个bytes类用来代表二进制字符串,</p>
+<p>所以这里有两个概念, string和bytes string, 他们是不同的类, 拥有的函数不同, 对于一个普通的string, 它有个函数叫<code>encode()</code>, 该函数的返回类型是<code>bytes</code>, 如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>bytes_str <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;AB&#39;</span><span style="color:#f92672">.</span>encode(<span style="color:#e6db74">&#39;ascii&#39;</span>)
+</span></span><span style="display:flex;"><span>print(type(bytes_str))
+</span></span><span style="display:flex;"><span>print(bytes_str<span style="color:#f92672">.</span>hex())
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">class</span> <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#a6e22e">bytes</span><span style="color:#e6db74">&#39;&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">4142</span>
+</span></span></code></pre></div><p>然后对于bytes类, 有个函数叫<code>decode()</code>, 该函数的返回类型为<code>str</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>bytes_str <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;AB&#39;</span><span style="color:#f92672">.</span>encode(<span style="color:#e6db74">&#39;ascii&#39;</span>)
+</span></span><span style="display:flex;"><span>a <span style="color:#f92672">=</span> bytes_str<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;ascii&#39;</span>)
+</span></span><span style="display:flex;"><span>print(type(a))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">class</span> <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#a6e22e">str</span><span style="color:#e6db74">&#39;&gt;</span>
+</span></span></code></pre></div><p>所以在往一个文件写入的时候想好是直接写入二进制还是写入编码后的字符串, 即<strong>注意文件的打开方式</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># 文件的内容: 汉在</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 文件的编码方式: gbk, 每个汉字2字节</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#34;article_2.md&#34;</span>, <span style="color:#e6db74">&#34;rb&#34;</span>) <span style="color:#66d9ef">as</span> f:
+</span></span><span style="display:flex;"><span>    bin_str <span style="color:#f92672">=</span> f<span style="color:#f92672">.</span>read()
+</span></span><span style="display:flex;"><span>    print(type(bin_str))
+</span></span><span style="display:flex;"><span>    print(bin_str)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">class</span> <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#a6e22e">bytes</span><span style="color:#e6db74">&#39;&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\xba\xba\xd4\xda</span><span style="color:#e6db74">&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#34;article_2.md&#34;</span>, <span style="color:#e6db74">&#34;r&#34;</span>, encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;gbk&#39;</span>) <span style="color:#66d9ef">as</span> f:
+</span></span><span style="display:flex;"><span>    text_str <span style="color:#f92672">=</span> f<span style="color:#f92672">.</span>read()
+</span></span><span style="display:flex;"><span>    print(type(text_str))
+</span></span><span style="display:flex;"><span>    print(text_str)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">class</span> <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#a6e22e">str</span><span style="color:#e6db74">&#39;&gt;</span>
+</span></span><span style="display:flex;"><span>汉在
+</span></span></code></pre></div><p>因为<code>article_2.md</code>采用gbk编码方式, 而python默认是utf-8解码, 所以这里需要指定编码方式, 否则肯定乱码或者出错,</p>
+<p>写入也要<strong>注意打开文件的方式</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>bin_str <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;AB&#39;</span><span style="color:#f92672">.</span>encode(<span style="color:#e6db74">&#39;utf-8&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#34;text.md&#34;</span>, <span style="color:#e6db74">&#34;wb&#34;</span>) <span style="color:#66d9ef">as</span> f:
+</span></span><span style="display:flex;"><span>    f<span style="color:#f92672">.</span>write(bin_str)
+</span></span><span style="display:flex;"><span>    f<span style="color:#f92672">.</span>encoding <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;utf-8&#34;</span>
+</span></span></code></pre></div><p>查看文件的内容:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ xxd text.md
+</span></span><span style="display:flex;"><span>00000000: <span style="color:#ae81ff">4142</span>              AB
+</span></span></code></pre></div><p>如果我们不指定以二进制写入, 则会报错:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>bin_str <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;AB&#39;</span><span style="color:#f92672">.</span>encode(<span style="color:#e6db74">&#39;utf-8&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#34;text.md&#34;</span>, <span style="color:#e6db74">&#34;w&#34;</span>) <span style="color:#66d9ef">as</span> f:
+</span></span><span style="display:flex;"><span>    f<span style="color:#f92672">.</span>write(bin_str)
+</span></span><span style="display:flex;"><span>    f<span style="color:#f92672">.</span>encoding <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;utf-8&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># error: TypeError: write() argument must be str, not bytes</span>
+</span></span></code></pre></div><p>注意, python挺好有报错, 但是有的语言比如C的接口, 就不会提醒, 你写入什么就是什么, 如果你打开方式不是二进制, 然后写入了二进制的字符串, 那结果就是, 这些二进制的字符串被当作普通字符串写入文件&hellip;</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/cs-basics/004-ssh/" class="button inline prev">
+        ssh 免密登陆 中间人攻击 网络安全
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/python/practice/001-add-space/" class="button inline next">
+        Python 脚本给文章中英字符以及符号间加空格
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

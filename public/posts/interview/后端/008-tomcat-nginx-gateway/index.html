@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Tomcat Nginx Gateway LoadBalancer :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 写在前面 好多网关路由转发的功能, 感觉有的都重复了, 在这里讨论一下, 主要目的是明白各自存在的意义, 首先是 Tomcat, 这是个 Servlet 容器, 至于 Servlet 是什么, umm, 如果你以前写过 JSP 那一套肯定是了解的, 但现在基本上直接学习 Spring Boot, 不会接触到 Servlet, JSP, 最多也是调试看日志的时候看到一些比如 DispatcherServlet 相关的错误, 可以说 Spring MVC 就是基于 Servlet 的 Web 框架, 它通过一个核心的 DispatcherServlet 来分发请求到不同的控制器, 但底层仍然依赖 Tomcat 这样的容器来运行
+1.1. 从最基础的 Java Web Servlet &#43; JSP 说起 Servlet 是 JavaEE 体系里定义的一套 接口/规范, 最初的目标是取代 CGI 处理 HTTP 请求, Tomcat 是一个 Servlet 容器, 它实现了 Servlet 规范, 因此, 只要你编写的代码符合 Servlet 规范, 就可以直接部署在 Tomcat 上跑
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/008-tomcat-nginx-gateway/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Tomcat Nginx Gateway LoadBalancer">
+<meta property="og:description" content="1. 写在前面 好多网关路由转发的功能, 感觉有的都重复了, 在这里讨论一下, 主要目的是明白各自存在的意义, 首先是 Tomcat, 这是个 Servlet 容器, 至于 Servlet 是什么, umm, 如果你以前写过 JSP 那一套肯定是了解的, 但现在基本上直接学习 Spring Boot, 不会接触到 Servlet, JSP, 最多也是调试看日志的时候看到一些比如 DispatcherServlet 相关的错误, 可以说 Spring MVC 就是基于 Servlet 的 Web 框架, 它通过一个核心的 DispatcherServlet 来分发请求到不同的控制器, 但底层仍然依赖 Tomcat 这样的容器来运行
+1.1. 从最基础的 Java Web Servlet &#43; JSP 说起 Servlet 是 JavaEE 体系里定义的一套 接口/规范, 最初的目标是取代 CGI 处理 HTTP 请求, Tomcat 是一个 Servlet 容器, 它实现了 Servlet 规范, 因此, 只要你编写的代码符合 Servlet 规范, 就可以直接部署在 Tomcat 上跑
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/008-tomcat-nginx-gateway/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-03-17 12:08:20 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/008-tomcat-nginx-gateway/">Tomcat Nginx Gateway LoadBalancer</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-03-17</time><span class="post-reading-time">6 分钟阅读 (1116 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E9%9D%A2%E8%AF%95/">后端面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-写在前面">1. 写在前面<a href="#1-写在前面" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>好多网关路由转发的功能, 感觉有的都重复了, 在这里讨论一下, 主要目的是明白各自存在的意义, 首先是 Tomcat, 这是个 Servlet 容器, 至于 Servlet 是什么, umm, 如果你以前写过 JSP 那一套肯定是了解的, 但现在基本上直接学习 Spring Boot, 不会接触到 Servlet, JSP, 最多也是调试看日志的时候看到一些比如 DispatcherServlet 相关的错误, 可以说 Spring MVC 就是基于 Servlet 的 Web 框架, 它通过一个核心的 DispatcherServlet 来分发请求到不同的控制器, 但底层仍然依赖 Tomcat 这样的容器来运行</p>
+<h3 id="11-从最基础的-java-web-servlet--jsp-说起">1.1. 从最基础的 Java Web Servlet + JSP 说起<a href="#11-从最基础的-java-web-servlet--jsp-说起" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Servlet 是 JavaEE 体系里定义的一套 接口/规范, 最初的目标是取代 CGI 处理 HTTP 请求, Tomcat 是一个 Servlet 容器, 它实现了 Servlet 规范, 因此, 只要你编写的代码符合 Servlet 规范, 就可以直接部署在 Tomcat 上跑</p>
+<h4 id="111-如何操作">1.1.1. 如何操作<a href="#111-如何操作" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p>开发者编写一个继承 HttpServlet 的类，重写 <code>doGet()</code> 或 <code>doPost()</code> 方法:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MyServlet</span> <span style="color:#66d9ef">extends</span> HttpServlet {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">doGet</span>(HttpServletRequest req, HttpServletResponse resp) <span style="color:#66d9ef">throws</span> ServletException, IOException {
+</span></span><span style="display:flex;"><span>        resp.<span style="color:#a6e22e">setContentType</span>(<span style="color:#e6db74">&#34;text/html&#34;</span>);
+</span></span><span style="display:flex;"><span>        PrintWriter out <span style="color:#f92672">=</span> resp.<span style="color:#a6e22e">getWriter</span>();
+</span></span><span style="display:flex;"><span>        out.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;&lt;html&gt;&lt;body&gt;Hello, World!&lt;/body&gt;&lt;/html&gt;&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在 <code>web.xml</code> 中配置 URL 映射：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;servlet&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;servlet-name&gt;</span>MyServlet<span style="color:#f92672">&lt;/servlet-name&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;servlet-class&gt;</span>com.example.MyServlet<span style="color:#f92672">&lt;/servlet-class&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/servlet&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;servlet-mapping&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;servlet-name&gt;</span>MyServlet<span style="color:#f92672">&lt;/servlet-name&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;url-pattern&gt;</span>/hello<span style="color:#f92672">&lt;/url-pattern&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/servlet-mapping&gt;</span>
+</span></span></code></pre></div><h4 id="112-tomcat-做了什么">1.1.2. Tomcat 做了什么<a href="#112-tomcat-做了什么" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ol>
+<li>打开一个 ServerSocket，监听某个端口（默认 8080）</li>
+<li>当有 HTTP 请求进来时，会将请求解析成 HttpServletRequest / HttpServletResponse 对象</li>
+<li>根据配置（如 <code>web.xml</code> 中的 <code>&lt;servlet&gt;</code> / <code>&lt;servlet-mapping&gt;</code>）, Tomcat 会将请求分发给对应的 Servlet</li>
+<li>Tomcat 接收到 <code>/hello</code> 请求后，调用 <code>MyServlet</code> 的 <code>doGet()</code> 方法</li>
+<li>Servlet 接口定义了一系列生命周期方法，比如 <code>init()</code>, <code>service()</code>, <code>destroy()</code> 等，最核心的就是 <code>service()</code> 方法(或 doGet/doPost&hellip;)，用来处理请求并写出响应</li>
+</ol>
+<h4 id="113-现存问题">1.1.3. 现存问题<a href="#113-现存问题" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ul>
+<li>
+<p>每个功能（如登录、列表页）都需要一个 Servlet, 代码重复严重（比如每次都要设置响应类型、获取参数）</p>
+</li>
+<li>
+<p>配置繁琐, 所有 Servlet 都要在 <code>web.xml</code> 中手动映射</p>
+</li>
+</ul>
+<h3 id="12-spring-mvc在-servlet-基础上的进一步抽象">1.2. Spring MVC：在 Servlet 基础上的进一步抽象<a href="#12-spring-mvc在-servlet-基础上的进一步抽象" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Spring MVC 出现是为了解决 Servlet + JSP 的问题, 它引入了 MVC（Model-View-Controller）模式, 通过一个核心 Servlet（DispatcherServlet）统一处理请求, 并将逻辑分层,</p>
+<h4 id="121-两个核心组件">1.2.1. 两个核心组件<a href="#121-两个核心组件" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ul>
+<li>
+<p><strong>DispatcherServlet</strong>：Spring MVC 的入口, 是一个特殊的 Servlet，配置为拦截所有请求 <code>/*</code></p>
+</li>
+<li>
+<p><strong>Controller</strong>：替代了分散的 Servlet，集中处理业务逻辑</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Controller</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">HelloController</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@RequestMapping</span>(<span style="color:#e6db74">&#34;/hello&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">sayHello</span>(Model model) {
+</span></span><span style="display:flex;"><span>        model.<span style="color:#a6e22e">addAttribute</span>(<span style="color:#e6db74">&#34;message&#34;</span>, <span style="color:#e6db74">&#34;Hello, World!&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;hello&#34;</span>; <span style="color:#75715e">// 逻辑视图名</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;servlet&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;servlet-name&gt;</span>dispatcher<span style="color:#f92672">&lt;/servlet-name&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;servlet-class&gt;</span>org.springframework.web.servlet.DispatcherServlet<span style="color:#f92672">&lt;/servlet-class&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/servlet&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;servlet-mapping&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;servlet-name&gt;</span>dispatcher<span style="color:#f92672">&lt;/servlet-name&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;url-pattern&gt;</span>/*<span style="color:#f92672">&lt;/url-pattern&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/servlet-mapping&gt;</span>
+</span></span></code></pre></div><h4 id="122-请求步骤">1.2.2. 请求步骤<a href="#122-请求步骤" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ol>
+<li>
+<p>用户访问 http://localhost:8080/myapp/hello</p>
+</li>
+<li>
+<p>Tomcat 接收请求，根据 web.xml 路由到 DispatcherServlet</p>
+</li>
+<li>
+<p>DispatcherServlet：</p>
+<ul>
+<li>
+<p>根据 @RequestMapping(&quot;/hello&quot;) 找到 HelloController 的 sayHello 方法</p>
+</li>
+<li>
+<p>执行方法，生成 Model 数据（&ldquo;message&rdquo;）</p>
+</li>
+<li>
+<p>通过 ViewResolver 将 &ldquo;hello&rdquo; 解析为 hello.jsp</p>
+</li>
+<li>
+<p>渲染 JSP，返回 HTML 响应</p>
+</li>
+</ul>
+</li>
+</ol>
+<h4 id="123-优缺点">1.2.3. 优缺点<a href="#123-优缺点" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p>优点: 请求分发自动化, 不需要为每个 URL 写一个 Servlet</p>
+<p>缺点: 配置复杂（XML 或注解）部署仍需手动打包 WAR 文件, 放入 Tomcat</p>
+<h3 id="13-spring-boot进一步简化部署与配置">1.3. Spring Boot：进一步简化部署与配置<a href="#13-spring-boot进一步简化部署与配置" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>
+<p>在传统的 Spring MVC 项目中, 你需要单独安装 Tomcat, 然后把打好的 <code>.war</code> 包部署到 Tomcat 的 <code>webapps</code> 目录下</p>
+</li>
+<li>
+<p>Spring Boot 则自带一个 嵌入式 Tomcat, 你只要在 <code>pom.xml</code> 里加上依赖, Spring Boot 会自动把 Tomcat 打包进来</p>
+</li>
+<li>
+<p>在 Spring MVC 时代，为了让 DispatcherServlet 工作，你往往需要在 <code>web.xml</code> 配置 <code>&lt;servlet&gt;</code> + <code>&lt;servlet-mapping&gt;</code></p>
+</li>
+<li>
+<p>在 Spring Boot 中, 几乎可以“零配置”——因为 Spring Boot Starter 以及 自动配置(Auto Configuration) 会帮你自动注册 DispatcherServlet、自动扫描 <code>@Controller</code>、自动创建上下文等等</p>
+</li>
+</ul>
+<blockquote>
+<p>要记住：尽管我们用 Spring Boot，但底层还是 <strong>Tomcat + DispatcherServlet</strong> 在跑，只不过这一切都被 Boot 帮我们封装好了：</p>
+<ol>
+<li>
+<p>你用 <code>SpringApplication.run(...);</code> 启动项目时, Spring Boot会：</p>
+<ul>
+<li>
+<p>创建一个 Spring 上下文(ApplicationContext)，加载各种自动配置类</p>
+</li>
+<li>
+<p>初始化并启动一个 Tomcat 容器（默认监听 8080 端口）</p>
+</li>
+<li>
+<p>注册 DispatcherServlet 并进行 URL 映射(默认 <code>/*</code>)，使它成为整个应用的前端控制器</p>
+</li>
+</ul>
+</li>
+<li>
+<p>当请求进入时, Tomcat 依旧会解析 HTTP 消息头、消息体，生成 <code>HttpServletRequest / HttpServletResponse</code></p>
+</li>
+<li>
+<p>Tomcat 将请求分发给对应的 Servlet；在 Spring Boot 里，几乎所有请求都指向 DispatcherServlet</p>
+</li>
+<li>
+<p>DispatcherServlet 查找对应的 Handler（<code>@Controller</code> / <code>@RestController</code> 上的各种映射），执行相关方法，得到返回值</p>
+</li>
+<li>
+<p>如果返回的是视图名，就会交给视图解析器去找模板进行渲染；如果是 <code>@ResponseBody</code> 或 <code>@RestController</code>，就会把返回对象序列化为 JSON 响应</p>
+</li>
+<li>
+<p>最终 Tomcat 将响应通过网络发回给客户端</p>
+</li>
+</ol>
+<p>所以可以看到, 本质上还是 Servlet 容器 + Servlet 规范在支撑所有这些流程, Spring Boot 并没有发明新的东西, 只是封装集成得更紧密, 让我们省去了许多“手动调度、配置、部署”的繁琐步骤</p>
+</blockquote>
+<p>所以 Spring Boot 本质就是构建于 Spring MVC 之上基于 Spring 生态的“快速开发框架”, 它帮我们集成了 Spring MVC 所有的基础配置, 包括 Servlet 路径, 视图, 以及 Servlet 容器 Tomcat, 除此之外还提前定义了 Spring 核心组件的依赖版本, 我们只要在 <code>pom.xml</code> 引入了 <code>&lt;parent&gt;...&lt;/parent&gt;</code>, 当我们使用一些依赖比如 Spring Security, Spring Data JPA 等, 直接加到 <code>pom.xml</code> 中就行, 不用指定版本号或者担心以后更新引起版本冲突,</p>
+<h2 id="2-tomcat-vs-nginx">2. Tomcat vs Nginx<a href="#2-tomcat-vs-nginx" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<ul>
+<li>
+<p><strong>Tomcat</strong>: Apache Tomcat 是一个开源的 Java Servlet 容器, 主要用于运行 Java 应用程序, 支持 Java Servlet、JavaServer Pages (JSP) 和 WebSocket 等技术，常用于处理动态内容</p>
+</li>
+<li>
+<p><strong>Nginx</strong>: 用于提供静态内容（如 HTML、CSS、图片等）, 或者作为反向代理将请求分发到后端服务器, 它的核心职责是接收客户端请求、分发流量、管理静态资源，以及将动态请求代理到后端服务</p>
+</li>
+</ul>
+<h2 id="3-为什么有了-nginx-还需要-spring-cloud-gateway">3. 为什么有了 Nginx 还需要 Spring Cloud Gateway<a href="#3-为什么有了-nginx-还需要-spring-cloud-gateway" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Gateway 可以与 Spring Cloud Eureka, Spring Cloud Loadbalancer 合作使用, 可以用来通过 请求路径 如 <code>Path=/product/**</code>  和 <code>uri: lb://product-service</code> 来找到服务位置, 而 Nginx 不可以,</p>
+<p>Gateway 专为微服务设计，与 Spring 生态深度集成；Nginx 是通用工具，集成微服务生态麻烦</p>
+<h3 id="31-服务发现与动态路由">3.1. 服务发现与动态路由<a href="#31-服务发现与动态路由" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Gateway 可以与 Spring Cloud Eureka 集成, 通过 <code>uri: lb://product-service</code> 这样的配置, 自动从 Eureka 中查找 <code>product-service</code> 的实例 IP 和端口, 结合 Spring Cloud LoadBalancer, 它还能动态选择一个健康的实例发送请求:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">spring</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">cloud</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">gateway</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">routes</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">id</span>: <span style="color:#ae81ff">product_route</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">uri</span>: <span style="color:#ae81ff">lb://product-service </span> <span style="color:#75715e"># 动态找到服务</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">predicates</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">Path=/product/**</span>
+</span></span></code></pre></div><p>Gateway 不需要知道具体的服务地址，服务实例增加或减少时，它会自动适应, 在微服务架构中，服务地址经常变化，Gateway 的动态性非常适合这种场景, Nginx 是一个独立的 Web 服务器，需要在配置文件中手动指定后端地址, 如果服务地址变了比如新增实例或实例宕机, 你得手动更新配置并重载 Nginx:</p>
+<pre tabindex="0"><code>upstream product_service {
+    server 192.168.1.10:8080;
+    server 192.168.1.11:8081;
+}
+location /product {
+    proxy_pass http://product_service;
+}
+</code></pre><h2 id="32-灵活的路由与业务逻辑">3.2. 灵活的路由与业务逻辑<a href="#32-灵活的路由与业务逻辑" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Spring Cloud Gateway 可以基于路径 <code>Path=/product/**</code>、请求方法<code>Method=GET</code> 等条件定义路由规则, 通过过滤器 Filter，可以轻松实现认证、添加请求头、限流等功能:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">spring</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">cloud</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">gateway</span>:
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">routes</span>:
+</span></span><span style="display:flex;"><span>        - <span style="color:#f92672">id</span>: <span style="color:#ae81ff">product_route</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">uri</span>: <span style="color:#ae81ff">lb://product-service</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">predicates</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">Path=/product/**</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">filters</span>:
+</span></span><span style="display:flex;"><span>            - <span style="color:#ae81ff">AddRequestHeader=X-Authenticated, true </span> <span style="color:#75715e"># 添加请求头</span>
+</span></span><span style="display:flex;"><span>            - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">AuthenticationFilter </span> <span style="color:#75715e"># 自定义认证逻辑</span>
+</span></span></code></pre></div><h2 id="4-nginx-使用场景">4. Nginx 使用场景<a href="#4-nginx-使用场景" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>假设你想搭建一个简单的 Web 服务器，监听 80 端口，并根据路径转发请求：</p>
+<pre tabindex="0"><code>http {
+    server {
+        listen 80;                  # 监听 80 端口
+        server_name example.com;    # 域名
+
+        location / {                # 根路径返回欢迎信息
+            return 200 &#34;Welcome to Nginx!&#34;;
+        }
+
+        location /api {             # /api 路径代理到后端
+            proxy_pass http://backend:8080;
+        }
+    }
+}
+</code></pre><p>假设你有两台后端服务器，想实现简单的负载均衡：</p>
+<pre tabindex="0"><code>http {
+    upstream backend_servers {
+        server 192.168.1.10:8080;   # 第一台后端服务器
+        server 192.168.1.11:8080;   # 第二台后端服务器
+    }
+
+    server {
+        listen 80;
+        server_name example.com;
+
+        location / {
+            proxy_pass http://backend_servers;  # 转发到 upstream
+            proxy_set_header Host $host;
+        }
+    }
+}
+</code></pre><ul>
+<li>默认情况下, 当 Nginx 代理请求到后端服务器时, 它可能会使用后端服务器的 IP 地址作为 <code>Host</code>，例如 <code>192.168.1.10:8080</code>，而不是 <code>example.com</code></li>
+<li><code>proxy_set_header Host $host;</code> 主要用于保持客户端请求的 <code>Host</code> 头不变, 让后端服务器知道用户访问的是哪个域名</li>
+</ul>
+<p>假设你想将所有 /old-page 的请求重定向到 /new-page：</p>
+<pre tabindex="0"><code>http {
+    server {
+        listen 80;
+        server_name example.com;
+
+        location /old-page {
+            rewrite ^/old-page(.*)$ /new-page$1 permanent;  # 永久重定向 (301)
+        }
+
+        location /new-page {
+            return 200 &#34;This is the new page!&#34;;
+        }
+    }
+}
+</code></pre><ul>
+<li>
+<p>用户访问 example.com/old-page 时，Nginx 将其重定向到 example.com/new-page，并返回 &ldquo;This is the new page!&rdquo;</p>
+</li>
+<li>
+<p>permanent 表示使用 301 重定向，告诉浏览器永久更新地址</p>
+</li>
+</ul>
+<p>限制请求速率, 防止服务器过载或抵御 DDoS 攻击, 限制每个 IP 每秒只能发送 2 个请求:</p>
+<pre tabindex="0"><code>http {
+    limit_req_zone $binary_remote_addr zone=mylimit:10m rate=2r/s;
+
+    server {
+        listen 80;
+        server_name example.com;
+
+        location / {
+            limit_req zone=mylimit burst=5;  # 允许突发 5 个请求
+            return 200 &#34;Hello, Nginx!&#34;;
+        }
+    }
+}
+</code></pre><p>为网站启用 HTTPS，并将 HTTP 请求重定向到 HTTPS：</p>
+<pre tabindex="0"><code>http {
+    server {
+        listen 80;
+        server_name example.com;
+        return 301 https://$host$request_uri;  # 重定向到 HTTPS
+    }
+
+    server {
+        listen 443 ssl;
+        server_name example.com;
+
+        ssl_certificate /etc/nginx/ssl/cert.pem;      # 证书文件
+        ssl_certificate_key /etc/nginx/ssl/key.pem;   # 私钥文件
+
+        location / {
+            return 200 &#34;Secure Page!&#34;;
+        }
+    }
+}
+</code></pre><h2 id="5-有了-gateway-还需要-nginx-吗">5. 有了 Gateway 还需要 Nginx 吗?<a href="#5-有了-gateway-还需要-nginx-吗" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>尽管 Gateway 功能强大，但在某些场景下，Nginx 仍然有不可替代的优势。以下是几个需要 Nginx 的理由和示例：</p>
+<h3 id="51-理由-1高性能和外部流量处理">5.1. <strong>理由 1：高性能和外部流量处理</strong><a href="#51-理由-1高性能和外部流量处理" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>场景：你的系统需要应对高并发外部流量（如网站有 10 万 QPS）</li>
+<li>问题：Gateway 运行在 JVM 上, 性能受限于 Java 的内存管理和线程模型, 在高并发场景下, 容易成为瓶颈, 性能不如 Nginx（C 语言实现，异步非阻塞 I/O）在高并发场景下，Gateway 可能成为瓶颈</li>
+<li>解决方案：用 Nginx 作为最外层入口，分担流量压力</li>
+</ul>
+<pre tabindex="0"><code>upstream gateway_cluster {
+    server gateway1:8080;
+    server gateway2:8080;
+    server gateway3:8080;
+}
+
+server {
+    listen 80;
+    server_name example.com;
+    location / {
+        proxy_pass http://gateway_cluster;  # 负载均衡到多个 Gateway
+    }
+}
+</code></pre><blockquote>
+<p>在没有 Nginx 的情况下，Gateway（如果它直接对外提供 HTTPS 接口）就需要自行完成整个 TLS 协议的握手和加解密工作，这部分本身会消耗一定的 CPU 资源，并且会让 Gateway 直接面对海量外部连接；而有了 Nginx 以后：</p>
+<ul>
+<li>当客户端发起 HTTPS 请求时，Nginx 负责完成 SSL/TLS 握手和加解密的全过程，然后再将解密后的明文流量转发给 Gateway</li>
+<li>Gateway 只需要处理已经解密的流量，不再承担这部分 CPU 与网络资源负担，能专注于业务层面的路由或规则处理</li>
+</ul>
+</blockquote>
+<p>流量削峰: Nginx 可以同时保持 10 万个前端连接 client -&gt; Nginx, Nginx 并不“一对一”地为这 10 万前端连接都新建一个后端连接, 而是维持一组「后端连接池」, 例如 500 条（实际可配置）与 Gateway 的 TCP 连接, 这些连接都处于 Keep-Alive 状态, 当 Nginx 收到前端请求时, 会在这个连接池里“找一个”空闲连接, 发给 Gateway, 如果所有后端连接都暂时在忙, 那剩下的新请求可以在 Nginx 层面进行排队或等待, 不至于一股脑儿挤给 Gateway,</p>
+<pre tabindex="0"><code># 定义后端（上游）服务器组
+upstream gateway_servers {
+    server gateway1:8080;
+    server gateway2:8080;
+
+    # 保持最多 64 条保持存活的后端连接（示例数字）
+    keepalive 64;  
+}
+
+server {
+    listen 80;
+    server_name example.com;
+
+    location / {
+        # 代理到定义好的上游
+        proxy_pass http://gateway_servers;
+
+        # 使用HTTP/1.1并开启keep-alive
+        proxy_http_version 1.1;
+        proxy_set_header Connection &#34;&#34;;
+    }
+}
+</code></pre><ul>
+<li>
+<p><code>proxy_http_version 1.1</code> 这个设置告诉 Nginx 在把 HTTP 请求转发给后端服务器 比如你的 gateway1:8080 和 gateway2:8080时, 使用 HTTP/1.1 协议, HTTP/1.1 有一个重要特点, 它支持持久连接, 意思是 TCP 连接建立后不会立刻关闭, 可以重复使用来处理多个 HTTP 请求</p>
+</li>
+<li>
+<p><code>keepalive 64</code> 这个设置告诉 Nginx：在和后端服务器通信时, 尽量保持最多 64 个连接处于“存活”状态, 也就是说, 这些 TCP 连接不会在请求完成后马上关闭, 而是留着待命, 方便下次处理 HTTP 请求直接复用</p>
+</li>
+</ul>
+<p>想象 Nginx 和后端服务器之间像打电话：</p>
+<ul>
+<li>如果没有 <code>keepalive</code>, 每次 Nginx 要找后端服务器, 就得重新拨号、接通、说完挂断, 下次请求又得重复这个过程，很费时间</li>
+<li>加了 <code>keepalive 64</code>, Nginx 就像跟后端说：“我们别挂电话，我留 64 条线开着，有新请求直接用这些线聊</li>
+</ul>
+<blockquote>
+<p>持久连接（Keep-Alive）：HTTP/1.1 默认支持持久连接，允许在同一个 TCP 连接上处理多个 HTTP 请求，而无需每次请求都重新建立连接, 这减少了连接建立的开销，提高了性能</p>
+</blockquote>
+<h3 id="52-理由-2静态资源分发">5.2. 理由 2：静态资源分发<a href="#52-理由-2静态资源分发" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>
+<p>场景：你的应用需要提供大量静态资源（如图片、CSS、JS 文件）</p>
+</li>
+<li>
+<p>问题：Gateway 不是为静态资源分发设计的，效率不如 Nginx</p>
+</li>
+<li>
+<p>解决方案：用 Nginx 直接处理静态资源，动态请求交给 Gateway</p>
+</li>
+</ul>
+<pre tabindex="0"><code>server {
+    listen 80;
+    server_name example.com;
+
+    location /static {
+        root /var/www/static;  # 直接提供静态文件
+    }
+
+    location / {
+        proxy_pass http://gateway:8080;  # 动态请求给 Gateway
+    }
+}
+</code></pre><h3 id="53-理由-3https-和安全">5.3. 理由 3：HTTPS 和安全<a href="#53-理由-3https-和安全" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>场景</strong>：需要为网站启用 HTTPS 或抵御 DDoS 攻击</p>
+<p><strong>问题</strong>：Gateway 可以配置 HTTPS，但 Nginx 在 SSL 终止和安全防护（如限流、IP 黑名单）方面更成熟</p>
+<p><strong>解决方案</strong>：用 Nginx 处理 HTTPS 和安全，再转发到 Gateway</p>
+<pre tabindex="0"><code>server {
+    listen 443 ssl;
+    server_name example.com;
+    ssl_certificate /etc/nginx/ssl/cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/key.pem;
+
+    location / {
+        proxy_pass http://gateway:8080;
+    }
+}
+</code></pre>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/000-%E6%95%B0%E6%8D%AE%E5%BA%93%E8%8C%83%E5%BC%8F-%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/" class="button inline prev">
+        MySQL 基础八股文
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/007-spring-cloud-arch/" class="button inline next">
+        Spring Cloud 组件理解
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

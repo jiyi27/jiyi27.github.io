@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Redis 五种数据类型 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Redis 仅仅是缓存吗 Redis 最广为人知的用途是缓存, 它通过内存存储提供超高的读写性能, 常用于减轻数据库压力:
+缓存热点数据 会话存储 页面缓存 但 Redis 的功能远不止缓存：
+数据结构存储：支持字符串、列表、集合、哈希等，类似一个内存数据库 消息队列：通过 Pub/Sub 或 List 实现轻量级消息传递 分布式锁：在分布式系统中用于同步 高可用与分布式：通过主从复制、哨兵模式、集群模式支持分布式架构 2. String 2.1. 常见操作 SET user:001 &#34;Alice&#34; SET user:001 &#39;{&#34;name&#34;: &#34;Alice&#34;, &#34;age&#34;: 25}&#39; SET counter 10 user:001 和 counter 是 Key, 后面的 字符串 &quot;Alice&quot;, {&quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 25}, 还有数字 10 是 Value, Redis 中的 String 有点像哈希表, 但不是
+GET user:001 # 获取 key user:001 值 INCR counter # 自增1 DECR counter # 自减1 INCRBY counter 5 # 自增5 虽然 Redis 是用 C 语言写的, 但是 Redis 并没有使用 C 的字符串表示, 而是自己构建了一种 简单动态字符串（Simple Dynamic String）相比于 C 的原生字符串, Redis 的 SDS 不光可以保存文本数据还可以保存二进制数据, 并且获取字符串长度复杂度为 O(1)（C 字符串为 O(N)）, 除此之外, Redis 的 SDS API 是安全的, 不会造成缓冲区溢出:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/001-redis-data-structure/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Redis 五种数据类型">
+<meta property="og:description" content="1. Redis 仅仅是缓存吗 Redis 最广为人知的用途是缓存, 它通过内存存储提供超高的读写性能, 常用于减轻数据库压力:
+缓存热点数据 会话存储 页面缓存 但 Redis 的功能远不止缓存：
+数据结构存储：支持字符串、列表、集合、哈希等，类似一个内存数据库 消息队列：通过 Pub/Sub 或 List 实现轻量级消息传递 分布式锁：在分布式系统中用于同步 高可用与分布式：通过主从复制、哨兵模式、集群模式支持分布式架构 2. String 2.1. 常见操作 SET user:001 &#34;Alice&#34; SET user:001 &#39;{&#34;name&#34;: &#34;Alice&#34;, &#34;age&#34;: 25}&#39; SET counter 10 user:001 和 counter 是 Key, 后面的 字符串 &quot;Alice&quot;, {&quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 25}, 还有数字 10 是 Value, Redis 中的 String 有点像哈希表, 但不是
+GET user:001 # 获取 key user:001 值 INCR counter # 自增1 DECR counter # 自减1 INCRBY counter 5 # 自增5 虽然 Redis 是用 C 语言写的, 但是 Redis 并没有使用 C 的字符串表示, 而是自己构建了一种 简单动态字符串（Simple Dynamic String）相比于 C 的原生字符串, Redis 的 SDS 不光可以保存文本数据还可以保存二进制数据, 并且获取字符串长度复杂度为 O(1)（C 字符串为 O(N)）, 除此之外, Redis 的 SDS API 是安全的, 不会造成缓冲区溢出:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/001-redis-data-structure/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-02-21 11:28:58 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/001-redis-data-structure/">Redis 五种数据类型</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-02-21</time><span class="post-reading-time">3 分钟阅读 (548 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E7%BC%93%E5%AD%98%E9%9D%A2%E8%AF%95/">缓存面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-redis--仅仅是缓存吗">1. Redis  仅仅是缓存吗<a href="#1-redis--仅仅是缓存吗" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Redis 最广为人知的用途是<strong>缓存</strong>, 它通过内存存储提供超高的读写性能, 常用于减轻数据库压力:</p>
+<ul>
+<li>缓存热点数据</li>
+<li>会话存储</li>
+<li>页面缓存</li>
+</ul>
+<p>但 Redis 的功能远不止缓存：</p>
+<ul>
+<li>数据结构存储：支持字符串、列表、集合、哈希等，类似一个内存数据库</li>
+<li>消息队列：通过 Pub/Sub 或 List 实现轻量级消息传递</li>
+<li>分布式锁：在分布式系统中用于同步</li>
+<li>高可用与分布式：通过主从复制、哨兵模式、集群模式支持分布式架构</li>
+</ul>
+<h2 id="2-string">2. String<a href="#2-string" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="21-常见操作">2.1. 常见操作<a href="#21-常见操作" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<pre tabindex="0"><code>SET user:001 &#34;Alice&#34;
+SET user:001 &#39;{&#34;name&#34;: &#34;Alice&#34;, &#34;age&#34;: 25}&#39;
+SET counter 10
+</code></pre><p><code>user:001</code> 和 <code>counter</code> 是 Key, 后面的 字符串 <code>&quot;Alice&quot;</code>, <code>{&quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 25}</code>, 还有数字 <code>10</code> 是 Value, Redis 中的 String 有点像哈希表, 但不是</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>GET user:001 <span style="color:#75715e"># 获取 key user:001 值</span>
+</span></span><span style="display:flex;"><span>INCR counter <span style="color:#75715e"># 自增1</span>
+</span></span><span style="display:flex;"><span>DECR counter <span style="color:#75715e"># 自减1</span>
+</span></span><span style="display:flex;"><span>INCRBY counter <span style="color:#ae81ff">5</span> <span style="color:#75715e"># 自增5</span>
+</span></span></code></pre></div><blockquote>
+<p>虽然 Redis 是用 C 语言写的, 但是 Redis 并没有使用 C 的字符串表示, 而是自己构建了一种 <strong>简单动态字符串</strong>（Simple Dynamic String）相比于 C 的原生字符串, Redis 的 SDS 不光可以保存文本数据还可以保存二进制数据, 并且获取字符串长度复杂度为 O(1)（C 字符串为 O(N)）, 除此之外, Redis 的 SDS API 是安全的, 不会造成<strong>缓冲区溢出</strong>:</p>
+<p><strong>Buffer Overflow</strong> 是一种常见的程序错误, 通常发生在程序试图向一个固定大小的内存缓冲区写入超出其容量的数据时导致的数据覆盖相邻内存，导致程序行为异常或崩溃, 在 C 语言中，字符串操作尤其容易引发缓冲区溢出, 因为 C 的原生字符串（以空字符 <code>\0</code> 结尾的字符数组）不自带长度信息, 操作时需要程序员手动确保不会越界</p>
+</blockquote>
+<h3 id="22-一些拓展">2.2. 一些拓展<a href="#22-一些拓展" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>String 是一种二进制安全的数据类型, 可以用来存储任何类型的数据比如字符串、数字、序列化后的对象（如 JSON、Protobuf 等）</p>
+<blockquote>
+<p>严格来说, String 本身并不直接存储“类型”, 而是存储数据的字节表示, 在编程中, “类型”（data type）指的是数据的种类以及与之相关的操作规则, 每种“类型”都有自己的<strong>语义</strong>（含义）和<strong>操作方式</strong>, 这些是由编程语言或程序逻辑定义的, 当我们说 String 存储数据时, String 本身并不知道或关心数据的“类型”, 它只是一个<strong>字节序列</strong>（byte sequence）的容器, 换句话说, String 存储的是数据的<strong>二进制表示</strong>, 而不是数据的高级语义或类型信息:</p>
+<ul>
+<li><strong>字节表示</strong>：任何数据（无论是整数、浮点数、文本、图片还是对象）在计算机底层都是以二进制形式（0 和 1 的序列）存储的, 这些二进制数据可以看作一串字节（每个字节是 8 位）</li>
+<li><strong>String 的角色</strong>：在二进制安全的 String 实现中（例如 Redis 或 PHP 的字符串）, String 只是把这些字节原封不动地保存下来, 它不关心这些字节是表示一个整数、一个图片，还是一个序列化后的对象</li>
+</ul>
+<p>举个例子:</p>
+<ul>
+<li>整数 42 的二进制表示可能是 00101010（取决于编码方式，比如 32 位整数）</li>
+<li>文本 &ldquo;hello&rdquo; 的 UTF-8 编码可能是字节序列 01101000 01100101 01101100 01101100 01101111</li>
+<li>一个序列化后的 JSON 对象 <code>{&quot;name&quot;: &quot;Alice&quot;}</code> 也是一串字节，可能看起来像 7b226e616d65223a2022416c696365227d（十六进制表示）</li>
+</ul>
+<p>当你把这些数据存进 Redis String 时, String 只负责保存这些字节的顺序和内容,, 它不会记录“这是个整数”或“这是个 JSON 对象”这样的类型信息, Redis String 作为二进制安全的数据类型, 负责存储数据, 但数据的<strong>语义</strong>（如整数、浮点数、对象）需要由程序逻辑解析, 例如, 一个序列化后的 JSON 对象存储在 String 中, 程序需要调用 JSON 解析器来还原对象</p>
+</blockquote>
+<blockquote>
+<p>在某些编程语言或系统中（例如 Redis、PHP等），String 被称为<strong>二进制安全</strong>（binary-safe）的数据类型，意思是它可以安全地存储和处理任意的二进制数据，而不会因为数据中包含特定的字符（如空字符 <code>\0</code>）或其他控制字符而导致数据被截断或错误解析, 并非所有语言或系统的 String 都是二进制安全的, 例如:</p>
+<ul>
+<li>在 C 中，字符串通常不是二进制安全的（因为以 <code>\0</code> 结尾）</li>
+<li>在 Java 中, String 是基于 Unicode 的, 主要用于文本, 处理二进制数据更常用 <code>byte[]</code></li>
+</ul>
+</blockquote>
+<h2 id="3-set">3. Set<a href="#3-set" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Set 只能存储字符串, 且字符串不能重复:</p>
+<pre tabindex="0"><code>[&#34;123&#34;, &#34;456&#34;, &#34;Jack&#34;, &#34;Alice&#34;, ...]
+</code></pre><blockquote>
+<p>注意 Redis String 是一个数据结构, 不是一个值的类型, Redis 中 Set 只能用来存储 String 类型的值, 这里的 String 指的只是单纯的字符串, 而不是前面的数据结构</p>
+</blockquote>
+<h2 id="4-list">4. List<a href="#4-list" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Redis 中的 List 其实就是链表数据结构的实现, 很多语言都内置了链表的实现, 但是 C 语言并没有实现链表, 因此 Redis 实现了自己的链表, Redis 的 List 的实现是一个 双向链表,</p>
+<p><code>List</code> 可以用来做消息队列, 只是功能过于简单且存在很多缺陷, 不建议这样做, 相对来说, Redis 5.0 新增加的一个数据结构 <code>Stream</code> 更适合做消息队列一些, 只是功能依然非常简陋, 和专业的消息队列相比, 还是有很多欠缺的地方比如消息丢失和堆积问题不好解决</p>
+<h2 id="5-hash">5. Hash<a href="#5-hash" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>大部分编程语言都提供了 哈希（<code>hash</code>）类型, 它们的叫法可能是 哈希、字典, 在 <code>Redis</code> 中, 哈希类型 是指键值本身又是一个 键值对结构:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>HMSET user:1001 name <span style="color:#e6db74">&#34;Alice&#34;</span> age <span style="color:#ae81ff">25</span> city <span style="color:#e6db74">&#34;Beijing&#34;</span>
+</span></span></code></pre></div><ul>
+<li>这里 user:1001 是 Redis 的键（key）</li>
+<li>这个键对应的值是一个哈希，包含多个键值对：name: &ldquo;Alice&rdquo;，age: 25，city: &ldquo;Beijing&rdquo;</li>
+<li>在这个哈希里，name、age、city 是 field，&ldquo;Alice&rdquo;、25、Beijing 是对应的值</li>
+</ul>
+<p>类似下面这种:</p>
+<pre tabindex="0"><code>key: user:1001
+value: { name: &#34;Alice&#34;, age: 25, city: &#34;Beijing&#34; }
+</code></pre><p>你可以用命令单独访问某个 field 的值，比如:</p>
+<pre tabindex="0"><code>HGET user:1001 name
+</code></pre><p>可以看出 Redis 中的 哈希表 和 普通键值对不同:</p>
+<pre tabindex="0"><code>key: username
+value: &#34;Alice&#34;
+</code></pre><p>Redis 是一个高效的键值数据库, 为了保证性能和一致性, 它要求所有存储的数据在底层都以字符串的形式保存, 因此:</p>
+<ul>
+<li>
+<p><strong>Field</strong>：哈希的字段（比如上面的 name、age、city）必须是字符串类型</p>
+</li>
+<li>
+<p><strong>Value</strong>：每个字段对应的值（比如 &ldquo;Alice&rdquo;、25、Beijing）也必须是字符串</p>
+</li>
+</ul>
+<pre tabindex="0"><code>HMSET user:1001 friends [&#34;Bob&#34;, &#34;Charlie&#34;]  # 错误！
+</code></pre><p>那如果我们想存用户的信息, 而用户又存在这样的数组字段, 应该怎么办呢?</p>
+<p>答案是把整个用户信息（比如 name、age、city、friends 等）<strong>序列化</strong>为一个 JSON 字符串, 直接存到 Redis 的 String 类型的一个键里, 每次读写时, 客户端负责解析和序列化 JSON</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;Alice&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;age&#34;</span>: <span style="color:#ae81ff">25</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;city&#34;</span>: <span style="color:#e6db74">&#34;Beijing&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;friends&#34;</span>: [<span style="color:#e6db74">&#34;Bob&#34;</span>, <span style="color:#e6db74">&#34;Charlie&#34;</span>]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>用 Redis 哈希存储：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># 用 SET 命令存储 JSON 字符串</span>
+</span></span><span style="display:flex;"><span>SET user:<span style="color:#ae81ff">1001</span> <span style="color:#e6db74">&#34;{</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">name</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">:</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">Alice</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">,</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">age</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">:25,</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">city</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">:</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">Beijing</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">,</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">friends</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">:[</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">Bob</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">,</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">Charlie</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">]}&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 获取 JSON 字符串</span>
+</span></span><span style="display:flex;"><span>GET user:<span style="color:#ae81ff">1001</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 返回: &#34;{\&#34;name\&#34;:\&#34;Alice\&#34;,\&#34;age\&#34;:25,\&#34;city\&#34;:\&#34;Beijing\&#34;,\&#34;friends\&#34;:[\&#34;Bob\&#34;,\&#34;Charlie\&#34;]}&#34;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> json
+</span></span><span style="display:flex;"><span>json_str <span style="color:#f92672">=</span> redis_client<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;user:1001&#34;</span>)
+</span></span><span style="display:flex;"><span>user_info <span style="color:#f92672">=</span> json<span style="color:#f92672">.</span>loads(json_str)  <span style="color:#75715e"># 转为字典</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># user_info = {&#34;name&#34;: &#34;Alice&#34;, &#34;age&#34;: 25, &#34;city&#34;: &#34;Beijing&#34;, &#34;friends&#34;: [&#34;Bob&#34;, &#34;Charlie&#34;]}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 要更新某个字段（比如加朋友或改 city），需要, 读取整个 JSON, 在客户端修改, 序列化后写回</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 添加新朋友</span>
+</span></span><span style="display:flex;"><span>user_info[<span style="color:#e6db74">&#34;friends&#34;</span>]<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;Alice&#34;</span>)
+</span></span><span style="display:flex;"><span>redis_client<span style="color:#f92672">.</span>set(<span style="color:#e6db74">&#34;user:1001&#34;</span>, json<span style="color:#f92672">.</span>dumps(user_info))
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 或者改城市</span>
+</span></span><span style="display:flex;"><span>user_info[<span style="color:#e6db74">&#34;city&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Shanghai&#34;</span>
+</span></span><span style="display:flex;"><span>redis_client<span style="color:#f92672">.</span>set(<span style="color:#e6db74">&#34;user:1001&#34;</span>, json<span style="color:#f92672">.</span>dumps(user_info))
+</span></span></code></pre></div><p>虽然这种方式直接存整个 JSON 对象, 看着很容易理解, 但缺点也很明显<strong>更新效率低</strong>：每次修改（即使只改 name 或加一个朋友）, 都要：</p>
+<ol>
+<li>读整个 JSON（GET）</li>
+<li>客户端解析</li>
+<li>修改后序列化</li>
+<li>写回整个 JSON（SET）</li>
+</ol>
+<p>这对频繁更新的场景效率较低, 那有没有更好的办法?</p>
+<p>用 Redis 哈希存储基本信息（name、age、city 等）作为单独的字段, 把复杂结构（比如 friends 列表）序列化为 JSON 字符串存到一个字段, 这样结合了哈希的结构化和 JSON 的灵活性:</p>
+<pre tabindex="0"><code># 存储用户信息
+HMSET user:1001 name &#34;Alice&#34; age &#34;25&#34; city &#34;Beijing&#34; friends &#34;[\&#34;Bob\&#34;, \&#34;Charlie\&#34;]&#34;
+
+# 获取所有字段
+HGETALL user:1001
+# 返回: {&#34;name&#34;: &#34;Alice&#34;, &#34;age&#34;: &#34;25&#34;, &#34;city&#34;: &#34;Beijing&#34;, &#34;friends&#34;: &#34;[\&#34;Bob\&#34;, \&#34;Charlie\&#34;]&#34;}
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> json
+</span></span><span style="display:flex;"><span>user_info <span style="color:#f92672">=</span> redis_client<span style="color:#f92672">.</span>hgetall(<span style="color:#e6db74">&#34;user:1001&#34;</span>)
+</span></span><span style="display:flex;"><span>friends <span style="color:#f92672">=</span> json<span style="color:#f92672">.</span>loads(user_info[<span style="color:#e6db74">&#34;friends&#34;</span>])  <span style="color:#75715e"># 转为列表 [&#34;Bob&#34;, &#34;Charlie&#34;]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 更新基本信息, 直接修改某个字段</span>
+</span></span><span style="display:flex;"><span>HSET user:<span style="color:#ae81ff">1001</span> city <span style="color:#e6db74">&#34;Shanghai&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 更新朋友列表</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 客户端先读取，修改，再写回</span>
+</span></span><span style="display:flex;"><span>friends<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;Alice&#34;</span>)
+</span></span><span style="display:flex;"><span>redis_client<span style="color:#f92672">.</span>hset(<span style="color:#e6db74">&#34;user:1001&#34;</span>, <span style="color:#e6db74">&#34;friends&#34;</span>, json<span style="color:#f92672">.</span>dumps(friends))
+</span></span></code></pre></div><ul>
+<li>基本字段（name、city）可直接修改，效率高</li>
+<li>friends 列表用 JSON 存储，灵活支持列表或其他复杂结构</li>
+<li>所有信息在一个键（user:1001）下</li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/bugs/013-kafka-connection/" class="button inline prev">
+        Kafka 链接失败
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/001-%E4%BA%8B%E5%8A%A1/" class="button inline next">
+        MySQL 事务 数据库锁 悲观锁 乐观锁
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

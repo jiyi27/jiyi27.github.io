@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Spring Boot 之何为内嵌 Tomcat :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="一直听说Spring Boot内嵌了Tomcat, 然后Spring Boot默认把应用打包为Jar, 这到底意味着什么呢, 为啥不直接用War包部署到外部服务器呢(外部的Tomcat)? 不了解War可以看看我的其它War相关的文章或者站内搜War等关键字. 在StackOverflow上看到一个关于什么是内嵌Tomcat回答, 看看咋说的
+&ldquo;Embedded&rdquo; means that you program ships with the server within it as opposed to a web application being deployed to external server. With embedded server your application is packaged with the server of choice and responsible for server start-up and management.
+From the user standpoint the difference is:
+Application with embedded server looks like a regular java program. You just launch it and that&rsquo;s it. Regular web application is usually a war archive which needs to be deployed to some server Embedding a server is very useful for testing purposes where you can start or stop server at will during the test.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/java/backend/003-spring-embedded-tomcat/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Spring Boot 之何为内嵌 Tomcat">
+<meta property="og:description" content="一直听说Spring Boot内嵌了Tomcat, 然后Spring Boot默认把应用打包为Jar, 这到底意味着什么呢, 为啥不直接用War包部署到外部服务器呢(外部的Tomcat)? 不了解War可以看看我的其它War相关的文章或者站内搜War等关键字. 在StackOverflow上看到一个关于什么是内嵌Tomcat回答, 看看咋说的
+&ldquo;Embedded&rdquo; means that you program ships with the server within it as opposed to a web application being deployed to external server. With embedded server your application is packaged with the server of choice and responsible for server start-up and management.
+From the user standpoint the difference is:
+Application with embedded server looks like a regular java program. You just launch it and that&rsquo;s it. Regular web application is usually a war archive which needs to be deployed to some server Embedding a server is very useful for testing purposes where you can start or stop server at will during the test.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/java/backend/003-spring-embedded-tomcat/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="spring boot" />
+
+
+  <meta property="article:published_time" content="2023-04-28 15:02:55 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/java/backend/003-spring-embedded-tomcat/">Spring Boot 之何为内嵌 Tomcat</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-04-28</time><span class="post-reading-time">3 分钟阅读 (638 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/spring-boot/">spring boot</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>一直听说Spring Boot内嵌了Tomcat, 然后Spring Boot默认把应用打包为Jar, 这到底意味着什么呢, 为啥不直接用War包部署到外部服务器呢(外部的Tomcat)?  不了解War可以看看我的其它<a href="https://davidzhu.xyz/2023/04/27/Java/Backend/War/">War相关的文章</a>或者站内搜War等关键字. 在StackOverflow上看到一个<a href="https://stackoverflow.com/a/23176765/16317008">关于什么是内嵌Tomcat回答</a>, 看看咋说的</p>
+<p>&ldquo;Embedded&rdquo; means that you program <strong>ships with</strong> the server within it as opposed to a web application being deployed to external server. With embedded server your application is packaged with the server of choice and responsible for server start-up and management.</p>
+<p>From the user standpoint the difference is:</p>
+<ul>
+<li>Application with embedded server looks like a regular java program. You just launch it and that&rsquo;s it.</li>
+<li>Regular web application is usually a <code>war</code> archive which needs to be deployed to some server</li>
+</ul>
+<p>Embedding a server is very useful for testing purposes where you can start or stop server at will during the test.</p>
+<p>现在貌似懂点了, 就是Tomcat被被集成到了我们的项目里呗(Tomcat本质也就是个实现了Servlet和JSP标准的程序), 那我们去看看我们打包好的Spring Boot项目(一个Jar文件)里是不是有Tomcat,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ pwd
+</span></span><span style="display:flex;"><span>Downloads/SpringDemo-0.0.1-SNAPSHOT/BOOT-INF/lib/
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ ls | grep tomcat
+</span></span><span style="display:flex;"><span>tomcat-embed-core-10.1.7.jar
+</span></span><span style="display:flex;"><span>tomcat-embed-el-10.1.7.jar
+</span></span><span style="display:flex;"><span>tomcat-embed-websocket-10.1.7.jar
+</span></span></code></pre></div><p>好家伙, 果然在里面,</p>
+<hr>
+<p>然后又看到一篇文章, 说的很清晰, 这里粘贴部分, 分享一下,</p>
+<p>Think about what you would need to be able to deploy your application (typically) on a virtual machine.</p>
+<ul>
+<li>Step 1 : Install Java</li>
+<li>Step 2 : Install the Web/Application Server (Tomcat/Websphere/Weblogic etc)</li>
+<li>Step 3 : Deploy the application war</li>
+</ul>
+<p>What if we want to simplify this?</p>
+<p>How about making the server a part of the application?</p>
+<p>You would just need a virtual machine with Java installed and you would be able to directly deploy the application on the virtual machine. Isn’t it cool?</p>
+<p>This idea is the genesis for Embedded Servers. When we create an application deployable, we would embed the server (for example, tomcat) inside the deployable.</p>
+<p>For example, for a Spring Boot Application, you can generate an application jar which contains Embedded Tomcat. <strong>You can run a web application as a normal Java application</strong>!</p>
+<p>Embedded server implies that our deployable unit contains the binaries for the server (example, tomcat.jar). 这也就是我们上面看到的那几个文件<code>tomcat-embed-core-10.1.7.jar</code>等, 了解更多<a href="https://www.springboottutorial.com/spring-boot-with-embedded-servers-tomcat-jetty">Spring Boot and Embedded Servers - Tomcat</a></p>
+<p>打开项目<code>pom.xml</code>可以看到依赖里并没tomcat相关的东西, 但是我们项目里却有tomcat那几个jar包, 这是为啥哩, 其实是因为下面的<code>spring-boot-starter-web</code>依赖tomcat, 自动为我们添加类似<code>spring-boot-starter-tomcat</code>这种了,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span>			  <span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-data-jpa<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-web<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-test<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;scope&gt;</span>test<span style="color:#f92672">&lt;/scope&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>看一下别人怎么说,</p>
+<p>The single spring-boot-starter-web dependency can pull in all dependencies related to web development. It also reduces the count of build dependency. The spring-boot-starter-web mainly depends on the following:</p>
+<pre tabindex="0"><code>- org.springframework.boot:spring-boot-starter
+- org.springframework.boot:spring-boot-starter-tomcat
+- org.springframework.boot:spring-boot-starter-validation
+- com.fasterxml.jackson.core:jackson-databind
+- org.springframework:spring-web
+- org.springframework:spring-webmvc
+</code></pre><p>By default, the <code>spring-boot-starter-web</code> contains the below tomcat server dependency given:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;dependency&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-starter-tomcat<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;version&gt;</span>2.0.0.RELEASE<span style="color:#f92672">&lt;/version&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;scope&gt;</span>compile<span style="color:#f92672">&lt;/scope&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>The <code>spring-boot-starter-web</code> auto-configures the below things required for the web development:</p>
+<ul>
+<li>Dispatcher Servlet</li>
+<li>Error Page</li>
+<li>Embedded servlet container</li>
+<li>Web JARs for managing the static dependencies</li>
+</ul>
+<p><a href="https://www.geeksforgeeks.org/difference-between-spring-boot-starter-web-and-spring-boot-starter-tomcat/">Difference Between Spring Boot Starter Web and Spring Boot Starter Tomcat - GeeksforGeeks</a></p>
+<hr>
+<p>说了那么多, 既然是生成的项目jar包内嵌服务器, 也就是说我们只要安装了Java(比如Java8以上), 那我们就可以运行我们的Spring Boot项目了, 不用额外安装Tomcat了,</p>
+<p>首先得先打包我们的项目吧, 在Spring Boot根目录运行<code>mvn clean install</code></p>
+<p>然后报错 (不出一点岔子就不正常了, 写代码嘛),</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span>[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:2.3.5.RELEASE:repackage (repackage) on project SpringDemo: Execution repackage of goal org.springframework.boot:spring-boot-maven-plugin:2.3.5.RELEASE:repackage failed: Unsupported class file major version 61 -&gt; [Help 1]
+</span></span></code></pre></div><p>然后仔细看了一下发现上面说<code>org.springframework.boot:spring-boot-maven-plugin:2.3.5.RELEASE:repackage failed</code>, 好熟悉, 好像是之前刚开始初始化Spring Boot项目的时候IDEA提示<code>pom.xml</code>有错误(出现曲线下划线那种错, 不是运行报错), 出去强迫症想解决它,然后在StackOverflow在哪查到添加上版本信息就不会提示错误了, 于是我加了一行<code>&lt;version&gt;2.3.5.RELEASE&lt;/version&gt;</code>,  如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span>    <span style="color:#f92672">&lt;build&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;plugins&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;plugin&gt;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;groupId&gt;</span>org.springframework.boot<span style="color:#f92672">&lt;/groupId&gt;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;artifactId&gt;</span>spring-boot-maven-plugin<span style="color:#f92672">&lt;/artifactId&gt;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&lt;version&gt;</span>2.3.5.RELEASE<span style="color:#f92672">&lt;/version&gt;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">&lt;/plugin&gt;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&lt;/plugins&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;/build&gt;</span>
+</span></span></code></pre></div><p>加了版本信息后确实那个红色曲线消失, 也没影响我程序的正常运行(即在IDEA点击运行按钮那个斜三角按钮), 但是使用命令行<code>mvn clean install</code>就出现了刚刚的错误, 所以我把版本信息去掉了然后更新<code>pom.xml</code>, 然后<code>mvn clean install</code>正常运行,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span>.....
+</span></span><span style="display:flex;"><span>[INFO] Installing /Users/David/Codes/IDEA/SpringDemo/target/SpringDemo-0.0.1-SNAPSHOT.jar to /Users/David/.m2/repository/com/choo/SpringDemo/0.0.1-SNAPSHOT/SpringDemo-0.0.1-SNAPSHOT.jar
+</span></span><span style="display:flex;"><span>[INFO] ------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>[INFO] BUILD SUCCESS
+</span></span><span style="display:flex;"><span>[INFO] ------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>[INFO] Total time:  4.091 s
+</span></span><span style="display:flex;"><span>[INFO] Finished at: 2023-04-29T16:22:17-03:00
+</span></span><span style="display:flex;"><span>[INFO] ------------------------------------------------------------------------
+</span></span></code></pre></div><p>注意上面jar包输出路径, 然后进入到生成的jar包的路径里, 运行jar包(运行之前确保你的数据库服务已经正确开启, 可以正常连接, 如你使用了MySQL服务),</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>java -jar SpringDemo-0.0.1-SNAPSHOT.jar
+</span></span></code></pre></div><p>取决于你项目的REST API怎么设计的, 然后去浏览器访问<code>http://localhost:8080/find/temperature?from=2023-04-01&amp;to=2023-04-02</code>, 得到如下数据, 访问成功:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>[{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">1</span>,<span style="color:#f92672">&#34;value&#34;</span>:<span style="color:#ae81ff">27.5</span>,<span style="color:#f92672">&#34;createdDate&#34;</span>:<span style="color:#e6db74">&#34;2023-04-01T14:54:26&#34;</span>},{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">2</span>,<span style="color:#f92672">&#34;value&#34;</span>:<span style="color:#ae81ff">28.5</span>,<span style="color:#f92672">&#34;createdDate&#34;</span>:<span style="color:#e6db74">&#34;2023-04-01T20:42:50&#34;</span>},{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">3</span>,<span style="color:#f92672">&#34;value&#34;</span>:<span style="color:#ae81ff">20.6</span>,<span style="color:#f92672">&#34;createdDate&#34;</span>:<span style="color:#e6db74">&#34;2023-04-02T11:09:26&#34;</span>},{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">4</span>,<span style="color:#f92672">&#34;value&#34;</span>:<span style="color:#ae81ff">30.6</span>,<span style="color:#f92672">&#34;createdDate&#34;</span>:<span style="color:#e6db74">&#34;2023-04-02T15:32:39&#34;</span>}]
+</span></span></code></pre></div><p>你也可以使用<code>wget</code>发送<code>GET</code>请求,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span>wget &#34;http://localhost:8080/find/temperature?from=2023-04-01<span style="color:#960050;background-color:#1e0010">&amp;</span>to=2023-04-02&#34;
+</span></span></code></pre></div><p>总结下, 这次讨论我们理解了Jar是什么, 也知道了什么是所谓的内嵌Tomcat, 可以看到运行Jar包并不是像<a href="https://davidzhu.xyz/2023/04/27/Java/Backend/War/">之前讨论War</a>那样, 还得把War部署到Tomcat的<code>webapps</code>目录下, 然后启动Tomcat, 再去访问对应url, 我们直接一个<code>java -jar</code>便可以运行我们的Java Web项目, 可谓是很方便, 但是需要注意如果你的应用用到了数据库, 那你仍需要在你执行该应用的机器上开启对应的数据库服务以及创建对应的表, 这跟tomcat没关系, SpringBoot只是内嵌了Tomcat并不是内嵌了你的数据库啥的,</p>
+<p>然后我们也就知道别人所说的那种, Spring Boot内嵌Tomcat, 然后默认项目打包成Jar而不是War到底是个什么玩意, 即就是把所有依赖和所有我们编写的源代码的字节码<code>.class</code>文件通过约定好的目录结构放到一起, 然后打包成一个jar, 上面说到的依赖比如<code>pom.xml</code>中的各种依赖以jar文件格式放到<code>SpringDemo-0.0.1-SNAPSHOT/BOOT-INF/lib</code>目录下, 然后<code>.class</code>文件都在<code>SpringDemo-0.0.1-SNAPSHOT/BOOT-INF/classes</code>下, 当然可能还包含其他的文件, 这你自己去探索吧,</p>
+<p>最后看一下项目生成的Jar的结构(依赖太多了, 删除了一部分):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>.
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">├──</span> BOOT<span style="color:#f92672">-</span>INF
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">├──</span> classes
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">├──</span> application.<span style="color:#a6e22e">properties</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">├──</span> com
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">└──</span> choo
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">└──</span> springdemo
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>           <span style="color:#960050;background-color:#1e0010">├──</span> SpringDemoApplication.<span style="color:#a6e22e">class</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>           <span style="color:#960050;background-color:#1e0010">├──</span> Temperature.<span style="color:#a6e22e">class</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>           <span style="color:#960050;background-color:#1e0010">└──</span> TemperatureRepository.<span style="color:#a6e22e">class</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">└──</span> <span style="color:#66d9ef">static</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">└──</span> index.<span style="color:#a6e22e">html</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">├──</span> classpath.<span style="color:#a6e22e">idx</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">├──</span> layers.<span style="color:#a6e22e">idx</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>   <span style="color:#960050;background-color:#1e0010">└──</span> lib
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">├──</span> HikariCP<span style="color:#f92672">-</span>5.<span style="color:#a6e22e">0</span>.<span style="color:#a6e22e">1</span>.<span style="color:#a6e22e">jar</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">├──</span> angus<span style="color:#f92672">-</span>activation<span style="color:#f92672">-</span>2.<span style="color:#a6e22e">0</span>.<span style="color:#a6e22e">0</span>.<span style="color:#a6e22e">jar</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">├──</span> antlr4<span style="color:#f92672">-</span>runtime<span style="color:#f92672">-</span>4.<span style="color:#a6e22e">10</span>.<span style="color:#a6e22e">1</span>.<span style="color:#a6e22e">jar</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">├──</span> spring<span style="color:#f92672">-</span>jcl<span style="color:#f92672">-</span>6.<span style="color:#a6e22e">0</span>.<span style="color:#a6e22e">7</span>.<span style="color:#a6e22e">jar</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">├──</span> spring<span style="color:#f92672">-</span>jdbc<span style="color:#f92672">-</span>6.<span style="color:#a6e22e">0</span>.<span style="color:#a6e22e">7</span>.<span style="color:#a6e22e">jar</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">├──</span> spring<span style="color:#f92672">-</span>orm<span style="color:#f92672">-</span>6.<span style="color:#a6e22e">0</span>.<span style="color:#a6e22e">7</span>.<span style="color:#a6e22e">jar</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">├──</span> spring<span style="color:#f92672">-</span>tx<span style="color:#f92672">-</span>6.<span style="color:#a6e22e">0</span>.<span style="color:#a6e22e">7</span>.<span style="color:#a6e22e">jar</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">├──</span> spring<span style="color:#f92672">-</span>web<span style="color:#f92672">-</span>6.<span style="color:#a6e22e">0</span>.<span style="color:#a6e22e">7</span>.<span style="color:#a6e22e">jar</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">├──</span> spring<span style="color:#f92672">-</span>webmvc<span style="color:#f92672">-</span>6.<span style="color:#a6e22e">0</span>.<span style="color:#a6e22e">7</span>.<span style="color:#a6e22e">jar</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">├──</span> tomcat<span style="color:#f92672">-</span>embed<span style="color:#f92672">-</span>core<span style="color:#f92672">-</span>10.<span style="color:#a6e22e">1</span>.<span style="color:#a6e22e">7</span>.<span style="color:#a6e22e">jar</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">├──</span> tomcat<span style="color:#f92672">-</span>embed<span style="color:#f92672">-</span>el<span style="color:#f92672">-</span>10.<span style="color:#a6e22e">1</span>.<span style="color:#a6e22e">7</span>.<span style="color:#a6e22e">jar</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">│</span>       <span style="color:#960050;background-color:#1e0010">├──</span> tomcat<span style="color:#f92672">-</span>embed<span style="color:#f92672">-</span>websocket<span style="color:#f92672">-</span>10.<span style="color:#a6e22e">1</span>.<span style="color:#a6e22e">7</span>.<span style="color:#a6e22e">jar</span>
+</span></span></code></pre></div><p>其实有时候对于一些概念区别, 读很多文章博客不如去自己实操一遍, 读多了可能觉得自己会了理解了, 但还是会云里雾里, 因为有的说的很泛, 总之别嫌麻烦, 多动手,</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/linux/regex/regex/" class="button inline prev">
+        Regex Basics
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/java/backend/001-war/" class="button inline next">
+        手动部署 War 包到 Tomcat 之何为 War
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

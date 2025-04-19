@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Tunneling Protocols :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. VPN VPN（Virtual Private Network）的核心特性之一就是使用隧道协议（Tunneling Protocol）。通过这些隧道协议，VPN 能够保证数据在不安全的网络中的安全传输，使得VPN在保护在线隐私和绕过网络限制方面非常有效。
+常见的隧道协议包括：
+IPsec (Internet Protocol Security)：用于在IP通信过程中确保数据的完整性、认证和机密性。 OpenVPN：一个基于SSL/TLS的开源VPN协议，提供高度的安全性和灵活性。 WireGuard：一个较新的协议，旨在提供更高的速度和更先进的加密技术。 SSL/TLS (Secure Sockets Layer/Transport Layer Security)：SSL VPN usually connects using a Web browser, whereas an IPSec VPN generally requires client software on the remote system. SSL VPN is a component of virtually every Web browser. Any OS that runs a browser is supported. OpenVPN 是一个独立的 VPN 协议，它不使用像 PPTP、L2TP 或 IPsec 这样的标准隧道协议。相反，OpenVPN 使用自己的协议，基于 SSL/TLS 来提供加密和安全连接。它是一个开源的软件应用程序，允许创建安全的点对点或站点对站点连接 OpenVPN 的关键特性包括：
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/networking/007-tunneling-protocols/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Tunneling Protocols">
+<meta property="og:description" content="1. VPN VPN（Virtual Private Network）的核心特性之一就是使用隧道协议（Tunneling Protocol）。通过这些隧道协议，VPN 能够保证数据在不安全的网络中的安全传输，使得VPN在保护在线隐私和绕过网络限制方面非常有效。
+常见的隧道协议包括：
+IPsec (Internet Protocol Security)：用于在IP通信过程中确保数据的完整性、认证和机密性。 OpenVPN：一个基于SSL/TLS的开源VPN协议，提供高度的安全性和灵活性。 WireGuard：一个较新的协议，旨在提供更高的速度和更先进的加密技术。 SSL/TLS (Secure Sockets Layer/Transport Layer Security)：SSL VPN usually connects using a Web browser, whereas an IPSec VPN generally requires client software on the remote system. SSL VPN is a component of virtually every Web browser. Any OS that runs a browser is supported. OpenVPN 是一个独立的 VPN 协议，它不使用像 PPTP、L2TP 或 IPsec 这样的标准隧道协议。相反，OpenVPN 使用自己的协议，基于 SSL/TLS 来提供加密和安全连接。它是一个开源的软件应用程序，允许创建安全的点对点或站点对站点连接 OpenVPN 的关键特性包括：
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/networking/007-tunneling-protocols/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="计算机网络" />
+
+
+  <meta property="article:published_time" content="2023-09-10 08:27:59 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/networking/007-tunneling-protocols/">Tunneling Protocols</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-09-10</time><span class="post-reading-time">8 分钟阅读 (1639 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/vpn/">vpn</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-vpn">1. VPN<a href="#1-vpn" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>VPN（Virtual Private Network）的核心特性之一就是使用隧道协议（Tunneling Protocol）。通过这些隧道协议，VPN 能够保证数据在不安全的网络中的安全传输，使得VPN在保护在线隐私和绕过网络限制方面非常有效。</p>
+<p>常见的隧道协议包括：</p>
+<ul>
+<li><strong>IPsec (Internet Protocol Security)</strong>：用于在IP通信过程中确保数据的完整性、认证和机密性。</li>
+<li><strong>OpenVPN</strong>：一个基于SSL/TLS的开源VPN协议，提供高度的安全性和灵活性。</li>
+<li><strong>WireGuard</strong>：一个较新的协议，旨在提供更高的速度和更先进的加密技术。</li>
+<li><strong>SSL/TLS (Secure Sockets Layer/Transport Layer Security)</strong>：SSL VPN usually connects using a Web browser, whereas an IPSec VPN generally requires client software on the remote system.
+<ul>
+<li>SSL VPN is a component of virtually every Web browser. Any OS that runs a browser is supported.</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>OpenVPN 是一个独立的 VPN 协议，它不使用像 PPTP、L2TP 或 IPsec 这样的标准隧道协议。相反，OpenVPN 使用自己的协议，基于 SSL/TLS 来提供加密和安全连接。它是一个开源的软件应用程序，允许创建安全的点对点或站点对站点连接 OpenVPN 的关键特性包括：</p>
+<ol>
+<li><strong>自定义加密协议</strong>：虽然基于 SSL/TLS，但 OpenVPN 有其独特的实现方式，允许高度的定制和灵活性。</li>
+<li><strong>身份验证</strong>：支持各种认证机制，包括证书、预共享密钥和用户认证。</li>
+<li><strong>跨平台兼容性</strong>：OpenVPN 可以在多种操作系统上运行，包括 Windows、macOS、Linux 和移动平台。</li>
+</ol>
+</blockquote>
+<h2 id="2-tunneling">2. Tunneling<a href="#2-tunneling" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>In <a href="https://davidzhu.xyz/post/networking/007-tun-tap-device/">previous post</a>, we know that <em><strong>TUN</strong></em> and <em><strong>TAP</strong></em> are two different kernel virtual network devices, which are used for <strong>tunneling</strong> purposes. In this post, we&rsquo;ll discuss what is tunneling and coomon tunneling protocols.</p>
+<p>In the physical world, tunneling is a way to cross terrain or boundaries that could not normally be crossed. Similarly, in networking, tunnels are a method for transporting data across a network using protocols that are not supported by that network. <strong>Tunneling works by encapsulating packets: wrapping packets inside of other packets.</strong></p>
+<blockquote>
+<p>Encapsulating packets within other packets is called &ldquo;tunneling.&rdquo;</p>
+</blockquote>
+<p>Because tunneling involves repackaging the traffic data into a different form, perhaps with encryption as standard, it can hide the nature of the traffic that is run through a tunnel.</p>
+<blockquote>
+<p>Encapsulation:</p>
+<p>Data traveling over a network is divided into packets. A typical packet has two parts: the <strong>header</strong>, which indicates the packet&rsquo;s destination and which protocol it uses, and the <strong>payload</strong>, which is the packet&rsquo;s actual contents.</p>
+<p><strong>An encapsulated packet is essentially a packet inside another packet</strong>. In an encapsulated packet, the header and payload of the first packet goes inside the payload section of the surrounding packet. <strong>The original packet itself becomes the payload.</strong></p>
+</blockquote>
+<blockquote>
+<p>A VPN just uses one of the tunneling protocols, therefore, when you know how each tunneling protocol works, you will know the essence of VPN of that type.</p>
+</blockquote>
+<h2 id="3-types-of-tunneling-protocol">3. Types of Tunneling protocol<a href="#3-types-of-tunneling-protocol" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>In addition to <strong>GRE, IPsec, IP-in-IP, and SSH</strong>, other tunneling protocols include:</p>
+<ul>
+<li>Point-to-Point Tunneling Protocol (PPTP)</li>
+<li>Secure Socket Tunneling Protocol (SSTP)</li>
+<li>Layer 2 Tunneling Protocol (L2TP)</li>
+<li>Virtual Extensible Local Area Network (VXLAN)</li>
+</ul>
+<h2 id="4-ipsec---network-layer">4. IPsec - Network layer<a href="#4-ipsec---network-layer" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>The IPsec protocol suite operates at the <strong>network layer</strong> of the OSI model. Within the term &ldquo;IPsec,&rdquo; &ldquo;IP&rdquo; stands for &ldquo;<strong>Internet Protocol</strong>&rdquo; and &ldquo;sec&rdquo; for &ldquo;secure.&rdquo;  IPsec usually uses port 500.</p>
+<p>The Internet Protocol is the main routing protocol used on the Internet; it designates where data will go using <a href="https://www.cloudflare.com/learning/dns/glossary/what-is-my-ip-address/">IP addresses</a>. IPsec is secure because it <strong>adds encryption and authentication</strong> to this process.</p>
+<h3 id="41-why-ipsec-is-important">4.1. Why IPSec is important?<a href="#41-why-ipsec-is-important" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Networking protocol suites like <strong>TCP/IP are only concerned with connection and delivery</strong>, and messages sent are not concealed. Anyone in the middle can read them. IPsec, and other protocols that encrypt data, essentially put an envelope around data as it traverses networks, keeping it secure.</p>
+<h3 id="42-how-does-ipsec-work">4.2. How does IPsec work?<a href="#42-how-does-ipsec-work" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>IPsec connections include the following steps:</p>
+<p><strong>Key exchange:</strong> <a href="https://www.cloudflare.com/learning/ssl/what-is-a-cryptographic-key/">Keys</a> are necessary for encryption;</p>
+<p><strong>Packet headers and trailers:</strong> IP packets contain both a payload and a header. IPsec adds several headers to data packets containing authentication and encryption information. IPsec also adds trailers, which go after each packet&rsquo;s payload instead of before.</p>
+<p>Learn more: <a href="https://www.cloudflare.com/learning/network-layer/what-is-ipsec/">What is IPsec? | How IPsec VPNs work | Cloudflare</a></p>
+<h3 id="43-ipsec-tunnel-and-ipsec-transport-mode">4.3. IPsec tunnel and IPsec transport mode<a href="#43-ipsec-tunnel-and-ipsec-transport-mode" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ol>
+<li>
+<p><strong>Tunnel Mode</strong>：</p>
+<ul>
+<li>在隧道模式下，IPsec对整个IP数据包（包括头部信息）进行加密。</li>
+<li>这意味着原始的IP数据包被封装在一个新的IP数据包中。新的数据包有一个新的IP头部。</li>
+<li>隧道模式常用于VPN（Virtual Private Network，虚拟私人网络），允许不同网络之间安全地传输数据。</li>
+</ul>
+</li>
+<li>
+<p><strong>Transport Mode</strong>：</p>
+<ul>
+<li>在传输模式下，IPsec只加密IP数据包的有效载荷（Payload），而不加密头部信息。</li>
+</ul>
+</li>
+</ol>
+<h3 id="44-what-protocols-are-used-in-ipsec">4.4. What protocols are used in IPsec?<a href="#44-what-protocols-are-used-in-ipsec" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>In <a href="https://www.cloudflare.com/learning/network-layer/what-is-the-network-layer/">networking</a>, a protocol is a specified way of formatting data so that any networked computer can interpret the data. <strong>IPsec is not one protocol, but a suite of protocols</strong>. The following protocols make up the IPsec suite:</p>
+<p><strong>Authentication Header (AH):</strong> The AH protocol ensures that data packets are from a trusted source and that the data has not been tampered with, like a tamper-proof seal on a consumer product. These headers do not provide any encryption; they do not help conceal the data from attackers.</p>
+<p><strong>Encapsulating Security Protocol (ESP):</strong> ESP encrypts the IP header and the payload for each packet — unless transport mode is used, in which case it only encrypts the payload. ESP adds its own header and a trailer to each data packet.</p>
+<p><strong>Security Association (SA):</strong> SA refers to a number of protocols used for negotiating encryption keys and algorithms. One of the most common SA protocols is Internet Key Exchange (IKE).</p>
+<p>Finally, while the <strong>Internet Protocol (IP)</strong> is not part of the IPsec suite, IPsec runs directly on top of IP.</p>
+<h3 id="45-how-does-ipsec-impact-mss-and-mtu">4.5. How does IPsec impact MSS and MTU?<a href="#45-how-does-ipsec-impact-mss-and-mtu" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>IPsec protocols add several headers and trailers to packets, all of which take up several bytes. For networks that use IPsec, either the MSS and MTU have to be adjusted accordingly, or packets will be fragmented and slightly delayed. Usually, the MTU for a network is 1,500 bytes. A normal IP header is 20 bytes long, and a TCP header is also 20 bytes long, meaning each packet can contain 1,460 bytes of payload. However, <strong>IPsec adds an Authentication Header, an ESP header, and associated trailers</strong>. These add 50-60 bytes to a packet, or more.</p>
+<h2 id="5-gre---network-layer">5. GRE - Network Layer<a href="#5-gre---network-layer" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Encapsulating packets within other packets is called &ldquo;tunneling.&rdquo; GRE tunnels are usually configured between two routers, with each router acting like one end of the tunnel. The routers are set up to send and receive GRE packets directly to each other. <strong>Any routers in between those two routers</strong> will not open the encapsulated packets; they only reference the headers surrounding the encapsulated packets in order to forward them.</p>
+<p>GRE enables the usage of protocols that are not normally supported by a network, because the packets are wrapped within other packets that do use supported protocols. To understand how this works, think about the difference between a <strong>car</strong> and a <strong>ferry</strong>. A <strong>car</strong> travels over roads on land, while a <strong>ferry</strong> travels over <strong>water</strong>. A <strong>car</strong> cannot normally travel on <strong>water</strong> — however, a <strong>car</strong> can be loaded onto a <strong>ferry</strong> in order to do so.</p>
+<p>For instance, suppose a company needs to set up a connection between the <a href="https://www.cloudflare.com/learning/network-layer/what-is-a-lan/">local area networks (LANs)</a> in their two different offices. Both LANs use the latest version of the <a href="https://www.cloudflare.com/learning/network-layer/internet-protocol/">Internet Protocol</a>, IPv6. But in order to get from one office network to another, traffic must pass through a network managed by a third party — which is somewhat outdated and only supports the older IPv4 protocol.</p>
+<p>With GRE, the company could send traffic through this network by encapsulating IPv6 packets within IPv4 packets. Referring back to the analogy, the <strong>IPv6 packets are the car</strong>, the IPv4 packets are the ferry, and the <strong>third-party network is the water</strong>.</p>
+<h3 id="51-what-goes-in-a-gre-header">5.1. What goes in a GRE header?<a href="#51-what-goes-in-a-gre-header" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>GRE adds two headers to each packet: the GRE header, which is 4 bytes long, and an IP header, which is 20 bytes long. The GRE header indicates the protocol type used by the encapsulated packet. The IP header encapsulates the original packet&rsquo;s header and payload. This means that a GRE packet usually has two IP headers: one for the original packet, and one added by the GRE protocol. Only the routers at each end of the GRE tunnel will reference the original, non-GRE IP header.</p>
+<h3 id="52-how-does-the-use-of-gre-impact-mtu-and-mss-requirements">5.2. How does the use of GRE impact MTU and MSS requirements?<a href="#52-how-does-the-use-of-gre-impact-mtu-and-mss-requirements" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Like any protocol, using GRE adds a few bytes to the size of data packets. This must be factored into the MSS and MTU settings for packets. If the MTU is 1,500 bytes and the MSS is 1,460 bytes (to account for the size of the necessary IP and <a href="https://www.cloudflare.com/learning/ddos/glossary/tcp-ip/">TCP</a> headers), the addition of GRE 24-byte headers will cause the packets to exceed the MTU:</p>
+<p><em>1,460 bytes [payload] + 20 bytes [TCP header] + 20 bytes [IP header] + 24 bytes [GRE header + IP header] = 1,524 bytes</em></p>
+<p>As a result, the packets will be fragmented. Fragmentation slows down packet delivery times and increases how much compute power is used, because packets that exceed the MTU must be broken down and then reassembled.</p>
+<p>This can be avoided by reducing the MSS to accommodate the GRE headers. If the MSS is set to 1,436 instead of 1,460, the GRE headers will be accounted for and the packets will not exceed the MTU of 1,500:</p>
+<p><em>1,436 bytes [payload] + 20 bytes [TCP header] + 20 bytes [IP header] + 24 bytes [GRE header + IP header] = 1,500 bytes</em></p>
+<p>While fragmentation is avoided, the result is that payloads are slightly smaller, meaning it will take extra packets to deliver data. For instance, if the goal is to deliver 150,000 bytes of content (or about 150 kB), and if the MTU is set to 1,500 and no other layer 3 protocols are used, compare how many packets are necessary when GRE is used versus when it is not used:</p>
+<ul>
+<li>Without GRE, MSS 1,460: <strong>103</strong> packets</li>
+<li>With GRE, MSS 1,436: <strong>105</strong> packets</li>
+</ul>
+<p>The extra two packets add milliseconds of delay to the data transfer. However, the usage of GRE may allow these packets to take faster network paths than they could otherwise take, which can make up for the lost time.</p>
+<h2 id="6-ssh-tunneling----application-layer">6. SSH Tunneling  - Application layer<a href="#6-ssh-tunneling----application-layer" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>The Secure Shell (SSH) protocol sets up encrypted connections between client and server, and can also be used to set up a secure tunnel. SSH operates at layer 7 of the OSI model, the application layer. By contrast, IPsec, IP-in-IP, and GRE operate at the network layer.</p>
+<p>A <em><a href="https://en.wikipedia.org/wiki/Secure_Shell">Secure Shell</a> (SSH) tunnel</em> consists of an encrypted tunnel created through an <a href="https://en.wikipedia.org/wiki/Secure_Shell">SSH protocol</a> connection. Users may set up SSH tunnels to transfer <a href="https://en.wikipedia.org/wiki/Unencrypted">unencrypted</a> traffic over a network through an <a href="https://en.wikipedia.org/wiki/Encrypted">encrypted</a> channel. It is a software-based approach to network security and the result is transparent encryption.</p>
+<p>References:</p>
+<ul>
+<li><a href="https://www.cloudflare.com/learning/network-layer/what-is-ipsec/">What is IPsec? | How IPsec VPNs work | Cloudflare</a></li>
+<li><a href="https://www.cloudflare.com/learning/network-layer/what-is-tunneling/">What is tunneling? | Tunneling in networking | Cloudflare</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Tunneling_protocol">Tunneling protocol</a></li>
+<li><a href="https://www.cloudflare.com/learning/network-layer/what-is-gre-tunneling/">What is GRE tunneling? | How GRE protocol works | Cloudflare</a></li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/http/006-https-vpn/" class="button inline prev">
+        HTTPS vs VPN vs Proxy
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/build-website/005-vps-basic-config/" class="button inline next">
+        新买的 VPS 方便配置
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

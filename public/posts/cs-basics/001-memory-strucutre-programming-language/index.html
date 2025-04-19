@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>C Go Java Python内存结构及对比 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Javascript Taken from JavaScript | MDN but this applies for all language with GC:
+Low-level languages like C, have manual memory management primitives such as malloc() and free(). In contrast, JavaScript automatically allocates memory when objects are created and frees it when they are not used anymore (garbage collection). This automaticity is a potential source of confusion: it can give developers the false impression that they don&rsquo;t need to worry about memory management.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/cs-basics/001-memory-strucutre-programming-language/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="C Go Java Python内存结构及对比">
+<meta property="og:description" content="1. Javascript Taken from JavaScript | MDN but this applies for all language with GC:
+Low-level languages like C, have manual memory management primitives such as malloc() and free(). In contrast, JavaScript automatically allocates memory when objects are created and frees it when they are not used anymore (garbage collection). This automaticity is a potential source of confusion: it can give developers the false impression that they don&rsquo;t need to worry about memory management.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/cs-basics/001-memory-strucutre-programming-language/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="计算机基础" />
+
+
+  <meta property="article:published_time" content="2023-05-27 19:59:17 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/cs-basics/001-memory-strucutre-programming-language/">C Go Java Python内存结构及对比</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-05-27</time><span class="post-reading-time">7 分钟阅读 (1294 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">内存管理</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/java/">java</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/c%E8%AF%AD%E8%A8%80/">c语言</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/python/">python</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/other/">other</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-javascript">1. Javascript<a href="#1-javascript" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Taken from <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_management">JavaScript | MDN</a> but <strong>this applies for all language with GC</strong>:</p>
+<p>Low-level languages like C, have manual memory management primitives such as <a href="https://pubs.opengroup.org/onlinepubs/009695399/functions/malloc.html"><code>malloc()</code></a> and <a href="https://en.wikipedia.org/wiki/C_dynamic_memory_allocation#Overview_of_functions"><code>free()</code></a>. In contrast, JavaScript automatically allocates memory when objects are created and frees it when they are not used anymore (<em>garbage collection</em>). This automaticity is a potential source of confusion: it can give developers the false impression that they don&rsquo;t need to worry about memory management.</p>
+<p>Regardless of the programming language, the memory life cycle is pretty much always the same:</p>
+<ol>
+<li><strong>Allocate</strong> the memory you need</li>
+<li>Use the allocated memory (read, write), <strong>each variable exists as long as there are references to it</strong>.</li>
+<li><strong>Release</strong> the allocated memory when it is not needed anymore (Usually done by GC)</li>
+</ol>
+<p>The second part is explicit in all languages. The first and last parts are explicit in low-level languages but are mostly implicit in high-level languages like JavaScript.</p>
+<h3 id="11-allocation">1.1. Allocation<a href="#11-allocation" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">n</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">123</span>; <span style="color:#75715e">// allocates memory for a number
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">s</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;azerty&#34;</span>; <span style="color:#75715e">// allocates memory for a string
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">o</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">a</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">b</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">null</span>,
+</span></span><span style="display:flex;"><span>}; <span style="color:#75715e">// allocates memory for an object and contained values
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// (like object) allocates memory for the array and
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// contained values
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">a</span> <span style="color:#f92672">=</span> [<span style="color:#ae81ff">1</span>, <span style="color:#66d9ef">null</span>, <span style="color:#e6db74">&#34;abra&#34;</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">f</span>(<span style="color:#a6e22e">a</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">a</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span>;
+</span></span><span style="display:flex;"><span>} <span style="color:#75715e">// allocates a function (which is a callable object)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// function expressions also allocate an object
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">someElement</span>.<span style="color:#a6e22e">addEventListener</span>(
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;click&#34;</span>,
+</span></span><span style="display:flex;"><span>  () =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">someElement</span>.<span style="color:#a6e22e">style</span>.<span style="color:#a6e22e">backgroundColor</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;blue&#34;</span>;
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">false</span>,
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><h3 id="12-using-values">1.2. Using values<a href="#12-using-values" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Using values basically means reading and writing in allocated memory. This can be done by reading or writing the value of a variable or an object property or even passing an argument to a function.</p>
+<h3 id="13-release-when-the-memory-is-not-needed-anymore">1.3. Release when the memory is not needed anymore<a href="#13-release-when-the-memory-is-not-needed-anymore" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>The majority of memory management issues occur at this phase. The most difficult aspect of this stage is determining when the allocated memory is no longer needed.</p>
+<p><strong>Low-level languages</strong> require the developer to manually determine at which point in the program the allocated memory is no longer needed and to release it.</p>
+<p>Some <strong>high-level languages</strong>, such as JavaScript, utilize a form of automatic memory management known as <a href="https://en.wikipedia.org/wiki/Garbage_collection_%28computer_science%29">garbage collection</a> (GC). The purpose of a garbage collector is to monitor memory allocation and determine when a block of allocated memory is no longer needed and reclaim it.</p>
+<p>Learn more: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_management">Memory management - JavaScript | MDN</a></p>
+<h2 id="2-python">2. Python<a href="#2-python" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Memory management in Python involves a private heap containing <strong>all Python objects</strong> and data structures. The management of this private heap is ensured internally by the <em><strong>Python memory manager</strong></em>. The Python memory manager has different components which deal with various dynamic storage management aspects, like sharing, segmentation, preallocation or caching.</p>
+<blockquote>
+<p>Everything is an object in Python, even types such as <code>int</code> and <code>str</code>.</p>
+</blockquote>
+<p>Learn more: <a href="https://docs.python.org/3/c-api/memory.html">Memory Management — Python 3.12.0 documentation</a></p>
+<h2 id="3-golang">3. Golang<a href="#3-golang" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>From a correctness standpoint, you don&rsquo;t need to know. Each variable in Go exists as long as there are references to it. The storage location chosen by the implementation is irrelevant to the semantics of the language.</p>
+<p>The storage location does have an effect on writing efficient programs. When possible, the Go compilers will allocate variables that are local to a function in that function&rsquo;s <strong>stack frame</strong>. However, if the compiler cannot prove that the variable is not referenced after the function returns, then the compiler must allocate the variable on the <strong>garbage-collected heap</strong> to avoid dangling pointer errors. Also, if a local variable is very large, it might make more sense to store it on the heap rather than the stack.</p>
+<p>In the current compilers, if a variable has its address taken, that variable is a candidate for allocation on the heap. However, a basic <em>escape analysis</em> recognizes some cases when such variables will not live past the return from the function and can reside on the stack.</p>
+<h2 id="4-java">4. Java<a href="#4-java" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Learn more: <a href="https://davidzhu.xyz/post/java/basics/005-memory-structure/">https://davidzhu.xyz/post/java/basics/005-memory-structure/</a></p>
+<h2 id="5-cc">5. C/C++<a href="#5-cc" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>C has three different pools of memory:</p>
+<ul>
+<li><strong>static</strong>: global variable storage, permanent for the entire run of the program.</li>
+<li><strong>stack</strong>: local variable storage (automatic, continuous memory).</li>
+<li><strong>heap</strong>: dynamic storage (large pool of memory, not allocated in contiguous order).</li>
+</ul>
+<h3 id="51-static-memory">5.1. Static memory<a href="#51-static-memory" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Static memory persists throughout the entire life of the program, and is usually used to store things like <em>global</em> variables, or variables created with the static clause. If a variable is declared <em>outside</em> of a function, it is considered global, meaning it is accessible anywhere in the program. Global variables are static, and there is only one copy for the entire program. Inside a function the variable is allocated on the stack. It is also possible to force a variable to be static using the <strong>static</strong> clause. For example, the same variable created inside a function using the static clause would allow it to be stored in static memory.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> theforce;
+</span></span></code></pre></div><h3 id="52-stack-memory">5.2. Stack memory<a href="#52-stack-memory" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>The <em>stack</em> is used to store variables used on the inside of a function (including the <code>main()</code> function). It’s a LIFO, “<strong>L</strong>ast-<strong>I</strong>n,-<strong>F</strong>irst-<strong>O</strong>ut”, structure. Every time a function declares a new variable it is “pushed” onto the stack. Then when a function finishes running, all the variables associated with that function on the stack are deleted, and the memory they use is freed up. This leads to the “local” scope of function variables.</p>
+<p>Note that there is generally a limit on the size of the stack – which can vary with the operating system (for example OSX currently has a default stack size of 8MB). If a program tries to put too much information on the stack, <strong>stack overflow</strong> will occur. Stack overflow happens when all the memory in the stack has been allocated, and further allocations begin overflowing into other sections of memory. Stack overflow also occurs in situations where recursion is incorrectly used.</p>
+<ul>
+<li>the stack grows and shrinks as variables are created and destroyed</li>
+<li>stack variables only exist whilst the function that created them exists</li>
+</ul>
+<h3 id="53-heap-memory">5.3. Heap Memory<a href="#53-heap-memory" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>The <em>heap</em> is the diametrical opposite of the stack. The <em>heap</em> is a large pool of memory that can be used dynamically – it is also known as the “free store”. This is memory that is not automatically managed in C/C++ – you have to explicitly allocate (using functions such as malloc), and deallocate (e.g. free) the memory. Failure to free the memory when you are finished with it will result in what is known as a <em>memory leak</em> – memory that is still “being used”, and not available to other processes. Unlike the stack, there are generally no restrictions on the size of the heap (or the variables it creates), other than the physical size of memory in the machine. Variables created on the heap are accessible anywhere in the program.</p>
+<h2 id="6-conclusion">6. Conclusion<a href="#6-conclusion" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Most of languages are designed with stack and heap, the concept of stack and heap are not mentioned in Javascript, but some concepts like the function stack frame, heap are shared among the modern languages designs. Our goal is to grab the lifetime of objects so that can write good and robust codes, not stack and heap.</p>
+<p>References:</p>
+<ul>
+<li><a href="https://craftofcoding.wordpress.com/2015/12/07/memory-in-c-the-stack-the-heap-and-static/">Memory in C – the stack, the heap, and static – The Craft of Coding</a></li>
+<li><a href="https://stackoverflow.com/questions/18406703/when-will-a-string-be-garbage-collected-in-java">When will a string be garbage collected in java - Stack Overflow</a></li>
+<li><a href="https://www.baeldung.com/java-choosing-gc-algorithm">Choosing a GC Algorithm in Java | Baeldung</a></li>
+<li><a href="https://segment.com/blog/allocation-efficiency-in-high-performance-go-services/">Golang Memory Management: Allocation Efficiency in Go Services</a></li>
+<li><a href="https://docs.python.org/3/c-api/memory.html">Memory Management — Python 3.11.3 documentation</a></li>
+<li><a href="https://www.honeybadger.io/blog/memory-management-in-python/">Memory Management in Python - Honeybadger Developer Blog</a></li>
+<li><a href="https://en.wikipedia.org/wiki/CPython">CPython</a></li>
+<li><a href="https://deepu.tech/memory-management-in-golang/">🚀 Visualizing memory management in Golang | Technorage</a></li>
+<li><a href="https://stackoverflow.com/a/73021/16317008">methods - Is Java &ldquo;pass-by-reference&rdquo; or &ldquo;pass-by-value&rdquo;? - Stack Overflow</a></li>
+<li><a href="https://stackoverflow.com/questions/10866195/stack-vs-heap-allocation-of-structs-in-go-and-how-they-relate-to-garbage-collec">Stack vs heap allocation of structs in Go, and how they relate to garbage collection - Stack Overflow</a></li>
+<li><a href="https://stackoverflow.com/questions/986006/how-do-i-pass-a-variable-by-reference">python - How do I pass a variable by reference? - Stack Overflow</a></li>
+<li><a href="https://devguide.python.org/internals/garbage-collector/">Garbage Collector Design</a></li>
+<li><a href="https://deepu.tech/memory-management-in-programming/">🚀 Demystifying memory management in modern programming languages | Technorage</a></li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/cs-basics/006-cpu-architecture/" class="button inline prev">
+        Hyper-Threading &amp; Physical Threads
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/cs-basics/006-thread-process/" class="button inline next">
+        Thread Stack and CPU Cores
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

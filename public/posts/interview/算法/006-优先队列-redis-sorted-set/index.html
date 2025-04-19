@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>优先队列 vs Redis Sorted Sets :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Priority Queues 堆分为最大最小堆, 插入和删除复杂度都是 O(log n), 通常通过数组实现, 平时的用法比如 heap sort, priority queues, 今天我们说的优先队列就是最小堆实现的, 一般优先队列就像array, list, hashmap 每个语言内都内置了, 平时用于开发系统级别, 比较 low-level 的系统会用到, 而 redis sorted sets 一般都是用在后端开发业务逻辑中, 而且本质上, 它也是优先队列, 这里对比一下, 毕竟都是和排序有关系
+2.1. 默认排序规则（自然顺序） 默认情况下，PriorityQueue 是一个最小堆，即：
+自然顺序要求元素实现 Comparable 接口，并在其 compareTo 方法中定义比较逻辑 队列的队首（peek/poll 获取的元素）始终是最小的元素（根据 compareTo 的结果） 例如，对于整数，PriorityQueue 会将最小的整数放在队首；对于字符串，会按字典序（ lexicographical order）排序 import java.util.PriorityQueue; public class Main { public static void main(String[] args) { PriorityQueue&lt;Integer&gt; pq = new PriorityQueue&lt;&gt;(); pq.offer(5); pq.offer(2); pq.offer(8); System.out.println(pq.poll()); // 输出: 2（最小值） System.out.println(pq.poll()); // 输出: 5 System.out.println(pq.poll()); // 输出: 8 } } 这里，Integer 实现了 Comparable，compareTo 按数值大小比较，因此 PriorityQueue 按升序排列，队首是最小值 2.2. 自定义排序规则（使用 Comparator） 你可以通过在构造 PriorityQueue 时传入一个 Comparator 对象来自定义排序规则
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/006-%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97-redis-sorted-set/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="优先队列 vs Redis Sorted Sets">
+<meta property="og:description" content="1. Priority Queues 堆分为最大最小堆, 插入和删除复杂度都是 O(log n), 通常通过数组实现, 平时的用法比如 heap sort, priority queues, 今天我们说的优先队列就是最小堆实现的, 一般优先队列就像array, list, hashmap 每个语言内都内置了, 平时用于开发系统级别, 比较 low-level 的系统会用到, 而 redis sorted sets 一般都是用在后端开发业务逻辑中, 而且本质上, 它也是优先队列, 这里对比一下, 毕竟都是和排序有关系
+2.1. 默认排序规则（自然顺序） 默认情况下，PriorityQueue 是一个最小堆，即：
+自然顺序要求元素实现 Comparable 接口，并在其 compareTo 方法中定义比较逻辑 队列的队首（peek/poll 获取的元素）始终是最小的元素（根据 compareTo 的结果） 例如，对于整数，PriorityQueue 会将最小的整数放在队首；对于字符串，会按字典序（ lexicographical order）排序 import java.util.PriorityQueue; public class Main { public static void main(String[] args) { PriorityQueue&lt;Integer&gt; pq = new PriorityQueue&lt;&gt;(); pq.offer(5); pq.offer(2); pq.offer(8); System.out.println(pq.poll()); // 输出: 2（最小值） System.out.println(pq.poll()); // 输出: 5 System.out.println(pq.poll()); // 输出: 8 } } 这里，Integer 实现了 Comparable，compareTo 按数值大小比较，因此 PriorityQueue 按升序排列，队首是最小值 2.2. 自定义排序规则（使用 Comparator） 你可以通过在构造 PriorityQueue 时传入一个 Comparator 对象来自定义排序规则
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/006-%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97-redis-sorted-set/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-03-20 18:08:52 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/006-%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97-redis-sorted-set/">优先队列 vs Redis Sorted Sets</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-03-20</time><span class="post-reading-time">3 分钟阅读 (601 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E7%AE%97%E6%B3%95%E9%9D%A2%E8%AF%95/">算法面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-priority-queues">1. Priority Queues<a href="#1-priority-queues" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>堆分为最大最小堆, 插入和删除复杂度都是 <code>O(log n)</code>, 通常通过数组实现, 平时的用法比如 heap sort, priority queues, 今天我们说的优先队列就是最小堆实现的, 一般优先队列就像<code>array</code>, <code>list</code>, <code>hashmap</code> 每个语言内都内置了, 平时用于开发系统级别, 比较 low-level 的系统会用到, 而 redis sorted sets 一般都是用在后端开发业务逻辑中, 而且本质上, 它也是优先队列, 这里对比一下, 毕竟都是和排序有关系</p>
+<h3 id="21-默认排序规则自然顺序">2.1. 默认排序规则（自然顺序）<a href="#21-默认排序规则自然顺序" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>默认情况下，PriorityQueue 是一个<strong>最小堆</strong>，即：</p>
+<ul>
+<li>自然顺序要求元素实现 <code>Comparable</code> 接口，并在其 <code>compareTo</code> 方法中定义比较逻辑</li>
+<li>队列的队首（<code>peek/poll</code> 获取的元素）始终是最小的元素（根据 <code>compareTo</code> 的结果）</li>
+<li>例如，对于整数，PriorityQueue 会将最小的整数放在队首；对于字符串，会按字典序（ lexicographical order）排序</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">import</span> java.util.PriorityQueue;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Main</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String<span style="color:#f92672">[]</span> args) {
+</span></span><span style="display:flex;"><span>        PriorityQueue<span style="color:#f92672">&lt;</span>Integer<span style="color:#f92672">&gt;</span> pq <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> PriorityQueue<span style="color:#f92672">&lt;&gt;</span>();
+</span></span><span style="display:flex;"><span>        pq.<span style="color:#a6e22e">offer</span>(5);
+</span></span><span style="display:flex;"><span>        pq.<span style="color:#a6e22e">offer</span>(2);
+</span></span><span style="display:flex;"><span>        pq.<span style="color:#a6e22e">offer</span>(8);
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(pq.<span style="color:#a6e22e">poll</span>()); <span style="color:#75715e">// 输出: 2（最小值）</span>
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(pq.<span style="color:#a6e22e">poll</span>()); <span style="color:#75715e">// 输出: 5</span>
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(pq.<span style="color:#a6e22e">poll</span>()); <span style="color:#75715e">// 输出: 8</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>这里，<code>Integer</code> 实现了 <code>Comparable</code>，<code>compareTo</code> 按数值大小比较，因此 <code>PriorityQueue</code> 按升序排列，队首是最小值</li>
+</ul>
+<h3 id="22-自定义排序规则使用-comparator">2.2. 自定义排序规则（使用 Comparator）<a href="#22-自定义排序规则使用-comparator" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>
+<p>你可以通过在构造 <code>PriorityQueue</code> 时传入一个 <code>Comparator</code> 对象来自定义排序规则</p>
+</li>
+<li>
+<p><code>Comparator</code> 的 compare 方法定义了元素的优先级顺序</p>
+</li>
+<li>
+<p>如果提供了 <code>Comparator</code>，<code>PriorityQueue</code> 会根据它来决定元素的顺序，<strong>而不是依赖 <code>Comparable</code></strong></p>
+</li>
+<li>
+<p>仍然默认是最小堆，队首是根据 <code>Comparator</code> 定义的“最小”元素</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">import</span> java.util.PriorityQueue;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> java.util.Comparator;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Main</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String<span style="color:#f92672">[]</span> args) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 自定义 Comparator，按降序排序（大的值优先）</span>
+</span></span><span style="display:flex;"><span>        PriorityQueue<span style="color:#f92672">&lt;</span>Integer<span style="color:#f92672">&gt;</span> pq <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> PriorityQueue<span style="color:#f92672">&lt;&gt;</span>(Comparator.<span style="color:#a6e22e">reverseOrder</span>());
+</span></span><span style="display:flex;"><span>        pq.<span style="color:#a6e22e">offer</span>(5);
+</span></span><span style="display:flex;"><span>        pq.<span style="color:#a6e22e">offer</span>(2);
+</span></span><span style="display:flex;"><span>        pq.<span style="color:#a6e22e">offer</span>(8);
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(pq.<span style="color:#a6e22e">poll</span>()); <span style="color:#75715e">// 输出: 8（最大值）</span>
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(pq.<span style="color:#a6e22e">poll</span>()); <span style="color:#75715e">// 输出: 5</span>
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(pq.<span style="color:#a6e22e">poll</span>()); <span style="color:#75715e">// 输出: 2</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="23-排队服务-任务调度系统">2.3. 排队服务 任务调度系统<a href="#23-排队服务-任务调度系统" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>用户上传视频后，系统会排队转码（比如压缩、加字幕等）</li>
+<li>有的用户是普通用户，优先级低</li>
+<li>有的用户是 VIP，优先级高</li>
+</ul>
+<p>建一个「优先队列」来排这些转码任务：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">import</span> java.util.PriorityQueue;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 转码任务类</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">TranscodeTask</span> <span style="color:#66d9ef">implements</span> Comparable<span style="color:#f92672">&lt;</span>TranscodeTask<span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> String videoId;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> priority; <span style="color:#75715e">// 优先级：数字越小优先级越高</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">boolean</span> isVip;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">TranscodeTask</span>(String videoId, <span style="color:#66d9ef">boolean</span> isVip) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">videoId</span> <span style="color:#f92672">=</span> videoId;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">isVip</span> <span style="color:#f92672">=</span> isVip;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// VIP用户优先级为1，普通用户优先级为2</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">priority</span> <span style="color:#f92672">=</span> isVip <span style="color:#f92672">?</span> 1 : 2;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 实现Comparable接口，用于优先队列排序</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">compareTo</span>(TranscodeTask other) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 按优先级排序，数字小的在前</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> Integer.<span style="color:#a6e22e">compare</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">priority</span>, other.<span style="color:#a6e22e">priority</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">toString</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;视频: &#34;</span> <span style="color:#f92672">+</span> videoId <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; [&#34;</span> <span style="color:#f92672">+</span> (isVip <span style="color:#f92672">?</span> <span style="color:#e6db74">&#34;VIP用户&#34;</span> : <span style="color:#e6db74">&#34;普通用户&#34;</span>) <span style="color:#f92672">+</span> 
+</span></span><span style="display:flex;"><span>               <span style="color:#e6db74">&#34;, 优先级: &#34;</span> <span style="color:#f92672">+</span> priority <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;]&#34;</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 视频转码服务</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">TranscodingService</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> PriorityQueue<span style="color:#f92672">&lt;</span>TranscodeTask<span style="color:#f92672">&gt;</span> queue;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> maxConcurrentTasks;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">TranscodingService</span>(<span style="color:#66d9ef">int</span> maxConcurrentTasks) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">queue</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> PriorityQueue<span style="color:#f92672">&lt;&gt;</span>();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">maxConcurrentTasks</span> <span style="color:#f92672">=</span> maxConcurrentTasks;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 添加任务到队列</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">addTask</span>(String videoId, <span style="color:#66d9ef">boolean</span> isVip) {
+</span></span><span style="display:flex;"><span>        TranscodeTask task <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> TranscodeTask(videoId, isVip);
+</span></span><span style="display:flex;"><span>        queue.<span style="color:#a6e22e">offer</span>(task); <span style="color:#75715e">// 添加到优先队列</span>
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;任务已添加: &#34;</span> <span style="color:#f92672">+</span> task);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 处理队列中的任务</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">processTasks</span>() {
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;\n开始处理队列中的任务，最多同时处理&#34;</span> <span style="color:#f92672">+</span> maxConcurrentTasks <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;个任务&#34;</span>);
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 模拟处理maxConcurrentTasks个任务</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> 0; i <span style="color:#f92672">&lt;</span> maxConcurrentTasks <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>queue.<span style="color:#a6e22e">isEmpty</span>(); i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>            TranscodeTask task <span style="color:#f92672">=</span> queue.<span style="color:#a6e22e">poll</span>(); <span style="color:#75715e">// 取出优先级最高的任务</span>
+</span></span><span style="display:flex;"><span>            System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;正在处理: &#34;</span> <span style="color:#f92672">+</span> task);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        System.<span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;队列中剩余任务数: &#34;</span> <span style="color:#f92672">+</span> queue.<span style="color:#a6e22e">size</span>());
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 测试优先队列</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">VideoTranscodingDemo</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main</span>(String<span style="color:#f92672">[]</span> args) {
+</span></span><span style="display:flex;"><span>        TranscodingService service <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> TranscodingService(2); <span style="color:#75715e">// 最多同时处理2个任务</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 添加任务，普通用户和VIP用户混合</span>
+</span></span><span style="display:flex;"><span>        service.<span style="color:#a6e22e">addTask</span>(<span style="color:#e6db74">&#34;video1&#34;</span>, <span style="color:#66d9ef">false</span>); <span style="color:#75715e">// 普通用户</span>
+</span></span><span style="display:flex;"><span>        service.<span style="color:#a6e22e">addTask</span>(<span style="color:#e6db74">&#34;video2&#34;</span>, <span style="color:#66d9ef">true</span>);  <span style="color:#75715e">// VIP用户</span>
+</span></span><span style="display:flex;"><span>        service.<span style="color:#a6e22e">addTask</span>(<span style="color:#e6db74">&#34;video3&#34;</span>, <span style="color:#66d9ef">false</span>); <span style="color:#75715e">// 普通用户</span>
+</span></span><span style="display:flex;"><span>        service.<span style="color:#a6e22e">addTask</span>(<span style="color:#e6db74">&#34;video4&#34;</span>, <span style="color:#66d9ef">true</span>);  <span style="color:#75715e">// VIP用户</span>
+</span></span><span style="display:flex;"><span>        service.<span style="color:#a6e22e">addTask</span>(<span style="color:#e6db74">&#34;video5&#34;</span>, <span style="color:#66d9ef">false</span>); <span style="color:#75715e">// 普通用户</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 处理任务</span>
+</span></span><span style="display:flex;"><span>        service.<span style="color:#a6e22e">processTasks</span>();
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 再次处理剩余任务</span>
+</span></span><span style="display:flex;"><span>        service.<span style="color:#a6e22e">processTasks</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="2-redis-sorted-set">2. Redis Sorted Set<a href="#2-redis-sorted-set" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>A <strong>Redis Sorted Set</strong> is a data type where each element is associated with a score, and elements are automatically sorted by that score. It behaves <em>like</em> a priority queue — but it’s <strong>persistent, distributed</strong>, and accessible over the network.</p>
+<h3 id="21-redis-sorted-set-的特点">2.1. Redis Sorted Set 的特点<a href="#21-redis-sorted-set-的特点" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ol>
+<li>每个元素都有一个关联的分数，用于排序</li>
+<li>元素按分数从小到大排序（可以使用 ZREVRANGE 等命令反向获取）</li>
+<li>相同分数的元素按字典序排序</li>
+<li>支持范围查询、<strong>取 top-N 等操作</strong></li>
+<li>元素不可重复，但分数可以重复</li>
+</ol>
+<h2 id="3-二者对比">3. 二者对比<a href="#3-二者对比" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-实现原理">3.1. 实现原理<a href="#31-实现原理" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<table>
+  <thead>
+      <tr>
+          <th>特性</th>
+          <th>Redis Sorted Set</th>
+          <th>优先队列</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>数据结构</strong></td>
+          <td>基于跳表实现</td>
+          <td>通常基于二叉堆、斐波那契堆等实现</td>
+      </tr>
+      <tr>
+          <td><strong>元素唯一性</strong></td>
+          <td>元素必须唯一</td>
+          <td>允许重复元素</td>
+      </tr>
+      <tr>
+          <td><strong>排序依据</strong></td>
+          <td>按分数(score)排序</td>
+          <td>按优先级排序</td>
+      </tr>
+      <tr>
+          <td><strong>访问方式</strong></td>
+          <td>可随机访问任意范围的元素</td>
+          <td>通常只能访问队头元素(最高/最低优先级)</td>
+      </tr>
+      <tr>
+          <td><strong>操作复杂度</strong></td>
+          <td>大多数操作 O(log(N))</td>
+          <td>插入/删除通常为 O(log(N))</td>
+      </tr>
+      <tr>
+          <td><strong>分布式支持</strong></td>
+          <td>原生支持分布式环境</td>
+          <td>通常为单机内存数据结构</td>
+      </tr>
+      <tr>
+          <td><strong>持久化</strong></td>
+          <td>支持</td>
+          <td>通常不支持</td>
+      </tr>
+      <tr>
+          <td><strong>内存占用</strong></td>
+          <td>相对较高</td>
+          <td>相对较低</td>
+      </tr>
+      <tr>
+          <td><strong>同分数/优先级处理</strong></td>
+          <td>同分数按字典序排序</td>
+          <td>实现决定(通常不保证顺序)</td>
+      </tr>
+      <tr>
+          <td><strong>范围查询</strong></td>
+          <td>支持高效的范围查询</td>
+          <td>通常不支持</td>
+      </tr>
+  </tbody>
+</table>
+<blockquote>
+<p>跳表（Skip List）是一种基于链表的数据结构, 通过在原始链表上构建多层索引来加速查找操作, 从而提供高效的动态集合实现, 它支持快速的查找、插入和删除操作, 在某些场景下性能可以媲美平衡树（如红黑树）, 但实现上更为简单</p>
+<p>跳表由以下几个部分组成：</p>
+<ol>
+<li>原始链表：最底层是一个有序的链表，包含所有元素</li>
+<li>索引层：在原始链表之上有多层索引，每一层是从下一层中随机选择部分节点构成的“稀疏”版本</li>
+<li>头节点：每层都有一个头节点，用于从顶部开始查找</li>
+</ol>
+<p><strong>跳表的工作原理</strong></p>
+<ul>
+<li>查找：从最高层的头节点开始, 沿着每一层的指针向右移动, 如果当前层的下一个节点键值大于目标键, 则下降到下一层继续查找, 直到找到目标元素或确认其不存在</li>
+<li>插入：先查找插入位置，然后随机决定新节点的层数，并在对应层中插入节点</li>
+<li>删除：先找到要删除的节点，然后在每一层中移除该节点</li>
+</ul>
+<p>跳表的层数选择是随机的, 这种随机化保证了结构的平衡性, 使查找、插入和删除的平均时间复杂度达到 <strong>O(log n)</strong></p>
+</blockquote>
+<h3 id="32-使用场景">3.2. 使用场景<a href="#32-使用场景" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<table>
+  <thead>
+      <tr>
+          <th>场景</th>
+          <th>Redis Sorted Set</th>
+          <th>优先队列</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>排行榜系统</strong></td>
+          <td>✅ 适合：<!-- raw HTML omitted -->- 范围查询支持获取前N名<!-- raw HTML omitted -->- 分数更新自动重排序<!-- raw HTML omitted -->- 持久化保证数据不丢失</td>
+          <td>❌ 不适合：<!-- raw HTML omitted -->- 无法高效获取范围数据<!-- raw HTML omitted -->- 通常无持久化能力</td>
+      </tr>
+      <tr>
+          <td><strong>任务调度</strong></td>
+          <td>✅ 适合：<!-- raw HTML omitted -->- 分布式环境下多服务共享队列<!-- raw HTML omitted -->- score可用时间戳表示执行时间<!-- raw HTML omitted -->- 支持任务更新和取消</td>
+          <td>✅ 适合：<!-- raw HTML omitted -->- 单机环境下内存效率高<!-- raw HTML omitted -->- 操作延迟低<!-- raw HTML omitted -->- 适合实时系统</td>
+      </tr>
+      <tr>
+          <td><strong>延迟队列</strong></td>
+          <td>✅ 非常适合：<!-- raw HTML omitted -->- score设为执行时间<!-- raw HTML omitted -->- ZRANGEBYSCORE可查询该执行的任务<!-- raw HTML omitted -->- 分布式环境可靠</td>
+          <td>⚠️ 有限支持：<!-- raw HTML omitted -->- 需要额外的定时器机制<!-- raw HTML omitted -->- 分布式环境需要额外协调</td>
+      </tr>
+      <tr>
+          <td><strong>社交网络关系</strong></td>
+          <td>✅ 适合：<!-- raw HTML omitted -->- 可存储用户关系并按亲密度排序<!-- raw HTML omitted -->- 支持查询Top N好友<!-- raw HTML omitted -->- 支持范围查询</td>
+          <td>❌ 不适合：<!-- raw HTML omitted -->- 无法进行复杂的关系查询</td>
+      </tr>
+      <tr>
+          <td><strong>实时分析系统</strong></td>
+          <td>✅ 适合：<!-- raw HTML omitted -->- 可用于时间序列数据存储<!-- raw HTML omitted -->- 支持时间范围查询<!-- raw HTML omitted -->- 分布式环境下的数据共享</td>
+          <td>⚠️ 部分适合：<!-- raw HTML omitted -->- 处理速度快但功能有限<!-- raw HTML omitted -->- 不支持复杂查询</td>
+      </tr>
+      <tr>
+          <td><strong>图算法</strong></td>
+          <td>❌ 不适合：<!-- raw HTML omitted -->- 网络延迟影响性能<!-- raw HTML omitted -->- API不适合图算法需求</td>
+          <td>✅ 非常适合：<!-- raw HTML omitted -->- Dijkstra等算法的核心组件<!-- raw HTML omitted -->- 快速获取最小/最大元素</td>
+      </tr>
+      <tr>
+          <td><strong>地理位置应用</strong></td>
+          <td>✅ 适合：<!-- raw HTML omitted -->- 结合GEO命令可存储位置并按距离排序<!-- raw HTML omitted -->- 支持范围查询附近的POI</td>
+          <td>❌ 不适合：<!-- raw HTML omitted -->- 无地理位置特性支持</td>
+      </tr>
+      <tr>
+          <td><strong>限流系统</strong></td>
+          <td>✅ 适合：<!-- raw HTML omitted -->- score设为时间戳<!-- raw HTML omitted -->- ZREMRANGEBYSCORE删除过期令牌<!-- raw HTML omitted -->- 原子操作保证一致性</td>
+          <td>⚠️ 有限支持：<!-- raw HTML omitted -->- 需要额外逻辑处理过期</td>
+      </tr>
+      <tr>
+          <td><strong>大数据处理</strong></td>
+          <td>✅ 支持：<!-- raw HTML omitted -->- 可处理大量数据(内存限制)<!-- raw HTML omitted -->- 支持集群扩展</td>
+          <td>⚠️ 受限：<!-- raw HTML omitted -->- 受单机内存限制<!-- raw HTML omitted -->- 扩展性差</td>
+      </tr>
+      <tr>
+          <td><strong>分布式应用</strong></td>
+          <td>✅ 原生支持：<!-- raw HTML omitted -->- 多客户端可并发访问<!-- raw HTML omitted -->- 支持主从复制和集群</td>
+          <td>❌ 需要额外实现：<!-- raw HTML omitted -->- 需要自行处理分布式一致性<!-- raw HTML omitted -->- 需要额外的服务协调</td>
+      </tr>
+  </tbody>
+</table>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/005-%E4%BA%8C%E5%8F%89%E6%A0%91/" class="button inline prev">
+        二叉树和堆
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/000-%E6%95%B0%E6%8D%AE%E5%BA%93%E8%8C%83%E5%BC%8F-%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/" class="button inline next">
+        MySQL 基础八股文
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

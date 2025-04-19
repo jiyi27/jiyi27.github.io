@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ufw on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/ufw/</link>
+    <description>Recent content in Ufw on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Mon, 09 Oct 2023 13:53:57 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/ufw/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>ufw vs  AWS Security Group</title>
+      <link>https://blog.jiyi27.com/posts/build-website/006-ufw-aws-sg/</link>
+      <pubDate>Mon, 09 Oct 2023 13:53:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/build-website/006-ufw-aws-sg/</guid>
+      <description>&lt;h2 id=&#34;1-ufw-command&#34;&gt;1. &lt;code&gt;ufw&lt;/code&gt; command&lt;/h2&gt;
+&lt;h3 id=&#34;11-commonly-used-ufw-commands&#34;&gt;1.1. Commonly used ufw commands&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw status
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Status: inactive
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw enable
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Command may disrupt existing ssh connections. Proceed with operation &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;y|n&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;? n
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Aborted
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; use &lt;code&gt;sudo ufw enable&lt;/code&gt; carefully, because it may disrupt your ssh connection.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw enable: Enables the firewall, which starts enforcing the configured rules.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw disable: Disables the firewall, allowing all network traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw status: Displays the current status of the firewall and the rules that are in effect.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw default allow: Sets the default policy to allow all incoming and outgoing traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw default deny: Sets the default policy to deny all incoming and outgoing traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw allow &amp;lt;port&amp;gt;: Opens a specific port &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; incoming traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw deny &amp;lt;port&amp;gt;: Blocks incoming traffic on a specific port.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw delete &amp;lt;rule&amp;gt;: Deletes a specific rule from the firewall. 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# e.g., sudo ufw delete allow 80&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;12-ufw-app-list&#34;&gt;1.2. &lt;code&gt;ufw app list&lt;/code&gt;&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw app list
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Available applications:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Nginx Full
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Nginx HTTP
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Nginx HTTPS
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  OpenSSH
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The output of &lt;code&gt;sudo ufw app list&lt;/code&gt; only shows the available &lt;strong&gt;application profiles&lt;/strong&gt;, not their actual status or whether they have been allowed or denied by &lt;code&gt;ufw&lt;/code&gt;. It simply provides a list of predefined profiles &lt;strong&gt;so that you can use conveniently&lt;/strong&gt; when configuring firewall rules. You don&amp;rsquo;t need to remember which port for each application, you can simply use like this:&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-ufw-command&#34;&gt;1. &lt;code&gt;ufw&lt;/code&gt; command&lt;/h2&gt;
+&lt;h3 id=&#34;11-commonly-used-ufw-commands&#34;&gt;1.1. Commonly used ufw commands&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw status
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Status: inactive
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw enable
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Command may disrupt existing ssh connections. Proceed with operation &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;y|n&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;? n
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Aborted
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; use &lt;code&gt;sudo ufw enable&lt;/code&gt; carefully, because it may disrupt your ssh connection.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw enable: Enables the firewall, which starts enforcing the configured rules.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw disable: Disables the firewall, allowing all network traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw status: Displays the current status of the firewall and the rules that are in effect.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw default allow: Sets the default policy to allow all incoming and outgoing traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw default deny: Sets the default policy to deny all incoming and outgoing traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw allow &amp;lt;port&amp;gt;: Opens a specific port &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; incoming traffic.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw deny &amp;lt;port&amp;gt;: Blocks incoming traffic on a specific port.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ufw delete &amp;lt;rule&amp;gt;: Deletes a specific rule from the firewall. 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# e.g., sudo ufw delete allow 80&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;12-ufw-app-list&#34;&gt;1.2. &lt;code&gt;ufw app list&lt;/code&gt;&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# ubuntu @ ip-172-31-12-228&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw app list
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Available applications:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Nginx Full
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Nginx HTTP
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  Nginx HTTPS
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  OpenSSH
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The output of &lt;code&gt;sudo ufw app list&lt;/code&gt; only shows the available &lt;strong&gt;application profiles&lt;/strong&gt;, not their actual status or whether they have been allowed or denied by &lt;code&gt;ufw&lt;/code&gt;. It simply provides a list of predefined profiles &lt;strong&gt;so that you can use conveniently&lt;/strong&gt; when configuring firewall rules. You don&amp;rsquo;t need to remember which port for each application, you can simply use like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sudo ufw allow &amp;#39;Profile Name&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw allow &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;OpenSSH&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Rules updated
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Rules updated &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw allow &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;OpenS&amp;#39;&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ERROR: Could not find a profile matching &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;OpenS&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;rather than&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo ufw allow &lt;span style=&#34;color:#ae81ff&#34;&gt;22&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;So the command below will allow both port &lt;code&gt;80&lt;/code&gt; and &lt;code&gt;443&lt;/code&gt;:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;sudo ufw allow &amp;#39;Nginx Full&amp;#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;To check the status of your firewall rules and verify whether Nginx HTTP, Nginx HTTPS, or OpenSSH have been allowed or denied by &lt;code&gt;ufw&lt;/code&gt;, you can use the &lt;code&gt;sudo ufw status&lt;/code&gt; command. This command will display the current status of the firewall and the active rules.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw allow &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;OpenSSH&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Rules updated
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Rules updated &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw enable
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Command may disrupt existing ssh connections. Proceed with operation &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;y|n&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;? y
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Firewall is active and enabled on system startup
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw status       
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Status: active
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;To                         Action      From
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;--                         ------      ----
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;5060/udp                   ALLOW       Anywhere                  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;OpenSSH                    ALLOW       Anywhere                  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;5060/udp &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;              ALLOW       Anywhere &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;             
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;OpenSSH &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;               ALLOW       Anywhere &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;v6&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo ufw disable
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Firewall stopped and disabled on system startup
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-ubuntu-firewall-ufw-vs-aws-security-groups&#34;&gt;2. Ubuntu Firewall (ufw) vs AWS Security Groups&lt;/h2&gt;
+&lt;p&gt;A firewall like UFW is running at the OS level, while Amazon Security Groups are running at the instance level. Traffic coming into the EC2 would first pass through the SG, and then be evaluated by UFW.&lt;/p&gt;
+&lt;p&gt;I strongly recommend you to use only &amp;ldquo;SG(Security Group)&amp;rdquo; on EC2 even though we can use both &amp;ldquo;SG&amp;rdquo; and &amp;ldquo;UFW. &amp;ldquo;SG&amp;rdquo; is a firewall same as &amp;ldquo;UFW&amp;rdquo;.&lt;/p&gt;
+&lt;p&gt;When only &amp;ldquo;SG&amp;rdquo; allowed &amp;ldquo;SSH 22&amp;rdquo; and &amp;ldquo;UFW&amp;rdquo; didn&amp;rsquo;t allow &amp;ldquo;SSH 22&amp;rdquo; then I logged out ubuntu, I couldn&amp;rsquo;t log in to ubuntu forever, then I terminated ubuntu.&lt;/p&gt;
+&lt;p&gt;Even though &amp;ldquo;SG&amp;rdquo; allowed &amp;ldquo;SSH 22&amp;rdquo;, I couldn&amp;rsquo;t log in to ubuntu because &amp;ldquo;UFW&amp;rdquo; didn&amp;rsquo;t allow &amp;ldquo;SSH 22&amp;rdquo;. So if either of them doesn&amp;rsquo;t allow &amp;ldquo;SSH 22&amp;rdquo;, &amp;ldquo;SSH 22&amp;rdquo; doesn&amp;rsquo;t work. If both &amp;ldquo;SG&amp;rdquo; and &amp;ldquo;UFW&amp;rdquo; allow &amp;ldquo;SSH 22&amp;rdquo;, &amp;ldquo;SSH 22&amp;rdquo; works, then we can log in to ubuntu.&lt;/p&gt;
+&lt;p&gt;I also experimented with &amp;ldquo;HTTP 80&amp;rdquo;. When only &amp;ldquo;SG&amp;rdquo; allowed &amp;ldquo;HTTP 80&amp;rdquo; and &amp;ldquo;UFW&amp;rdquo; didn&amp;rsquo;t allow &amp;ldquo;HTTP 80&amp;rdquo;, &amp;ldquo;HTTP 80&amp;rdquo; didn&amp;rsquo;t work. When &amp;ldquo;SG&amp;rdquo; and &amp;ldquo;UFW&amp;rdquo; allowed &amp;ldquo;HTTP 80&amp;rdquo;, &amp;ldquo;HTTP 80&amp;rdquo; worked.&lt;/p&gt;
+&lt;p&gt;Just remember like &amp;ldquo;If both allow, it works&amp;rdquo; and &amp;ldquo;If only either of them allow, it doesn&amp;rsquo;t work&amp;rdquo;. Actually, using both of them makes complication and some trobles. So again, I really recommend you to &lt;strong&gt;use only &amp;ldquo;SG&amp;rdquo; on EC2&lt;/strong&gt; which is simpler than using both of them.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://stackoverflow.com/questions/57436758/does-ubuntu-ufw-overrides-amazon-ec2s-security-groups-and-rules&#34;&gt;https://stackoverflow.com/questions/57436758/does-ubuntu-ufw-overrides-amazon-ec2s-security-groups-and-rules&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

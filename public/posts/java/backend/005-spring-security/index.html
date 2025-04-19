@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Spring Security 一根难啃的骨头 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 前言 AuthenticationManager, AuthenticationProvider , ProviderManager, AuthenticationManager, DaoAuthenticationProvider, UserDetailsService, SecurityFilterChain, 这么多类和接口, 搞糊涂了已经, 去年学过一次 Spring Security, 感觉太复杂~~(没学会)~~, 就转战 Golang 了, 到最后找工作还是得面对 Java, 这不, 开始恶补 Spring&hellip;
+2. 两种认证方式 我们最终的目的都是让服务器记住/区分客户端, 实现这个目的的方法有两种:
+在服务端维护有状态的 Session 在客户端保存 JWT Token (通过 cookie 或其他方式保存) Spring Security 既支持基于 Session 的有状态会话，也支持基于 Token (例如 JWT) 的无状态会话,
+在请求在进入 Controller 之前, Spring Security 会预先拦截所有请求, 如果用户访问受保护页面, Spring Security 会通过 cookie 或者 Authorization 等请求头检查客户端是否已认证, 如果没有认证, 请求将会被重定向到我们预先指定的路径, 比如 \login, 我们也可以向 Spring Security 指定哪些路径受保护, 哪些路径不受保护, 大致如下:
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception { // 访问 /login /register 不需要认证 http.authorizeHttpRequests(auth -&gt; auth .requestMatchers(&#34;/login&#34;, &#34;/register&#34;).permitAll() .anyRequest().authenticated() ); // 使用默认表单页面登录 (不用自己实现登录页面) http.authenticationProvider(authenticationProvider()) .formLogin(Customizer.withDefaults()); // 指定 Session 模式: IF_REQUIRED http.sessionManagement(session -&gt; session .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) .maximumSessions(1) .expiredUrl(&#34;/login?expired&#34;) ); return http.build(); } 上面代码我们使用的是 Spring Security 提供的默认表单登录 &#43; Session 管理状态 的方式, 也就是说当我们第一次访问主页 localhost:8080/, 因为还没认证, 就会被重定向到 Spring Security 提供的默认表单登录页面, 如果验证成功 Spring Security 会自动维护一个 Session，返回给客户端一个 Cookie, 最后浏览器存有 JSESSIONID Cookie，让后续请求自动携带, 如下图:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/java/backend/005-spring-security/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Spring Security 一根难啃的骨头">
+<meta property="og:description" content="1. 前言 AuthenticationManager, AuthenticationProvider , ProviderManager, AuthenticationManager, DaoAuthenticationProvider, UserDetailsService, SecurityFilterChain, 这么多类和接口, 搞糊涂了已经, 去年学过一次 Spring Security, 感觉太复杂~~(没学会)~~, 就转战 Golang 了, 到最后找工作还是得面对 Java, 这不, 开始恶补 Spring&hellip;
+2. 两种认证方式 我们最终的目的都是让服务器记住/区分客户端, 实现这个目的的方法有两种:
+在服务端维护有状态的 Session 在客户端保存 JWT Token (通过 cookie 或其他方式保存) Spring Security 既支持基于 Session 的有状态会话，也支持基于 Token (例如 JWT) 的无状态会话,
+在请求在进入 Controller 之前, Spring Security 会预先拦截所有请求, 如果用户访问受保护页面, Spring Security 会通过 cookie 或者 Authorization 等请求头检查客户端是否已认证, 如果没有认证, 请求将会被重定向到我们预先指定的路径, 比如 \login, 我们也可以向 Spring Security 指定哪些路径受保护, 哪些路径不受保护, 大致如下:
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception { // 访问 /login /register 不需要认证 http.authorizeHttpRequests(auth -&gt; auth .requestMatchers(&#34;/login&#34;, &#34;/register&#34;).permitAll() .anyRequest().authenticated() ); // 使用默认表单页面登录 (不用自己实现登录页面) http.authenticationProvider(authenticationProvider()) .formLogin(Customizer.withDefaults()); // 指定 Session 模式: IF_REQUIRED http.sessionManagement(session -&gt; session .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) .maximumSessions(1) .expiredUrl(&#34;/login?expired&#34;) ); return http.build(); } 上面代码我们使用的是 Spring Security 提供的默认表单登录 &#43; Session 管理状态 的方式, 也就是说当我们第一次访问主页 localhost:8080/, 因为还没认证, 就会被重定向到 Spring Security 提供的默认表单登录页面, 如果验证成功 Spring Security 会自动维护一个 Session，返回给客户端一个 Cookie, 最后浏览器存有 JSESSIONID Cookie，让后续请求自动携带, 如下图:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/java/backend/005-spring-security/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="spring boot" />
+
+
+  <meta property="article:published_time" content="2025-02-13 20:29:10 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/java/backend/005-spring-security/">Spring Security 一根难啃的骨头</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-02-13</time><span class="post-reading-time">7 分钟阅读 (1400 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/spring-boot/">spring boot</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-前言">1. 前言<a href="#1-前言" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>AuthenticationManager, AuthenticationProvider , ProviderManager, AuthenticationManager, DaoAuthenticationProvider, UserDetailsService, SecurityFilterChain, 这么多类和接口, 搞糊涂了已经, 去年学过一次 Spring Security, 感觉太复杂~~(没学会)~~, 就转战 Golang 了, 到最后找工作还是得面对 Java, 这不, 开始恶补 Spring&hellip;</p>
+<h2 id="2-两种认证方式">2. 两种认证方式<a href="#2-两种认证方式" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>我们最终的目的都是让服务器记住/区分客户端, 实现这个目的的方法有两种:</p>
+<ul>
+<li>在服务端维护有状态的 Session</li>
+<li>在客户端保存 JWT Token (通过 cookie 或其他方式保存)</li>
+</ul>
+<p>Spring Security 既支持基于 Session 的有状态会话，也支持基于 Token (例如 JWT) 的无状态会话,</p>
+<p>在请求在进入 Controller 之前, <strong>Spring Security 会预先拦截所有请求</strong>, 如果用户访问受保护页面, Spring Security 会通过 cookie 或者 Authorization 等请求头检查客户端是否已认证, 如果没有认证, 请求将会被重定向到我们预先指定的路径, 比如 <code>\login</code>, 我们也可以向 Spring Security 指定哪些路径受保护, 哪些路径不受保护, 大致如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> SecurityFilterChain <span style="color:#a6e22e">securityFilterChain</span>(HttpSecurity http) <span style="color:#66d9ef">throws</span> Exception {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 访问 /login /register 不需要认证</span>
+</span></span><span style="display:flex;"><span>    http.<span style="color:#a6e22e">authorizeHttpRequests</span>(auth <span style="color:#f92672">-&gt;</span> auth
+</span></span><span style="display:flex;"><span>            .<span style="color:#a6e22e">requestMatchers</span>(<span style="color:#e6db74">&#34;/login&#34;</span>, <span style="color:#e6db74">&#34;/register&#34;</span>).<span style="color:#a6e22e">permitAll</span>()
+</span></span><span style="display:flex;"><span>            .<span style="color:#a6e22e">anyRequest</span>().<span style="color:#a6e22e">authenticated</span>()
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 使用默认表单页面登录 (不用自己实现登录页面)</span>
+</span></span><span style="display:flex;"><span>    http.<span style="color:#a6e22e">authenticationProvider</span>(authenticationProvider())
+</span></span><span style="display:flex;"><span>      .<span style="color:#a6e22e">formLogin</span>(Customizer.<span style="color:#a6e22e">withDefaults</span>());
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 指定 Session 模式: IF_REQUIRED </span>
+</span></span><span style="display:flex;"><span>    http.<span style="color:#a6e22e">sessionManagement</span>(session <span style="color:#f92672">-&gt;</span> session
+</span></span><span style="display:flex;"><span>            .<span style="color:#a6e22e">sessionCreationPolicy</span>(SessionCreationPolicy.<span style="color:#a6e22e">IF_REQUIRED</span>)
+</span></span><span style="display:flex;"><span>            .<span style="color:#a6e22e">maximumSessions</span>(1)
+</span></span><span style="display:flex;"><span>            .<span style="color:#a6e22e">expiredUrl</span>(<span style="color:#e6db74">&#34;/login?expired&#34;</span>)
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> http.<span style="color:#a6e22e">build</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>上面代码我们使用的是  <strong>Spring Security 提供的默认表单登录 + Session 管理状态 的方式</strong>, 也就是说当我们第一次访问主页 <code>localhost:8080/</code>, 因为还没认证, 就会被重定向到 Spring Security 提供的默认表单登录页面, 如果验证成功 Spring Security 会自动维护一个 Session，返回给客户端一个 Cookie, 最后浏览器存有 <code>JSESSIONID</code> Cookie，让后续请求自动携带, 如下图:</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/02/304faf547af877e5f76bd7e7850647eb.png" alt=""></p>
+<p>当然我们也可以通过第二种方式, 无状态 JWT 来实现认证, 此时的 SecurityFilterChain 代码大致如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> SecurityFilterChain <span style="color:#a6e22e">securityFilterChain</span>(
+</span></span><span style="display:flex;"><span>        HttpSecurity http,
+</span></span><span style="display:flex;"><span>        JwtAuthFilter jwtAuthenticationFilter) <span style="color:#66d9ef">throws</span> Exception {
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 禁止 CSRF, 任何请求都可以发送到服务器</span>
+</span></span><span style="display:flex;"><span>    http.<span style="color:#a6e22e">csrf</span>(AbstractHttpConfigurer::disable);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 指定无状态 Session</span>
+</span></span><span style="display:flex;"><span>    http.<span style="color:#a6e22e">sessionManagement</span>(session <span style="color:#f92672">-&gt;</span> session.<span style="color:#a6e22e">sessionCreationPolicy</span>(SessionCreationPolicy.<span style="color:#a6e22e">STATELESS</span>));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    http.<span style="color:#a6e22e">authorizeHttpRequests</span>(auth <span style="color:#f92672">-&gt;</span> auth
+</span></span><span style="display:flex;"><span>            .<span style="color:#a6e22e">requestMatchers</span>(<span style="color:#e6db74">&#34;/api/users/login&#34;</span>, <span style="color:#e6db74">&#34;/api/users/register&#34;</span>).<span style="color:#a6e22e">permitAll</span>()
+</span></span><span style="display:flex;"><span>            .<span style="color:#a6e22e">anyRequest</span>().<span style="color:#a6e22e">authenticated</span>()
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 添加自定义的 JWT 验证逻辑, 验证请求中的 JWT Token 是否有效</span>
+</span></span><span style="display:flex;"><span>    http.<span style="color:#a6e22e">addFilterBefore</span>(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.<span style="color:#a6e22e">class</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> http.<span style="color:#a6e22e">build</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ curl -X POST -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span> -d
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#39;{&#34;username&#34;:&#34;user1&#34;,&#34;password&#34;:&#34;ps123&#34;}&#39;</span> http://localhost:8080/login -v
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>&lt; HTTP/1.1 <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span>&lt; X-XSS-Protection: <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span><span style="color:#e6db74">&#34;token&#34;</span>:<span style="color:#e6db74">&#34;eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsImlhdCI6MTczOTU1OTk0NywiZXhwIjoxNzM5NjQ2MzQ3fQ.3o4g5OJVQSzrCJtoqNvnsV-PdgOMeGVdSuGhEuQy3WM&#34;</span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>上面代码没有指定登录的验证方式, 也就是说当用户第一次访问受保护的路径时, Spring Security 不会帮我们重定向到登录页面, 而是返回 403/401 未授权, 客户端需要直接向路径比如  <code>\login</code> 发送登录请求, 以获取 JWT Token, 所以作为服务端, 我们应该实现一个 Controller, 接受登录请求:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@PostMapping</span>(<span style="color:#e6db74">&#34;/login&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> JwtResponse <span style="color:#a6e22e">login</span>(UserDTO.<span style="color:#a6e22e">LoginRequest</span> request) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// userService.login() 处理认证逻辑 校对密码</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 若成功, 返回给用户 JWT Token</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> userService.<span style="color:#a6e22e">login</span>(request);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>因此可以总结无论是基于 Session 还是 JWT, 客户端认证都包括两个阶段:</p>
+<ul>
+<li>通过登录获取 Session ID 或 JWT Token</li>
+<li>之后的每次请求自动携带 Session ID 或 JWT Token 用于认证</li>
+</ul>
+<blockquote>
+<p>现在你应该知道 SecurityFilterChain 是干嘛的了, 还剩下 AuthenticationManager, AuthenticationProvider , ProviderManager, AuthenticationManager, DaoAuthenticationProvider, UserDetailsService, 我们慢慢来</p>
+</blockquote>
+<h2 id="3-基于-token-jwt-的无状态会话">3. 基于 Token (JWT) 的无状态会话<a href="#3-基于-token-jwt-的无状态会话" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>作为后端开发, 我们需要先介绍客户端和服务器认识(登录), 然后客户端访问一些资源就不用每次都登录了, 所以我们先说登录密码验证.</p>
+<h3 id="31-登录">3.1. 登录<a href="#31-登录" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>传统的登录密码验证逻辑很简单, 客户端向 <code>/login</code> 发送请求, 服务器直接在 Controller 对应的方法中对比账号密码是否匹配, 而 Spring Security 并不是这么做的,  刚开始我搞不明白的是, 明明就是简单的账号密码比较, 为什么非要搞得那么麻烦,</p>
+<p>因为 Spring Security 的设计理念是“配置驱动”，它提供了大量的接口和类去处理各种场景：<code>UserDetailsService</code>、<code>PasswordEncoder</code>、<code>DaoAuthenticationProvider</code>、<code>AuthenticationManager</code>、<code>SecurityFilterChain</code> 等,</p>
+<p>它的本意是: 你只要实现自己的一小部分逻辑（比如怎么查数据库获取密码）, 其他通用的部分（密码对比、账户状态检查、异常处理等）就交给框架内部的 <code>DaoAuthenticationProvider</code> 等组件去做.</p>
+<p>还是很难懂, 现在我们说的是登录, 所以看看 Spring Security 怎么进行账号密码验证, 在 Spring Security 中, 我们一般使用 <strong>DaoAuthenticationProvider</strong> 来进行 “用户名+密码” 认证, 它需要知道两件事：</p>
+<ul>
+<li>
+<p>如何加载用户信息: 也就是 <strong>UserDetailsService</strong>：通过用户名去数据库等地方查找用户，并返回一个实现了 <code>UserDetails</code> 的对象（包含用户名、密码、权限等）</p>
+</li>
+<li>
+<p>如何验证密码: 也就是 <strong>PasswordEncoder</strong>：用来做密码加密或密码对比</p>
+</li>
+</ul>
+<p>也就是说<code>DaoAuthenticationProvider</code> 有两个小弟:</p>
+<ul>
+<li><code>UserDetailsService</code> 用来加载用户数据(账号密码)</li>
+<li><code>PasswordEncoder</code>  用来加密 验证 密码</li>
+</ul>
+<p>现在我们还要引入另外一个接口:</p>
+<p><strong>AuthenticationProvider 和 DaoAuthenticationProvider 的区别:</strong></p>
+<ul>
+<li><code>AuthenticationProvider</code> 是一个 接口，定义了认证逻辑的标准</li>
+<li><code>DaoAuthenticationProvider</code> 是 <code>AuthenticationProvider</code> 的一个 实现, 用于数据库用户名/密码认证</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@PostMapping</span>(<span style="color:#e6db74">&#34;/login&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> ResponseEntity<span style="color:#f92672">&lt;</span>UserDTO.<span style="color:#a6e22e">JwtResponse</span><span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">login</span>(UserDTO.<span style="color:#a6e22e">LoginRequest</span> request) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 1. 封装用户名密码</span>
+</span></span><span style="display:flex;"><span>    UsernamePasswordAuthenticationToken authRequest <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">new</span> UsernamePasswordAuthenticationToken(
+</span></span><span style="display:flex;"><span>      request.<span style="color:#a6e22e">getUsername</span>(), 
+</span></span><span style="display:flex;"><span>      request.<span style="color:#a6e22e">getPassword</span>());
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 2. 调用 AuthenticationManager 进行认证</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 如果认证不通过，authenticate(...) 会抛出异常, 由全局异常处理器处理</span>
+</span></span><span style="display:flex;"><span>    Authentication authentication <span style="color:#f92672">=</span> authenticationManager.<span style="color:#a6e22e">authenticate</span>(authRequest);
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 3. 如果认证通过，生成 JWT</span>
+</span></span><span style="display:flex;"><span>    String jwt <span style="color:#f92672">=</span> jwtUtils.<span style="color:#a6e22e">generateToken</span>(authentication);
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 4. 返回 JWT 给客户端（可放在 Body，也可放在 Header）</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> ResponseEntity.<span style="color:#a6e22e">ok</span>(<span style="color:#66d9ef">new</span> UserDTO.<span style="color:#a6e22e">JwtResponse</span>(jwt));
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>ProviderManager 和 AuthenticationManager 的区别:</strong></p>
+<ul>
+<li>
+<p><code>AuthenticationManager</code> 是一个接口, 这个接口规定所有实现它的类, 都应该实现<code>authenticate(Authentication authentication)</code> 方法, 该方法是为了身份验证</p>
+</li>
+<li>
+<p><code>ProviderManager</code> 是 <code>AuthenticationManager</code> 的一个 默认实现，负责管理多个 <code>AuthenticationProvider</code> 并协调认证过程</p>
+</li>
+</ul>
+<p>Spring Security 允许多个 <code>AuthenticationManager</code> 的实现, 但 <code>ProviderManager</code> 是默认实现, 我们来看一下 <code>AuthenticationManager</code> 接口的定义:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">AuthenticationManager</span> {
+</span></span><span style="display:flex;"><span>    Authentication <span style="color:#a6e22e">authenticate</span>(Authentication authentication) 
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throws</span> AuthenticationException;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>通过上面的代码我们也可以看出, 我们调用 <code>authenticationManager.authenticate(authRequest)</code> 方法进行验证密码匹配, 而且此函数返回一个 <code>Authentication</code> 对象, 看一下这个类的定义, 就知道是什么了:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">Authentication</span> <span style="color:#66d9ef">extends</span> Principal, Serializable {
+</span></span><span style="display:flex;"><span>    Collection<span style="color:#f92672">&lt;?</span> <span style="color:#66d9ef">extends</span> GrantedAuthority<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">getAuthorities</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Object <span style="color:#a6e22e">getCredentials</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Object <span style="color:#a6e22e">getDetails</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Object <span style="color:#a6e22e">getPrincipal</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">isAuthenticated</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">setAuthenticated</span>(<span style="color:#66d9ef">boolean</span> isAuthenticated) <span style="color:#66d9ef">throws</span> IllegalArgumentException;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<p>现在你知道了 SecurityFilterChain, AuthenticationProvider, DaoAuthenticationProvider, UserDetailsService, PasswordEncoder, ProviderManager 和 AuthenticationManager</p>
+</blockquote>
+<h3 id="32-验证-jwt-token">3.2. 验证 JWT Token<a href="#32-验证-jwt-token" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>验证涉及的概念很少,  只需要自定义 JWT Token 验证逻辑, 加入到 Spring Security Chain 中, 这样之后每次请求来到服务器, 都会被 Spring Security Chain 拦截, 然后经过我们自定义的 JWT Token 验证逻辑, 若验证成功, 放行,</p>
+<p>如何自定义 JWT 验证逻辑呢? 答: 通过实现 <code>OncePerRequestFilter</code>,</p>
+<p>当然 <code>OncePerRequestFilter</code> 的作用可不止用来验证 JWT Token, 在 Spring Web 应用中, 我们经常会使用 <code>Filter</code> 进行请求的拦截, 比如：</p>
+<ul>
+<li>
+<p>认证与授权（如 JWT 解析）</p>
+</li>
+<li>
+<p>记录请求日志</p>
+</li>
+<li>
+<p>统一处理 CORS</p>
+</li>
+<li>
+<p>请求参数或响应的预处理</p>
+</li>
+</ul>
+<p>默认的 <code>Filter</code> 可能会在一次请求的多个阶段执行多次（例如 <code>forward</code> 或 <code>include</code> 操作时），导致重复的逻辑执行。而 <code>OncePerRequestFilter</code> 解决了这个问题，保证了在同一个请求的整个生命周期内，该过滤器仅执行一次。<code>OncePerRequestFilter</code> 会检查当前请求的 <code>request</code> 是否已经被它处理过（通过 <code>request</code> 的 <code>attribute</code> 记录状态）。如果是第一次执行，则调用 <strong><code>doFilterInternal()</code></strong> 处理逻辑。如果该请求在后续的 <code>forward</code> 或 <code>include</code> 中再次经过这个过滤器，则不会再次执行 <code>doFilterInternal()</code>，而是直接放行。</p>
+<p>所以我们要怎么通过实现 <code>OncePerRequestFilter</code> 来进行 JWT Token 验证呢? 来看大荧幕:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Component</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">JwtAuthFilter</span> <span style="color:#66d9ef">extends</span> OncePerRequestFilter {
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 注意这个函数的名字</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">doFilterInternal</span>(
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">@NonNull</span> HttpServletRequest request,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">@NonNull</span> HttpServletResponse response,
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">@NonNull</span> FilterChain filterChain)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">throws</span> ServletException, IOException {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 从 Authorization 请求头中获取 JWT Token</span>
+</span></span><span style="display:flex;"><span>         String jwt <span style="color:#f92672">=</span> parseJwt(request);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 验证 token 是否有效</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (jwt <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> jwtUtils.<span style="color:#a6e22e">validateToken</span>(jwt)) {...}
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 转发到下一个 filter</span>
+</span></span><span style="display:flex;"><span>        filterChain.<span style="color:#a6e22e">doFilter</span>(request, response);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> String <span style="color:#a6e22e">parseJwt</span>(HttpServletRequest request) {
+</span></span><span style="display:flex;"><span>        String headerAuth <span style="color:#f92672">=</span> request.<span style="color:#a6e22e">getHeader</span>(<span style="color:#e6db74">&#34;Authorization&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (StringUtils.<span style="color:#a6e22e">hasText</span>(headerAuth) <span style="color:#f92672">&amp;&amp;</span> headerAuth.<span style="color:#a6e22e">startsWith</span>(<span style="color:#e6db74">&#34;Bearer &#34;</span>)) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> headerAuth.<span style="color:#a6e22e">substring</span>(7);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>当然上面的都是伪代码, 只要知道大致发生什么就可以了, 接下来, 就是最后一步, 把这个 filter 添加到 Spring Security Chain 中, 也就是最开始我们在 <code>securityFilterChain()</code> 方法中的语句:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>http.<span style="color:#a6e22e">addFilterBefore</span>(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.<span style="color:#a6e22e">class</span>);
+</span></span></code></pre></div><blockquote>
+<p>现在你知道了 SecurityFilterChain, AuthenticationProvider, DaoAuthenticationProvider, UserDetailsService, PasswordEncoder, OncePerRequestFilter</p>
+</blockquote>
+<h2 id="4-基于-session-的有状态会话">4. 基于 Session 的有状态会话<a href="#4-基于-session-的有状态会话" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="41-登录">4.1. 登录<a href="#41-登录" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>我们已经知道, 要实现登录需要使用 DaoAuthenticationProvider 和 它的两个工具 UserDetailsService, PasswordEncoder,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Slf4j</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Configuration</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@RequiredArgsConstructor</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SecurityConfig</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">final</span> UserRepository userRepository;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> PasswordEncoder <span style="color:#a6e22e">passwordEncoder</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> BCryptPasswordEncoder();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> UserDetailsService <span style="color:#a6e22e">userDetailsService</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> username <span style="color:#f92672">-&gt;</span> {
+</span></span><span style="display:flex;"><span>            User user <span style="color:#f92672">=</span> userRepository.<span style="color:#a6e22e">findByUsername</span>(username)
+</span></span><span style="display:flex;"><span>                    .<span style="color:#a6e22e">orElseThrow</span>(() <span style="color:#f92672">-&gt;</span> <span style="color:#66d9ef">new</span> UsernameNotFoundException(<span style="color:#e6db74">&#34;用户不存在&#34;</span>));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            log.<span style="color:#a6e22e">info</span>(<span style="color:#e6db74">&#34;用户信息: {}&#34;</span>, user);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 把自己的 User 转换成 Spring Security 提供的 UserDetails 对象</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> org.<span style="color:#a6e22e">springframework</span>.<span style="color:#a6e22e">security</span>.<span style="color:#a6e22e">core</span>.<span style="color:#a6e22e">userdetails</span>.<span style="color:#a6e22e">User</span>(
+</span></span><span style="display:flex;"><span>                    user.<span style="color:#a6e22e">getUsername</span>(),
+</span></span><span style="display:flex;"><span>                    user.<span style="color:#a6e22e">getPasswordHash</span>(),
+</span></span><span style="display:flex;"><span>                    Collections.<span style="color:#a6e22e">emptyList</span>()
+</span></span><span style="display:flex;"><span>            );
+</span></span><span style="display:flex;"><span>        };
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> DaoAuthenticationProvider <span style="color:#a6e22e">daoAuthenticationProvider</span>() {
+</span></span><span style="display:flex;"><span>        DaoAuthenticationProvider provider <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> DaoAuthenticationProvider();
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 加入 DaoAuthenticationProvider 的两个小弟</span>
+</span></span><span style="display:flex;"><span>        provider.<span style="color:#a6e22e">setUserDetailsService</span>(userDetailsService());
+</span></span><span style="display:flex;"><span>        provider.<span style="color:#a6e22e">setPasswordEncoder</span>(passwordEncoder());
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> provider;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> AuthenticationManager <span style="color:#a6e22e">authenticationManager</span>(AuthenticationConfiguration authenticationConfiguration) <span style="color:#66d9ef">throws</span> Exception {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> authenticationConfiguration.<span style="color:#a6e22e">getAuthenticationManager</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> SecurityFilterChain <span style="color:#a6e22e">securityFilterChain</span>(HttpSecurity http) <span style="color:#66d9ef">throws</span> Exception {
+</span></span><span style="display:flex;"><span>        http.<span style="color:#a6e22e">authorizeHttpRequests</span>(auth <span style="color:#f92672">-&gt;</span> auth
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">requestMatchers</span>(<span style="color:#e6db74">&#34;/login&#34;</span>, <span style="color:#e6db74">&#34;/home&#34;</span>).<span style="color:#a6e22e">permitAll</span>()
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">anyRequest</span>().<span style="color:#a6e22e">authenticated</span>()
+</span></span><span style="display:flex;"><span>        );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        http.<span style="color:#a6e22e">authenticationProvider</span>(daoAuthenticationProvider())
+</span></span><span style="display:flex;"><span>          .<span style="color:#a6e22e">formLogin</span>(Customizer.<span style="color:#a6e22e">withDefaults</span>());
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        http.<span style="color:#a6e22e">sessionManagement</span>(session <span style="color:#f92672">-&gt;</span> session
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">sessionCreationPolicy</span>(SessionCreationPolicy.<span style="color:#a6e22e">IF_REQUIRED</span>)
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">maximumSessions</span>(1)
+</span></span><span style="display:flex;"><span>                .<span style="color:#a6e22e">expiredUrl</span>(<span style="color:#e6db74">&#34;/login?expired&#34;</span>)
+</span></span><span style="display:flex;"><span>        );
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> http.<span style="color:#a6e22e">build</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>SecurityConfig</code> 基本上覆盖了我们上面讨论的所有的类和接口, 根据代码逻辑也可以看出:</p>
+<ul>
+<li>我们向 DaoAuthenticationProvider 添加了它的两个小弟 UserDetailsService 和 PasswordEncoder</li>
+<li>我们利用 UserDetailsService  指定如何加载用户信息(账号 密码), 然后返回一个 <code>UserDetails</code> 的对象 (包含用户名、密码、权限等）</li>
+<li>我们利用 PasswordEncoder 进行加密 或者验证密码, umm, 这一点好像没显示出来, 应该在用户注册的逻辑里可以看到,</li>
+<li>securityFilterChain() 方法中 我们指定了哪些路径受保护, 指定了采用 Spring Security 提供的表单进行登录, 也指定了 Session 采用 IF_REQUIRED 模式 而不是 STATELESS</li>
+</ul>
+<blockquote>
+<p>你可能会注意到为什么我们没写密码比较逻辑, 这是因为 <code>DaoAuthenticationProvider</code> 会自动调用 <code>passwordEncoder().matches(rawPassword, encodedPassword)</code> 来验证密码, 如果密码正确, 就会为请求生成一个 JSESSIONID 放到 cookie 返回, 同时自动创建一个 Session,</p>
+<p>在 JWT 的情况, 我们之所以需要自己实现密码验证逻辑, 是因为我们关闭了 Session 模式, 且要返回给用户一个 JWT Token, 而不是返回  Spring Security 自动生成的 JSESSIONID, 所以我们需要自己判断密码是否正确, 若正确, 自己生成 JWT Token 并返回给客户端,</p>
+</blockquote>
+<p>上面的代码其实会遇到一个警告:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security <span style="color:#66d9ef">for</span> automatically configuring username<span style="color:#f92672">/</span>password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off <span style="color:#66d9ef">this</span> warning, increase the logging level of <span style="color:#960050;background-color:#1e0010">&#39;</span>org.<span style="color:#a6e22e">springframework</span>.<span style="color:#a6e22e">security</span>.<span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">annotation</span>.<span style="color:#a6e22e">authentication</span>.<span style="color:#a6e22e">configuration</span>.<span style="color:#a6e22e">InitializeUserDetailsBeanManagerConfigurer</span><span style="color:#960050;background-color:#1e0010">&#39;</span> to ERROR
+</span></span></code></pre></div><p>这个警告的主要原因是 Spring Security 发现了一个 <code>AuthenticationProvider</code> (即 <code>daoAuthenticationProvider()</code>)，所以不会自动使用 <code>UserDetailsService</code> 来配置基于用户名/密码的认证。</p>
+<p>也就是说, 在默认情况下，如果我们的 <code>SecurityConfig</code> 只用提供 <code>UserDetailsService</code> 和 <code>PasswordEncoder </code> 的定义, 不用手动为 DaoAuthenticationProvider 添加 这俩小弟, Spring Security 会自动执行以下步骤：</p>
+<ol>
+<li>创建 <code>DaoAuthenticationProvider</code> 并使用 <code>UserDetailsService</code> 进行认证</li>
+<li>创建 <code>AuthenticationManager</code>，并将 <code>DaoAuthenticationProvider</code> 添加进去</li>
+<li>允许基于用户名/密码的身份验证（即 <code>UsernamePasswordAuthenticationFilter</code>）</li>
+</ol>
+<p>所以我们直接删除  <code>DaoAuthenticationProvider daoAuthenticationProvider(){...}</code> 函数让 Spring Security 自动管理就行了, 然后之前的代码:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>http.<span style="color:#a6e22e">authenticationProvider</span>(daoAuthenticationProvider())
+</span></span><span style="display:flex;"><span>  .<span style="color:#a6e22e">formLogin</span>(Customizer.<span style="color:#a6e22e">withDefaults</span>());
+</span></span></code></pre></div><p>改为:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>http.<span style="color:#a6e22e">formLogin</span>(Customizer.<span style="color:#a6e22e">withDefaults</span>());
+</span></span></code></pre></div><h3 id="42-验证-session-id">4.2. 验证 Session ID<a href="#42-验证-session-id" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>这一步不用我们操作, Spring Security 会自动帮我们验证, 我们上面的代码:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>http.<span style="color:#a6e22e">sessionManagement</span>(session <span style="color:#f92672">-&gt;</span> session
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">sessionCreationPolicy</span>(SessionCreationPolicy.<span style="color:#a6e22e">IF_REQUIRED</span>)
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">maximumSessions</span>(1)
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">expiredUrl</span>(<span style="color:#e6db74">&#34;/login?expired&#34;</span>)
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><p>启用了 会话管理，Spring Security 会:</p>
+<ol>
+<li>检查 Session ID 是否有效（自动解析 <code>JSESSIONID</code>）</li>
+<li>限制最多 1 个会话（如果用户在另一个地方登录，旧的 Session 会被踢下线）</li>
+<li>会话过期后跳转到 <code>/login?expired</code></li>
+</ol>
+<p>当然你可以自己实现自己的 Session ID 认证逻辑, 还记得上面我们提到的 <code>OncePerRequestFilter</code> 吗?</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Component</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SessionValidationFilter</span> <span style="color:#66d9ef">extends</span> OncePerRequestFilter {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Autowired</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> HttpSession session;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">doFilterInternal</span>(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">throws</span> ServletException, IOException {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (session.<span style="color:#a6e22e">getAttribute</span>(<span style="color:#e6db74">&#34;SPRING_SECURITY_CONTEXT&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span>) {
+</span></span><span style="display:flex;"><span>            response.<span style="color:#a6e22e">sendRedirect</span>(<span style="color:#e6db74">&#34;/login?expired&#34;</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        filterChain.<span style="color:#a6e22e">doFilter</span>(request, response);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>然后注册到 <code>SecurityFilterChain</code>：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> SecurityFilterChain <span style="color:#a6e22e">securityFilterChain</span>(HttpSecurity http) <span style="color:#66d9ef">throws</span> Exception {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 注册过滤器</span>
+</span></span><span style="display:flex;"><span>    http.<span style="color:#a6e22e">addFilterBefore</span>(<span style="color:#66d9ef">new</span> SessionValidationFilter(), UsernamePasswordAuthenticationFilter.<span style="color:#a6e22e">class</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> http.<span style="color:#a6e22e">build</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>但这完全是不必要的，因为 Spring Security 已经自动处理了这个逻辑。</p>
+<pre tabindex="0"><code>1. 用户发送 `POST /login` 请求
+2. `SecurityFilterChain`（接口，定义 Spring Security 过滤器链）
+   - 由 `DefaultSecurityFilterChain` 实现
+   - 其中包含 `UsernamePasswordAuthenticationFilter`
+   - `UsernamePasswordAuthenticationFilter` 解析请求，并调用 `AuthenticationManager`
+3. `AuthenticationManager`（接口，定义认证管理逻辑）
+   - 由 `ProviderManager` 实现
+   - `ProviderManager` 遍历 `List&lt;AuthenticationProvider&gt;`
+4. `AuthenticationProvider`（接口，定义认证提供者）
+   - `DaoAuthenticationProvider`（`AuthenticationProvider` 的实现）
+   - `DaoAuthenticationProvider` 调用 `UserDetailsService.loadUserByUsername()`
+5. `UserDetailsService`（接口，定义用户数据加载逻辑）
+   - 由 `MyUserDetailsService` 实现
+   - `MyUserDetailsService` 查询数据库，返回 `UserDetails`（包含用户名、密码、权限）
+6. `DaoAuthenticationProvider` 使用 `PasswordEncoder` 验证密码
+   - `PasswordEncoder.matches(rawPassword, encodedPassword)`
+   - 由 `BCryptPasswordEncoder` 实现
+7. 如果认证成功：
+   - `DaoAuthenticationProvider` 返回 `UsernamePasswordAuthenticationToken`（已认证的 `Authentication` 对象）
+   - `ProviderManager` 返回 `Authentication`，认证完成
+   - `SecurityContextHolder` 存储 `Authentication`，用户成功登录
+8. 认证通过后，Spring Security 允许访问受保护资源
+</code></pre><h3 id="43-自定义登录表单页面">4.3. 自定义登录表单页面<a href="#43-自定义登录表单页面" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>上面我们提到, 我们不仅可以使用 Spring Security 自定义的表单页面, 还可以自己定义页面使用, 我们要做的就是在  <code>securityFilterChain()</code> 方法中, 替换之前指定默认表单的语句:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> SecurityFilterChain <span style="color:#a6e22e">securityFilterChain</span>(HttpSecurity http) <span style="color:#66d9ef">throws</span> Exception {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 修改这个语句</span>
+</span></span><span style="display:flex;"><span>    http.<span style="color:#a6e22e">authenticationProvider</span>(daoAuthenticationProvider())
+</span></span><span style="display:flex;"><span>      .<span style="color:#a6e22e">formLogin</span>(Customizer.<span style="color:#a6e22e">withDefaults</span>());
+</span></span><span style="display:flex;"><span>  ...
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> SecurityFilterChain <span style="color:#a6e22e">securityFilterChain</span>(HttpSecurity http) <span style="color:#66d9ef">throws</span> Exception {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 配置 URL 访问权限</span>
+</span></span><span style="display:flex;"><span>    http.<span style="color:#a6e22e">authorizeHttpRequests</span>(auth <span style="color:#f92672">-&gt;</span> {
+</span></span><span style="display:flex;"><span>        auth.<span style="color:#a6e22e">requestMatchers</span>(<span style="color:#e6db74">&#34;/login&#34;</span>, <span style="color:#e6db74">&#34;/css/**&#34;</span>, <span style="color:#e6db74">&#34;/js/**&#34;</span>).<span style="color:#a6e22e">permitAll</span>();
+</span></span><span style="display:flex;"><span>        auth.<span style="color:#a6e22e">anyRequest</span>().<span style="color:#a6e22e">authenticated</span>();
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 配置表单登录</span>
+</span></span><span style="display:flex;"><span>    http.<span style="color:#a6e22e">formLogin</span>(form <span style="color:#f92672">-&gt;</span> {
+</span></span><span style="display:flex;"><span>        form.<span style="color:#a6e22e">loginPage</span>(<span style="color:#e6db74">&#34;/login&#34;</span>);
+</span></span><span style="display:flex;"><span>        form.<span style="color:#a6e22e">loginProcessingUrl</span>(<span style="color:#e6db74">&#34;/login&#34;</span>);
+</span></span><span style="display:flex;"><span>        form.<span style="color:#a6e22e">defaultSuccessUrl</span>(<span style="color:#e6db74">&#34;/home&#34;</span>, <span style="color:#66d9ef">true</span>);
+</span></span><span style="display:flex;"><span>        form.<span style="color:#a6e22e">permitAll</span>();
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 配置登出</span>
+</span></span><span style="display:flex;"><span>    http.<span style="color:#a6e22e">logout</span>(logout <span style="color:#f92672">-&gt;</span> {
+</span></span><span style="display:flex;"><span>        logout.<span style="color:#a6e22e">logoutUrl</span>(<span style="color:#e6db74">&#34;/logout&#34;</span>);
+</span></span><span style="display:flex;"><span>        logout.<span style="color:#a6e22e">logoutSuccessUrl</span>(<span style="color:#e6db74">&#34;/login?logout&#34;</span>);
+</span></span><span style="display:flex;"><span>        logout.<span style="color:#a6e22e">permitAll</span>();
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> http.<span style="color:#a6e22e">build</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>注意这种配置容易引起无限重定向问题,</p>
+<pre tabindex="0"><code>This page isn’t working
+localhost redirected you too many times.
+Try deleting your cookies.
+ERR_TOO_MANY_REDIRECTS
+</code></pre><p>大致原因是没有实现 <code>/login</code> 路径的 GET 方法, 且没有设置为 所有用户都可以访问 <code>/login</code>, 如果你的 <code>loginPage(&quot;/login&quot;)</code> 其实返回的是某个 Thymeleaf 模板（或者前端页面），却没有对外暴露出可访问的 <code>GET /login</code> 路由（或者在控制器中又重定向到别的地方），就会导致访问 <code>/login</code> 时再次跳到另一个需要认证的路径，从而产生循环。</p>
+<blockquote>
+<p>Spring Security 中, 很多种认证方式, JWT 或者 http.formLogin 或者 httpBasic(Customizer.withDefaults()); 且他们可以同时存在, 但一般不会这么做, <a href="https://chatgpt.com/share/67aeb98d-7038-8002-afa9-c758167f6dea">了解更多</a></p>
+<p>对于纯 REST API 场景，使用无状态认证（JWT 或 OAuth2）是主流做法，后端无需维护 Session，更适合前后端分离和分布式微服务场景。如果业务中尚有一部分需要基于 Session 的传统登录或后台管理，可以针对不同路径（<code>/home</code>, <code>/discuss</code>, <code>/api/users</code>, <code>/api/posts/[id]</code>）进行多 <code>HttpSecurity</code> 配置，把 JWT 和 FormLogin (Session) 并存。</p>
+</blockquote>
+<h3 id="45-configuration-和-bean">4.5. <code>@Configuration</code> 和 <code>@Bean</code><a href="#45-configuration-和-bean" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>写配置代码的时候注意到, SecurityConfig 由 <code>@Configuration</code> 修饰, 其他的方法都是由 <code>@Bean</code> 修饰, 我们来研究一下.</p>
+<p><code>@Bean</code> 注解是 Spring 框架中的一个注解，它用于在 Java 配置类（即标注了 <code>@Configuration</code> 的类）中定义 Spring 容器管理的 Bean。<strong>将方法的返回值注册为 Spring 容器的 Bean</strong>，类似于 <code>@Component</code>、<code>@Service</code>、<code>@Repository</code> 等注解，但更灵活。如果某个类不是你自己写的，不能直接用 <code>@Component</code> 进行注入，你可以使用 <code>@Bean</code> 来将其实例手动注册到 Spring 容器中。</p>
+<p>比如 <code>UserDetailsService</code> 和 <code>PasswordEncoder</code> 都不是我们定义的, 而是 Spring Security 定义的接口, 而 <code>@Component</code> <code>@Service</code> 这种一般都是定义某个类的时候加上去的注解, 所以我们只能写个方法, 返回 <code>UserDetailsService</code> 和 <code>PasswordEncoder</code> 类型的对象, 然后把这个方法标注为 <code>@Bean</code>,</p>
+<p>所以 <code>@Bean</code> 只能在方法上, 那个方法应该返回一个对象, 且这个对像应该是非自己定义的类的实例,  而 <code>@Component</code> 常常放在 自己定义的类上, 他们的意思都是说, 在启动程序的时候, Spring 会自动生成一个实例,</p>
+<ul>
+<li>它们告诉 Spring 在程序启动时创建一个对象（Bean）并放入 Spring 容器，以便 <code>@Autowired</code> 自动注入使用</li>
+<li>Spring 会自动管理这些对象，比如在需要时创建（实例化）、在应用关闭时销毁等</li>
+</ul>
+<p>但这里需要修正： ❌ &ldquo;<code>@Bean</code> 只能用于非自己定义的类&rdquo; ✅ <code>@Bean</code> 也可以用于自己写的类，只是一般不这么做，因为 <code>@Component</code> 更方便, 比如，<code>@Component</code> 和 <code>@Bean</code> 都可以用来创建 <code>MyService</code>：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Component</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">MyService</span> {
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>或者：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Configuration</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">AppConfig</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> MyService <span style="color:#a6e22e">myService</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> MyService();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>两种方式都会让 <code>MyService</code> 变成 Spring 管理的 Bean，但一般推荐用 <code>@Component</code>，除非 <code>MyService</code> 需要复杂的初始化逻辑。</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/004-oj%E5%B9%B3%E5%8F%B0%E7%89%9B%E5%AE%A2%E7%BD%91/" class="button inline prev">
+        国内面试 OJ 平台调试
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/003-link-algorithm/" class="button inline next">
+        算法题 链表系列
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>MySQL 中的事务隔离界别和各种锁 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 行级锁/记录锁 1.1. 排它锁 X 锁 - 解决脏写 相同数据行上的 X 锁会阻塞其它加共享锁或排他锁的操作
+SELECT * FROM my_table WHERE id = 1 FOR UPDATE; 在任何事务隔离级别下, 删改操作都需要先获得 x 锁, 目的是避免脏写, 也就是说即使没有显示使用 SELECT ... FOR UPDATE, 进行删改操作时, 数据库都会自动尝试获得相应行的 x锁, 然后再进行写操作, 否则阻塞等待锁释放或当作死锁处理
+1.2. 共享锁 S 锁 - 解决不可重复读 允许多个事务同时读取同一数据, 但不允许修改, 也就是说与 X 锁互斥
+SELECT * FROM my_table WHERE id = 1 LOCK IN SHARE MODE; 在 所有事务隔离级别 下, s锁都不会默认添加, 只有当显式使用 SELECT ... LOCK IN SHARE MODE 时才会加 s锁
+拓展 在 InnoDB 可重复读 隔离级别下, 普通的 SELECT 语句不会默认加 s共享锁, 它使用的是一致性读, 即通过MVCC 机制读取数据的快照, 而不是加锁读取, 来避免不可重复读问题的, 当然你也可以显示加上 s共享锁, 使用锁来避免不可重复读问题,
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/002-%E5%90%84%E7%A7%8D%E9%94%81/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="MySQL 中的事务隔离界别和各种锁">
+<meta property="og:description" content="1. 行级锁/记录锁 1.1. 排它锁 X 锁 - 解决脏写 相同数据行上的 X 锁会阻塞其它加共享锁或排他锁的操作
+SELECT * FROM my_table WHERE id = 1 FOR UPDATE; 在任何事务隔离级别下, 删改操作都需要先获得 x 锁, 目的是避免脏写, 也就是说即使没有显示使用 SELECT ... FOR UPDATE, 进行删改操作时, 数据库都会自动尝试获得相应行的 x锁, 然后再进行写操作, 否则阻塞等待锁释放或当作死锁处理
+1.2. 共享锁 S 锁 - 解决不可重复读 允许多个事务同时读取同一数据, 但不允许修改, 也就是说与 X 锁互斥
+SELECT * FROM my_table WHERE id = 1 LOCK IN SHARE MODE; 在 所有事务隔离级别 下, s锁都不会默认添加, 只有当显式使用 SELECT ... LOCK IN SHARE MODE 时才会加 s锁
+拓展 在 InnoDB 可重复读 隔离级别下, 普通的 SELECT 语句不会默认加 s共享锁, 它使用的是一致性读, 即通过MVCC 机制读取数据的快照, 而不是加锁读取, 来避免不可重复读问题的, 当然你也可以显示加上 s共享锁, 使用锁来避免不可重复读问题,
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/002-%E5%90%84%E7%A7%8D%E9%94%81/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-03-06 09:39:22 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/002-%E5%90%84%E7%A7%8D%E9%94%81/">MySQL 中的事务隔离界别和各种锁</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-03-06</time><span class="post-reading-time">3 分钟阅读 (446 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9D%A2%E8%AF%95/">数据库面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-行级锁记录锁">1. 行级锁/记录锁<a href="#1-行级锁记录锁" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="11-排它锁-x-锁---解决脏写">1.1. 排它锁 X 锁 - 解决脏写<a href="#11-排它锁-x-锁---解决脏写" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>相同数据行上的 X 锁会阻塞其它加共享锁或排他锁的操作</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> my_table <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">FOR</span> <span style="color:#66d9ef">UPDATE</span>;
+</span></span></code></pre></div><blockquote>
+<p>在任何事务隔离级别下, 删改操作都需要先获得 x 锁, 目的是避免脏写, 也就是说即使没有显示使用 <code>SELECT ... FOR UPDATE</code>, 进行删改操作时, 数据库都会自动尝试获得相应行的 x锁, 然后再进行写操作, 否则阻塞等待锁释放或当作死锁处理</p>
+</blockquote>
+<h3 id="12-共享锁-s-锁---解决不可重复读">1.2. 共享锁 S 锁 - 解决不可重复读<a href="#12-共享锁-s-锁---解决不可重复读" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>允许多个事务同时读取同一数据, 但不允许修改, 也就是说与 X 锁互斥</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> my_table <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">LOCK</span> <span style="color:#66d9ef">IN</span> <span style="color:#66d9ef">SHARE</span> <span style="color:#66d9ef">MODE</span>;
+</span></span></code></pre></div><blockquote>
+<p>在 所有事务隔离级别 下, s锁都不会默认添加, 只有当显式使用 <code>SELECT ... LOCK IN SHARE MODE</code> 时才会加 s锁</p>
+</blockquote>
+<blockquote>
+<p><strong>拓展</strong> 在  InnoDB 可重复读 隔离级别下, 普通的 <code>SELECT</code> 语句不会默认加 s共享锁, 它使用的是一致性读, 即通过MVCC 机制读取数据的快照, 而不是加锁读取, 来避免不可重复读问题的, 当然你也可以显示加上 s共享锁, 使用锁来避免不可重复读问题,</p>
+<p>不可重复读: 发生在同一行数据被更新, 导致同一查询多次执行返回不同的具体数值</p>
+</blockquote>
+<h2 id="2-next-key-lock---解决幻读">2. Next-Key Lock - 解决幻读<a href="#2-next-key-lock---解决幻读" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>注意 InnoDB <code>可重复读</code> 或更高隔离级别才会有 Next-Key 锁, Next-Key 锁 = 记录锁 + 间隙锁,</p>
+<p>Next-Key 锁的目的是解决幻读问题, 幻读是指事务读取一个范围的数据时, 另一个事务插入或删除行, 导致再次读取范围时结果不一致, 所以我们在进行范围查询时, 通过 <code>SELECT ... FOR UPDATE </code> 自动添加间隙锁, 这样就可以避免在间隙锁释放之前, 其他事务在查询范围内插入新纪录, 至于如何避免的, 我们下面会讲到,</p>
+<h3 id="21-范围查询">2.1. 范围查询<a href="#21-范围查询" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>当执行涉及范围条件的查询且使用 <code>SELECT ... FOR UPDATE </code>时, InnoDB 会使用 Next-Key Lock 锁定查询范围内的记录及其间隙</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> <span style="color:#66d9ef">table_name</span> <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">5</span> <span style="color:#66d9ef">AND</span> id <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">10</span> <span style="color:#66d9ef">FOR</span> <span style="color:#66d9ef">UPDATE</span>;
+</span></span></code></pre></div><blockquote>
+<p>注意上面的 SQL 语句格式 <code>SELECT ... FOR UPDATE</code>, 若是普通查询 <code>SELECT ...</code>, 无论是否是范围查询 InnoDB 采用的都是 MVCC 多版本并发控制</p>
+</blockquote>
+<h3 id="22-非唯一索引上的等值查询">2.2. 非唯一索引上的等值查询<a href="#22-非唯一索引上的等值查询" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">START</span> <span style="color:#66d9ef">TRANSACTION</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> employees <span style="color:#66d9ef">WHERE</span> salary <span style="color:#f92672">=</span> <span style="color:#ae81ff">4000</span> <span style="color:#66d9ef">FOR</span> <span style="color:#66d9ef">UPDATE</span>;
+</span></span></code></pre></div><p>如果 <code>salary</code> 列上存在索引, 并且是<strong>非唯一索引</strong>, InnoDB 会在查找到的记录上加锁, 同时加锁该记录与相邻记录之间的间隙, 即使这不是范围查询, 这保证了其他事务不能在锁定区间内插入新记录，从而避免幻读问题。因为若 salary 不唯一, 我们查到的结果可能是多个, 此时必须使用 Next-Key Lock 来防止其他事务插入相同的 salary 导致幻读,</p>
+<p>如果 <code>salary</code> 唯一, 通常不会触发间隙锁, 只会加记录锁, 因为等值查询可以精确定位到一条记录, 不需要保护范围,</p>
+<p>如果  <code>salary</code>  唯一, 但若是范围查询, 则需要防止其他事务在查询范围之间插入新记录, 因此仍会触发间隙锁,</p>
+<p>如果  <code>salary</code>   列上不存在索引（无论是唯一索引还是非唯一索引），MySQL 的 InnoDB 在执行涉及   <code>salary</code>    的查询或修改操作时，会<strong>因为无法利用索引而退化为全表扫描</strong>, 在这种情况下，锁的机制和范围会发生显著变化，尤其是在默认隔离级别下，可能会导致更广泛的锁范围，甚至锁住整个表。</p>
+<blockquote>
+<p>记录锁 Record Lock：锁定具体的索引记录, x 锁或 s 锁</p>
+<p>间隙锁 Gap Lock：锁定索引记录之间的间隙, 防止其他事务在该范围内插入新记录, 间隙锁只在 <strong>可重复读</strong> 和 <strong>串行化</strong> 隔离级别下生效, 且只作用于 <strong>索引</strong>（包括主键索引和二级索引）, 如果表没有索引（例如纯堆表）, InnoDB 会退化为锁全表</p>
+</blockquote>
+<h2 id="3-插入意向锁-insert-intention-lock">3. 插入意向锁 Insert Intention Lock<a href="#3-插入意向锁-insert-intention-lock" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>在 InnoDB 中，插入操作本身并不会直接获取行上的 X 锁, 因为插入的目标是新记录, 尚未存在于表中, 所以没有“行”可以加锁,</p>
+<p>当执行 INSERT 操作时，InnoDB 不直接在数据行上加锁，而是先在目标 gap 上加上插入意向锁, 插入意向锁是 MySQL InnoDB 存储引擎中一种特殊的间隙锁变种, 属于意向锁的一种, 插入意向锁本身并不直接锁定具体的行, 而是表明一个事务“打算”在某个间隙中插入数据, 它会等待现有的间隙锁（如果有）释放, 从而避免冲突,</p>
+<p>插入意向锁通常出现在使用 <strong>可重复读 隔离级别</strong>时, 因为在这个隔离级别下, MySQL 会<strong>使用间隙锁来防止幻读问题</strong>,</p>
+<p>我们来看一下例子, 现在有两个事务同时尝试插入记录：</p>
+<ul>
+<li>事务 A 想插入 id = 2</li>
+<li>事务 B 想插入 id = 3</li>
+</ul>
+<p>假设事务 C <strong>先执行</strong>了一条查询 <code>SELECT ... FOR UPDATE</code>, 锁定了间隙 (1, 4)：</p>
+<ol>
+<li>
+<p>事务 A 请求插入 id = 2, 发现间隙 (1, 4) 被间隙锁占用, 插入意向锁被阻塞</p>
+</li>
+<li>
+<p>事务 A 必须等待事务 C 提交或回滚, 释放间隙锁后才能继续插入</p>
+</li>
+</ol>
+<p>这就完美避免了幻读问题, 看看上面的内容, 前后呼应</p>
+<h2 id="4-记录锁-多版本并发控制">4. 记录锁 多版本并发控制<a href="#4-记录锁-多版本并发控制" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>普通 <code>SELECT</code> 语句：</p>
+<ul>
+<li>使用 MVCC 多版本并发控制</li>
+<li>读取的是事务开始时的快照数据, 不会加 <code>S</code> 锁, 也不会阻塞其他事务的更新或插入</li>
+</ul>
+<p><code>SELECT ... LOCK IN SHARE MODE</code>：</p>
+<ul>
+<li>会显式对读取的行加 <code>S</code> 锁，其他事务仍可读取，但不能 <code>UPDATE</code> 或 <code>DELETE</code> 这些被锁的行</li>
+<li>适用于确保数据在事务执行期间不会被修改，但仍允许读取</li>
+</ul>
+<p><code>SELECT ... FOR UPDATE</code>：</p>
+<ul>
+<li>会显式对读取的行加 <code>X</code> 锁，阻止其他事务对这些行进行 <code>UPDATE</code> 或 <code>DELETE</code>，但仍允许读取（非锁定读）</li>
+</ul>
+<p><strong>总结</strong></p>
+<ul>
+<li>记录锁 Record Lock：锁定具体的索引记录, x 锁或 s 锁</li>
+<li>间隙锁 Gap Loc：锁定索引记录之间的间隙，防止其他事务在该范围内插入新记录</li>
+<li>Next-Key 锁 = 记录锁 + 间隙锁</li>
+</ul>
+<blockquote>
+<p>注意上面讨论的是在 InnoDB <code>可重复读</code> 隔离级别下的情况, InnoDB 的默认隔离级别也是 <code>可重复读</code>, 更低级别比如 <code>已提交读</code>, <code>已提交读</code> 并不支持 MVCC 快照读 或者 Next-Key 锁, 它们都是 <code>可重复读</code> 和 <code>序列化</code> 隔离级别下的机制</p>
+</blockquote>
+<h2 id="5--快照读-vs-当前读">5.  快照读 vs 当前读<a href="#5--快照读-vs-当前读" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>快照读</strong>: 普通的 SELECT, 不会加锁, 只依赖快照读 MVCC</p>
+<p><strong>当前读</strong>: <code>SELECT ... FOR UPDATE</code> 或 <code>SELECT ... LOCK IN SHARE MODE</code>, 触发 x 锁 或 s 锁, 范围查询会触发 Next-Key Lock</p>
+<ul>
+<li>无范围查询时, <strong>当前读</strong>触发记录锁( x 锁 或 s 锁)</li>
+<li>存在范围查询, 触发 Next-Key Lock, 也就是 记录锁 + 间隙锁</li>
+</ul>
+<blockquote>
+<p>注释上面讨论的是 InnoDB  “可重复读” 隔离级别下的情况</p>
+</blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/003-%E6%AD%BB%E9%94%81/" class="button inline prev">
+        数据库死锁以及排查
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/002-%E7%BC%93%E5%AD%98%E5%87%BB%E7%A9%BF-%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F/" class="button inline next">
+        缓存击穿 缓存穿透 缓存雪崩
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

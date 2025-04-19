@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>IMapper &amp; Model Binding :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. IMapper [Route(&#34;inventory&#34;)] [ApiController] public class InventoryController : ControllerBase { private readonly InventoryService _inventoryService; private readonly IMapper _mapper; public InventoryController( InventoryService inventoryService, IMapper mapper) { _mapper = mapper; _inventoryService = inventoryService; } [HttpGet(&#34;stocklist&#34;)] public async Task&lt;ActionResult&lt;ResultDto&gt;&gt; ListAllStock() { var stockList = await _inventoryService.FindAllStock(); return new ResultDto(200, &#34;查询成功&#34;, _mapper.Map&lt;List&lt;InventoryModelDto&gt;&gt;(stockList)); } } public class InventoryModelDto { public string Id { get; set; } public int StockLevel { get; set; } public string ItemName { get; set; } public string LastUpdated { get; set; } } public class InventoryModel { [BsonId] [BsonRepresentation(BsonType.ObjectId)] public string Id { get; set; } public int StockLevel { get; set; } public string ItemName { get; set; } [JsonConverter(typeof(CustomDateTimeConverter))] public DateTime LastUpdated { get; set; } } AutoMapper 是一个 .NET 库, 用于简化对象之间的映射, 它可以自动将一个对象的属性值复制到另一个对象的对应属性上, 减少手动编写繁琐的映射代码, 通常用于将数据库实体（如 InventoryModel）映射到 DTO（Data Transfer Object, 如 InventoryModelDto）, 以便在 API 返回数据时使用更轻量或特定格式的对象:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/csharp/dot-net/003-mapper-model-binding/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="IMapper &amp; Model Binding">
+<meta property="og:description" content="1. IMapper [Route(&#34;inventory&#34;)] [ApiController] public class InventoryController : ControllerBase { private readonly InventoryService _inventoryService; private readonly IMapper _mapper; public InventoryController( InventoryService inventoryService, IMapper mapper) { _mapper = mapper; _inventoryService = inventoryService; } [HttpGet(&#34;stocklist&#34;)] public async Task&lt;ActionResult&lt;ResultDto&gt;&gt; ListAllStock() { var stockList = await _inventoryService.FindAllStock(); return new ResultDto(200, &#34;查询成功&#34;, _mapper.Map&lt;List&lt;InventoryModelDto&gt;&gt;(stockList)); } } public class InventoryModelDto { public string Id { get; set; } public int StockLevel { get; set; } public string ItemName { get; set; } public string LastUpdated { get; set; } } public class InventoryModel { [BsonId] [BsonRepresentation(BsonType.ObjectId)] public string Id { get; set; } public int StockLevel { get; set; } public string ItemName { get; set; } [JsonConverter(typeof(CustomDateTimeConverter))] public DateTime LastUpdated { get; set; } } AutoMapper 是一个 .NET 库, 用于简化对象之间的映射, 它可以自动将一个对象的属性值复制到另一个对象的对应属性上, 减少手动编写繁琐的映射代码, 通常用于将数据库实体（如 InventoryModel）映射到 DTO（Data Transfer Object, 如 InventoryModelDto）, 以便在 API 返回数据时使用更轻量或特定格式的对象:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/csharp/dot-net/003-mapper-model-binding/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="c#" />
+
+
+  <meta property="article:published_time" content="2025-04-17 21:15:52 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/csharp/dot-net/003-mapper-model-binding/">IMapper &amp; Model Binding</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-04-17</time><span class="post-reading-time">4 分钟阅读 (762 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/c#/">c#</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/.net/">.net</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-imapper">1. <code>IMapper</code><a href="#1-imapper" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c#" data-lang="c#"><span style="display:flex;"><span><span style="color:#a6e22e">[Route(&#34;inventory&#34;)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">[ApiController]</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">InventoryController</span> : ControllerBase
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> InventoryService _inventoryService;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> IMapper _mapper;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> InventoryController(
+</span></span><span style="display:flex;"><span>        InventoryService inventoryService, IMapper mapper)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        _mapper = mapper;
+</span></span><span style="display:flex;"><span>        _inventoryService = inventoryService;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [HttpGet(&#34;stocklist&#34;)]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">async</span> Task&lt;ActionResult&lt;ResultDto&gt;&gt; ListAllStock()
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> stockList = <span style="color:#66d9ef">await</span> _inventoryService.FindAllStock();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> ResultDto(<span style="color:#ae81ff">200</span>, <span style="color:#e6db74">&#34;查询成功&#34;</span>, _mapper.Map&lt;List&lt;InventoryModelDto&gt;&gt;(stockList));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">InventoryModelDto</span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">string</span> Id { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> StockLevel { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">string</span> ItemName { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">string</span> LastUpdated { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">InventoryModel</span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [BsonId]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [BsonRepresentation(BsonType.ObjectId)]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">string</span> Id { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> StockLevel { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">string</span> ItemName { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [JsonConverter(typeof(CustomDateTimeConverter))]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> DateTime LastUpdated { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>AutoMapper</code> 是一个 .NET 库, 用于简化对象之间的映射, 它可以自动将一个对象的属性值复制到另一个对象的对应属性上, 减少手动编写繁琐的映射代码, 通常用于将数据库实体（如 <code>InventoryModel</code>）映射到 DTO（Data Transfer Object, 如 <code>InventoryModelDto</code>）, 以便在 API 返回数据时使用更轻量或特定格式的对象:</p>
+<p><strong>为什么需要映射？</strong></p>
+<ul>
+<li>
+<p><code>InventoryModel</code> 通常是数据库实体, 可能包含敏感字段或不适合直接暴露给客户端的数据, <code>InventoryModelDto</code> 是一个专为 API 响应设计的对象, 可能只包含客户端需要的字段</p>
+</li>
+<li>
+<p>DTO 可以调整数据的结构或格式, 使其更适合前端使用</p>
+</li>
+</ul>
+<p><strong>代码中的具体流程</strong></p>
+<ul>
+<li><code> _inventoryService.FindAllStock()</code> 返回一个 <code>List&lt;InventoryModel&gt;</code></li>
+<li><code>_mapper.Map&lt;List&lt;InventoryModelDto&gt;&gt;(processlist)</code> 将这个列表中的每个 <code>InventoryModel</code> 对象转换为 <code>InventoryModelDto</code> 对象</li>
+<li>最终结果被包装在 <code>ResultDto</code> 中，作为 API 的响应返回，状态码为 200，消息为“查询成功”</li>
+</ul>
+<p><strong>类型不同会发生什么？</strong> <code>DateTime LastUpdated</code> 到 <code>string LastUpdated</code> 的映射会发生什么?</p>
+<ul>
+<li><code>AutoMapper</code> 支持 <code>DateTime</code> 到 <code>string</code> 的转换, 默认调用 <code>DateTime.ToString()</code></li>
+<li><code>[JsonConverter(typeof(CustomDateTimeConverter))]</code> 只在 JSON 序列化/反序列化时生效（例如，API 响应）</li>
+<li><code>AutoMapper</code> 的映射是对象层面的操作，<strong>不会调用 <code>CustomDateTimeConverter</code></strong>，除非在 <code>AutoMapper</code> 配置中显式指定</li>
+</ul>
+<h2 id="2-post-api-如何限制前端表单传递的数据字段">2. POST API 如何限制前端表单传递的数据字段<a href="#2-post-api-如何限制前端表单传递的数据字段" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c#" data-lang="c#"><span style="display:flex;"><span><span style="color:#a6e22e">[Route(&#34;api/users&#34;)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">[ApiController]</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">UserController</span> : ControllerBase
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> UserService _userService;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> IMapper _mapper;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> UserController(UserService userService, IMapper mapper)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        _userService = userService;
+</span></span><span style="display:flex;"><span>        _mapper = mapper;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [HttpPost(&#34;create&#34;)]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">async</span> Task&lt;ActionResult&lt;UserDto&gt;&gt; CreateUser([FromBody] UserCreateDto userCreateDto)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (!ModelState.IsValid)
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> BadRequest(ModelState);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> user = _mapper.Map&lt;User&gt;(userCreateDto);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> createdUser = <span style="color:#66d9ef">await</span> _userService.CreateUserAsync(user);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> Ok(_mapper.Map&lt;UserDto&gt;(createdUser));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>假设 <code>UserCreateDto</code> 定义如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c#" data-lang="c#"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">UserCreateDto</span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [Required(ErrorMessage = &#34;用户名是必填项&#34;)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [StringLength(50, ErrorMessage = &#34;用户名长度不能超过50个字符&#34;)]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">string</span> Username { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [Required(ErrorMessage = &#34;邮箱是必填项&#34;)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [EmailAddress(ErrorMessage = &#34;邮箱格式不正确&#34;)]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">string</span> Email { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [Range(18, 100, ErrorMessage = &#34;年龄必须在18到100岁之间&#34;)]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> Age { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>前端通过 POST 请求发送以下 JSON 数据到 <code>/api/users/create</code>：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;Username&#34;</span>: <span style="color:#e6db74">&#34;john_doe&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;Email&#34;</span>: <span style="color:#e6db74">&#34;john@example.com&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;Age&#34;</span>: <span style="color:#ae81ff">25</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;ExtraField&#34;</span>: <span style="color:#e6db74">&#34;some_value&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="21-如何限制前端表单字段">2.1. 如何限制前端表单字段？<a href="#21-如何限制前端表单字段" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>DTO 定义限制字段：</strong></p>
+<ul>
+<li><code>UserCreateDto</code> 类定义了 API 接受的字段：<code>Username</code>、<code>Email</code> 和 <code>Age</code></li>
+<li>前端发送的 JSON 数据中，只有这些字段会被绑定到 UserCreateDto 对象的相应属性</li>
+<li>额外的字段（如 <code>ExtraField</code>）不会被绑定，因为 <code>UserCreateDto</code> 中没有对应的属性, 这种限制是通过 DTO 的结构实现的</li>
+</ul>
+<p><strong>处理前端数据的机制</strong>：</p>
+<ul>
+<li>当前端发送 POST 请求时，ASP.NET Core 使用 <strong>模型绑定（Model Binding）</strong> 机制将请求体中的 JSON 数据<strong>反序列化</strong>为 <code>UserCreateDto</code> 对象</li>
+<li>由于 <code>UserCreateDto</code> 只有 <code>Username</code>、<code>Email</code> 和 <code>Age</code> 三个属性，<code>ExtraField</code> 会被忽略，不影响 API 的处理</li>
+</ul>
+<p><strong>验证数据的有效性</strong>：</p>
+<ul>
+<li><code>UserCreateDto</code> 使用了数据注解（如 <code>[Required]</code>、<code>[StringLength]</code>、<code>[EmailAddress]</code>、<code>[Range]</code>）来定义验证规则</li>
+<li>例如，如果前端发送的 JSON 缺少 <code>Username</code> 或 <code>Email</code>，或者 <code>Email</code> 格式不正确，ASP.NET Core 会将这些错误记录在 <code>ModelState</code> 中</li>
+<li>代码中检查 <code>if (!ModelState.IsValid)</code>，如果验证失败，会返回 400 Bad Request 响应，包含具体的错误信息</li>
+</ul>
+<blockquote>
+<p><code>ModelState</code> 很重要, 我们可以在 controller 中判断是否数据反序列化成功等:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c#" data-lang="c#"><span style="display:flex;"><span><span style="color:#a6e22e">[HttpPost(&#34;user&#34;)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">async</span> Task&lt;IActionResult&gt; CreateUser([FromBody] UserCreateDto userCreateDto) {
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">if</span> (!ModelState.IsValid) {
+</span></span><span style="display:flex;"><span>     ...
+</span></span><span style="display:flex;"><span> }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></blockquote>
+<h3 id="22-aspnet-的机制">2.2. ASP.NET 的机制<a href="#22-aspnet-的机制" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li><strong>模型绑定</strong>：将请求数据映射到 DTO，仅绑定 DTO 定义的属性</li>
+<li><strong>模型验证</strong>：通过数据注解（如 <code>[Required]</code>、<code>[EmailAddress]</code>）和 <code>[ApiController]</code> 特性验证数据有效性</li>
+<li><strong>绑定属性</strong>：如 <code>[FromBody]</code>，控制数据来源</li>
+</ul>
+<p>这种机制类似于 Spring 框架的 <code>@RequestBody</code> 和 <code>@Valid</code>，但 ASP.NET Core 的 <code>[ApiController]</code> 提供了更自动化的验证流程</p>
+<h3 id="23-默认检查哪些数据来源进行反序列化">2.3. 默认检查哪些数据来源进行反序列化？<a href="#23-默认检查哪些数据来源进行反序列化" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>当不显式指定绑定源（如 <code>[FromBody]</code>、<code>[FromQuery]</code> 等）时，ASP.NET Core 的模型绑定系统会根据参数类型和上下文按以下优先级检查数据来源：</p>
+<p><strong>复杂类型（如 DTO、类）</strong>：</p>
+<ul>
+<li><strong>默认来源</strong>：在 <code>[ApiController]</code> 控制器中，默认从<strong>请求体</strong>（<code>[FromBody]</code>）绑定，通常期望 <code>Content-Type</code> 为 <code>application/json</code> 或 <code>application/xml</code></li>
+<li>如果请求体不可用（例如，<code>Content-Type</code> 为 <code>application/x-www-form-urlencoded</code> 或 <code>multipart/form-data</code>），也可能尝试从<strong>表单数据</strong>（<code>[FromForm]</code>）绑定</li>
+<li>如果没有 <code>[ApiController]</code>，ASP.NET Core 可能不会自动从请求体绑定复杂类型，导致参数为 null，除非显式指定<code> [FromBody]</code> 或 <code>[FromForm]</code></li>
+</ul>
+<p><strong>简单类型（如 string、int、bool）</strong>：</p>
+<ul>
+<li>默认来源
+<ol>
+<li><strong>路由参数</strong>（<code>[FromRoute]</code>）：如果参数名称匹配路由模板中的占位符（例如，<code>[Route(&quot;api/users/{id}&quot;)]</code>)</li>
+<li><strong>查询字符串</strong>（<code>[FromQuery]</code>）：从 URL 的查询参数绑定（例如，<code>?name=john</code>）</li>
+<li><strong>表单数据</strong>（<code>[FromForm]</code>）：如果请求是 <code>application/x-www-form-urlencoded</code> 或 <code>multipart/form-data</code></li>
+</ol>
+</li>
+<li>简单类型不会默认从请求体绑定，除非显式使用 <code>[FromBody]</code></li>
+</ul>
+<blockquote>
+<p>当控制器方法期望一个复杂类型（如 <code>UserCreateDto</code>）并使用 <code>[FromBody]</code>（或 <code>[ApiController]</code> 默认推断为 <code>[FromBody]</code>），ASP.NET Core 期望请求体的 <code>Content-Type</code> 是 <code>application/json</code> 或 <code>application/xml</code>，因为这些格式可以直接反序列化为 C# 对象</p>
+<p>如果请求的 <code>Content-Type</code> 是 <code>application/x-www-form-urlencoded</code> 或 <code>multipart/form-data</code>，ASP.NET Core 的 JSON 反序列化器无法解析这些格式，导致绑定失败（参数可能为 null 或抛出异常）</p>
+</blockquote>
+<blockquote>
+<p><code>application/x-www-form-urlencoded</code> 表示请求的内容在 <strong>HTTP 请求的 Body</strong> 中，但它不是 JSON 格式，而是一串以键值对形式编码的字符串（格式如 <code>key1=value1&amp;key2=value2</code>）</p>
+<p>与 <code>application/json</code> 不同：</p>
+<ul>
+<li><code>application/x-www-form-urlencoded</code>：数据是扁平的键值对字符串，适合简单表单数据</li>
+<li><code>application/json</code>：数据是结构化的 JSON 对象，支持复杂嵌套结构</li>
+</ul>
+</blockquote>
+<h3 id="24-查询字符串-如何绑定到后端方法">2.4. 查询字符串 如何绑定到后端方法?<a href="#24-查询字符串-如何绑定到后端方法" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>后端代码:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c#" data-lang="c#"><span style="display:flex;"><span><span style="color:#a6e22e">[HttpPost(&#34;user&#34;)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">async</span> Task&lt;ActionResult&lt;ResultDto&gt;&gt; CreateNewUser(UserModelDto user, <span style="color:#66d9ef">string</span> currentuser)
+</span></span></code></pre></div><p>前端代码:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">registerUser</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">currentuser</span>: <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">data?</span>: <span style="color:#66d9ef">object</span>) <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">_currentuser</span> <span style="color:#f92672">=</span> encodeURIComponent(<span style="color:#a6e22e">currentuser</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">request</span>&lt;<span style="color:#f92672">any</span>&gt;(
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#34;post&#34;</span>, 
+</span></span><span style="display:flex;"><span>       <span style="color:#a6e22e">myApi</span>(<span style="color:#e6db74">`/user?currentuseruser=</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">_currentuser</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>), {<span style="color:#a6e22e">data</span>});
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>上面我们说到, 在 <code>[ApiController]</code> 控制器中, 对于复杂类型如 <code>Dto</code>, 若不指定参数的数据来源, 则默认从<strong>请求体</strong>（<code>[FromBody]</code>）绑定, 因此 <code>UserModelDto user</code> 肯定是从 请求体中反序列化得到, 那 <code>string currentuser</code> 参数怎么办?</p>
+<p>答案也很简单: <code>string currentuser</code> 是简单类型，且没有显式指定 <code>[FromBody]</code>, 所以默认从查询字符串绑定, 也就是前端的 <code>/user?currentuseruser=${_currentuser}</code></p>
+<h3 id="25-如果想上传文件需要怎么办">2.5. 如果想上传文件，需要怎么办？<a href="#25-如果想上传文件需要怎么办" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>在 ASP.NET Core 中，文件上传通常通过 <code>multipart/form-data</code> 格式实现，结合 <code>[FromForm]</code> 和 <code>IFormFile</code> 类型来处理文件和表单数据</p>
+<p><strong>定义 DTO 和控制器方法</strong>：</p>
+<ul>
+<li>使用 <code>[FromForm]</code> 绑定表单数据</li>
+<li>使用 <code>IFormFile</code> 或 <code>IFormFileCollection</code> 接收上传的文件</li>
+<li>确保方法支持 <code>multipart/form-data</code> 请求</li>
+</ul>
+<p><strong>前端发送文件</strong>：</p>
+<ul>
+<li>使用 HTML 表单（<code>enctype=&quot;multipart/form-data&quot;</code>）或 AJAX 请求（如 <code>FormData</code>）发送文件和相关数据</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c#" data-lang="c#"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">UserCreateDto</span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [Required(ErrorMessage = &#34;用户名是必填项&#34;)]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">string</span> Username { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [Required(ErrorMessage = &#34;邮箱是必填项&#34;)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [EmailAddress(ErrorMessage = &#34;邮箱格式不正确&#34;)]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">string</span> Email { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> Age { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">[Route(&#34;api/users&#34;)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">[ApiController]</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">UserController</span> : ControllerBase
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">readonly</span> IWebHostEnvironment _environment;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> UserController(IWebHostEnvironment environment)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        _environment = environment;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">    [HttpPost(&#34;upload&#34;)]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">async</span> Task&lt;IActionResult&gt; UploadUser([FromForm] UserCreateDto userCreateDto, [FromForm] IFormFile file)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (!ModelState.IsValid)
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> BadRequest(ModelState);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (file == <span style="color:#66d9ef">null</span> || file.Length == <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> BadRequest(<span style="color:#e6db74">&#34;No file uploaded.&#34;</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 验证文件类型（例如，只允许图片）</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> allowedExtensions = <span style="color:#66d9ef">new</span>[] { <span style="color:#e6db74">&#34;.jpg&#34;</span>, <span style="color:#e6db74">&#34;.jpeg&#34;</span>, <span style="color:#e6db74">&#34;.png&#34;</span> };
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (!allowedExtensions.Contains(extension))
+</span></span><span style="display:flex;"><span>        {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> BadRequest(<span style="color:#e6db74">&#34;Invalid file type. Only JPG and PNG are allowed.&#34;</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 保存文件到服务器（例如，wwwroot/uploads 目录）</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> uploadsFolder = Path.Combine(_environment.WebRootPath, <span style="color:#e6db74">&#34;uploads&#34;</span>);
+</span></span><span style="display:flex;"><span>        ...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 假设保存用户信息到数据库</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// var user = new User { Username = userCreateDto.Username, Email = userCreateDto.Email, Age = userCreateDto.Age };</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// await _userService.SaveUserAsync(user);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> Ok(<span style="color:#66d9ef">new</span> { Message = <span style="color:#e6db74">&#34;User and file uploaded successfully&#34;</span>, FilePath = filePath });
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/csharp/basics/002-%E6%8B%93%E5%B1%95%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4/" class="button inline prev">
+        Extension Namespaces C#
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/vue/001-vue-api-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B/" class="button inline next">
+        Vue 基础概念
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

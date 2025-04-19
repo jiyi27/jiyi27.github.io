@@ -1,0 +1,604 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Dns on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/dns/</link>
+    <description>Recent content in Dns on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 07 Apr 2024 00:15:30 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/dns/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>DNS 基础概念</title>
+      <link>https://blog.jiyi27.com/posts/build-website/001-domain-name-dns-records/</link>
+      <pubDate>Sun, 07 Apr 2024 00:15:30 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/build-website/001-domain-name-dns-records/</guid>
+      <description>&lt;h2 id=&#34;1-dns-hierarchy&#34;&gt;1. DNS Hierarchy&lt;/h2&gt;
+&lt;p&gt;DNS服务器怎么会知道每个域名的IP地址呢？答案是分级查询, 仔细看下面DNS解析过程，每个域名的尾部都多了一个点&lt;code&gt;.&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/060ac4f1fb8e9b0fa6d0d81eea60e23c.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;多出的那个&lt;code&gt;.&lt;/code&gt;是Root Level Domain, 比如&lt;code&gt;www.example.com&lt;/code&gt;真正的名字是&lt;code&gt;www.example.com.root&lt;/code&gt;然后上图就简写为&lt;code&gt;www.example.com.&lt;/code&gt; 因为根域名&lt;code&gt;.root&lt;/code&gt;对于所有域名都是一样的，所以平时是省略的。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;域名的层级结构: &lt;code&gt;hostname.SLD.TLD.root&lt;/code&gt;, &lt;strong&gt;hostname 也叫 subdomain&lt;/strong&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-hostname-vs-sld&#34;&gt;2. HOSTNAME vs SLD&lt;/h2&gt;
+&lt;p&gt;HOSTNAME 和二级域名(SLD)是不一样的, 二级域名是指&lt;code&gt;example.com&lt;/code&gt;里面的&lt;code&gt;example&lt;/code&gt;, 而HOSTNAME是指&lt;code&gt;www.example.com&lt;/code&gt;里面的&lt;code&gt;www&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;HOSTNAME 的作用是为了区分同一个域名下的不同服务, 比如&lt;code&gt;www.example.com&lt;/code&gt;和&lt;code&gt;blog.example.com&lt;/code&gt;是同一个域名下的不同服务, 现在都是采用微服务分布式架构, 即每个服务通常不在一个主机, 这样用户访问&lt;code&gt;www.example.com&lt;/code&gt;和&lt;code&gt;blog.example.com&lt;/code&gt;时就会访问到不同的服务器, 从而提供不同的服务. 如下图可以看出一个 HOSTNAME 可以对应一个 IP:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/001-domain-name-dns-records%2F01.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-dns-records&#34;&gt;3. DNS Records&lt;/h2&gt;
+&lt;h3 id=&#34;31-a-record&#34;&gt;3.1. A Record&lt;/h3&gt;
+&lt;p&gt;常见的 DNS Records 有 &lt;code&gt;A&lt;/code&gt;, &lt;code&gt;CNAME&lt;/code&gt;, &lt;code&gt;TXT&lt;/code&gt;, 其中 &lt;code&gt;A&lt;/code&gt; 记录是最常见的, 用于将域名指向一个 ipv4 IP地址, &lt;code&gt;CNAME&lt;/code&gt; 记录用于将域名指向另一个域名.&lt;/p&gt;
+&lt;p&gt;当你想给域名添加一个 ip 地址时, 只能添加 &lt;code&gt;A&lt;/code&gt; 记录. 添加 A 记录时需要指定 HOSTNAME 和 IP, 其中 &lt;code&gt;HOSTNAME&lt;/code&gt; 可以填&lt;code&gt;@&lt;/code&gt;或者&lt;code&gt;www&lt;/code&gt;或&lt;code&gt;blog&lt;/code&gt;等, &lt;code&gt;@&lt;/code&gt;代表空即不填,&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-dns-hierarchy&#34;&gt;1. DNS Hierarchy&lt;/h2&gt;
+&lt;p&gt;DNS服务器怎么会知道每个域名的IP地址呢？答案是分级查询, 仔细看下面DNS解析过程，每个域名的尾部都多了一个点&lt;code&gt;.&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/060ac4f1fb8e9b0fa6d0d81eea60e23c.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;多出的那个&lt;code&gt;.&lt;/code&gt;是Root Level Domain, 比如&lt;code&gt;www.example.com&lt;/code&gt;真正的名字是&lt;code&gt;www.example.com.root&lt;/code&gt;然后上图就简写为&lt;code&gt;www.example.com.&lt;/code&gt; 因为根域名&lt;code&gt;.root&lt;/code&gt;对于所有域名都是一样的，所以平时是省略的。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;域名的层级结构: &lt;code&gt;hostname.SLD.TLD.root&lt;/code&gt;, &lt;strong&gt;hostname 也叫 subdomain&lt;/strong&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-hostname-vs-sld&#34;&gt;2. HOSTNAME vs SLD&lt;/h2&gt;
+&lt;p&gt;HOSTNAME 和二级域名(SLD)是不一样的, 二级域名是指&lt;code&gt;example.com&lt;/code&gt;里面的&lt;code&gt;example&lt;/code&gt;, 而HOSTNAME是指&lt;code&gt;www.example.com&lt;/code&gt;里面的&lt;code&gt;www&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;HOSTNAME 的作用是为了区分同一个域名下的不同服务, 比如&lt;code&gt;www.example.com&lt;/code&gt;和&lt;code&gt;blog.example.com&lt;/code&gt;是同一个域名下的不同服务, 现在都是采用微服务分布式架构, 即每个服务通常不在一个主机, 这样用户访问&lt;code&gt;www.example.com&lt;/code&gt;和&lt;code&gt;blog.example.com&lt;/code&gt;时就会访问到不同的服务器, 从而提供不同的服务. 如下图可以看出一个 HOSTNAME 可以对应一个 IP:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/001-domain-name-dns-records%2F01.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-dns-records&#34;&gt;3. DNS Records&lt;/h2&gt;
+&lt;h3 id=&#34;31-a-record&#34;&gt;3.1. A Record&lt;/h3&gt;
+&lt;p&gt;常见的 DNS Records 有 &lt;code&gt;A&lt;/code&gt;, &lt;code&gt;CNAME&lt;/code&gt;, &lt;code&gt;TXT&lt;/code&gt;, 其中 &lt;code&gt;A&lt;/code&gt; 记录是最常见的, 用于将域名指向一个 ipv4 IP地址, &lt;code&gt;CNAME&lt;/code&gt; 记录用于将域名指向另一个域名.&lt;/p&gt;
+&lt;p&gt;当你想给域名添加一个 ip 地址时, 只能添加 &lt;code&gt;A&lt;/code&gt; 记录. 添加 A 记录时需要指定 HOSTNAME 和 IP, 其中 &lt;code&gt;HOSTNAME&lt;/code&gt; 可以填&lt;code&gt;@&lt;/code&gt;或者&lt;code&gt;www&lt;/code&gt;或&lt;code&gt;blog&lt;/code&gt;等, &lt;code&gt;@&lt;/code&gt;代表空即不填,&lt;/p&gt;
+&lt;p&gt;一般域名自带默认的 DNS Records, 所以买了域名之后做的第一件事就应该删除这些默认记录, 不然等你又添加了一个A记录, 这时候你的域名就会被解析到多个IP(默认的和你刚添加的), 那浏览器访问你域名的时候, 选择哪个呢? 我查了一下论坛, 有人说是choose randomly, 所以如果你不删除域名所有的默认DNS Records, 那浏览器访问你域名的时候就有可能选择“错误”的ip,&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Yes you can. It is called round-robin DNS, and &lt;strong&gt;the browser just chooses one of them randomly&lt;/strong&gt;. It is a well used method of getting cheap load balancing, but if one host goes down, users will still try to access it. &lt;a href=&#34;https://serverfault.com/q/528742/761923&#34;&gt;https://serverfault.com/q/528742/761923&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;32-cname-record&#34;&gt;3.2. CNAME Record&lt;/h3&gt;
+&lt;p&gt;Use a CNAME record instead of an A record when one domain or subdomain is just another name for a different domain. &lt;strong&gt;All CNAME records must point to a domain, never to an IP address&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;假设你有个主网站 example.com，它有一个A记录指向IP地址 123.45.67.89。若你还想通过 &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt; 访问这个网站，有两个办法,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;再创建一个A记录 host name 写为 www 指向 123.45.67.89, (注意对于 example.com 的A记录 host name 是空).&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;创建一个 CNAME 记录, Host Name 写为 www, 指向 example.com&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;第二种办法的工作原理：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;example.com A记录 -&amp;gt; 123.45.67.89&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt; CNAME记录 -&amp;gt; example.com&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;当用户尝试访问 &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt; 时，DNS解析流程如下：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;DNS查找 &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt; 的记录。&lt;/li&gt;
+&lt;li&gt;找到CNAME记录，了解到 &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt; 是 example.com 的别名。&lt;/li&gt;
+&lt;li&gt;接着，DNS会解析 example.com 的A记录，获取其IP地址 123.45.67.89。&lt;/li&gt;
+&lt;li&gt;用户的请求最终被定向到IP地址 123.45.67.89，也就是 example.com 所在的服务器。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;添加 CNAME 有什么优点呢? 比如你的服务器IP地址发生变化, 此时只需要更新 example.com 的A记录就行了, 如果全都使用A记录，你需要手动更新 example.com 和 &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt; 的 A 记录,&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Github Pages 的 custom domain 就可以使用 CNAME 记录, 即只需简单给你的域名添加一个 CNAME 记录, 指向 &lt;code&gt;username.github.io&lt;/code&gt; 即可, &lt;strong&gt;不用修改任何 NS 服务器&lt;/strong&gt;. 注意添加 CNAME 记录时, 我的 HOSTNAME 填的是 &lt;code&gt;blog&lt;/code&gt;, 即 &lt;code&gt;blog.example.com&lt;/code&gt; 指向 &lt;code&gt;username.github.io&lt;/code&gt;, 你也可以把 HOSTNAME 设置为空, 若为空则代表你的主域名 &lt;code&gt;example.com&lt;/code&gt; 指向 &lt;code&gt;username.github.io&lt;/code&gt;, 根据个人喜好来设置.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/04/f356b3dd152035f92b0ae20335413ab0.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;33-ttl-field&#34;&gt;3.3. TTL Field&lt;/h3&gt;
+&lt;p&gt;另外 DNS Records 有一个字段叫 TTL, 这里介绍一下: Time to Live (TTL) is a field on DNS records that controls how long each record is valid and — as a result — how long it takes for record updates to reach your end users. Longer TTLs speed up DNS lookups by increasing the chance of cached results, but a longer TTL also means that updates to your records take longer to go into effect.&lt;/p&gt;
+&lt;h2 id=&#34;4-总结&#34;&gt;4. 总结&lt;/h2&gt;
+&lt;p&gt;买过来域名, 根据不同情况可能做的修改如下:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;无托管域名, 则直接去你的域名注册商那里添加 DNS Records, 一般是添加 A 记录, 指向你的服务器 IP 地址 即可.&lt;/li&gt;
+&lt;li&gt;若要将域名托管到其他地方 (如 Cloudflare), 则只需要修改域名的 Nameserver 为 Cloudflare 指定的的 Nameserver 即可. 之后在 Cloudflare 上即添加管理不同类似的 DNS Records.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://developers.cloudflare.com/dns/manage-dns-records/reference/ttl/&#34;&gt;Time to Live (TTL) · Cloudflare DNS docs&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cloudflare.com/zh-cn/learning/dns/dns-records/dns-cname-record/&#34;&gt;什么是 DNS CNAME 记录？ | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.educative.io/answers/what-is-dns-hierarchy&#34;&gt;What is DNS Hierarchy?&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>排查实验室电脑无法访问一些网站</title>
+      <link>https://blog.jiyi27.com/posts/bugs/008-computer-lab-cannot-access-youtube/</link>
+      <pubDate>Wed, 22 Nov 2023 21:43:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/008-computer-lab-cannot-access-youtube/</guid>
+      <description>&lt;p&gt;首先可以联网, 谷歌和微软邮箱等其他的一些网站都可访问, 但是访问油管的时候总是会超时,&lt;/p&gt;
+&lt;p&gt;首先想到了是 DNS 服务器的问题, 尝试把电脑的 DNS server 改为 8.8.8.8, 可惜需要管理员权限, 失败&lt;/p&gt;
+&lt;p&gt;后来无聊想着看看解析出来 youtube.com 的实际ip是什么, 使用 nklookup 查了一下, (大概这样, 没在实验室)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ nslookup youtube.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.100.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Name:	youtube.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 142.251.40.206
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;于是访问 &lt;code&gt;142.251.40.206&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ wget -O- 142.251.40.206
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;--2023-11-22 22:23:53--  http://142.251.40.206/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Connecting to 142.251.40.206:80... connected.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;HTTP request sent, awaiting response... &lt;span style=&#34;color:#ae81ff&#34;&gt;301&lt;/span&gt; Moved Permanently
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Location: http://www.google.com/ &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;following&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;--2023-11-22 22:23:53--  http://www.google.com/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Resolving www.google.com &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;www.google.com&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;... 142.250.80.36
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以看到被重定向到了谷歌页面, 当时在实验室也是这种情况, 查了一下, 这确实是正确的地址, 只是&lt;a href=&#34;https://stackoverflow.com/questions/5142030/why-does-the-resolved-ip-of-youtube-com-direct-to-google-com&#34;&gt;谷歌给重定向&lt;/a&gt;了, 所以不是DNS的问题, 那应该就是防火墙的问题, 下次去实验室再看看,&lt;/p&gt;</description>
+      <content>&lt;p&gt;首先可以联网, 谷歌和微软邮箱等其他的一些网站都可访问, 但是访问油管的时候总是会超时,&lt;/p&gt;
+&lt;p&gt;首先想到了是 DNS 服务器的问题, 尝试把电脑的 DNS server 改为 8.8.8.8, 可惜需要管理员权限, 失败&lt;/p&gt;
+&lt;p&gt;后来无聊想着看看解析出来 youtube.com 的实际ip是什么, 使用 nklookup 查了一下, (大概这样, 没在实验室)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ nslookup youtube.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.100.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Name:	youtube.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 142.251.40.206
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;于是访问 &lt;code&gt;142.251.40.206&lt;/code&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ wget -O- 142.251.40.206
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;--2023-11-22 22:23:53--  http://142.251.40.206/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Connecting to 142.251.40.206:80... connected.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;HTTP request sent, awaiting response... &lt;span style=&#34;color:#ae81ff&#34;&gt;301&lt;/span&gt; Moved Permanently
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Location: http://www.google.com/ &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;following&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;--2023-11-22 22:23:53--  http://www.google.com/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Resolving www.google.com &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;www.google.com&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;... 142.250.80.36
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;可以看到被重定向到了谷歌页面, 当时在实验室也是这种情况, 查了一下, 这确实是正确的地址, 只是&lt;a href=&#34;https://stackoverflow.com/questions/5142030/why-does-the-resolved-ip-of-youtube-com-direct-to-google-com&#34;&gt;谷歌给重定向&lt;/a&gt;了, 所以不是DNS的问题, 那应该就是防火墙的问题, 下次去实验室再看看,&lt;/p&gt;
+&lt;p&gt;另外上面 nskookup 返回的是 &lt;a href=&#34;https://davidzhu.xyz/post/networking/006-commands-in-network/&#34;&gt;Non-authoritative answer&lt;/a&gt;, 意思是 ip 地址不是由该域名的 NS 服务器返回的, 而是从 DNS cache获取的, 所以 Non-authoritative answer 并不是代表不安全或者不可靠, 但可能不是最新的, 比如你的域名刚更新了 NS server, 加了层 Cloudflare 的 https 加密代理, 即 &lt;code&gt;your_domain-&amp;gt;proxy-ip-&amp;gt;your_ip&lt;/code&gt;, 而学校的 DNS cache 里缓存的却是你之前的 ip, 即 &lt;code&gt;your_domain -&amp;gt; your_ip&lt;/code&gt;, 那代理就不会生效,&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;去实验室查了一下我域名的NS, 竟然 time-out:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;c: \Users\student&amp;gt;nslookup shaowenzhu.top
+Server: Unknown
+Address:192.168.102.1
+
+DNS request timed out.
+timeout was 2 seconds.
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;查了一下, 看到了一个与我&lt;a href=&#34;https://superuser.com/questions/1303128/why-does-nslookup-return-dns-request-timed-out&#34;&gt;相似的问题&lt;/a&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;DNS request timed out&lt;/em&gt; means NSLookup submitted the query to the DNS server, but did not get a response.&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s possible the DNS server you queried was having a problem and couldn&amp;rsquo;t reply. Network errors could be to blame as well.&lt;/p&gt;
+&lt;p&gt;However, given that you did this from a &amp;ldquo;public computer,&amp;rdquo; the most likely explanation is that &lt;strong&gt;your DNS lookup was blocked by the network&amp;rsquo;s firewall&lt;/strong&gt;. It&amp;rsquo;s common for network administrators to require that DNS lookups originating from nodes on the internal network be done using approved DNS servers. These can either be DNS servers under the administrator&amp;rsquo;s control, or specific public DNS servers selected by the admin.&lt;/p&gt;
+&lt;p&gt;突然想到 DNS 缓存在 Chrome 上也有备份, 于是去查了一下是不是可以修改 DNS server 在 Chrome 上, (在电脑上没有管理员权限),&lt;/p&gt;
+&lt;p&gt;真的有, 具体参考(privacy-security -&amp;gt; Advanced -&amp;gt; Use Secure DNS): &lt;a href=&#34;https://www.minitool.com/news/how-to-change-dns-server-in-google-chrome.html&#34;&gt;How to Change DNS Server in Google Chrome on Computer and Mobile? - MiniTool&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;然后可以在Chrome上通过域名访问我的网站了, 终于不用输入 IP 了每次, nnd&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>DNS Spoofing - GFW</title>
+      <link>https://blog.jiyi27.com/posts/networking/005-gfw-dns/</link>
+      <pubDate>Tue, 31 Oct 2023 15:29:25 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/005-gfw-dns/</guid>
+      <description>&lt;p&gt;声明: 本文只用于学习目的, 请勿用于非法用途.&lt;/p&gt;
+&lt;h2 id=&#34;1-dns-spoofing&#34;&gt;1. DNS spoofing&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/dns/what-is-dns/&#34;&gt;DNS&lt;/a&gt; cache poisoning is the act of entering false information into a DNS cache, so that DNS queries return an incorrect response and users are directed to the wrong websites. DNS cache poisoning is also known as &amp;lsquo;DNS spoofing&amp;rsquo;.&lt;/p&gt;
+&lt;h3 id=&#34;11-dns-caching&#34;&gt;1.1. DNS Caching&lt;/h3&gt;
+&lt;p&gt;Learn more about DNS caching: &lt;a href=&#34;https://davidzhu.xyz/post/networking/002-dns-basics/&#34;&gt;DNS Concepts (NameServer(NS), DNS Records and Caching) - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;12-how-do-attackers-poison-dns-caches&#34;&gt;1.2. How do attackers poison DNS caches?&lt;/h3&gt;
+&lt;p&gt;Attackers can poison DNS caches by impersonating &lt;a href=&#34;https://www.cloudflare.com/learning/dns/dns-server-types/&#34;&gt;DNS nameservers&lt;/a&gt;, making a request to a DNS resolver, and then forging the reply when the DNS resolver queries a nameserver. This is possible because DNS servers use &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/user-datagram-protocol-udp/&#34;&gt;UDP&lt;/a&gt; instead of &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/tcp-ip/&#34;&gt;TCP&lt;/a&gt;, and because currently there is no verification for DNS information.&lt;/p&gt;</description>
+      <content>&lt;p&gt;声明: 本文只用于学习目的, 请勿用于非法用途.&lt;/p&gt;
+&lt;h2 id=&#34;1-dns-spoofing&#34;&gt;1. DNS spoofing&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/dns/what-is-dns/&#34;&gt;DNS&lt;/a&gt; cache poisoning is the act of entering false information into a DNS cache, so that DNS queries return an incorrect response and users are directed to the wrong websites. DNS cache poisoning is also known as &amp;lsquo;DNS spoofing&amp;rsquo;.&lt;/p&gt;
+&lt;h3 id=&#34;11-dns-caching&#34;&gt;1.1. DNS Caching&lt;/h3&gt;
+&lt;p&gt;Learn more about DNS caching: &lt;a href=&#34;https://davidzhu.xyz/post/networking/002-dns-basics/&#34;&gt;DNS Concepts (NameServer(NS), DNS Records and Caching) - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;12-how-do-attackers-poison-dns-caches&#34;&gt;1.2. How do attackers poison DNS caches?&lt;/h3&gt;
+&lt;p&gt;Attackers can poison DNS caches by impersonating &lt;a href=&#34;https://www.cloudflare.com/learning/dns/dns-server-types/&#34;&gt;DNS nameservers&lt;/a&gt;, making a request to a DNS resolver, and then forging the reply when the DNS resolver queries a nameserver. This is possible because DNS servers use &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/user-datagram-protocol-udp/&#34;&gt;UDP&lt;/a&gt; instead of &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/tcp-ip/&#34;&gt;TCP&lt;/a&gt;, and because currently there is no verification for DNS information.&lt;/p&gt;
+&lt;p&gt;DNS Cache Poisoning Process:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/9bac53ae4cf010ddec6d34a15ca5bf7a.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Poisoned DNS Cache:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/5160e98a37841a2eac514a21f56224c9.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;If a DNS resolver receives a forged response, it accepts and caches the data uncritically because there is no way to verify if the information is accurate and comes from a legitimate source.&lt;/p&gt;
+&lt;p&gt;Despite these major points of vulnerability in the DNS caching process, DNS poisoning attacks are not easy. Because the DNS resolver does actually query the authoritative nameserver, attackers have only a few milliseconds to send the fake reply before the real reply from the authoritative nameserver arrives.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The way to prevent this is to set the /etc/host file directly, because checking host file happens before DNS resolution.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/002-host-file-dns-stub-resolver/&#34;&gt;DNS Stub and Recursive Resolver - Config Files - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://www.cloudflare.com/learning/dns/dns-cache-poisoning/&#34;&gt;What is DNS cache poisoning? | DNS spoofing | Cloudflare&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-gfw&#34;&gt;2. GFW&lt;/h2&gt;
+&lt;h3 id=&#34;21-http-劫持&#34;&gt;2.1. HTTP 劫持&lt;/h3&gt;
+&lt;p&gt;原文: &lt;a href=&#34;https://doubibackup.com/6t3mypbm-5.html#comments&#34;&gt;浅谈HTTP劫持、DNS污染的影响及解决办法（仅个人理解） | 逗比根据地&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;HTTP劫持很容易理解，因为HTTP传输协议是明文的，并且我的网站服务器是在海外，要访问我的网站就要通过中国的国际宽带出口，出去与我的网站建立连接。我的网站也是因为关键词的原因在经过出口的时候，被“&lt;strong&gt;检查站：墙&lt;/strong&gt;”扫描到了违规关键词，于是掐断了TCP链接。所以当时用户访问网站会遇到：&lt;strong&gt;链接已重置、该网站已永久移动到其他地址等等。&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;HTTP劫持很容易解决，那就是&lt;strong&gt;加上SSL证书，网站链接全部内容加密&lt;/strong&gt;，这样“检查站：墙”就无法解密数据分析关键词了。但是这不是绝对能解决这个问题的，如果你的网站只是误杀或者违规擦边球，那还好，如果是大型网站，就会特殊对待了。&lt;/p&gt;
+&lt;p&gt;HTTPS在建立加密连接的时候，需要一次握手，也就是达成链接协议建立加密连接，但是这次握手是明文的（建立加密链接首先就是链接双方信任，比如网站的SSL证书是自己签的，或者SSL证书到期或伪造的，在访问这个网站的时候浏览器就会进行提示，表示此网站不安全啥的。）握手是明文的就意味着，如果你的域名被重点关注，即使你加上了SSL证书，也会在首次握手的时候，被关键词匹配然后掐断链接。 learn more: &lt;a href=&#34;https://davidzhu.xyz/post/http/006-https-ssl/&#34;&gt;HTTPS SSL TLS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;22-dns污染投毒&#34;&gt;2.2. DNS污染投毒&lt;/h3&gt;
+&lt;p&gt;我们假设A为用户端也就是你的电脑设备，B为DNS服务器，C为A到B链路中一个节点的网络设备（路由器、交换机、网关等）。&lt;/p&gt;
+&lt;p&gt;然后我们模拟一次被污染的DNS请求过程。&lt;/p&gt;
+&lt;p&gt;A访问一个网站，比如 &lt;code&gt;google.com&lt;/code&gt; ，然后，A向B通过UDP方式发送查询请求，比如查询内容 &lt;code&gt;A google.com&lt;/code&gt; ，这个数据库在前往B的时候要经过数个节点网络设备比如C，然后继续前往DNS服务器B。&lt;/p&gt;
+&lt;p&gt;然而在这个传输过程中，C针对这个数据包进行特征分析，（DNS端口为53，进行特定端口监视扫描，对UDP明文传输的DNS查询请求进行特征和关键词匹配分析，比如“google.com”是关键词，也或者是“A记录”），从而立刻返回一个错误的解析结果（比如返回了 &lt;code&gt;A 233.233.233.233&lt;/code&gt; ）。&lt;/p&gt;
+&lt;p&gt;众所周知，作为链路上的一个节点，网络设备 C 必定比真正的 DNS 服务器 B 更快的返回结果到 用户电脑A，而目前的DNS解析机制策略有一个重要的原则，就是只认第一。因此 节点网络设备C所返回的查询结果就被 用户电脑A当作了最终结果，于是用户电脑A因为获得了错误的IP，导致无法正常访问 &lt;code&gt;google.com &lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;验证污染 我的 doub.ssrshare.usm 主域名虽然在大部分地区解除了DNS污染，但是我的两个SS站域名并没有，所以我尝试对我的SS 子域名进行nslookup测试。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;C:&lt;span style=&#34;color:#ae81ff&#34;&gt;\U&lt;/span&gt;sers&lt;span style=&#34;color:#ae81ff&#34;&gt;\A&lt;/span&gt;dministrator&amp;gt;nslookup ss.dou-bi.com 8.8.8.8
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;服务器: google-public-dns-a.google.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 8.8.8.8
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;非权威应答:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;名称: ss.dou-bi.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Addresses: 200:2:9f6a:794b::
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;8.7.198.45
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;我使用的是谷歌的 8.8.8.8 DNS，但是我得到的A记录 IP却是8.7.198.45，这个明显不是我的IP，看一下其他被DNS污染的域名就会发现都会有这个IP。很明显，我的 ss.dou-bi.com 域名受到了DNS污染。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;解决办法&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;使用加密代理&lt;/strong&gt;，比如Shadowsocks，在加密代理里进行远程DNS解析，或者使用VPN上网。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;修改hosts文件&lt;/strong&gt;，操作系统中Hosts文件的权限优先级高于DNS服务器，操作系统在访问某个域名时，会先检测HOSTS文件，然后再查询DNS服务器。可以在hosts添加受到污染的DNS地址来解决DNS污染和DNS劫持。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;通过一些软件编程处理&lt;/strong&gt;，可以直接忽略返回结果是虚假IP地址的数据包，直接解决DNS污染的问题。如果你是Firefox用户，并且只用Firefox，又懒得折腾，直接打开Firefox的远程DNS解析就行了。在地址栏中输入：&lt;code&gt;about:config&lt;/code&gt;找到 &lt;code&gt;network.proxy.socks_remote_dns&lt;/code&gt; 一项改成true。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;使用DNSCrypt软件&lt;/strong&gt;，此软件与使用的OpenDNS直接建立相对安全的TCP连接并加密请求数据，从而不会被污染。 对于被DNS污染的网站站长来说，最有效的方法就是 换域名或者IP 了。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;23-ip黑名单&#34;&gt;2.3. ip黑名单&lt;/h3&gt;
+&lt;p&gt;即使没有DNS污染 或者 你获得了正确的IP，你就能正常访问这些被屏蔽的网站了吗？&lt;/p&gt;
+&lt;p&gt;不，墙目前已经有了IP黑名单，针对谷歌这种网站已经不再是普通的DNS污染了，因为总会有办法访问被DNS污染的网站（比如指定Hosts）。&lt;/p&gt;
+&lt;p&gt;那么就直接把所有的谷歌IP拉黑不就好了？就算你获得了正确的谷歌IP，但是当你去访问这个IP的时候，墙会发现这个IP存在于黑名单中，于是直接阻断，于是浏览器就会提示：www.google.com 的响应时间过长等等&lt;/p&gt;
+&lt;h2 id=&#34;3-常见代理方式&#34;&gt;3. 常见代理方式&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;VPN
+&lt;ul&gt;
+&lt;li&gt;常见协议: IPSec, OpenVPN, L2TP, WireGuard&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Shadowsocks (代理服务器)
+&lt;ul&gt;
+&lt;li&gt;常见协议: SOCKS5&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;V2Ray (代理服务器)
+&lt;ul&gt;
+&lt;li&gt;常见协议: VMess&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;HTTP 代理 (代理服务器)
+&lt;ul&gt;
+&lt;li&gt;已被封锁, 原因是HTTP代理并不对数据进行加密, 即使流量能够绕过初步的审查，传输的内容仍然是透明的，容易被监控。&lt;/li&gt;
+&lt;li&gt;即使使用 HTTPS 也不会实现全局加密, 在建立 TLS 握手验证时还是需要一个HTTP明文连接&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;了解更多: &lt;a href=&#34;https://superxlcr.github.io/2018/07/01/%E4%B8%8A%E7%BD%91%E9%99%90%E5%88%B6%E5%92%8C%E7%BF%BB%E5%A2%99%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/&#34;&gt;上网限制和翻墙基本原理 | superxlcr&amp;rsquo;s notebook&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Tools Commonly Used in Networking</title>
+      <link>https://blog.jiyi27.com/posts/networking/006-commands-in-network/</link>
+      <pubDate>Tue, 31 Oct 2023 15:23:08 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/006-commands-in-network/</guid>
+      <description>&lt;h2 id=&#34;1-nslookup&#34;&gt;1. &lt;code&gt;nslookup&lt;/code&gt;&lt;/h2&gt;
+&lt;h3 id=&#34;11-query-a-record&#34;&gt;1.1. Query &lt;code&gt;A Record&lt;/code&gt;&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# basic DNS lookup&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nslookup google.com                             
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.2.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Name:	google.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 142.250.81.238
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;12-reverse-dns-look-up&#34;&gt;1.2. Reverse DNS look-up&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nslookup 18.219.46.189                          
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.2.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;189.46.219.18.in-addr.arpa	name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ec2-18-219-46-189.us-east-2.compute.amazonaws.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Authoritative answers can be found from:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;46.219.18.in-addr.arpa	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns1-24-us-east-2.ec2-rdns.amazonaws.com.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;13-query-name-server&#34;&gt;1.3. Query name server&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nslookup -type&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;ns google.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.2.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;google.com	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns1.google.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;google.com	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns3.google.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When using the nslookup utility to query Domain Name System (DNS) servers, you could see the message “Non-authoritative answer.” This tells you that the DNS server you’re asking can’t ensure that it has the official, up-to-date information for the domain name or IP address you’re seeking up and is instead giving you a cached response that it got from another DNS server.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-nslookup&#34;&gt;1. &lt;code&gt;nslookup&lt;/code&gt;&lt;/h2&gt;
+&lt;h3 id=&#34;11-query-a-record&#34;&gt;1.1. Query &lt;code&gt;A Record&lt;/code&gt;&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# basic DNS lookup&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nslookup google.com                             
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.2.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Name:	google.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 142.250.81.238
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;12-reverse-dns-look-up&#34;&gt;1.2. Reverse DNS look-up&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nslookup 18.219.46.189                          
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.2.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;189.46.219.18.in-addr.arpa	name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ec2-18-219-46-189.us-east-2.compute.amazonaws.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Authoritative answers can be found from:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;46.219.18.in-addr.arpa	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns1-24-us-east-2.ec2-rdns.amazonaws.com.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;13-query-name-server&#34;&gt;1.3. Query name server&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ nslookup -type&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;ns google.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		192.168.2.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	192.168.2.1#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;google.com	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns1.google.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;google.com	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns3.google.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When using the nslookup utility to query Domain Name System (DNS) servers, you could see the message “Non-authoritative answer.” This tells you that the DNS server you’re asking can’t ensure that it has the official, up-to-date information for the domain name or IP address you’re seeking up and is instead giving you a cached response that it got from another DNS server.&lt;/p&gt;
+&lt;p&gt;Please note that getting non-authoritative answers doesn&amp;rsquo;t mean incorrect or unreliable. However, if you need the &lt;strong&gt;most accurate and up-to-date information&lt;/strong&gt;, it is recommended to use authoritative DNS servers for queries.&lt;/p&gt;
+&lt;p&gt;Reference:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/nslookup-command-in-linux-with-examples/&#34;&gt;Nslookup Command in Linux with Examples - GeeksforGeeks&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://ioflood.com/blog/what-is-the-meaning-of-non-authoritative-answer-given-by-nslookup-dns-demystified/&#34;&gt;Why is “Non-authoritative answer” given by nslookup? DNS Explained&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;14-get-authoritative-answer&#34;&gt;1.4. Get authoritative answer&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Step 1:&lt;/strong&gt; Use the &lt;code&gt;nslookup&lt;/code&gt; command to query the SOA (Start of Authority) record of the domain name. The SOA record contains information about the authoritative name servers for the domain.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ nslookup -type&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;soa davidzhu.xyz
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Non-authoritative answer:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Authoritative answers can be found from:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;davidzhu.xyz	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns1.dnsowl.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;davidzhu.xyz	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns2.dnsowl.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;davidzhu.xyz	nameserver &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ns3.dnsowl.com.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Step 2:&lt;/strong&gt; Identify the primary name server from previous response:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ nslookup davidzhu.xyz ns1.dnsowl.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Server:		ns1.dnsowl.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address:	162.159.27.173#53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Name:	davidzhu.xyz
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 185.199.108.153
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-dig&#34;&gt;2. &lt;code&gt;dig&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;dig&lt;/strong&gt; command stands for &lt;em&gt;&lt;strong&gt;Domain Information Groper&lt;/strong&gt;&lt;/em&gt;. It is used for retrieving information about DNS name servers. Dig command replaces older tools such as &lt;a href=&#34;https://www.geeksforgeeks.org/nslookup-command-in-linux-with-examples/&#34;&gt;nslooku&lt;/a&gt;p and the &lt;a href=&#34;https://www.geeksforgeeks.org/host-command-in-linux-with-examples/&#34;&gt;host&lt;/a&gt;.&lt;/p&gt;
+&lt;h3 id=&#34;21-query-a-record&#34;&gt;2.1. Query &lt;code&gt;A Record&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;To query domain “A” record with &lt;code&gt;+short&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ dig geeksforgeeks.org +short
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;34.218.62.116
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Specify DNS server:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ dig geeksforgeeks.org +short @8.8.8.8
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;By default, dig command will query the name servers listed in “/etc/resolv.conf” to perform a DNS lookup. We can change it by using @ symbol followed by a hostname or IP address of the name server.&lt;/p&gt;
+&lt;p&gt;Learn more about &lt;code&gt;/etc/resolv.conf&lt;/code&gt; and &lt;code&gt;/etc/hosts&lt;/code&gt;: &lt;a href=&#34;https://davidzhu.xyz/post/networking/002-host-file-dns-stub-resolver/&#34;&gt;DNS Stub and Recursive Resolver - Config Files - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;22-reverse-dns-lookup&#34;&gt;2.2. Reverse DNS lookup&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ dig -x 18.219.46.189 +short
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ec2-18-219-46-189.us-east-2.compute.amazonaws.com.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;23-query-name-server&#34;&gt;2.3. Query name server&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;❯ dig davidzhu.xyz NS +short
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ns1.dnsowl.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ns2.dnsowl.com.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ns3.dnsowl.com.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-dig-vs-nslookup&#34;&gt;3. dig vs nslookup&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;dig&lt;/code&gt; Process:
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;dig&lt;/code&gt; follows the standard DNS resolution process, starting with a query to the &lt;strong&gt;root name servers&lt;/strong&gt; to obtain the list of TLD name servers.&lt;/li&gt;
+&lt;li&gt;It then queries a TLD name server to obtain the authoritative name servers for the domain.&lt;/li&gt;
+&lt;li&gt;After obtaining the &lt;strong&gt;authoritative name servers&lt;/strong&gt;, &lt;code&gt;dig&lt;/code&gt; sends a direct query to one of these name servers to retrieve the A record for the domain.&lt;/li&gt;
+&lt;li&gt;The response obtained from &lt;code&gt;dig&lt;/code&gt; is typically authoritative, as it comes directly from the authoritative name server responsible for the domain.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;nslookup&lt;/code&gt; Process:
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;nslookup&lt;/code&gt; queries the DNS server configured on the local system by default. This DNS server may be provided by the ISP or manually configured.&lt;/li&gt;
+&lt;li&gt;The response from &lt;code&gt;nslookup&lt;/code&gt; may be non-authoritative, indicating that the DNS server providing the response is not the authoritative server for the queried domain. It may have obtained the response from its cache or forwarded the query to another DNS server.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;In summary, &lt;code&gt;dig&lt;/code&gt; directly queries authoritative name servers to obtain DNS information, resulting in authoritative responses. On the other hand, &lt;code&gt;nslookup&lt;/code&gt; queries the local DNS server, which may or may not provide authoritative responses, depending on its configuration and the nature of the query.&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>DNS Concepts (NameServer(NS), DNS Records and Caching)</title>
+      <link>https://blog.jiyi27.com/posts/networking/002-dns-basics/</link>
+      <pubDate>Tue, 31 Oct 2023 09:50:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/002-dns-basics/</guid>
+      <description>&lt;h2 id=&#34;1-dns&#34;&gt;1. DNS&lt;/h2&gt;
+&lt;p&gt;DNS stands for Domain Name System, and it is a distributed hierarchical system that translates human-readable domain names into IP addresses. The process of &lt;strong&gt;DNS resolution&lt;/strong&gt; involves converting a hostname (such as &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt;) into a computer-friendly IP address (such as 192.168.1.1).&lt;/p&gt;
+&lt;p&gt;The main components of the DNS are DNS servers. All DNS servers fall into one of four categories: Recursive resolvers, root nameservers, TLD nameservers, and authoritative nameservers.&lt;/p&gt;
+&lt;h3 id=&#34;11-dns-stub-resolver&#34;&gt;1.1. DNS stub resolver&lt;/h3&gt;
+&lt;p&gt;Before introduce the DNS servers, there is a software runs on the client whcih called DNS stub resolver should be noted.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-dns&#34;&gt;1. DNS&lt;/h2&gt;
+&lt;p&gt;DNS stands for Domain Name System, and it is a distributed hierarchical system that translates human-readable domain names into IP addresses. The process of &lt;strong&gt;DNS resolution&lt;/strong&gt; involves converting a hostname (such as &lt;a href=&#34;https://www.example.com&#34;&gt;www.example.com&lt;/a&gt;) into a computer-friendly IP address (such as 192.168.1.1).&lt;/p&gt;
+&lt;p&gt;The main components of the DNS are DNS servers. All DNS servers fall into one of four categories: Recursive resolvers, root nameservers, TLD nameservers, and authoritative nameservers.&lt;/p&gt;
+&lt;h3 id=&#34;11-dns-stub-resolver&#34;&gt;1.1. DNS stub resolver&lt;/h3&gt;
+&lt;p&gt;Before introduce the DNS servers, there is a software runs on the client whcih called DNS stub resolver should be noted.&lt;/p&gt;
+&lt;p&gt;DNS stub resolver runs on the client machine, which is used to initiate DNS queries, and it sends the DNS query to the recursive resolver, which then performs the actual DNS resolution process (usually provided by your internet service provider (ISP) or a public DNS resolver like Google&amp;rsquo;s 8.8.8.8 or Cloudflare&amp;rsquo;s 1.1.1.1).&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/network/002-dns/&#34;&gt;DNS Stub and Recursive Resolver - Config Files - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;12-recursive-resolver&#34;&gt;1.2. Recursive resolver&lt;/h3&gt;
+&lt;p&gt;As we mentioned above, recursive resolver performs the actual &lt;strong&gt;DNS resolution&lt;/strong&gt; process, and it&amp;rsquo;s a DNS server actually, usually provided by your internet service provider (ISP) or a public DNS resolver like Google&amp;rsquo;s &lt;code&gt;8.8.8.8&lt;/code&gt; or Cloudflare&amp;rsquo;s &lt;code&gt;1.1.1.1&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;A recursive resolver (also known as a DNS recursor) is the first stop in a DNS query. The recursive resolver acts as a middleman between a client and a DNS nameserver. When a recursive resolver receives a query from a stub resolver, a recursive resolver will either respond with cached data, or send a request to a &lt;em&gt;root nameserver&lt;/em&gt;, followed by another request to a &lt;em&gt;TLD nameserver&lt;/em&gt;, and then one last request to an &lt;em&gt;authoritative nameserver&lt;/em&gt;. After receiving a response from the authoritative nameserver containing the requested IP address, the recursive resolver then sends a response to the client.&lt;/p&gt;
+&lt;p&gt;During this process, &lt;strong&gt;the recursive resolver will cache information received from authoritative nameservers&lt;/strong&gt;. When a client requests the IP address of a domain name that was recently requested by another client, the resolver can circumvent the process of communicating with the nameservers, and just deliver the client the requested record from its cache.&lt;/p&gt;
+&lt;h3 id=&#34;13-root-nameserver--tld-nameserver&#34;&gt;1.3. Root nameserver &amp;amp; TLD nameserver&lt;/h3&gt;
+&lt;p&gt;The 13 DNS root nameservers are known to every recursive resolver, and they are the first stop in a recursive resolver’s quest for DNS records. A root server accepts a recursive resolver’s query which includes a domain name, and the root nameserver responds by directing the recursive resolver to a TLD nameserver, based on the extension of that domain (.com, .net, .org, etc.).&lt;/p&gt;
+&lt;p&gt;A TLD nameserver maintains information for all the domain names that share a common domain extension, such as .com, .net, or whatever comes after the last dot in a URL. For example, a .com TLD nameserver contains information for every website that ends in ‘.com’. If a user was searching for google.com, after receiving a response from a root nameserver, the recursive resolver would then send a query to a .com TLD nameserver, which would respond by pointing to the authoritative nameserver (see below) for that domain.&lt;/p&gt;
+&lt;h3 id=&#34;14-authoritative-nameserver&#34;&gt;1.4. Authoritative nameserver&lt;/h3&gt;
+&lt;p&gt;When a recursive resolver &lt;strong&gt;receives a response from&lt;/strong&gt; a TLD nameserver, that response will direct the resolver to an authoritative nameserver.&lt;/p&gt;
+&lt;p&gt;The authoritative nameserver contains information specific to the domain name it serves (e.g. google.com) and it can provide a recursive resolver with the IP address of that server found in the &lt;a href=&#34;https://www.cloudflare.com/learning/dns/dns-records/dns-a-record/&#34;&gt;DNS A record&lt;/a&gt;, or if the domain has a &lt;a href=&#34;https://www.cloudflare.com/learning/dns/dns-records/dns-cname-record/&#34;&gt;CNAME record&lt;/a&gt; (alias) it will provide the recursive resolver with an alias domain, at which point the recursive resolver will have to perform a whole new DNS lookup to procure a record from an authoritative nameserver (often an A record containing an IP address).&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;DNS A record is actually a map between the domain name and its ipv4 address.&lt;/p&gt;
+&lt;p&gt;DNS CNAME record is an alias for that domain.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;After buy a domain on a website, the most common operations we use are that &lt;strong&gt;change its nameservers&lt;/strong&gt; and &lt;strong&gt;update its DNS records&lt;/strong&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/c9d1480f89adaf900fcc9d104cb8e921.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Here, Change the NameServers option if to change the &lt;strong&gt;authoritative nameserver&lt;/strong&gt; of your domain, and update the DNS records is to set ip address (A record) or alias (CNAME record) for your domain.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/660f9f8211ebaeac8ffea3c050c94d78.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-dns-queries&#34;&gt;2. DNS queries&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Recursive query&lt;/strong&gt; - In a recursive query, a DNS client requires that a DNS server (typically a DNS recursive resolver) will respond to the client with either the requested resource record or an error message if the resolver can&amp;rsquo;t find the record.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Iterative query&lt;/strong&gt; - in this situation the DNS client will allow a DNS server to return the best answer it can.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Non-recursive query&lt;/strong&gt;: learn more: &lt;a href=&#34;https://www.cloudflare.com/learning/dns/what-is-dns/&#34;&gt;What is DNS? | How DNS works | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;3-dns-caching&#34;&gt;3. DNS caching&lt;/h2&gt;
+&lt;h3 id=&#34;31-browser-dns-caching&#34;&gt;3.1. Browser DNS caching&lt;/h3&gt;
+&lt;p&gt;Modern web browsers are designed by default to cache DNS records for a set amount of time. The purpose here is obvious; the closer the DNS caching occurs to the web browser, the fewer processing steps must be taken in order to check the cache and make the correct requests to an IP address. When a request is made for a DNS record, the browser cache is the first location checked for the requested record.&lt;/p&gt;
+&lt;p&gt;In Chrome, you can see the status of your DNS cache by going to &lt;code&gt;chrome://net-internals/#dns&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/6666ce8db7adb7bc4e333d94ae70cb1d.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;h4 id=&#34;32-operating-system-os-level-dns-caching&#34;&gt;3.2. Operating system (OS) level DNS caching&lt;/h4&gt;
+&lt;p&gt;The operating system level DNS resolver is the second and last local stop before a DNS query leaves your machine. The process inside your operating system that is designed to handle this query is commonly called a “&lt;strong&gt;stub resolver&lt;/strong&gt;” or &lt;strong&gt;DNS client&lt;/strong&gt;. When a stub resolver gets a request from an application, it first checks its own cache to see if it has the record. If it does not, it then sends a DNS query (with a recursive flag set), outside the local network to a DNS recursive resolver inside the Internet service provider (ISP).&lt;/p&gt;
+&lt;p&gt;When the recursive resolver inside the ISP receives a DNS query, like all previous steps, it will also check to see if the requested host-to-IP-address translation is already stored inside its local persistence layer.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://www.cloudflare.com/learning/dns/what-is-dns/&#34;&gt;What is DNS? | How DNS works | Cloudflare&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that checking &lt;code&gt;/etc/hosts&lt;/code&gt; happens before DNS.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;33-recursive-resolver-caching&#34;&gt;3.3. Recursive resolver caching&lt;/h3&gt;
+&lt;p&gt;We have mentioned above, during DNS resolution process, &lt;strong&gt;the recursive resolver will cache information received from authoritative nameservers&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;A DNS resolver will save responses to IP address queries for a certain amount of time. In this way, the resolver can respond to future queries much more quickly, without needing to communicate with the many servers involved in the typical DNS resolution process.&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Common Network Attacks</title>
+      <link>https://blog.jiyi27.com/posts/networking/010-common-attacks/</link>
+      <pubDate>Mon, 30 Oct 2023 22:44:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/010-common-attacks/</guid>
+      <description>&lt;h2 id=&#34;1-man-in-the-middle-attack&#34;&gt;1. Man-in-the-middle attack&lt;/h2&gt;
+&lt;p&gt;Learn more:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/002-ssh/&#34;&gt;https://davidzhu.xyz/post/cs-basics/002-ssh/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/003-ssl-secure-communication/#4-details-in-tls-handshake---avoid-man-in-middle-attack&#34;&gt;HTTPS SSL TLS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-ddos-attack&#34;&gt;2. DDoS attack&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/004-ddos-attack/&#34;&gt;DDoS Attack - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-csrf-attack&#34;&gt;3. CSRF attack&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/http/007-csrf-attack/&#34;&gt;CSRF Attack and CORS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-ssl-stripping&#34;&gt;4. SSL stripping&lt;/h2&gt;
+&lt;p&gt;SSL stripping attacks, also known as SSL strip, SSL downgrade, or HTTP downgrade attacks, strip the encryption offered by HTTPS, reducing the connection to the less-secure HTTP.&lt;/p&gt;
+&lt;p&gt;In order to &lt;a href=&#34;https://avicoder.me/2016/02/22/SSLstrip-for-newbies/&#34;&gt;“strip” the SSL&lt;/a&gt;, an attacker intervenes in the redirection of the HTTP to the secure HTTPS protocol and intercepts a request from the user to the server. The attacker will then continue to establish an HTTPS connection between himself and the server, and an unsecured HTTP connection with the user, acting as a “bridge” between them.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-man-in-the-middle-attack&#34;&gt;1. Man-in-the-middle attack&lt;/h2&gt;
+&lt;p&gt;Learn more:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/002-ssh/&#34;&gt;https://davidzhu.xyz/post/cs-basics/002-ssh/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/003-ssl-secure-communication/#4-details-in-tls-handshake---avoid-man-in-middle-attack&#34;&gt;HTTPS SSL TLS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-ddos-attack&#34;&gt;2. DDoS attack&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/004-ddos-attack/&#34;&gt;DDoS Attack - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-csrf-attack&#34;&gt;3. CSRF attack&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/http/007-csrf-attack/&#34;&gt;CSRF Attack and CORS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-ssl-stripping&#34;&gt;4. SSL stripping&lt;/h2&gt;
+&lt;p&gt;SSL stripping attacks, also known as SSL strip, SSL downgrade, or HTTP downgrade attacks, strip the encryption offered by HTTPS, reducing the connection to the less-secure HTTP.&lt;/p&gt;
+&lt;p&gt;In order to &lt;a href=&#34;https://avicoder.me/2016/02/22/SSLstrip-for-newbies/&#34;&gt;“strip” the SSL&lt;/a&gt;, an attacker intervenes in the redirection of the HTTP to the secure HTTPS protocol and intercepts a request from the user to the server. The attacker will then continue to establish an HTTPS connection between himself and the server, and an unsecured HTTP connection with the user, acting as a “bridge” between them.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/b0158611a93323eae52c342681549a60.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;How can the SSL strip trick both the browser and the website’s server? The SSL strip takes advantage of the way most users come to SSL websites. The majority of visitors connect to a website’s page that redirects through a 302 redirect, or they arrive on an SSL page via a link from a non-SSL site. If the victim wants, for instance, to buy a product and types the URL &lt;a href=&#34;https://www.buyme.com&#34;&gt;www.buyme.com&lt;/a&gt; in the address bar, the browser connects to the attacker&amp;rsquo;s machine and waits for a response from the server. In an SSL strip, the attacker, in turn, forwards the victim’s request to the online shop’s server and receives the secure HTTPS payment page. For example &lt;a href=&#34;https://www.buyme.com&#34;&gt;https://www.buyme.com&lt;/a&gt;. At this point, the attacker has complete control over the secure payment page. He downgrades it from HTTPS to HTTP and sends it back to the victim’s browser. The browser is now redirected to &lt;a href=&#34;http://www.buyme.com&#34;&gt;http://www.buyme.com&lt;/a&gt;. From now onward, all the victim’s data will be transferred in plain text format, and the attacker will be able to intercept it. Meanwhile, the website’s server will think that it has successfully established the secure connection, which indeed it has—but with the attacker’s machine, not the victim’s.&lt;/p&gt;
+&lt;h3 id=&#34;41-enable-ssl-sitewide-at-all-websites&#34;&gt;4.1. Enable SSL sitewide at all websites&lt;/h3&gt;
+&lt;p&gt;To mitigate this threat, financial institutions and technology firms have &lt;a href=&#34;https://venafi.com/blog/https-should-be-implemented-everywhereincluding-static-websites/&#34;&gt;already enabled&lt;/a&gt; HTTPS on a site-wide basis. Enabling HTTPS encrypts the connection between a browser and the website, thereby securing sensitive data transmissions. Therefore it makes perfect sense for banks and high-profile technology firms to enable HTTPS on their dynamic websites because of the transaction of important and sensitive information.&lt;/p&gt;
+&lt;h3 id=&#34;42-why-enable-hsts&#34;&gt;4.2. Why enable HSTS?&lt;/h3&gt;
+&lt;p&gt;In addition to enabling HTTPS on a site-wide basis, corporations should weigh the benefits of enabling &lt;a href=&#34;https://www.globalsign.com/en/blog/what-is-hsts-and-how-do-i-use-it/&#34;&gt;HSTS&lt;/a&gt; (HTTP Strict Transport Security), which is a web security policy mechanism that helps to protect websites against SSL stripping attacks and cookie hijacking. &lt;strong&gt;It allows&lt;/strong&gt; &lt;strong&gt;web servers to declare that&lt;/strong&gt; web browsers should interact with them using only secure HTTPS connections, and never via the insecure HTTP protocol.&lt;/p&gt;
+&lt;p&gt;When a web application issues HSTS Policy to user browsers, conformant user browsers will &lt;a href=&#34;https://www.owasp.org/index.php/HTTP_Strict_Transport_Security_Cheat_Sheet&#34;&gt;automatically redirect&lt;/a&gt; any insecure HTTP requests to HTTPS for the target website. In addition, when a man-in-the-middle attacker attempts to intercept traffic from a victim using an invalid certificate, HSTS does not allow the user to override the invalid certificate warning message. By having a HSTS policy installed, it will be nearly impossible for the attackers to intercept any information at all!&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://venafi.com/blog/what-are-ssl-stripping-attacks/&#34;&gt;What Are SSL Stripping Attacks? | Venafi&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;5-dns&#34;&gt;5. DNS&lt;/h2&gt;
+&lt;h3 id=&#34;51-dns-hijacking&#34;&gt;5.1. DNS hijacking&lt;/h3&gt;
+&lt;p&gt;To prevent DNS hijacking, first, you have to know the different kinds of attacks. DNS hijacking can take four different forms:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Local DNS hijacking:&lt;/strong&gt; An attacker installs &lt;a href=&#34;https://www.fortinet.com/resources/cyberglossary/trojan-horse-virus&#34;&gt;Trojan software&lt;/a&gt; on a user&amp;rsquo;s computer, then modifies the local DNS settings (cahnge its DNS server to a Rogue DNS server).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DNS hijacking using a router:&lt;/strong&gt; Many routers have weak firmware or use the default passwords they were shipped with. Attackers can take advantage of this to hack a router and change its DNS settings, which will affect everyone that uses that router.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Man-in-the-middle (MITM) attacks:&lt;/strong&gt; Attackers use &lt;a href=&#34;https://www.fortinet.com/resources/cyberglossary/man-in-the-middle-attack&#34;&gt;man-in-the-middle attack techniques&lt;/a&gt; to intercept communications between users and a &lt;a href=&#34;https://www.fortinet.com/resources/cyberglossary/dynamic-dns&#34;&gt;DNS server&lt;/a&gt;. They then direct the target to malicious websites.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Learn more &lt;a href=&#34;https://www.fortinet.com/resources/cyberglossary/dns-hijacking&#34;&gt;What Is DNS Hijacking? How to Detect &amp;amp; Prevent It | Fortinet&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;52-dns-spoofing-vs-dns-cache-poisoning&#34;&gt;5.2. DNS spoofing vs DNS (cache) poisoning&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;DNS Poisoning&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Definition&lt;/strong&gt;: The attacker inserts false address records into the DNS server&amp;rsquo;s cache, causing the server to return incorrect IP addresses for domain names.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Target&lt;/strong&gt;: The attack is on the DNS server.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Example&lt;/strong&gt;: If &lt;code&gt;www.example.com&lt;/code&gt; is supposed to resolve to IP &lt;code&gt;1.2.3.4&lt;/code&gt;, in a DNS poisoning attack, the DNS server might be tricked into resolving it to &lt;code&gt;5.6.7.8&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;DNS Spoofing&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Definition&lt;/strong&gt;: The attacker intercepts and responds to DNS requests with false information, usually &lt;strong&gt;before&lt;/strong&gt; the legitimate response is received.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Example&lt;/strong&gt;: When a user tries to access &lt;code&gt;www.example.com&lt;/code&gt;, an attacker might intercept this request and send a fake response directing the user to IP &lt;code&gt;5.6.7.8&lt;/code&gt; instead of the real IP &lt;code&gt;1.2.3.4&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/005-gfw-dns/&#34;&gt;GFW and DNS Poisoning - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;53-others&#34;&gt;5.3. Others&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;DNS Poisoning vs DNS Spoofing&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;DNS Poisoning: Inject false DNS info to the real server&amp;rsquo;s cache.&lt;/li&gt;
+&lt;li&gt;DNS Spoofing: Send false response back with a malicious DNS server.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Purpose of MAC Address Spoofing&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;To make a switch forward packets to an attacker&amp;rsquo;s device by mimicking a legitimate MAC address.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Use of ICMP Redirects in Man-in-the-Middle Attacks&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;An attacker sends forged &amp;ldquo;ICMP redirect messages&amp;rdquo; to mislead a host into changing its routing table, diverting traffic through the attacker&amp;rsquo;s machine.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;6-xss-attack&#34;&gt;6. XSS Attack&lt;/h2&gt;
+&lt;p&gt;可以到 &lt;a href=&#34;https://jiyi27.com/post/networking/009-xss-attack/&#34;&gt;XSS 攻击&lt;/a&gt; 查看&lt;/p&gt;
+&lt;h2 id=&#34;7-缓存投毒&#34;&gt;7. 缓存投毒&lt;/h2&gt;
+&lt;p&gt;可以到 &lt;a href=&#34;https://jiyi27.com/post/networking/010-%E7%BC%93%E5%AD%98%E6%8A%95%E6%AF%92/&#34;&gt;缓存投毒&lt;/a&gt; 查看&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>DNS Stub and Recursive Resolver - Config Files</title>
+      <link>https://blog.jiyi27.com/posts/networking/002-host-file-dns-stub-resolver/</link>
+      <pubDate>Fri, 13 Oct 2023 14:03:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/002-host-file-dns-stub-resolver/</guid>
+      <description>&lt;h2 id=&#34;1-etchosts-and-etcresolvconf&#34;&gt;1. &lt;code&gt;/etc/hosts&lt;/code&gt; and &lt;code&gt;/etc/resolv.conf&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;On Linux or a Mac, if you add this to &lt;code&gt;/etc/hosts&lt;/code&gt;, facebook no longer exists:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;127.0.0.1 facebook.com
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;/etc/hosts&lt;/code&gt; is used to resolve hostnames to IP addresses on a local machine. They&amp;rsquo;re &lt;strong&gt;looked at first&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Now&amp;hellip; If you don&amp;rsquo;t have an entry for a host in your host file, you need to ask someone what the IP is. That comes from a &lt;strong&gt;resolver&lt;/strong&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;2-local-resolver--recursive-resolver&#34;&gt;2. Local resolver &amp;amp; recursive resolver&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Recursive resolver usually located at remote acts as a DNS server, whereas, a DNS stub resolver running on client devices.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-etchosts-and-etcresolvconf&#34;&gt;1. &lt;code&gt;/etc/hosts&lt;/code&gt; and &lt;code&gt;/etc/resolv.conf&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;On Linux or a Mac, if you add this to &lt;code&gt;/etc/hosts&lt;/code&gt;, facebook no longer exists:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;127.0.0.1 facebook.com
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;/etc/hosts&lt;/code&gt; is used to resolve hostnames to IP addresses on a local machine. They&amp;rsquo;re &lt;strong&gt;looked at first&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Now&amp;hellip; If you don&amp;rsquo;t have an entry for a host in your host file, you need to ask someone what the IP is. That comes from a &lt;strong&gt;resolver&lt;/strong&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;2-local-resolver--recursive-resolver&#34;&gt;2. Local resolver &amp;amp; recursive resolver&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Recursive resolver usually located at remote acts as a DNS server, whereas, a DNS stub resolver running on client devices.&lt;/p&gt;
+&lt;p&gt;Most Internet users use a recursive resolver provided by their ISP, but there are other options available; for example &lt;a href=&#34;https://www.cloudflare.com/learning/dns/what-is-1.1.1.1/&#34;&gt;Cloudflare&amp;rsquo;s 1.1.1.1&lt;/a&gt; or 8.8.8.8 provided by Google.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ cat /etc/resolv.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# This is /run/systemd/resolve/stub-resolv.conf managed by man:systemd-resolved(8).&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Do not edit.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;nameserver 127.0.0.53
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;127.0.0.53&lt;/code&gt; is the DNS server address, you can also manually change it to the IP of any DNS server (for example, change it to the famous Google DNS 8.8.8.8).&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;127.x.x.x&lt;/code&gt; are loopback addresses that point to the local machine and are bound to the &lt;em&gt;&lt;strong&gt;&amp;ldquo;lo&amp;rdquo;&lt;/strong&gt;&lt;/em&gt; (loopback) network device. So who is this DNS server &lt;code&gt;127.0.0.53&lt;/code&gt;?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ sudo netstat -anp | grep 127.0.0.53
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;tcp        &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; 127.0.0.53:53           0.0.0.0:*               LISTEN      96729/systemd-resol 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;udp        &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;      &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; 127.0.0.53:53           0.0.0.0:*                           96729/systemd-resol 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;From the output, we can see that the process uses  &lt;code&gt;127.0.0.53:53&lt;/code&gt;  called &lt;em&gt;&lt;strong&gt;systemd-resolve&lt;/strong&gt;&lt;/em&gt;. In &lt;code&gt;/etc/resolv.conf&lt;/code&gt; it says that it&amp;rsquo;s maintained by the &lt;em&gt;&lt;strong&gt;systemd-resolved&lt;/strong&gt;&lt;/em&gt; service. So we can try to check its status with systemctl:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ systemctl status systemd-resolved
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;● systemd-resolved.service - Network Name Resolution
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     Loaded: loaded &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;/lib/systemd/system/systemd-resolved.service; enabled; vendor preset: enabled&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     Active: active &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;running&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; since Tue 2023-10-10 01:56:13 UTC; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt; days ago
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     ....
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;We have know that the current DNS server on this machine is &lt;em&gt;&lt;strong&gt;systemd-resolve&lt;/strong&gt;&lt;/em&gt; which a DNS stub (client). So, what is the IP address of the actual DNS server? We can use the following command to check:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# $ systemd-resolve --status | grep &amp;#34;DNS Servers&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# In systemd 239 &amp;#39;systemd-resolve&amp;#39; has been renamed to &amp;#39;resolvectl&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ resolvectl status | grep &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;DNS Servers&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       DNS Servers: 172.31.0.2
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ resolvectl status
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Global
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       Protocols: -LLMNR -mDNS -DNSOverTLS DNSSEC&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;no/unsupported
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;resolv.conf mode: stub
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Link &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;eth0&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    Current Scopes: DNS
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         Protocols: +DefaultRoute +LLMNR -mDNS -DNSOverTLS DNSSEC&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;no/unsupported
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Current DNS Server: 172.31.0.2
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       DNS Servers: 172.31.0.2
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        DNS Domain: us-east-2.compute.internal
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;&lt;strong&gt;DNS stub resolver&lt;/strong&gt;&lt;/em&gt; used to initiate DNS queries, and it sends the DNS query to the &lt;strong&gt;recursive resolver&lt;/strong&gt;, which then performs the actual DNS resolution process (usually provided by an internet service provider or a public DNS resolver like Google&amp;rsquo;s 8.8.8.8).&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;References: &lt;a href=&#34;https://zhuanlan.zhihu.com/p/101275725&#34;&gt;https://zhuanlan.zhihu.com/p/101275725&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

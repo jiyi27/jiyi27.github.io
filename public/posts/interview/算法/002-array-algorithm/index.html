@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>算法题 数组系列 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 列表常用操作 # 844. Backspace String Compare def backspaceCompare(s, t): s_arr = [] t_arr = [] for ch in s: if ch != &#39;#&#39;: s_arr.append(ch) # 列表可以直接 append elif s_arr: s_arr.pop() # pop 之前要检查是否为空 for ch in t: if ch != &#39;#&#39;: t_arr.append(ch) elif t_arr: t_arr.pop() return t_arr == s_arr # 直接比较列表即里面的字符是否顺序全部相同 # 977. Squares of a Sorted Array def sortedSquares(self, nums: List[int]) -&gt; List[int]: n = len(nums) ans = [0] * n # 初始化 方便 index 访问 start, end = 0, n - 1 # 非常聪明的遍历方法, 不用重新倒序处理数组了 for i in range(n - 1, -1, -1): if abs(nums[start]) &gt;= abs(nums[end]): ans[i] = nums[start] * nums[start] start &#43;= 1 else: ans[i] = nums[end] * nums[end] end -= 1 return ans matrix = [[0] * n for _ in range(m)] # 初始化 n×m 矩阵 # 切片 反转整个字符串, 切片和操作不会改变原字符串, # 它们会返回一个新字符串, 因为字符串 immutable s = &#34;abcdefg&#34; print(s[::-1]) # &#34;gfedcba&#34; s = &#34;abcdefg&#34; print(s[::-2]) # &#34;geca&#34; -&gt; 每隔2个字符倒序取 s = &#34;abcdefg&#34; print(s[:4]) # &#34;abcd&#34; -&gt; 取前4个字符 print(s[4:]) # &#34;efg&#34; -&gt; 从索引4开始取到结尾 s = &#34;abcdefg&#34; k = 3 result = s[k:] &#43; s[:k] # 交换前 k 个字符和剩余部分 print(result) # &#34;defgabc&#34; # 541. 反转字符串 II def reverseStr(self, s: str, k: int) -&gt; str: s = list(s) for i in range(0, len(s), k * 2): s[i: i &#43; k] = s[i: i &#43; k][::-1] # 创建该切片的反转副本 return &#39;&#39;.join(s) 2. 滑动窗口&#43;暴力遍历 - 209 长度最小的子数组 注意子数组的意思是从一个数组任意截取连续的一段子数组, 不是从里面任取数字然后组合, 子序列也是这个概念,
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/002-array-algorithm/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="算法题 数组系列">
+<meta property="og:description" content="1. 列表常用操作 # 844. Backspace String Compare def backspaceCompare(s, t): s_arr = [] t_arr = [] for ch in s: if ch != &#39;#&#39;: s_arr.append(ch) # 列表可以直接 append elif s_arr: s_arr.pop() # pop 之前要检查是否为空 for ch in t: if ch != &#39;#&#39;: t_arr.append(ch) elif t_arr: t_arr.pop() return t_arr == s_arr # 直接比较列表即里面的字符是否顺序全部相同 # 977. Squares of a Sorted Array def sortedSquares(self, nums: List[int]) -&gt; List[int]: n = len(nums) ans = [0] * n # 初始化 方便 index 访问 start, end = 0, n - 1 # 非常聪明的遍历方法, 不用重新倒序处理数组了 for i in range(n - 1, -1, -1): if abs(nums[start]) &gt;= abs(nums[end]): ans[i] = nums[start] * nums[start] start &#43;= 1 else: ans[i] = nums[end] * nums[end] end -= 1 return ans matrix = [[0] * n for _ in range(m)] # 初始化 n×m 矩阵 # 切片 反转整个字符串, 切片和操作不会改变原字符串, # 它们会返回一个新字符串, 因为字符串 immutable s = &#34;abcdefg&#34; print(s[::-1]) # &#34;gfedcba&#34; s = &#34;abcdefg&#34; print(s[::-2]) # &#34;geca&#34; -&gt; 每隔2个字符倒序取 s = &#34;abcdefg&#34; print(s[:4]) # &#34;abcd&#34; -&gt; 取前4个字符 print(s[4:]) # &#34;efg&#34; -&gt; 从索引4开始取到结尾 s = &#34;abcdefg&#34; k = 3 result = s[k:] &#43; s[:k] # 交换前 k 个字符和剩余部分 print(result) # &#34;defgabc&#34; # 541. 反转字符串 II def reverseStr(self, s: str, k: int) -&gt; str: s = list(s) for i in range(0, len(s), k * 2): s[i: i &#43; k] = s[i: i &#43; k][::-1] # 创建该切片的反转副本 return &#39;&#39;.join(s) 2. 滑动窗口&#43;暴力遍历 - 209 长度最小的子数组 注意子数组的意思是从一个数组任意截取连续的一段子数组, 不是从里面任取数字然后组合, 子序列也是这个概念,
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/002-array-algorithm/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-02-02 15:28:52 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E7%AE%97%E6%B3%95/002-array-algorithm/">算法题 数组系列</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-02-02</time><span class="post-reading-time">7 分钟阅读 (1330 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E7%AE%97%E6%B3%95%E9%9D%A2%E8%AF%95/">算法面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-列表常用操作">1. 列表常用操作<a href="#1-列表常用操作" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># 844. Backspace String Compare</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">backspaceCompare</span>(s, t):
+</span></span><span style="display:flex;"><span>    s_arr <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    t_arr <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> ch <span style="color:#f92672">in</span> s:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> ch <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;#&#39;</span>:
+</span></span><span style="display:flex;"><span>            s_arr<span style="color:#f92672">.</span>append(ch) <span style="color:#75715e"># 列表可以直接 append</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> s_arr:
+</span></span><span style="display:flex;"><span>            s_arr<span style="color:#f92672">.</span>pop() <span style="color:#75715e"># pop 之前要检查是否为空</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> ch <span style="color:#f92672">in</span> t:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> ch <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;#&#39;</span>:
+</span></span><span style="display:flex;"><span>            t_arr<span style="color:#f92672">.</span>append(ch)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> t_arr:
+</span></span><span style="display:flex;"><span>            t_arr<span style="color:#f92672">.</span>pop()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> t_arr <span style="color:#f92672">==</span> s_arr <span style="color:#75715e"># 直接比较列表即里面的字符是否顺序全部相同</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># 977. Squares of a Sorted Array</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">sortedSquares</span>(self, nums: List[int]) <span style="color:#f92672">-&gt;</span> List[int]:
+</span></span><span style="display:flex;"><span>    n <span style="color:#f92672">=</span> len(nums)
+</span></span><span style="display:flex;"><span>    ans <span style="color:#f92672">=</span> [<span style="color:#ae81ff">0</span>] <span style="color:#f92672">*</span> n  <span style="color:#75715e"># 初始化 方便 index 访问</span>
+</span></span><span style="display:flex;"><span>    start, end <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>, n <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 非常聪明的遍历方法, 不用重新倒序处理数组了</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(n <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> abs(nums[start]) <span style="color:#f92672">&gt;=</span> abs(nums[end]):
+</span></span><span style="display:flex;"><span>            ans[i] <span style="color:#f92672">=</span> nums[start] <span style="color:#f92672">*</span> nums[start]
+</span></span><span style="display:flex;"><span>            start <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            ans[i] <span style="color:#f92672">=</span> nums[end] <span style="color:#f92672">*</span> nums[end]
+</span></span><span style="display:flex;"><span>            end <span style="color:#f92672">-=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> ans
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span> matrix <span style="color:#f92672">=</span> [[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">*</span> n <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(m)]  <span style="color:#75715e"># 初始化 n×m 矩阵</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># 切片 反转整个字符串, 切片和操作不会改变原字符串, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 它们会返回一个新字符串, 因为字符串 immutable</span>
+</span></span><span style="display:flex;"><span>s <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;abcdefg&#34;</span>
+</span></span><span style="display:flex;"><span>print(s[::<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>])  <span style="color:#75715e"># &#34;gfedcba&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>s <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;abcdefg&#34;</span>
+</span></span><span style="display:flex;"><span>print(s[::<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>])  <span style="color:#75715e"># &#34;geca&#34;  -&gt; 每隔2个字符倒序取</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>s <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;abcdefg&#34;</span>
+</span></span><span style="display:flex;"><span>print(s[:<span style="color:#ae81ff">4</span>])   <span style="color:#75715e"># &#34;abcd&#34;  -&gt; 取前4个字符</span>
+</span></span><span style="display:flex;"><span>print(s[<span style="color:#ae81ff">4</span>:])   <span style="color:#75715e"># &#34;efg&#34;   -&gt; 从索引4开始取到结尾</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>s <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;abcdefg&#34;</span>
+</span></span><span style="display:flex;"><span>k <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>result <span style="color:#f92672">=</span> s[k:] <span style="color:#f92672">+</span> s[:k]  <span style="color:#75715e"># 交换前 k 个字符和剩余部分</span>
+</span></span><span style="display:flex;"><span>print(result)  <span style="color:#75715e"># &#34;defgabc&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 541. 反转字符串 II</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">reverseStr</span>(self, s: str, k: int) <span style="color:#f92672">-&gt;</span> str:
+</span></span><span style="display:flex;"><span>    s <span style="color:#f92672">=</span> list(s)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">0</span>, len(s), k <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span>):
+</span></span><span style="display:flex;"><span>        s[i: i <span style="color:#f92672">+</span> k] <span style="color:#f92672">=</span> s[i: i <span style="color:#f92672">+</span> k][::<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]  <span style="color:#75715e"># 创建该切片的反转副本</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">.</span>join(s)
+</span></span></code></pre></div><h2 id="2-滑动窗口暴力遍历---209-长度最小的子数组">2. 滑动窗口+暴力遍历 - 209 长度最小的子数组<a href="#2-滑动窗口暴力遍历---209-长度最小的子数组" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>注意子数组的意思是从一个数组任意截取连续的一段子数组, 不是从里面任取数字然后组合, 子序列也是这个概念,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">minSubArrayLen</span>(s: int, nums: List[int]) <span style="color:#f92672">-&gt;</span> int:
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># float(&#39;-inf&#39;) 负无穷大</span>
+</span></span><span style="display:flex;"><span>    result <span style="color:#f92672">=</span> float(<span style="color:#e6db74">&#39;inf&#39;</span>)
+</span></span><span style="display:flex;"><span>    sum_val <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    sub_length <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(len(nums)):  <span style="color:#75715e"># 设置子序列起点为 i</span>
+</span></span><span style="display:flex;"><span>        sum_val <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(i, len(nums)):  <span style="color:#75715e"># 注意第二层循环从 i 开始</span>
+</span></span><span style="display:flex;"><span>            sum_val <span style="color:#f92672">+=</span> nums[j]
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> sum_val <span style="color:#f92672">&gt;=</span> s:
+</span></span><span style="display:flex;"><span>                sub_length <span style="color:#f92672">=</span> j <span style="color:#f92672">-</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>                result <span style="color:#f92672">=</span> min(result, sub_length)
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">break</span>  <span style="color:#75715e"># 一旦符合条件就 break</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span> <span style="color:#66d9ef">if</span> result <span style="color:#f92672">==</span> float(<span style="color:#e6db74">&#39;inf&#39;</span>) <span style="color:#66d9ef">else</span> result
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">minSubArrayLen</span>(target, nums):
+</span></span><span style="display:flex;"><span>    min_len <span style="color:#f92672">=</span> float(<span style="color:#e6db74">&#39;inf&#39;</span>)
+</span></span><span style="display:flex;"><span>    i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    sum <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(len(nums)):
+</span></span><span style="display:flex;"><span>        sum <span style="color:#f92672">+=</span> nums[j]
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> sum <span style="color:#f92672">&gt;=</span> target:
+</span></span><span style="display:flex;"><span>            min_len <span style="color:#f92672">=</span> min(j <span style="color:#f92672">-</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>, min_len) <span style="color:#75715e"># 注意 j - i + 1</span>
+</span></span><span style="display:flex;"><span>            sum <span style="color:#f92672">-=</span> nums[i]
+</span></span><span style="display:flex;"><span>            i <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e"># python 不支持 i++, 精髓动态更新初始位置, 不断收缩窗口</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> min_len <span style="color:#66d9ef">if</span> min_len <span style="color:#f92672">!=</span> float(<span style="color:#e6db74">&#39;inf&#39;</span>) <span style="color:#66d9ef">else</span> <span style="color:#ae81ff">0</span> <span style="color:#75715e"># 常用语法</span>
+</span></span></code></pre></div><h2 id="3-字典的使用---904-fruit-into-baskets">3. 字典的使用 - 904. Fruit Into Baskets<a href="#3-字典的使用---904-fruit-into-baskets" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<blockquote>
+<p>Find the longest continuous sub array that has exactly 2 distinct elements.</p>
+</blockquote>
+<p>找出下面代码的错误:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">totalFruit</span>(self, fruits):
+</span></span><span style="display:flex;"><span>    i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    max_len <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    basket <span style="color:#f92672">=</span> Counter()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(len(fruits)):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> len(basket) <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">2</span>:
+</span></span><span style="display:flex;"><span>            basket[fruits[j]] <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            max_len <span style="color:#f92672">=</span> max(max_len, j <span style="color:#f92672">-</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>            j <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        i <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">del</span> basket[fruits[i]]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> max_len
+</span></span></code></pre></div><ol>
+<li><strong>while 循环应当是用来收缩窗口的 (改变初始位置 <code>i</code>),</strong> 如果用来扩大窗口, 会导致 <code>j</code> 不仅在 <code>for</code> 循环里被迭代，还在 <code>while</code> 里手动增加了 <code>j</code>，这会导致以下问题：无限循环或 IndexError</li>
+<li>直接 <code>del basket[fruits[i]]</code> 并不对, 想象我们的窗口是 [2, 3, 2, 2] 完整的数组是 [2, 3, 2, 2, 5], 此时篮子里的水果种类为 2, 所以我们让 <code>j</code> 往右移动继续扩大, 我们的滑动窗口变为 [2, 3, 2, 2, 5] , 此时篮子里有 3 类水果, 因此缩小窗口, 移动 <code>i</code>, 此时窗口为 [3, 2, 2, 5] , 若此时直接执行 <code>del basket[fruits[i]]</code>, 也就是把类别 2 的水果全部倒出, 就不合理, 因为我们有 3 个类别 2 的水果, 我们要做的应该是让 basket[2] - 1, 即丢掉一个种类为 2 的水果, 只有当 basket[2] = 0 的时候才可以删除 种类为 2 的水果</li>
+<li>然后我们继续让 i 往右移动, 刚好种类为 3 的水果就一个, 我们直接丢掉, 然后删除, 这样 篮子里就剩两个种类为 2 的元素, 此时滑动窗口为 [2, 2, 5]</li>
+<li>此时篮子里的水果种类为 2, 因此 这也是为什么, 我们需要 while 循环, 一直让 i 往右移动, 缩小窗口, 直到 篮子里的水果种类大于 2 为 false 的时候, 窗口右侧 j 才能继续移动</li>
+</ol>
+<p>使用 <code>Counter()</code> 会造成不必要的开销, 在进行 <code>basket[fruits[i]] -= 1</code> 这种操作的时候, 会执行一些检查, 并不是直接操作, 所以我们换为 defaultdict 速度更快一些:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">totalFruit</span>(self, fruits):
+</span></span><span style="display:flex;"><span>    i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>  <span style="color:#75715e"># 滑动窗口的左边界</span>
+</span></span><span style="display:flex;"><span>    max_len <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>  <span style="color:#75715e"># 记录最大长度</span>
+</span></span><span style="display:flex;"><span>    basket <span style="color:#f92672">=</span> {}  <span style="color:#75715e"># 记录当前窗口内的水果种类和数量</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(len(fruits)):  <span style="color:#75715e"># 遍历水果数组，j 是右指针</span>
+</span></span><span style="display:flex;"><span>        basket[fruits[j]] <span style="color:#f92672">=</span> basket<span style="color:#f92672">.</span>get(fruits[j], <span style="color:#ae81ff">0</span>) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>  <span style="color:#75715e"># 统计当前窗口内的水果数量</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># 如果窗口内的水果种类超过 2 种，移动左指针 i 缩小窗口</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> len(basket) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">2</span>:
+</span></span><span style="display:flex;"><span>            basket[fruits[i]] <span style="color:#f92672">-=</span> <span style="color:#ae81ff">1</span>  <span style="color:#75715e"># 减少左边水果的个数</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> basket[fruits[i]] <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:  <span style="color:#75715e"># 如果某种水果数量变为 0，则从字典中删除</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">del</span> basket[fruits[i]]
+</span></span><span style="display:flex;"><span>            i <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>  <span style="color:#75715e"># 左指针右移，缩小窗口</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># 记录当前窗口的最大长度</span>
+</span></span><span style="display:flex;"><span>        max_len <span style="color:#f92672">=</span> max(max_len, j <span style="color:#f92672">-</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> max_len
+</span></span></code></pre></div><p>虽然这题也是找连续子数组长度, 都使用双指针解决问题, 但与 209 长度最小的子数组 还是不同, 不同的地方是判断条件, 也就是收放窗口的条件, 之前的那道题的条件是判断 sum 总和和target的大小关系, 若 sum 更大, 则可以持续缩放窗口(while 循环条件), 而这道题的判断条件是数组中元素种类, 而且根据题意, 我们不可以简单的直接删除一个元素, 而是元素个数为0的时候才可以删除, 因此我们不仅需要元素种类, 而且需要知道该种类对应的元素个数, 因此只能使用哈希表, 不能使用比如 Set 这种一维数组,</p>
+<h2 id="4-循环嵌套-58-length-of-last-word">4. 循环嵌套 58 Length of Last Word<a href="#4-循环嵌套-58-length-of-last-word" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>找出下面代码的逻辑问题, 最开始的解决思路, len 记录单词的长度, 每次遇到空格就会跳出 while 循环, 然后更新重新计算新的单词的长度,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">lengthOfLastWord</span>(self, s):
+</span></span><span style="display:flex;"><span>    len <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(len(s)):
+</span></span><span style="display:flex;"><span>        len <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> s[i] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39; &#39;</span> <span style="color:#f92672">and</span> i <span style="color:#f92672">&lt;</span> len(s):
+</span></span><span style="display:flex;"><span>            len <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            i <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> len
+</span></span></code></pre></div><p>关于 len 的重置有问题, 没有考虑最后有空格的情况, 比如 <code>&quot;Hello World  &quot;</code>, 我们期望 5，实际输出是 0, 因为遍历完最后一个单词跳出 while 后, i 仍没越界, 此时重新进入 for 循环, len 又被重置为零, 可是后面的都是空格, 也不会进入 while 循环, len 一直为 0,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">lengthOfLastWord</span>(self, s):
+</span></span><span style="display:flex;"><span>    len <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span> <span style="color:#75715e"># len 是个函数, 命名重复</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(len(s)):
+</span></span><span style="display:flex;"><span>        len <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>  <span style="color:#75715e"># 这个重置会导致问题, 没有考虑最后有空格的情况</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># i &lt; len(s) 这个检查并不安全, 应该先检查是否越界</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> s[i] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39; &#39;</span> <span style="color:#f92672">and</span> i <span style="color:#f92672">&lt;</span> len(s):
+</span></span><span style="display:flex;"><span>            len <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            i <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span> <span style="color:#75715e"># 最严重的问题在这, </span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> len
+</span></span></code></pre></div><p><code>i</code> 在 while 循环中被改变了（<code>i += 1</code>），但是这个 <code>i</code> 也是 for 循环的控制变量。这会导致：</p>
+<ul>
+<li>比如当 for 循环 i = 0 时</li>
+<li>while 循环增加 i 到 5</li>
+<li>但 for 循环下一轮会让 i = 1，<strong>又重新从头开始数</strong></li>
+</ul>
+<p>所以<strong>永远不要在两个地方修改循环变量</strong>, 正确的写法如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">lengthOfLastWord</span>(self, s):
+</span></span><span style="display:flex;"><span>    s <span style="color:#f92672">=</span> s<span style="color:#f92672">.</span>strip() <span style="color:#75715e"># 截取空格</span>
+</span></span><span style="display:flex;"><span>    length <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(len(s)):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> s[i] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39; &#39;</span>:
+</span></span><span style="display:flex;"><span>            length <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            length <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> length
+</span></span></code></pre></div><p>但是这还不够高效, 可以直接从后面倒序遍历, 遇到空格就跳出:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">lengthOfLastWord</span>(self, s):
+</span></span><span style="display:flex;"><span>    s <span style="color:#f92672">=</span> s<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>    length <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 又一次出现了这个聪明的遍历方式</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(len(s) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> s[i] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39; &#39;</span>:
+</span></span><span style="display:flex;"><span>            length <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> length
+</span></span></code></pre></div><h2 id="5-代码输入输出调试">5. 代码输入输出调试<a href="#5-代码输入输出调试" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><a href="https://kamacoder.com/problempage.php?pid=1070">https://kamacoder.com/problempage.php?pid=1070</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+</span></span><span style="display:flex;"><span>  	input <span style="color:#f92672">=</span> sys<span style="color:#f92672">.</span>stdin<span style="color:#f92672">.</span>read <span style="color:#75715e"># 读取</span>
+</span></span><span style="display:flex;"><span>    data <span style="color:#f92672">=</span> input()<span style="color:#f92672">.</span>split()  <span style="color:#75715e"># 读取并拆分输入 (空白字符拆分</span>
+</span></span><span style="display:flex;"><span>    index <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    n <span style="color:#f92672">=</span> int(data[index])  <span style="color:#75715e"># 读取数组大小, 不要忘了 data 是字符数组</span>
+</span></span><span style="display:flex;"><span>    index <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    nums <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(n):
+</span></span><span style="display:flex;"><span>        nums<span style="color:#f92672">.</span>append(int(data[index <span style="color:#f92672">+</span> i]))  <span style="color:#75715e"># 读取数组的数值</span>
+</span></span><span style="display:flex;"><span>    index <span style="color:#f92672">+=</span> n  <span style="color:#75715e"># 读取完 nums 后移动 index</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 构建前缀和数组</span>
+</span></span><span style="display:flex;"><span>    sums <span style="color:#f92672">=</span> [<span style="color:#ae81ff">0</span>] <span style="color:#f92672">*</span> n <span style="color:#75715e"># 初始化 不要忘了</span>
+</span></span><span style="display:flex;"><span>    sums[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> nums[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, n):
+</span></span><span style="display:flex;"><span>        sums[i] <span style="color:#f92672">=</span> sums[i <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>] <span style="color:#f92672">+</span> nums[i]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    result <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> index <span style="color:#f92672">&lt;</span> len(data):
+</span></span><span style="display:flex;"><span>        left <span style="color:#f92672">=</span> int(data[index]) <span style="color:#75715e"># 转换为整数</span>
+</span></span><span style="display:flex;"><span>        right <span style="color:#f92672">=</span> int(data[index <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>])
+</span></span><span style="display:flex;"><span>        index <span style="color:#f92672">+=</span> <span style="color:#ae81ff">2</span>  <span style="color:#75715e"># 移动到下一个查询</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> left <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>            result<span style="color:#f92672">.</span>append(sums[right])
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            result<span style="color:#f92672">.</span>append(sums[right] <span style="color:#f92672">-</span> sums[left <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> res <span style="color:#f92672">in</span> result:
+</span></span><span style="display:flex;"><span>        print(res)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>    main()
+</span></span></code></pre></div><h2 id="6-二维数组">6. 二维数组<a href="#6-二维数组" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>开发商购买土地: <a href="https://kamacoder.com/problempage.php?pid=1044">https://kamacoder.com/problempage.php?pid=1044</a></p>
+<pre tabindex="0"><code>3 3
+1 2 3
+2 1 3
+1 2 3
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">import</span> sys
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    input <span style="color:#f92672">=</span> sys<span style="color:#f92672">.</span>stdin<span style="color:#f92672">.</span>read 
+</span></span><span style="display:flex;"><span>    data <span style="color:#f92672">=</span> input()<span style="color:#f92672">.</span>split()
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    index <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    n <span style="color:#f92672">=</span> int(data[index])
+</span></span><span style="display:flex;"><span>    m <span style="color:#f92672">=</span> int(data[index <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>])
+</span></span><span style="display:flex;"><span>    index <span style="color:#f92672">+=</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    nums <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    sum <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(n):
+</span></span><span style="display:flex;"><span>        row <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(m):
+</span></span><span style="display:flex;"><span>            num <span style="color:#f92672">=</span> int(data[index])
+</span></span><span style="display:flex;"><span>            row<span style="color:#f92672">.</span>append(num)
+</span></span><span style="display:flex;"><span>            index <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span> 
+</span></span><span style="display:flex;"><span>            sum <span style="color:#f92672">+=</span> num
+</span></span><span style="display:flex;"><span>        nums<span style="color:#f92672">.</span>append(row)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    horizontal <span style="color:#f92672">=</span> [<span style="color:#ae81ff">0</span>] <span style="color:#f92672">*</span> n
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(n):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(m):
+</span></span><span style="display:flex;"><span>            horizontal[i] <span style="color:#f92672">+=</span> nums[i][j]
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    vertical <span style="color:#f92672">=</span> [<span style="color:#ae81ff">0</span>] <span style="color:#f92672">*</span> m
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(m):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(n):
+</span></span><span style="display:flex;"><span>            vertical[j] <span style="color:#f92672">+=</span> nums[i][j]
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>    result <span style="color:#f92672">=</span> float(<span style="color:#e6db74">&#39;inf&#39;</span>)
+</span></span><span style="display:flex;"><span>    horizontalCut <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(n):
+</span></span><span style="display:flex;"><span>        horizontalCut <span style="color:#f92672">+=</span> horizontal[i]
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># horizontalCut - (sum - horizontalCut) = 两个区域的差 取绝对值</span>
+</span></span><span style="display:flex;"><span>        result <span style="color:#f92672">=</span> min(result, abs(sum <span style="color:#f92672">-</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> horizontalCut))
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    verticalCut <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(m):
+</span></span><span style="display:flex;"><span>        verticalCut <span style="color:#f92672">+=</span> vertical[j]
+</span></span><span style="display:flex;"><span>        result <span style="color:#f92672">=</span> min(result, abs(sum <span style="color:#f92672">-</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> verticalCut))
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>    print(result)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>    main()
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Solution</span>(object):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">generateMatrix</span>(self, n):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        :type n: int
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        :rtype: List[List[int]]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        top <span style="color:#f92672">=</span> left <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        bottom <span style="color:#f92672">=</span> right <span style="color:#f92672">=</span> n <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        square <span style="color:#f92672">=</span> n <span style="color:#f92672">*</span> n
+</span></span><span style="display:flex;"><span>        result <span style="color:#f92672">=</span> [[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">*</span> n <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(n)]
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        num <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> num <span style="color:#f92672">&lt;=</span> square:
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># 从左到右填充</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> col <span style="color:#f92672">in</span> range(left, right <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>                result[top][col] <span style="color:#f92672">=</span> num
+</span></span><span style="display:flex;"><span>                num <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            top <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># 从上到下填充</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> row <span style="color:#f92672">in</span> range(top, bottom <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>                result[row][right] <span style="color:#f92672">=</span> num
+</span></span><span style="display:flex;"><span>                num <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            right <span style="color:#f92672">-=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># 从右到左填充</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> top <span style="color:#f92672">&lt;=</span> bottom:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">for</span> col <span style="color:#f92672">in</span> range(right, left <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>                    result[bottom][col] <span style="color:#f92672">=</span> num
+</span></span><span style="display:flex;"><span>                    num <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>                bottom <span style="color:#f92672">-=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>                
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># 从下到上填充</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> left <span style="color:#f92672">&lt;=</span> right:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">for</span> row <span style="color:#f92672">in</span> range(bottom, top <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>                    result[row][left] <span style="color:#f92672">=</span> num
+</span></span><span style="display:flex;"><span>                    num <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>                left <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> result
+</span></span></code></pre></div><p>我们的遍历范围在 <strong>左闭右闭</strong>（即 <code>[left, right]</code> 或 <code>[top, bottom]</code>），也就是说，遍历时包括起点 <code>start</code> 和终点 <code>end</code>。这就是为什么我们在 <code>range()</code> 里要 <code>+1</code> 或 <code>-1</code> 来确保终点被包含。</p>
+<p><strong>从右到左填充</strong></p>
+<ul>
+<li>这一部分填充的是 <strong>当前最底部的行</strong> (<code>bottom</code> 行)。</li>
+<li>但此时，<code>top</code> 已经向下移动了一格 (<code>top += 1</code>)，所以需要 <strong>额外判断 <code>top &lt;= bottom</code></strong>，确保当前 <code>bottom</code> 这行仍然 <strong>未被填充过</strong>。</li>
+<li>如果 <code>top &gt; bottom</code>，说明 <code>bottom</code> 这一行已经被上面的填充覆盖了，不需要执行这一步。</li>
+</ul>
+<p><strong>从下到上填充</strong></p>
+<ul>
+<li>这一部分填充的是 <strong>当前最左侧的列</strong> (<code>left</code> 列)。</li>
+<li>但此时，<code>right</code> 已经向左移动了一格 (<code>right -= 1</code>)，所以需要 <strong>额外判断 <code>left &lt;= right</code></strong>，确保当前 <code>left</code> 这列仍然 <strong>未被填充过</strong>。</li>
+<li>如果 <code>left &gt; right</code>，说明 <code>left</code> 这一列已经被右边的填充覆盖了，不需要执行这一步。</li>
+</ul>
+<p>在进入循环时，<code>top &lt;= bottom</code> 和 <code>left &lt;= right</code> 一定成立，因为矩阵初始是完整的，所以不需要额外判断。</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/reading/003-fallacies/" class="button inline prev">
+        常见谬误
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/reading/002-argument/" class="button inline next">
+        论证的形式 - 演绎和归纳, 规范和事实
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

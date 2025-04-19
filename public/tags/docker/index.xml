@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Docker on 为霜的博客</title>
+    <link>https://blog.jiyi27.com/tags/docker/</link>
+    <description>Recent content in Docker on 为霜的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Wed, 26 Feb 2025 18:31:22 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/docker/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>通过交叉编译理解 Docker 运行原理</title>
+      <link>https://blog.jiyi27.com/posts/docker/004-docker-has-arch/</link>
+      <pubDate>Wed, 26 Feb 2025 18:31:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/docker/004-docker-has-arch/</guid>
+      <description>&lt;p&gt;假设我们在 M1 的 Mac 上构建 Docker 镜像:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; golang:alpine&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./ ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go mod download&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; CGO_ENABLED&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;amd64 go build -o /server .&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;1-docker-build-阶段&#34;&gt;1. &lt;code&gt;docker build&lt;/code&gt; 阶段&lt;/h2&gt;
+&lt;h3 id=&#34;11-拉取基础镜像-golangalpine&#34;&gt;1.1 拉取基础镜像 &lt;code&gt;golang:alpine&lt;/code&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;在 &lt;strong&gt;M1 Mac (arm64)&lt;/strong&gt; 上执行 &lt;code&gt;docker build -t myserver .&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Docker 引擎会看到 &lt;code&gt;FROM golang:alpine&lt;/code&gt; 并去 Docker Hub 拉取对应的镜像&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;关键点&lt;/strong&gt;：&lt;code&gt;golang:alpine&lt;/code&gt; 是一个多架构（multi-arch）镜像名，里面包含了 &lt;code&gt;amd64&lt;/code&gt;、&lt;code&gt;arm64&lt;/code&gt; 等不同架构的版本&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Docker 会自动检测到宿主机是 arm64, 于是它会拉取并使用 arm64 版的 &lt;code&gt;golang:alpine&lt;/code&gt;, 这样, 构建时运行的容器基础环境就是 &lt;strong&gt;arm64&lt;/strong&gt; 的 Alpine + Go&lt;/p&gt;</description>
+      <content>&lt;p&gt;假设我们在 M1 的 Mac 上构建 Docker 镜像:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; golang:alpine&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./ ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go mod download&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; CGO_ENABLED&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;amd64 go build -o /server .&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;1-docker-build-阶段&#34;&gt;1. &lt;code&gt;docker build&lt;/code&gt; 阶段&lt;/h2&gt;
+&lt;h3 id=&#34;11-拉取基础镜像-golangalpine&#34;&gt;1.1 拉取基础镜像 &lt;code&gt;golang:alpine&lt;/code&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;在 &lt;strong&gt;M1 Mac (arm64)&lt;/strong&gt; 上执行 &lt;code&gt;docker build -t myserver .&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Docker 引擎会看到 &lt;code&gt;FROM golang:alpine&lt;/code&gt; 并去 Docker Hub 拉取对应的镜像&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;关键点&lt;/strong&gt;：&lt;code&gt;golang:alpine&lt;/code&gt; 是一个多架构（multi-arch）镜像名，里面包含了 &lt;code&gt;amd64&lt;/code&gt;、&lt;code&gt;arm64&lt;/code&gt; 等不同架构的版本&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Docker 会自动检测到宿主机是 arm64, 于是它会拉取并使用 arm64 版的 &lt;code&gt;golang:alpine&lt;/code&gt;, 这样, 构建时运行的容器基础环境就是 &lt;strong&gt;arm64&lt;/strong&gt; 的 Alpine + Go&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;12-在容器arm64里执行构建步骤&#34;&gt;1.2 在容器（arm64）里执行构建步骤&lt;/h3&gt;
+&lt;p&gt;进入到 &lt;code&gt;WORKDIR /app&lt;/code&gt; 后，&lt;code&gt;COPY&lt;/code&gt; 源码、&lt;code&gt;RUN go mod download&lt;/code&gt; 都是在 &lt;strong&gt;arm64&lt;/strong&gt; 架构的 Alpine 容器里进行的，没什么特别&lt;/p&gt;
+&lt;h3 id=&#34;13-编译-golang-源代码&#34;&gt;1.3 编译 golang 源代码&lt;/h3&gt;
+&lt;p&gt;现在最有意思的是这一行 &lt;code&gt;CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /server .&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;GOOS=linux：目标操作系统是 Linux（容器实际就是 Linux，但这里做了“明确指定”）&lt;/li&gt;
+&lt;li&gt;GOARCH=amd64：目标 CPU 架构是 x86_64（amd64）&lt;/li&gt;
+&lt;li&gt;容器自身是 arm64 的 Go 工具链，但是 Go 提供了「交叉编译」能力，所以它可以编译出一个「amd64」二进制&lt;/li&gt;
+&lt;li&gt;因此此步骤结束后，容器中 &lt;code&gt;./server&lt;/code&gt; 这个可执行文件将是&lt;strong&gt;amd64 架构&lt;/strong&gt;的 Linux ELF&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;14-结果&#34;&gt;1.4. 结果&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;生成的二进制是「amd64」的&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;但它坐落在一个「arm64」用户态系统（Alpine）里&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;如果你在这个容器里尝试 &lt;code&gt;./server&lt;/code&gt; 立即运行，很可能会报错：&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“exec format error” (因为是 amd64 指令集，无法在 arm64 CPU 上原生执行)。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;然而在 &lt;code&gt;docker build&lt;/code&gt; 阶段，Docker 不会去实际“运行”这个二进制（除了 CMD/ENTRYPOINT 之外），它只是把文件打包进镜像。&lt;/p&gt;
+&lt;h3 id=&#34;15-构建生成的镜像&#34;&gt;1.5 构建生成的镜像&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;docker build&lt;/code&gt; 成功后，会产出一个新的镜像，里头包含：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;基础镜像那一套 arm64 的 Alpine Linux&lt;/li&gt;
+&lt;li&gt;以及我们刚刚编译好的 &lt;strong&gt;amd64&lt;/strong&gt; 可执行文件 &lt;code&gt;/server&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这就导致了镜像本身是“arm64 用户态系统 + amd64 二进制”的“混搭”状态。&lt;/p&gt;
+&lt;h2 id=&#34;2-docker-run-阶段&#34;&gt;2. &lt;code&gt;docker run&lt;/code&gt; 阶段&lt;/h2&gt;
+&lt;p&gt;当你在 M1 Mac 上执行 &lt;code&gt;docker run myserver&lt;/code&gt; 时，Docker 会尝试：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;启动一个容器，它的用户态依旧是「arm64 Alpine」&lt;/li&gt;
+&lt;li&gt;在启动时，会执行 &lt;code&gt;CMD [&amp;quot;./server&amp;quot;]&lt;/code&gt;（即 &lt;code&gt;/server&lt;/code&gt;），这是一个 &lt;strong&gt;amd64&lt;/strong&gt; 的二进制&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;此时，如果没有任何额外的配置，容器内会试图在 arm64 环境中直接跑 amd64 的 ELF 文件，通常会出现：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;standard_init_linux.go:xxx: exec user process caused: exec format error
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;为什么？&lt;/strong&gt; 因为 arm64 CPU 无法直接执行 amd64 指令集的二进制。&lt;/p&gt;
+&lt;h2 id=&#34;3-在-ubuntu--amd64-cpu-上&#34;&gt;3. 在 Ubuntu + amd64 CPU 上&lt;/h2&gt;
+&lt;h3 id=&#34;31-docker-pull&#34;&gt;3.1. docker pull&lt;/h3&gt;
+&lt;p&gt;假设 &lt;code&gt;yourrepo/myserver:latest&lt;/code&gt; 是一个「多架构 manifest」镜像，包含了 &lt;strong&gt;arm64&lt;/strong&gt; 和 &lt;strong&gt;amd64&lt;/strong&gt; 两个版本&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;docker pull yourrepo/myserver:latest
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;当 Ubuntu（amd64）端尝试拉取时，Docker 会先匹配你本地主机是 &lt;code&gt;amd64&lt;/code&gt;，接着去仓库搜 &lt;code&gt;myserver&lt;/code&gt; 镜像是否包含 &lt;code&gt;linux/amd64&lt;/code&gt; 的 manifest,&lt;/p&gt;
+&lt;p&gt;最终下载下来的实际上是&lt;strong&gt;amd64&lt;/strong&gt; 的用户态环境（如果用的是 Alpine，则它里面的 &lt;code&gt;/bin/sh&lt;/code&gt;、&lt;code&gt;/usr/bin/go&lt;/code&gt; 等都是 amd64 编译的）,&lt;/p&gt;
+&lt;p&gt;与在 M1 Mac 上「自动拿到 arm64 版」是同样的机制，只是目标架构不同,&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Docker Hub 上的很多官方镜像（例如 &lt;code&gt;golang:alpine&lt;/code&gt;）是做了多架构支持的：它们在同一个镜像名后面，通过一个多架构 manifest，指向了多个真正的镜像文件（比如 amd64 版、arm64 版等）&lt;/p&gt;
+&lt;p&gt;当你 &lt;code&gt;docker pull&lt;/code&gt; 时，Docker 会根据你当前的宿主机架构，去拉取并解压相匹配的镜像层（layer）。这就是为什么“同一个名称”的镜像，能自动匹配不同架构&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;32-运行容器-docker-run&#34;&gt;3.2. 运行容器 docker run&lt;/h3&gt;
+&lt;p&gt;执行 &lt;code&gt;CMD [&amp;quot;./server&amp;quot;]&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;因为容器是「amd64 Alpine」, 里面的 &lt;code&gt;/server&lt;/code&gt; 也是 amd64 二进制, CPU 指令集、用户态环境全部匹配，&lt;code&gt;./server&lt;/code&gt; 可以直接原生执行, 不会出现在 M1 Mac 场景下的“exec format error”问题。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;我们拉取的镜像已经是一个微型系统了, 而且包含了我们在 M1 系统编译好的 server amd64 架构的可执行文件,  执行 docker run 的时候, 只会执行: &lt;code&gt;CMD [&amp;quot;./server&amp;quot;]&lt;/code&gt;, 上面的指令比如 &lt;code&gt;FROM&lt;/code&gt;、&lt;code&gt;WORKDIR&lt;/code&gt;、&lt;code&gt;COPY&lt;/code&gt;、&lt;code&gt;RUN go mod download&lt;/code&gt; 都是在&lt;strong&gt;构建阶段 (&lt;code&gt;docker build&lt;/code&gt;)&lt;/strong&gt; 执行的, 用来生产最终镜像。&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>CGO Compile Error Building Docker Image</title>
+      <link>https://blog.jiyi27.com/posts/bugs/006-cgo-docker-image-build-error/</link>
+      <pubDate>Sat, 21 Oct 2023 10:24:22 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/006-cgo-docker-image-build-error/</guid>
+      <description>&lt;p&gt;I choose a sqilte3 library which uses cgo, the Dockerfile:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; golang:alpine&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./ ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go mod download&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; CGO_ENABLED&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;amd64 go build -o /server .&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;在使用 docker 运行 golang 相关的程序的时候, 我们需要先选择基础镜像, 比如: &lt;code&gt;FROM golang:alpine&lt;/code&gt;, 编译 golang 源码的时候, 需要指定构建的目的系统和CPU架构, 比如: &lt;code&gt;GOOS=linux&lt;/code&gt;, 此时 选择 GOOS=linux 是因为我们选择基础镜像是 &lt;code&gt;golang:alpine&lt;/code&gt; 是 Linux 系统, 而 &lt;code&gt;GOARCH=amd64&lt;/code&gt; 是因为宿主机 CPU 架构是 amd64, 容器里的程序只能跑在与宿主机 CPU 架构兼容的环境上,&lt;/p&gt;
+&lt;p&gt;When cgo is enabled, the binary may link dynamically to C libraries, which can add dependencies on system-specific libraries. Disabling cgo (by setting &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;) helps produce a more self-contained binary, making cross-platform deployment easier.&lt;/p&gt;</description>
+      <content>&lt;p&gt;I choose a sqilte3 library which uses cgo, the Dockerfile:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; golang:alpine&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./ ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go mod download&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; CGO_ENABLED&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt; GOOS&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;linux GOARCH&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;amd64 go build -o /server .&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;在使用 docker 运行 golang 相关的程序的时候, 我们需要先选择基础镜像, 比如: &lt;code&gt;FROM golang:alpine&lt;/code&gt;, 编译 golang 源码的时候, 需要指定构建的目的系统和CPU架构, 比如: &lt;code&gt;GOOS=linux&lt;/code&gt;, 此时 选择 GOOS=linux 是因为我们选择基础镜像是 &lt;code&gt;golang:alpine&lt;/code&gt; 是 Linux 系统, 而 &lt;code&gt;GOARCH=amd64&lt;/code&gt; 是因为宿主机 CPU 架构是 amd64, 容器里的程序只能跑在与宿主机 CPU 架构兼容的环境上,&lt;/p&gt;
+&lt;p&gt;When cgo is enabled, the binary may link dynamically to C libraries, which can add dependencies on system-specific libraries. Disabling cgo (by setting &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;) helps produce a more self-contained binary, making cross-platform deployment easier.&lt;/p&gt;
+&lt;p&gt;Learn more:&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/golang/advance/012-statically-linking/&#34;&gt;Static Linking Go Programs - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://davidzhu.xyz/post/golang/advance/011-cross-compilation/&#34;&gt;Cross Compilation - Go - David&amp;rsquo;s Blog&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;After build successfully and run image:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run -p 80:80 shwezhu/file-station:v1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;2023/10/10 02:15:15 /app/main.go:12
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;error&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt; failed to initialize database, got error Binary was compiled with &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;CGO_ENABLED=0&amp;#39;&lt;/span&gt;, go-sqlite3 requires cgo to work. This is a stub
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see, apparently I will get an error, because my Go code use the &lt;code&gt;go-sqlite3 &lt;/code&gt; package which implemented by pure cgo, if I disable cgo with &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, this will wrong. Then I change the dockerfile to:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Install gcc to compile cgo&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; apk add --no-cache --update go gcc g++&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go build -o /server .&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;And build image with command:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker build -t shwezhu/file-station:v2 .
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;There is an error when run the image on EC2 server:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run -p 80:80 shwezhu/file-station:v1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;WARNING: The requested image&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;s platform &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;linux/arm64&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; does not match the detected host platform &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;linux/amd64&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; and no specific platform was requested
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Because my local machine is arm64, which means the image will be built to arm64 by default, but my EC2 server is linux/amd64, so there is an error occurred. With &lt;code&gt;--platform&lt;/code&gt;, you can specify the platform this image built for:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker build --platform linux/amd64 -t shwezhu/file-station:v2 .
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;em&gt;Go&lt;/em&gt; is a statically &lt;em&gt;compiled&lt;/em&gt; language. To execute a &lt;em&gt;Go&lt;/em&gt; binary on a machine, it must be &lt;em&gt;compiled&lt;/em&gt; for the matching operating system and processor architecture. So there is cross-compilation in Go. &lt;code&gt;--platform&lt;/code&gt; is used to build &lt;a href=&#34;https://docs.docker.com/build/building/multi-platform/&#34;&gt;multi-platform docker images&lt;/a&gt;, not build Go for another platform. You should know the difference between these concepts.&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Dockerfile Synatax</title>
+      <link>https://blog.jiyi27.com/posts/docker/003-dockerfile-syntax/</link>
+      <pubDate>Wed, 11 Oct 2023 12:27:35 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/docker/003-dockerfile-syntax/</guid>
+      <description>&lt;h2 id=&#34;1-workdir&#34;&gt;1. WORKDIR&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /path/to/workdir&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &lt;code&gt;WORKDIR&lt;/code&gt; instruction sets the working directory for any &lt;code&gt;RUN&lt;/code&gt;, &lt;code&gt;CMD&lt;/code&gt;, &lt;code&gt;ENTRYPOINT&lt;/code&gt;, &lt;code&gt;COPY&lt;/code&gt; and &lt;code&gt;ADD&lt;/code&gt; instructions that follow it in the &lt;code&gt;Dockerfile&lt;/code&gt;. If the &lt;code&gt;WORKDIR&lt;/code&gt; doesn&amp;rsquo;t exist, it will be created even if it&amp;rsquo;s not used in any subsequent &lt;code&gt;Dockerfile&lt;/code&gt; instruction.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;WORKDIR&lt;/code&gt; instruction can be used multiple times in a &lt;code&gt;Dockerfile&lt;/code&gt;. If a relative path is provided, it will be relative to the path of the previous &lt;code&gt;WORKDIR&lt;/code&gt; instruction. For example:&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-workdir&#34;&gt;1. WORKDIR&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /path/to/workdir&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &lt;code&gt;WORKDIR&lt;/code&gt; instruction sets the working directory for any &lt;code&gt;RUN&lt;/code&gt;, &lt;code&gt;CMD&lt;/code&gt;, &lt;code&gt;ENTRYPOINT&lt;/code&gt;, &lt;code&gt;COPY&lt;/code&gt; and &lt;code&gt;ADD&lt;/code&gt; instructions that follow it in the &lt;code&gt;Dockerfile&lt;/code&gt;. If the &lt;code&gt;WORKDIR&lt;/code&gt; doesn&amp;rsquo;t exist, it will be created even if it&amp;rsquo;s not used in any subsequent &lt;code&gt;Dockerfile&lt;/code&gt; instruction.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;WORKDIR&lt;/code&gt; instruction can be used multiple times in a &lt;code&gt;Dockerfile&lt;/code&gt;. If a relative path is provided, it will be relative to the path of the previous &lt;code&gt;WORKDIR&lt;/code&gt; instruction. For example:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /a&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; b&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; pwd&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The output of the final &lt;code&gt;pwd&lt;/code&gt; command in this &lt;code&gt;Dockerfile&lt;/code&gt; would be &lt;code&gt;/a/b&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;If not specified, the default working directory is &lt;code&gt;/&lt;/code&gt;. In practice, if you aren&amp;rsquo;t building a Dockerfile from scratch (&lt;code&gt;FROM scratch&lt;/code&gt;), the &lt;code&gt;WORKDIR&lt;/code&gt; may likely be set by the base image you&amp;rsquo;re using.&lt;/p&gt;
+&lt;p&gt;Therefore, &lt;strong&gt;to avoid unintended operations in unknown directories, it is best practice to set your &lt;code&gt;WORKDIR&lt;/code&gt; explicitly.&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-copy&#34;&gt;2. COPY&lt;/h2&gt;
+&lt;p&gt;We usually the following code in &lt;code&gt;Dockerfile&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./test ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The &lt;code&gt;COPY ./test ./&lt;/code&gt; will be executed when building the image, what &lt;code&gt;COPY ./test ./&lt;/code&gt; does is &lt;strong&gt;copy&lt;/strong&gt; all the files under &lt;code&gt;./test&lt;/code&gt; on your computer into the &lt;code&gt;/app&lt;/code&gt; folder of the container. Because &lt;code&gt;./&lt;/code&gt; means current folder, and we set  our current folder to &lt;code&gt;/app&lt;/code&gt; by using &lt;code&gt;WORKDIR /app&lt;/code&gt; in &lt;code&gt;Dockerfile&lt;/code&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note that  &lt;code&gt;.dockerignore&lt;/code&gt; file is not considered here, if you add &lt;code&gt;.dockerignore&lt;/code&gt; file, then before execute &lt;code&gt;COPY ./test ./&lt;/code&gt;,  docker will check the &lt;code&gt;.dockerignore&lt;/code&gt; file first, if the file in the &lt;code&gt;./test&lt;/code&gt; folder machs the file list in &lt;code&gt;.dockerignore&lt;/code&gt; file, then &lt;code&gt;COPY ./test ./&lt;/code&gt; will skip that file.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;And note that the build command &lt;code&gt;docker build -t docker-learning:v1 .&lt;/code&gt;, the last &lt;code&gt;.&lt;/code&gt; sign is used to specify the context, in &lt;code&gt;COPY ./test ./&lt;/code&gt;, the &lt;code&gt;./test&lt;/code&gt; is the &lt;code&gt;test&lt;/code&gt; folder under the context.&lt;/p&gt;
+&lt;h2 id=&#34;3-run-vs-cmd-vs-entrypoint&#34;&gt;3. RUN vs CMD vs ENTRYPOINT&lt;/h2&gt;
+&lt;h3 id=&#34;31-example&#34;&gt;3.1. Example&lt;/h3&gt;
+&lt;p&gt;&lt;em&gt;ENTRYPOINT&lt;/em&gt; sets the process to run, while &lt;strong&gt;&lt;em&gt;CMD&lt;/em&gt; supplies default arguments to that process&lt;/strong&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./ ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go mod download&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go build -o server&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ENTRYPOINT&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;-p&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;80&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When run image:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;docker run -p 80:80 --rm file-server:v1.0
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The command &lt;code&gt;./server -p 80&lt;/code&gt; will run in the container. By the way, thr &lt;code&gt;CMD&lt;/code&gt; could be overwritten by &lt;code&gt;docker run&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ENTRYPOINT &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;CMD &lt;span style=&#34;color:#f92672&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;-p&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;9000&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;When run image:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;sudo docker run -p 8080:8080 --rm file-server:v1.0 -port &lt;span style=&#34;color:#ae81ff&#34;&gt;8080&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The command &lt;code&gt;./server -port 8080&lt;/code&gt; will run, not &lt;code&gt;./server -p 9000&lt;/code&gt;&lt;/p&gt;
+&lt;h3 id=&#34;32-concepts&#34;&gt;3.2. Concepts&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;ENTRYPOINT&lt;/code&gt;&lt;/strong&gt; is the process that’s executed inside the container.
+&lt;ul&gt;
+&lt;li&gt;Images can only have one &lt;code&gt;ENTRYPOINT&lt;/code&gt;. If you repeat the Dockerfile instruction more than once, the last one will apply. When an image is created without an ENTRYPOINT, Docker defaults to using &lt;code&gt;/bin/sh -c&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;CMD&lt;/code&gt;&lt;/strong&gt; is the default set of arguments that are supplied to the ENTRYPOINT process.
+&lt;ul&gt;
+&lt;li&gt;There can only be one &lt;code&gt;CMD&lt;/code&gt; instruction in a &lt;code&gt;Dockerfile&lt;/code&gt;. If you list more than one &lt;code&gt;CMD&lt;/code&gt; then only the last &lt;code&gt;CMD&lt;/code&gt; will take effect.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;CMD&lt;/code&gt; - command triggers while we launch the created docker image.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;RUN&lt;/code&gt;&lt;/strong&gt; - command triggers while we build the docker image.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ENTRYPOINT&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;-p&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;80&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# same as: CMD [&amp;#34;./server&amp;#34;, &amp;#34;-p&amp;#34;, &amp;#34;80&amp;#34;]&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;4-docker-run-vs-entrypoint&#34;&gt;4. &lt;code&gt;docker run&lt;/code&gt; vs &lt;code&gt;ENTRYPOINT&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;The &lt;a href=&#34;https://docs.docker.com/engine/reference/commandline/run&#34;&gt;&lt;code&gt;docker run&lt;/code&gt; command&lt;/a&gt; starts a new container using a specified image. When no further arguments are given, the process that runs in the container will exactly match the ENTRYPOINT and CMD defined in the image.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Executes /usr/bin/my-app help&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run my-image:latest
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Technically, it is possible to override the ENTRYPOINT using &lt;code&gt;docker run&lt;/code&gt; by setting its &lt;code&gt;--entrypoint&lt;/code&gt; flag. Although this is rarely required, the technique can be useful if you want to launch a shell inside a container, such as to inspect the contents of an image’s filesystem:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# Executes bash -c &amp;#34;ls /&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run --entrypoint bash my-image:latest -c &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ls /&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Note that there is no &lt;code&gt;bash&lt;/code&gt; under the &lt;code&gt;/bin&lt;/code&gt; folder of  &lt;code&gt;alpine:latest&lt;/code&gt; linux system which our container based on, there just two shells: &lt;code&gt;ash &lt;/code&gt; and &lt;code&gt;sh&lt;/code&gt;. So the command above will get an error.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;docker: Error response from daemon: failed to create task &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: exec: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;bash&amp;#34;&lt;/span&gt;: executable file not found in $PATH: unknown.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You can try:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run --entrypoint /bin/sh docker-learning:v1 -c &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;cat /etc/shells&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# valid login shells&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/bin/ash
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Or&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run docker-learning:v1 cat /etc/shells  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# valid login shells&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/bin/sh
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/bin/ash
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Both of these are same, because the default entrypoint is &lt;code&gt;/bin/sh -c&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Reference:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.docker.com/engine/reference/builder/&#34;&gt;Dockerfile reference | Docker Docs&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://spacelift.io/blog/docker-entrypoint-vs-cmd&#34;&gt;Docker ENTRYPOINT and CMD : Differences &amp;amp; Examples&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Docker Architecture</title>
+      <link>https://blog.jiyi27.com/posts/docker/002-docker-architecture/</link>
+      <pubDate>Wed, 11 Oct 2023 10:38:35 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/docker/002-docker-architecture/</guid>
+      <description>&lt;h2 id=&#34;1-docker-architecture&#34;&gt;1. Docker architecture&lt;/h2&gt;
+&lt;p&gt;Docker uses a client-server architecture. The &lt;strong&gt;Docker client&lt;/strong&gt; talks to the &lt;strong&gt;Docker daemon&lt;/strong&gt;, which does the heavy lifting of building, running, and distributing your &lt;strong&gt;Docker containers&lt;/strong&gt;. The Docker client and daemon can run on the same system, or you can connect a Docker client to a remote Docker daemon. The Docker client and daemon communicate using a REST API, over UNIX sockets or a network interface.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/e8b32edce5939afa1e051041d591ffb0.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-docker-architecture&#34;&gt;1. Docker architecture&lt;/h2&gt;
+&lt;p&gt;Docker uses a client-server architecture. The &lt;strong&gt;Docker client&lt;/strong&gt; talks to the &lt;strong&gt;Docker daemon&lt;/strong&gt;, which does the heavy lifting of building, running, and distributing your &lt;strong&gt;Docker containers&lt;/strong&gt;. The Docker client and daemon can run on the same system, or you can connect a Docker client to a remote Docker daemon. The Docker client and daemon communicate using a REST API, over UNIX sockets or a network interface.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/e8b32edce5939afa1e051041d591ffb0.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Learn more about the Cocker client(&lt;code&gt;docker&lt;/code&gt;), Docker daemon(&lt;code&gt;dockerd&lt;/code&gt;) and Docker objects (images, containers): &lt;a href=&#34;https://docs.docker.com/get-started/overview/&#34;&gt;https://docs.docker.com/get-started/overview/&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-docker-build-architecture&#34;&gt;2. Docker build architecture&lt;/h2&gt;
+&lt;p&gt;Docker Build implements a client-server architecture, where:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Buildx is the client and the user interface for running and managing builds&lt;/li&gt;
+&lt;li&gt;BuildKit is the server, or builder, that handles the build execution.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/4b1595b53889e9dbe8ba7ee47a7639b9.png&#34; alt=&#34;&#34;&gt;&lt;/p&gt;
+&lt;p&gt;As of Docker Engine 23.0 and Docker Desktop 4.19, Buildx is the default build client.&lt;/p&gt;
+&lt;p&gt;In newer versions of Docker Desktop and Docker Engine, you&amp;rsquo;re using Buildx by default when you invoke the &lt;code&gt;docker build&lt;/code&gt; command. In earlier versions, to build using Buildx you would use the &lt;code&gt;docker buildx build&lt;/code&gt; command.&lt;/p&gt;
+&lt;p&gt;Sourcce: &lt;a href=&#34;https://docs.docker.com/build/architecture&#34;&gt;Docker Build architecture | Docker Docs&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://docs.docker.com/build/builders/&#34;&gt;Builders | Docker Docs&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>Docker Basics</title>
+      <link>https://blog.jiyi27.com/posts/docker/001-docker-basics/</link>
+      <pubDate>Mon, 09 Oct 2023 21:09:35 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/docker/001-docker-basics/</guid>
+      <description>&lt;h2 id=&#34;1-dockerfile-example&#34;&gt;1. Dockerfile example&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; golang:alpine&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./ ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go mod download&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go build -o server&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ENTRYPOINT&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;-p&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;80&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# docker build [--platform linux/amd64] -t shwezhu/file-server:v1.0 .&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# [docker push shwezhu/file-server:v1.0]&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# [docker pull davidzhu/file-server:v1.0]&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sudo docker run -d -p 80:80 --rm shwezhu/file-server:v1.0&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-docker-commands&#34;&gt;2. Docker commands&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#-------------- build and delete image --------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker build -t davidzhu/go-learning:v1.0 .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker rmi shwezhu/file-station:v1	&lt;span style=&#34;color:#75715e&#34;&gt;# if docker is in-use, delete with -f&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker rm container_id
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# docker run 用于创建一个新的容器并在其中运行一个命令&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# specify the container name, if not specified, generate a name for running contianer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run --name mysql-volume ...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# --rm automatically removes the container when it exits,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# -d: Run container in background&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run -d -p 80:80 --rm file-server
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# docker exec 用于在已经运行的容器中执行命令&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# run a contianer, &amp;#39;file-server&amp;#39; is the container name, not image&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker exec -it file-server bash &lt;span style=&#34;color:#75715e&#34;&gt;# specify&amp;#39;bash&amp;#39; as the shell of container&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker exec -it file-server /bin/sh &lt;span style=&#34;color:#75715e&#34;&gt;# specify &amp;#39;/bin/sh&amp;#39; as the shell of container&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# publish and pull image from repo&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker push shwezhu/file-station:v1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker pull davidzhu/file-station:v1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#-------------------- show info ------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker container ls -a
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker image ls -a
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# check the output of the program running in the container&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker logs container_name
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# volumes, mount the folder on the machine &amp;#39;~/root&amp;#39; to the &amp;#39;/app/root&amp;#39; dir of the container&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run --name file-server --rm -d -p 80:80 -v ~/root:/app/root shwezhu/file-server:v1.0 ./server -p &lt;span style=&#34;color:#ae81ff&#34;&gt;80&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-build-image&#34;&gt;3. Build image&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;docker build&lt;/code&gt; command is used to build a Docker image from a Dockerfile and a &amp;ldquo;context&amp;rdquo;.&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-dockerfile-example&#34;&gt;1. Dockerfile example&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-dockerfile&#34; data-lang=&#34;dockerfile&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; golang:alpine&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WORKDIR&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; /app&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COPY&lt;/span&gt; ./ ./&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go mod download&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;RUN&lt;/span&gt; go build -o server&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ENTRYPOINT&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./server&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CMD&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;-p&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;80&amp;#34;&lt;/span&gt;]&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# docker build [--platform linux/amd64] -t shwezhu/file-server:v1.0 .&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# [docker push shwezhu/file-server:v1.0]&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# [docker pull davidzhu/file-server:v1.0]&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# sudo docker run -d -p 80:80 --rm shwezhu/file-server:v1.0&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-docker-commands&#34;&gt;2. Docker commands&lt;/h2&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#-------------- build and delete image --------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker build -t davidzhu/go-learning:v1.0 .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker rmi shwezhu/file-station:v1	&lt;span style=&#34;color:#75715e&#34;&gt;# if docker is in-use, delete with -f&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker rm container_id
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# docker run 用于创建一个新的容器并在其中运行一个命令&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# specify the container name, if not specified, generate a name for running contianer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run --name mysql-volume ...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# --rm automatically removes the container when it exits,&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# -d: Run container in background&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run -d -p 80:80 --rm file-server
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# docker exec 用于在已经运行的容器中执行命令&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# run a contianer, &amp;#39;file-server&amp;#39; is the container name, not image&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker exec -it file-server bash &lt;span style=&#34;color:#75715e&#34;&gt;# specify&amp;#39;bash&amp;#39; as the shell of container&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker exec -it file-server /bin/sh &lt;span style=&#34;color:#75715e&#34;&gt;# specify &amp;#39;/bin/sh&amp;#39; as the shell of container&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# publish and pull image from repo&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker push shwezhu/file-station:v1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker pull davidzhu/file-station:v1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#-------------------- show info ------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker container ls -a
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker image ls -a
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# check the output of the program running in the container&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker logs container_name
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# volumes, mount the folder on the machine &amp;#39;~/root&amp;#39; to the &amp;#39;/app/root&amp;#39; dir of the container&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run --name file-server --rm -d -p 80:80 -v ~/root:/app/root shwezhu/file-server:v1.0 ./server -p &lt;span style=&#34;color:#ae81ff&#34;&gt;80&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;3-build-image&#34;&gt;3. Build image&lt;/h2&gt;
+&lt;p&gt;The &lt;code&gt;docker build&lt;/code&gt; command is used to build a Docker image from a Dockerfile and a &amp;ldquo;context&amp;rdquo;.&lt;/p&gt;
+&lt;p&gt;During the build, those files (build context) are sent to the Docker &lt;strong&gt;daemon&lt;/strong&gt; so that the &lt;strong&gt;image&lt;/strong&gt; can use them as files. The &lt;strong&gt;build context&lt;/strong&gt; is usually at the current folder.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# -t image_name:tag_name&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# . specifies the build context as the current directory&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker build -t go-learning:1 . 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://docs.docker.com/build/building/multi-stage/&#34;&gt;Multi-stage builds | Docker Docs&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;4-dockerignore-file&#34;&gt;4. &lt;code&gt;.dockerignore&lt;/code&gt; File&lt;/h2&gt;
+&lt;p&gt;During the build, those files (build context) are sent to the Docker &lt;strong&gt;daemon&lt;/strong&gt; so that the &lt;strong&gt;image&lt;/strong&gt; can use them as files.&lt;/p&gt;
+&lt;p&gt;When you build a Docker image, Docker takes all the files and directories in the build context and sends them to the Docker daemon, which then processes and includes them in the image. By using a &lt;code&gt;.dockerignore&lt;/code&gt; file, you can specify patterns of files and directories that should be ignored during the build process.&lt;/p&gt;
+&lt;p&gt;By excluding unnecessary files and directories, you can significantly &lt;strong&gt;reduce the size of the Docker image&lt;/strong&gt;. This is particularly important when building images for production environments or when transferring images across networks.&lt;/p&gt;
+&lt;h2 id=&#34;5-image-vs-container&#34;&gt;5. Image vs container&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;A container is an isolated place&lt;/strong&gt; where an application runs without affecting the rest of the system and without the system impacting the application. Because they are isolated, containers are well-suited for securely running software like databases or web applications that need access to sensitive resources without giving access to every user on the system. However, containers can be much more efficient than virtual machines because they don’t need the overhead of an entire operating system. They share a single kernel with other containers and boot in seconds instead of minutes.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Images are read-only templates&lt;/strong&gt; containing instructions for creating a container. A Docker image creates containers to run on the Docker platform. Docker images are immutable, so you cannot change them once they are created. If you need to change something, create another container with your changes, then save those as another image. Or, just run your new container using an existing image as a base and change that one.&lt;/p&gt;
+&lt;p&gt;An image is composed of multiple stacked layers, like layers in a photo editor, each changing something in the environment. Images contain the code or binary, runtimes, dependencies, and other filesystem objects to run an application. The image relies on the host operating system (OS) kernel. For example, to build a web server image, start with an image that includes Ubuntu Linux (a base OS). Then, add packages like Apache and PHP on top.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Think of a Docker container as a running image instance&lt;/strong&gt;. You can create many containers from the same image, each with its own unique data and state. Although images are not the only way to create containers, they are a common method.&lt;/p&gt;
+&lt;p&gt;Source: &lt;a href=&#34;https://circleci.com/blog/docker-image-vs-container/&#34;&gt;Docker image vs container: What are the differences? | CircleCI&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;6-image-with-cross-platform&#34;&gt;6. Image with cross platform&lt;/h2&gt;
+&lt;p&gt;Docker images are typically built for a specific CPU architecture, such as x86-64 (64-bit Intel/AMD processors). By default, Docker images are built for the architecture of the system where the image is built. However, it is possible to build and run Docker images for different architectures using a technique called multi-architecture or cross-platform support.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Docker images can support multiple platforms&lt;/strong&gt;, which means that a single image may contain variants for different architectures, and sometimes for different operating systems, such as Windows. When you run an image with multi-platform support, Docker automatically selects the image that matches your OS and architecture.&lt;/p&gt;
+&lt;p&gt;Most of the Docker Official Images on Docker Hub provide a &lt;a href=&#34;https://github.com/docker-library/official-images#architectures-other-than-amd64&#34;&gt;variety of architecturesopen_in_new&lt;/a&gt;. For example, the &lt;code&gt;busybox&lt;/code&gt; image supports &lt;code&gt;amd64&lt;/code&gt;, &lt;code&gt;arm32v5&lt;/code&gt;, &lt;code&gt;arm32v6&lt;/code&gt;, &lt;code&gt;arm32v7&lt;/code&gt;, &lt;code&gt;arm64v8&lt;/code&gt;, &lt;code&gt;i386&lt;/code&gt;, &lt;code&gt;ppc64le&lt;/code&gt;, and &lt;code&gt;s390x&lt;/code&gt;. When running this image on an &lt;code&gt;x86_64&lt;/code&gt; / &lt;code&gt;amd64&lt;/code&gt; machine, the &lt;code&gt;amd64&lt;/code&gt; variant is pulled and run.&lt;/p&gt;
+&lt;p&gt;Learn more: &lt;a href=&#34;https://docs.docker.com/build/building/multi-platform/&#34;&gt;Multi-platform images | Docker Docs&lt;/a&gt;&lt;/p&gt;
+</content>
+    </item>
+    
+  </channel>
+</rss>

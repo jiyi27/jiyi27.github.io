@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>用 Go 实现一个简单的贪吃蛇 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="地图
+地图就是个二维数组board, 在Go里面叫Slice of slices, 该地图(二维数组)存储bool类型, 定义如下和结构如下:
+// height = 4, width = 3 func main() { // Definition board := make([][]bool, height) for i := range board { board[i] = make([]bool, width) } // Test board[2][1] = true for y := range board{ for _, v := range board[y] { fmt.Printf(&#34;%v &#34;, v) } println() } } false false false false false false false true false false false false 打印蛇🐍身体
+蛇的身体由多个节点组成, 节点是个struct类型, 如下:
+type node struct { x int y int } 把地图设计成存储布尔类型的数组的目的就是方便打印蛇的身体, 也是实现的关键, 即每次循环board(代表地图的二维数组), 遇到false就打印空白, 遇到true就打印一个黑色方块▪️代表蛇的身体:
+func draw() { fmt.Print(&#34;\033[H\033[2J&#34;) // original: &#39;for y, _ := range board { ... }&#39; for y := range board { for i, v := range board[y] { if !v &amp;&amp; (food.x != i || food.y != y) { fmt.Print(&#34;□ &#34;) } else if !v &amp;&amp; food.x == i &amp;&amp; food.y == y { fmt.Print(&#34;★ &#34;) } else { fmt.Print(&#34;■ &#34;) } } fmt.Println() } } 这样我们只需要写个函数根据蛇的身体(多个节点)来修改(更新)board里面每个元素的值, 然后再写个函数(也就是上面的draw())根据board来画地图就好了, 注意画地图的时候也画了蛇的身体:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/practice/001-snake-game/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="用 Go 实现一个简单的贪吃蛇">
+<meta property="og:description" content="地图
+地图就是个二维数组board, 在Go里面叫Slice of slices, 该地图(二维数组)存储bool类型, 定义如下和结构如下:
+// height = 4, width = 3 func main() { // Definition board := make([][]bool, height) for i := range board { board[i] = make([]bool, width) } // Test board[2][1] = true for y := range board{ for _, v := range board[y] { fmt.Printf(&#34;%v &#34;, v) } println() } } false false false false false false false true false false false false 打印蛇🐍身体
+蛇的身体由多个节点组成, 节点是个struct类型, 如下:
+type node struct { x int y int } 把地图设计成存储布尔类型的数组的目的就是方便打印蛇的身体, 也是实现的关键, 即每次循环board(代表地图的二维数组), 遇到false就打印空白, 遇到true就打印一个黑色方块▪️代表蛇的身体:
+func draw() { fmt.Print(&#34;\033[H\033[2J&#34;) // original: &#39;for y, _ := range board { ... }&#39; for y := range board { for i, v := range board[y] { if !v &amp;&amp; (food.x != i || food.y != y) { fmt.Print(&#34;□ &#34;) } else if !v &amp;&amp; food.x == i &amp;&amp; food.y == y { fmt.Print(&#34;★ &#34;) } else { fmt.Print(&#34;■ &#34;) } } fmt.Println() } } 这样我们只需要写个函数根据蛇的身体(多个节点)来修改(更新)board里面每个元素的值, 然后再写个函数(也就是上面的draw())根据board来画地图就好了, 注意画地图的时候也画了蛇的身体:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/practice/001-snake-game/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="golang" />
+
+
+  <meta property="article:published_time" content="2023-05-20 19:59:09 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/practice/001-snake-game/">用 Go 实现一个简单的贪吃蛇</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-05-20</time><span class="post-reading-time">2 分钟阅读 (307 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%B8%B8%E6%88%8F/">游戏</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p><strong>地图</strong></p>
+<p>地图就是个二维数组<code>board</code>, 在Go里面叫Slice of slices, 该地图(二维数组)存储bool类型, 定义如下和结构如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// height = 4, width = 3</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Definition</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">board</span> <span style="color:#f92672">:=</span> make([][]<span style="color:#66d9ef">bool</span>, <span style="color:#a6e22e">height</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">board</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">board</span>[<span style="color:#a6e22e">i</span>] = make([]<span style="color:#66d9ef">bool</span>, <span style="color:#a6e22e">width</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Test</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">board</span>[<span style="color:#ae81ff">2</span>][<span style="color:#ae81ff">1</span>] = <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">y</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">board</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">v</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">board</span>[<span style="color:#a6e22e">y</span>] {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%v &#34;</span>, <span style="color:#a6e22e">v</span>)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		println()
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">false</span> <span style="color:#66d9ef">false</span> <span style="color:#66d9ef">false</span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">false</span> <span style="color:#66d9ef">false</span> <span style="color:#66d9ef">false</span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">false</span> <span style="color:#66d9ef">true</span> <span style="color:#66d9ef">false</span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">false</span> <span style="color:#66d9ef">false</span> <span style="color:#66d9ef">false</span> 
+</span></span></code></pre></div><hr>
+<p><strong>打印蛇🐍身体</strong></p>
+<p>蛇的身体由多个节点组成, 节点是个struct类型, 如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">node</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">x</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">y</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>把地图设计成存储布尔类型的数组的目的就是方便打印蛇的身体, 也是实现的关键, 即每次循环<code>board</code>(代表地图的二维数组), 遇到false就打印空白, 遇到true就打印一个黑色方块▪️代表蛇的身体:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">draw</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;\033[H\033[2J&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// original: &#39;for y, _ := range board { ... }&#39;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">y</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">board</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">v</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">board</span>[<span style="color:#a6e22e">y</span>] {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">v</span> <span style="color:#f92672">&amp;&amp;</span> (<span style="color:#a6e22e">food</span>.<span style="color:#a6e22e">x</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">food</span>.<span style="color:#a6e22e">y</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">y</span>) {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;□ &#34;</span>)
+</span></span><span style="display:flex;"><span>			} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">v</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">food</span>.<span style="color:#a6e22e">x</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">food</span>.<span style="color:#a6e22e">y</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">y</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;★ &#34;</span>)
+</span></span><span style="display:flex;"><span>			} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;■ &#34;</span>)
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>()
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这样我们只需要写个函数根据蛇的身体(多个节点)来修改(更新)<code>board</code>里面每个元素的值, 然后再写个函数(也就是上面的<code>draw()</code>)根据<code>board</code>来画地图就好了, 注意画地图的时候也画了蛇的身体:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">update</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 这里访问二维数组的时候第一个是高度, 第二个是宽度</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 即board[0][2]代表第1个数组的第3个元素, 所以我们写成 board[v.y][v.x] = true</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 而不是board[v.x][v.y] = true</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">v</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">snake</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">board</span>[<span style="color:#a6e22e">v</span>.<span style="color:#a6e22e">y</span>][<span style="color:#a6e22e">v</span>.<span style="color:#a6e22e">x</span>] = <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// draw map and snake and food</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">draw</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><hr>
+<p><strong>让蛇动起来</strong></p>
+<p>让蛇动起来的方法有多种, 在这里比如每次reset地图<code>board</code>的数据为false, 然后再根据蛇的身体<code>snake</code>更新<code>board</code>, 但这样效率稍低, 因为每次我们都需要遍历board去reset, 仔细想一下蛇每次移动, 其实就是最前面的头往前移动一格, 尾巴往前移动一格, 中间的身体<strong>看着</strong>是不变的, 所以我们在实现的时候也是有三步:</p>
+<ul>
+<li>1 根据当前方向<code>direction</code>修改<code>snake</code>第一个元素的坐标, 实现蛇头前进一格</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>  <span style="color:#75715e">// change the head position</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">direction</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">right</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">snake</span>[<span style="color:#ae81ff">0</span>].<span style="color:#a6e22e">x</span><span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">left</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">snake</span>[<span style="color:#ae81ff">0</span>].<span style="color:#a6e22e">x</span><span style="color:#f92672">--</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">up</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">snake</span>[<span style="color:#ae81ff">0</span>].<span style="color:#a6e22e">y</span><span style="color:#f92672">--</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#a6e22e">down</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">snake</span>[<span style="color:#ae81ff">0</span>].<span style="color:#a6e22e">y</span><span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span></code></pre></div><ul>
+<li>2 遍历<code>snake</code>, 使第<code>i</code>个元素的坐标等于第<code>i-1</code>个元素的坐标(<code>i&gt;=1</code>),中间的身体看着是不动的, 其实每个节点都前进了</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">length</span> <span style="color:#f92672">:=</span> len(<span style="color:#a6e22e">snake</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// &#34;move&#34; all node of snake except the head</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">length</span> &gt; <span style="color:#ae81ff">1</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// make the value of each (i)th element equal to the (i-1)th value</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> len(<span style="color:#a6e22e">snake</span>) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">--</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">snake</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">snake</span>[<span style="color:#a6e22e">i</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>3 设置位置在蛇的最后一个节点即尾巴<code>(snake[len - 1].x, snake[len - 1].y)</code>的<code>board</code>元素为false, 因为在第2步尾巴已经变成倒数第二个元素的坐标了, 所以我们要把旧的尾巴坐标位置设置为false</li>
+</ul>
+<p>即这样只遍历了<code>snake</code>(一维数组)来实现更新地图.</p>
+<hr>
+<p><strong>总结</strong></p>
+<p>这次的小应用, 熟悉了slice的用法, 也熟悉了很多语法比如<code>:=</code>和<code>var</code>, 尤其是遍历slice以及loop的写法, 比如无限循环可写成:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>其次是导入第三方模块, 如这里读取键盘我们使用的是第三方库, 安装方法很简单, 即在项目根目录执行:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ go get github.com/eiannone/keyboard
+</span></span></code></pre></div><p>源码: <a href="https://gist.github.com/shwezhu/3def0433eb5656deebf07dc32e6eecc1">https://gist.github.com/shwezhu/3def0433eb5656deebf07dc32e6eecc1</a></p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/cpp/008-operator-overloading/" class="button inline prev">
+        C&#43;&#43; Operator Overloading
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/cpp/009-lvalue-rvalue/" class="button inline next">
+        左值和右值
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

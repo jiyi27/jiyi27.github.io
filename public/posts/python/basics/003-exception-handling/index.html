@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Exception Handling Python :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Exception You should never expose stacktrace to users. Thats a security risk. You should also never expose exception messages to users, only for custom exceptions that you know can not contain sensitive information is ok to expose.
+You should never build your release candidate on a developer machine. You should use a build agent for this. The best solution is to look at using build agents, for example Azure devops support this and is a pollished and well working continuous integration suit. edit: There is also another reason for not building on your machine. On your machine you can have stuff in the GAC that makes the project build just fine on your machine but will not run on the target host.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/python/basics/003-exception-handling/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Exception Handling Python">
+<meta property="og:description" content="1. Exception You should never expose stacktrace to users. Thats a security risk. You should also never expose exception messages to users, only for custom exceptions that you know can not contain sensitive information is ok to expose.
+You should never build your release candidate on a developer machine. You should use a build agent for this. The best solution is to look at using build agents, for example Azure devops support this and is a pollished and well working continuous integration suit. edit: There is also another reason for not building on your machine. On your machine you can have stuff in the GAC that makes the project build just fine on your machine but will not run on the target host.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/python/basics/003-exception-handling/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="python" />
+
+
+  <meta property="article:published_time" content="2023-11-24 09:37:26 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/python/basics/003-exception-handling/">Exception Handling Python</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-11-24</time><span class="post-reading-time">8 分钟阅读 (1600 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/python/">python</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%94%99%E8%AF%AF%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/">错误异常处理</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-exception">1. Exception<a href="#1-exception" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>You should never expose stacktrace to users. Thats a security risk. You should also never expose exception messages to users, only for custom exceptions that you know can not contain sensitive information is ok to expose.</p>
+<p>You should never build your release candidate on a developer machine. You should use a build agent for this. The best solution is to look at using build agents, for example Azure devops support this and is a pollished and well working continuous integration suit. edit: There is also another reason for not building on your machine. On your machine you can have stuff in the GAC that makes the project build just fine on your machine but will not run on the target host.</p>
+<p>Finally you should build the release candidate in release mode. Both for performance reasons and security.</p>
+<p><a href="https://softwareengineering.stackexchange.com/a/402751/435322">https://softwareengineering.stackexchange.com/a/402751/435322</a></p>
+<p>两种编程异常处理风格:</p>
+<p>EAFP (Easier to Ask for Forgiveness than Permission):</p>
+<ul>
+<li>这是一种&quot;先做后检查&quot;的方式, 直接执行操作, 在出现异常时再处理</li>
+<li>Python 特别推崇这种风格</li>
+<li>代码示例:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># EAFP风格</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>    value <span style="color:#f92672">=</span> my_dict[<span style="color:#e6db74">&#39;key&#39;</span>]
+</span></span><span style="display:flex;"><span>    process(value)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">except</span> <span style="color:#a6e22e">KeyError</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 处理键不存在的情况</span>
+</span></span><span style="display:flex;"><span>    handle_missing_key()
+</span></span></code></pre></div><p>LBYL (Look Before You Leap):</p>
+<ul>
+<li>这是一种&quot;先检查后操作&quot;的方式,在执行操作前先判断条件是否满足</li>
+<li>更常见于C或Java等语言</li>
+<li>代码示例:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># LBYL风格</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#39;key&#39;</span> <span style="color:#f92672">in</span> my_dict:
+</span></span><span style="display:flex;"><span>    value <span style="color:#f92672">=</span> my_dict[<span style="color:#e6db74">&#39;key&#39;</span>]
+</span></span><span style="display:flex;"><span>    process(value)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>    handle_missing_key()
+</span></span></code></pre></div><p>两种风格的比较:</p>
+<ol>
+<li>
+<p>EAFP</p>
+<ul>
+<li>优点:代码更简洁,处理异常情况更统一</li>
+<li>缺点:可能带来性能开销(异常处理的开销)</li>
+<li>The reason that Python is EAFP is that unlike other languages (Java for example) - in Python catching exceptions is relatively inexpensive operation, and that&rsquo;s why you&rsquo;re encouraged to use it. <a href="https://stackoverflow.com/a/32901991/16317008">https://stackoverflow.com/a/32901991/16317008</a></li>
+</ul>
+</li>
+<li>
+<p>LBYL</p>
+<ul>
+<li>优点:逻辑清晰,容易理解</li>
+<li>缺点:可能出现竞态条件,需要多次检查</li>
+</ul>
+</li>
+</ol>
+<p>另外<a href="https://stackoverflow.com/a/32902114/16317008">有个帖子也提供了一个很好的观点</a>,</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># LBYL</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> key <span style="color:#f92672">in</span> dic:
+</span></span><span style="display:flex;"><span>    print(dic[key])
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>    handleError()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># EAFP</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>    print(dic[key])
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">except</span> <span style="color:#a6e22e">KeyError</span>:
+</span></span><span style="display:flex;"><span>    handleError()
+</span></span></code></pre></div><blockquote>
+<p>Now this looks very similar, although you should keep in mind that the LBYL solution checks the dictionary <em>twice</em>. As with all code that catches exceptions, you should only do it if the non-existance of a key is the <em>exceptional case</em>. So if usually, the supplied key is excepted to be in the dictionary, then it’s EAFP and you should just access it directly. If you don’t expect the key to be present in the dictionary, then you should probably check its existance first (while exceptions are cheaper in Python, they are still not free, so keep them for exceptional cases). <a href="https://stackoverflow.com/a/32902114/16317008">https://stackoverflow.com/a/32902114/16317008</a></p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// C++, Java...不建议 - 使用异常控制流程</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> 0; i <span style="color:#f92672">&lt;</span> 10000; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span>(i <span style="color:#f92672">%</span> 2 <span style="color:#f92672">==</span> 0) {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Exception();  
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">catch</span>(Exception e) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 处理</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 建议的做法 - 使用正常的控制流程</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> 0; i <span style="color:#f92672">&lt;</span> 10000; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(i <span style="color:#f92672">%</span> 2 <span style="color:#f92672">==</span> 0) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// ...</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><hr>
+<p>上面讨论了是该使用异常还是 if else 判断, 下面讨论关于异常的问题,</p>
+<p>都知道尽早捕获业务异常, 可是捕获的异常是继续往上 throw 还是立即被处理呢, 判断条件是什么?
+都抛出到最外层, 固然好, 代码清晰明了, 可是这样对性能有没有影响呢</p>
+<p>比如应该结束程序的异常, 一直往上抛出到最外层终止程序还是输出log后立即终止呢?</p>
+<h2 id="2-basics-concepts">2. Basics concepts<a href="#2-basics-concepts" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Try to understand the exception information (<em>Traceback (most recent call last)</em>) :</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">foo</span>():
+</span></span><span style="display:flex;"><span>    print(<span style="color:#ae81ff">10</span> <span style="color:#f92672">*</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+</span></span><span style="display:flex;"><span>    foo()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>    main()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Traceback (most recent call last):
+</span></span><span style="display:flex;"><span>  File <span style="color:#e6db74">&#34;main.py&#34;</span>, line <span style="color:#ae81ff">10</span>, <span style="color:#f92672">in</span> <span style="color:#f92672">&lt;</span>module<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>    main()
+</span></span><span style="display:flex;"><span>  File <span style="color:#e6db74">&#34;main.py&#34;</span>, line <span style="color:#ae81ff">6</span>, <span style="color:#f92672">in</span> main
+</span></span><span style="display:flex;"><span>    foo()
+</span></span><span style="display:flex;"><span>  File <span style="color:#e6db74">&#34;main.py&#34;</span>, line <span style="color:#ae81ff">2</span>, <span style="color:#f92672">in</span> foo
+</span></span><span style="display:flex;"><span>    print(<span style="color:#ae81ff">10</span> <span style="color:#f92672">*</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">ZeroDivisionError</span>: division by zero
+</span></span></code></pre></div><p>As you can see The last line of the error message indicates what happened: <code>print(10 * (1 / 0))</code>.</p>
+<blockquote>
+<p>Errors detected during execution are called <em>exceptions</em>. <a href="https://docs.python.org/3/tutorial/errors.html">Errors and Exceptions — Python 3.12.0</a></p>
+</blockquote>
+<h2 id="3-types-of-exceptions">3. Types of Exceptions<a href="#3-types-of-exceptions" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><code>BaseException</code> is the common base class of all exceptions. One of its subclasses, <code>Exception</code>, is the base class of all the <strong>non-fatal</strong> exceptions. Exceptions which are not subclasses of <code>Exception</code> are not typically handled, because they are used to indicate that the program should terminate. They include <code>SystemExit</code>which is raised by <code>sys.exit()</code> and <code>KeyboardInterrupt</code>which is raised when a user wishes to interrupt the program.</p>
+<p><code>Exception</code>can be used as a wildcard that catches (almost) everything. However, it is good practice to be as specific as possible with the types of exceptions that we intend to handle, and to allow any unexpected exceptions to propagate on.</p>
+<h2 id="4-handle-exceptions">4. Handle Exceptions<a href="#4-handle-exceptions" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>The most common pattern for handling <code>Exception</code> is to <strong>print or log the exception and then re-raise it</strong> (allowing a caller to handle the exception as well):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>    f <span style="color:#f92672">=</span> open(<span style="color:#e6db74">&#39;myfile.txt&#39;</span>)
+</span></span><span style="display:flex;"><span>    s <span style="color:#f92672">=</span> f<span style="color:#f92672">.</span>readline()
+</span></span><span style="display:flex;"><span>    i <span style="color:#f92672">=</span> int(s<span style="color:#f92672">.</span>strip())
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">except</span> <span style="color:#a6e22e">OSError</span> <span style="color:#66d9ef">as</span> err:
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;OS error:&#34;</span>, err)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">raise</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> err:
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Unexpected </span><span style="color:#e6db74">{</span>err<span style="color:#e6db74">=}</span><span style="color:#e6db74">, </span><span style="color:#e6db74">{</span>type(err)<span style="color:#e6db74">=}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">raise</span>
+</span></span></code></pre></div><h3 id="predefined-clean-up-actions">Predefined clean-up actions<a href="#predefined-clean-up-actions" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Some objects define standard clean-up actions to be undertaken when the object is no longer needed, regardless of whether or not the operation using the object succeeded or failed. Look at the following example, which tries to open a file and print its contents to the screen.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> line <span style="color:#f92672">in</span> open(<span style="color:#e6db74">&#34;myfile.txt&#34;</span>):
+</span></span><span style="display:flex;"><span>    print(line, end<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>)
+</span></span></code></pre></div><p>The problem with this code is that it leaves the file open for an indeterminate amount of time after this part of the code has finished executing. This is not an issue in simple scripts, but can be a problem for larger applications. The <a href="https://docs.python.org/3/reference/compound_stmts.html#with"><code>with</code></a> statement allows objects like files to be used in a way that ensures they are always cleaned up promptly and correctly.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#34;myfile.txt&#34;</span>) <span style="color:#66d9ef">as</span> f:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> line <span style="color:#f92672">in</span> f:
+</span></span><span style="display:flex;"><span>        print(line, end<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>)
+</span></span></code></pre></div><p>After the statement is executed, the file <em>f</em> is always closed, <strong>even if a problem was encountered while processing the lines</strong>. Objects which, like files, provide predefined clean-up actions will indicate this in their documentation.</p>
+<h2 id="5-performance">5. Performance<a href="#5-performance" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><a href="https://stackoverflow.com/questions/66536614/how-is-exception-handling-implemented-in-python">performance - How is exception handling implemented in Python? - Stack Overflow</a>:</p>
+<blockquote>
+<p>I&rsquo;ve learned from other SO answers that a try/catch block is <a href="https://stackoverflow.com/a/2522013/1663614">cheaper than an if/else statement</a> if the exception is expected to be raised rarely, and that <a href="https://stackoverflow.com/a/36784706/1663614">it&rsquo;s the call depth that&rsquo;s important</a> because filling the stacktrace is expensive. This is probably principally true for all programming languages.</p>
+</blockquote>
+<blockquote>
+<p>If you throw an exception, all functions will be exited back to the point where it finds a <code>try...catch</code> block with a matching <code>catch</code> type. If your function isn&rsquo;t called from within a try block, the program will exit with an unhandled exception.</p>
+</blockquote>
+<p>Find some discussions, from: <a href="https://stackoverflow.com/questions/1308432/do-try-catch-blocks-hurt-performance-when-exceptions-are-not-thrown?noredirect=1&amp;lq=1">c# - Do try/catch blocks hurt performance when exceptions are not thrown? - Stack Overflow</a></p>
+<blockquote>
+<p>During a code review with a Microsoft employee we came across a large section of code inside a <code>try{}</code> block. She and an IT representative suggested this can have effects on performance of the code. In fact, they suggested most of the code should be outside of try/catch blocks, and that only important sections should be checked. The Microsoft employee added and said an upcoming white paper warns against incorrect try/catch blocks.</p>
+</blockquote>
+<blockquote>
+<p>try catch blocks have a negligible impact on performance but exception Throwing can be pretty sizable, this is probably where your coworker was confused.</p>
+</blockquote>
+<p>Another disscussion: <a href="https://stackoverflow.com/questions/16451777/is-it-expensive-to-use-try-catch-blocks-even-if-an-exception-is-never-thrown?noredirect=1&amp;lq=1">java - Is it expensive to use try-catch blocks even if an exception is never thrown? - Stack Overflow</a></p>
+<blockquote>
+<p><code>try</code> has almost no expense at all. Instead of doing the work of setting up the <code>try</code> at runtime, the code&rsquo;s metadata is structured at compile time such that when an exception is thrown, it now does a relatively expensive operation of walking up the stack and seeing if any <code>try</code> blocks exist that would catch this exception. From a layman&rsquo;s perspective, <code>try</code> may as well be free. It&rsquo;s actually throwing the exception that costs you - but unless you&rsquo;re throwing hundreds or thousands of exceptions, you still won&rsquo;t notice the cost.</p>
+</blockquote>
+<p>Another post: <a href="https://stackoverflow.com/questions/299068/what-are-the-effects-of-exceptions-on-performance-in-java?noredirect=1&amp;lq=1">What are the effects of exceptions on performance in Java? - Stack Overflow</a></p>
+<blockquote>
+<p>In Java much of the expense of throwing an exception is the time spent gathering the stack trace, which occurs when the exception object is created. The actual cost of throwing the exception, while large, is considerably less than the cost of creating the exception.</p>
+<p><a href="https://stackoverflow.com/a/8024032/16317008">https://stackoverflow.com/a/8024032/16317008</a></p>
+</blockquote>
+<h2 id="6-when-to-catch">6. When to catch<a href="#6-when-to-catch" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="61-at-the-lowest-possible-level">6.1. At the lowest possible level<a href="#61-at-the-lowest-possible-level" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>This is the level at which you are integrating with third party code, such as an ORM tool or any library performing IO operations (accessing resources over HTTP, reading a file, saving to the database, you name it). That is, <strong>the level at which you leave your application’s native code</strong> to interact with other components.</p>
+<p>The guidelines in this scenario are:</p>
+<ul>
+<li><strong>Handle only specific exceptions</strong>, such as <code>SqlTimeoutException</code> or <code>IOException</code>. Never handle a generic exception (of type <code>Exception</code>)</li>
+<li><strong>Handle it only if you have something meaningful to do about it</strong>, such as retries, triggering compensatory actions, or adding more data to the exception (e.g. context variables), and then re-throw it</li>
+<li><strong>Do not perform logging here</strong></li>
+<li><strong>Let all other exceptions bubble up</strong> as they will be handled by the second case</li>
+</ul>
+<h3 id="62-at-the-highest-possible-level">6.2. At the highest possible level<a href="#62-at-the-highest-possible-level" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>This would be the last place where you can handle the exception before it is thrown directly to the user.</p>
+<p>Your goal here is to <strong>log the error and forward the details to the programmers</strong> so they can identify and correct the error. Add as much information as possible, record it, and then <strong>show an apology message to the user</strong>, as there’s probably nothing they can do about it, especially if it is a bug in the software.</p>
+<p>The guidelines in this second scenario are:</p>
+<ul>
+<li>Handle the generic Exception class</li>
+<li>Add more information from current execution context</li>
+<li>Log the error and notify the programmers</li>
+<li>Show an apology to the user</li>
+<li>Work it out as soon as you can</li>
+</ul>
+<p>Learn more, very good explanation: <a href="https://stackoverflow.com/a/59511485">https://stackoverflow.com/a/59511485</a></p>
+<h2 id="7-when-to-throw-exceptions---library">7. When to throw exceptions - Library<a href="#7-when-to-throw-exceptions---library" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Easier to explain in the context of developing a library. <strong>You should throw when you reached an error and there&rsquo;s nothing more you can do</strong> besides letting the consumer of your APIs know about it, and letting them decide.</p>
+<p>Imagine you&rsquo;re the developer of some data access library. When you reach a network error, there&rsquo;s nothing you can do besides throwing an exception. That&rsquo;s an irreversible error from a data access library standpoint.</p>
+<p>Learn more, very good explanation: <a href="https://stackoverflow.com/a/59511485">https://stackoverflow.com/a/59511485</a></p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/js/002-promise-async-await/" class="button inline prev">
+        Promise Object in Javascript
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/python/basics/004-yield-generator/" class="button inline next">
+        Yeild &amp; Generator Python
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

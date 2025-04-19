@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>零碎知识 - MySQL :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. UUIDs vs. Auto-incrementing Keys 特性 自增 ID (BIGINT) UUID 存储空间 8 字节 16 字节 (BINARY) 或 36 字节 (CHAR) 索引性能 优 - 顺序插入，页分裂少 差 - 随机插入，频繁页分裂 分布式友好度 差 - 需要额外设计（雪花算法）, 容易冲突 优 - 天然分布式友好 插入性能 优 - 顺序写入 差 - 随机写入 缓存友好度 高 - 连续存储 低 - 分散存储 如果主键是 UUID，数据插入时是随机的，会导致 B&#43; 树频繁分裂，影响索引性能。
+✅ 优化方法：使用 自增 ID 作为主键。如果必须用 UUID，可以使用 UUIDv7（时间戳递增的 UUID）。
+2. 存储字符串 The most commonly used string data types in the context of databases are CHAR and VARCHAR. TEXT and LONGTEXT are also commonly used string data types.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/database/mysql/001-nuggets-mysql/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="零碎知识 - MySQL">
+<meta property="og:description" content="1. UUIDs vs. Auto-incrementing Keys 特性 自增 ID (BIGINT) UUID 存储空间 8 字节 16 字节 (BINARY) 或 36 字节 (CHAR) 索引性能 优 - 顺序插入，页分裂少 差 - 随机插入，频繁页分裂 分布式友好度 差 - 需要额外设计（雪花算法）, 容易冲突 优 - 天然分布式友好 插入性能 优 - 顺序写入 差 - 随机写入 缓存友好度 高 - 连续存储 低 - 分散存储 如果主键是 UUID，数据插入时是随机的，会导致 B&#43; 树频繁分裂，影响索引性能。
+✅ 优化方法：使用 自增 ID 作为主键。如果必须用 UUID，可以使用 UUIDv7（时间戳递增的 UUID）。
+2. 存储字符串 The most commonly used string data types in the context of databases are CHAR and VARCHAR. TEXT and LONGTEXT are also commonly used string data types.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/database/mysql/001-nuggets-mysql/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="数据库" />
+
+
+  <meta property="article:published_time" content="2024-01-10 23:06:36 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/database/mysql/001-nuggets-mysql/">零碎知识 - MySQL</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2024-01-10</time><span class="post-reading-time">3 分钟阅读 (452 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/mysql/">mysql</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9B%B6%E7%A2%8E%E7%9F%A5%E8%AF%86/">零碎知识</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-uuids-vs-auto-incrementing-keys">1. UUIDs vs. Auto-incrementing Keys<a href="#1-uuids-vs-auto-incrementing-keys" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<table>
+  <thead>
+      <tr>
+          <th>特性</th>
+          <th>自增 ID (BIGINT)</th>
+          <th>UUID</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>存储空间</td>
+          <td>8 字节</td>
+          <td>16 字节 (BINARY) 或 36 字节 (CHAR)</td>
+      </tr>
+      <tr>
+          <td>索引性能</td>
+          <td>优 - 顺序插入，页分裂少</td>
+          <td>差 - 随机插入，频繁页分裂</td>
+      </tr>
+      <tr>
+          <td>分布式友好度</td>
+          <td>差 - 需要额外设计（雪花算法）, 容易冲突</td>
+          <td>优 - 天然分布式友好</td>
+      </tr>
+      <tr>
+          <td>插入性能</td>
+          <td>优 - 顺序写入</td>
+          <td>差 - 随机写入</td>
+      </tr>
+      <tr>
+          <td>缓存友好度</td>
+          <td>高 - 连续存储</td>
+          <td>低 - 分散存储</td>
+      </tr>
+  </tbody>
+</table>
+<p>如果主键是 UUID，数据插入时是随机的，会导致 B+ 树频繁分裂，影响索引性能。</p>
+<p>✅ <strong>优化方法</strong>：使用 <strong>自增 ID</strong> 作为主键。如果必须用 UUID，可以使用 <strong>UUIDv7</strong>（时间戳递增的 UUID）。</p>
+<h2 id="2-存储字符串">2. 存储字符串<a href="#2-存储字符串" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>The most commonly used string data types in the context of databases are CHAR and VARCHAR. TEXT and LONGTEXT are also commonly used string data types.</p>
+<p><strong><code>char(10)</code> vs <code>varchar(10)</code></strong></p>
+<p>When you define a column as CHAR(10), it will always occupy 10 characters of storage, regardless of the actual data length. If you store a string shorter than 10 characters, it will be padded with spaces to fill up the remaining space.</p>
+<p>When you define a column as VARCHAR(10), you store a string shorter than 10 characters, it will use only the necessary amount of storage, without any padding.</p>
+<p>In general, the performance difference between CHAR and VARCHAR is usually negligible unless you&rsquo;re dealing with extremely large datasets or have specific performance requirements.</p>
+<blockquote>
+<p>When the length of strings to be written to the field is explicitly specified choose CHAR as the data type. When the number of strings that users will input is not fixed, but there is a limit based on the number of characters, use VARCHAR as the data type. For example, for a username that can vary in length, VARCHAR is used as the data type.</p>
+</blockquote>
+<h2 id="3-存储时间">3. 存储时间<a href="#3-存储时间" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-不要用字符串存储日期">3.1. 不要用字符串存储日期<a href="#31-不要用字符串存储日期" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>字符串占用的空间更大</li>
+<li>字符串存储的日期比较效率比较低（逐个字符进行比对），无法用日期相关的 API 进行计算和比较</li>
+</ul>
+<h3 id="32-datetime-and-timestamp">3.2. Datetime and Timestamp<a href="#32-datetime-and-timestamp" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><code>Datetime</code> 和 <code>Timestamp</code> 是 MySQL 提供的两种比较相似的保存时间的数据类型, 通常我们都会首选 <code>Timestamp</code>. 因为DateTime类型没有时区信息的, 而Timestamp可以存储time zone信息, 并且做转换.</p>
+<p>Timestamp 只需要使用 4 个字节的存储空间，但是 DateTime 需要耗费 8 个字节的存储空间。但是，这样同样造成了一个问题，Timestamp 表示的时间范围更小。</p>
+<ul>
+<li>DateTime ：1000-01-01 00:00:00 ~ 9999-12-31 23:59:59</li>
+<li>Timestamp： 1970-01-01 00:00:01 ~ 2037-12-31 23:59:59</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> <span style="color:#f92672">`</span>time_zone_test<span style="color:#f92672">`</span> (
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>id<span style="color:#f92672">`</span> int <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span> AUTO_INCREMENT,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>date_time<span style="color:#f92672">`</span> datetime <span style="color:#66d9ef">DEFAULT</span> <span style="color:#66d9ef">NULL</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">`</span>time_stamp<span style="color:#f92672">`</span> <span style="color:#66d9ef">timestamp</span> <span style="color:#66d9ef">NOT</span> <span style="color:#66d9ef">NULL</span> <span style="color:#66d9ef">DEFAULT</span> <span style="color:#66d9ef">CURRENT_TIMESTAMP</span> <span style="color:#66d9ef">ON</span> <span style="color:#66d9ef">UPDATE</span> <span style="color:#66d9ef">CURRENT_TIMESTAMP</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> (<span style="color:#f92672">`</span>id<span style="color:#f92672">`</span>)
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> time_zone_test(date_time) <span style="color:#66d9ef">VALUES</span>(NOW());
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">select</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">from</span> time_zone_test;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">+</span><span style="color:#75715e">----+---------------------+---------------------+
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#f92672">|</span> id <span style="color:#f92672">|</span> date_time           <span style="color:#f92672">|</span> time_stamp          <span style="color:#f92672">|</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">+</span><span style="color:#75715e">----+---------------------+---------------------+
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#f92672">|</span>  <span style="color:#ae81ff">1</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">2023</span><span style="color:#f92672">-</span><span style="color:#ae81ff">04</span><span style="color:#f92672">-</span><span style="color:#ae81ff">01</span> <span style="color:#ae81ff">10</span>:<span style="color:#ae81ff">45</span>:<span style="color:#ae81ff">04</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">2023</span><span style="color:#f92672">-</span><span style="color:#ae81ff">04</span><span style="color:#f92672">-</span><span style="color:#ae81ff">01</span> <span style="color:#ae81ff">10</span>:<span style="color:#ae81ff">45</span>:<span style="color:#ae81ff">04</span> <span style="color:#f92672">|</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">+</span><span style="color:#75715e">----+---------------------+---------------------+
+</span></span></span></code></pre></div><p>这也说明了一个问题, 就是我们插入数据的时候, 没必要在逻辑上获取时间再加入, 我们只需要在创建表的时候设置一个time column并为其设置default值, 即可, 每次只用在Java代码中插入其他column, 然后时间会被mysql自动加上去.</p>
+<p>对于上面的数据, 我们修改会话的时区, 可以看到时间就变了:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">set</span> time_zone<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;+8:00&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">+</span><span style="color:#75715e">----+---------------------+---------------------+
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#f92672">|</span> id <span style="color:#f92672">|</span> date_time           <span style="color:#f92672">|</span> time_stamp          <span style="color:#f92672">|</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">+</span><span style="color:#75715e">----+---------------------+---------------------+
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#f92672">|</span>  <span style="color:#ae81ff">1</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">2023</span><span style="color:#f92672">-</span><span style="color:#ae81ff">04</span><span style="color:#f92672">-</span><span style="color:#ae81ff">01</span> <span style="color:#ae81ff">10</span>:<span style="color:#ae81ff">45</span>:<span style="color:#ae81ff">04</span> <span style="color:#f92672">|</span> <span style="color:#ae81ff">2023</span><span style="color:#f92672">-</span><span style="color:#ae81ff">04</span><span style="color:#f92672">-</span><span style="color:#ae81ff">01</span> <span style="color:#ae81ff">21</span>:<span style="color:#ae81ff">45</span>:<span style="color:#ae81ff">04</span> <span style="color:#f92672">|</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">+</span><span style="color:#75715e">----+---------------------+---------------------+
+</span></span></span></code></pre></div><h2 id="4-default-vs-not-null">4. Default vs NOT NULL<a href="#4-default-vs-not-null" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>有没有想过, 建表的时候default 和 not null一起使用, 是不是有点redundant? 因为比如你不插入值的时候mysql会帮你插入默认值,</p>
+<p>其实这么想你就错了, 你想的是我不插入, mysql就会帮我插入个默认值, 所以似乎not null没起作用, 但是你有没有想过如果你只设置了default而没有设置not null限制, 那这时候我插入null个呢, 显然可以插入成功, 但有时候为null, 比如一个日期, 当我们在写Java或者其他代码的时候查询数据然后把date转为string, 如果数据为null可能就会发生异常~</p>
+<h2 id="5-查看-mysql-warning">5. 查看 MySQL Warning<a href="#5-查看-mysql-warning" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>有时候我们创建表的时候或者执行SQL语句, 虽然执行成功了但是会显示有警告,但是还不告诉你警告内容, 这时候你需要立刻执行<code>SHOW WARNINGS;</code>语句, 否则你执行了其他语句再执行这个show, 那现实的就不是上一个语句的warnings了, 如下图:</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/ae56e684a1d7b2c0c6aab58d2064fdc0.png" alt=""></p>
+<p>参考:</p>
+<ul>
+<li><a href="https://medium.com/@centizennationwide/mysql-naming-conventions-e3a6f6219efe">MYSQL Naming Conventions. What is MYSQL? | by Centizen Nationwide | Medium</a></li>
+<li><a href="https://stackoverflow.com/questions/7899200/is-there-a-naming-convention-for-mysql">Is there a naming convention for MySQL? - Stack Overflow</a></li>
+<li><a href="https://www.sqlstyle.guide/#columns">SQL style guide by Simon Holywell</a></li>
+<li><a href="https://juejin.cn/post/7165675545965887525">MySQL数据库中常见的几种表字段数据类型 - 掘金</a></li>
+<li><a href="https://juejin.cn/post/6844904047489581063">老生常谈！数据库如何存储时间？你真的知道吗？ - 掘金</a></li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/microservice/grpc/002-proto-buffer/" class="button inline prev">
+        Ptotocol Buffers
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/database/mysql/003-normalization-join/" class="button inline next">
+        一对多, 多对多建表 MySQL MongoDB
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>数据库死锁以及排查 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 导致死锁的原因 在 MySQL（尤其是 InnoDB 存储引擎）里，常见的死锁往往与行锁（Row Lock）、间隙锁（Gap Lock）、Next-Key Lock 等锁机制的细节紧密相关。要理解为什么会出现死锁，需要先明白 InnoDB 是如何在事务中为数据上锁的，以及不同类型的锁是如何导致冲突的。
+行锁（Row Lock）：对索引记录本身加的锁（Record Lock）
+间隙锁（Gap Lock）：对索引记录之间的间隙加的锁，用于防止幻读（Phantom Read）
+Next-Key Lock：它实际上是“记录锁 &#43; 间隙锁”的组合锁，会锁住“当前索引记录”以及紧邻的一段间隙
+MySQL InnoDB 的默认隔离级别是 REPEATABLE READ。在该隔离级别下，对索引进行范围查询时，为了避免幻读，InnoDB 通常会通过 Next-Key Lock 把记录本身和相邻间隙一起锁定。正是因为这种锁定方式，当多事务并发执行时，如果它们的锁定范围出现交叠或顺序不一致，就比较容易引发死锁。
+1.1. 更新操作顺序不一致 普通行x锁 这是最直观的死锁场景之一, 也是很多人最先想到的场景, 本质原因是两个事务以不同的顺序加锁, 从而彼此等待。先来举一个简单的例子（无 Gap Lock 干扰）, 只用普通行x锁。
+场景: 事务 A 先更新 id=1 的记录，再更新 id=2 的记录；事务 B 先更新 id=2 的记录，再更新 id=1 的记录。
+如果两个事务并行执行，就可能出现这样的顺序：
+事务 A： UPDATE t_user SET balance = balance - 10 WHERE id = 1; 成功锁住 id=1 行 事务 B： UPDATE t_user SET balance = balance - 20 WHERE id = 2; 成功锁住 id=2 行 事务 A： UPDATE t_user SET balance = balance &#43; 10 WHERE id = 2; 要锁 id=2，但是这把锁被事务 B 占用，需要等待 事务 B： UPDATE t_user SET balance = balance &#43; 20 WHERE id = 1; 要锁 id=1，但是这把锁被事务 A 占用，需要等待 此时 A 等 B 释放锁，B 等 A 释放锁，形成死锁, 由于 InnoDB 检测到死锁，会自动回滚其中一个事务, 这种多发生在批量更新的情况, 可以标准化更新顺序，例如按 id 升序更新：
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/003-%E6%AD%BB%E9%94%81/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="数据库死锁以及排查">
+<meta property="og:description" content="1. 导致死锁的原因 在 MySQL（尤其是 InnoDB 存储引擎）里，常见的死锁往往与行锁（Row Lock）、间隙锁（Gap Lock）、Next-Key Lock 等锁机制的细节紧密相关。要理解为什么会出现死锁，需要先明白 InnoDB 是如何在事务中为数据上锁的，以及不同类型的锁是如何导致冲突的。
+行锁（Row Lock）：对索引记录本身加的锁（Record Lock）
+间隙锁（Gap Lock）：对索引记录之间的间隙加的锁，用于防止幻读（Phantom Read）
+Next-Key Lock：它实际上是“记录锁 &#43; 间隙锁”的组合锁，会锁住“当前索引记录”以及紧邻的一段间隙
+MySQL InnoDB 的默认隔离级别是 REPEATABLE READ。在该隔离级别下，对索引进行范围查询时，为了避免幻读，InnoDB 通常会通过 Next-Key Lock 把记录本身和相邻间隙一起锁定。正是因为这种锁定方式，当多事务并发执行时，如果它们的锁定范围出现交叠或顺序不一致，就比较容易引发死锁。
+1.1. 更新操作顺序不一致 普通行x锁 这是最直观的死锁场景之一, 也是很多人最先想到的场景, 本质原因是两个事务以不同的顺序加锁, 从而彼此等待。先来举一个简单的例子（无 Gap Lock 干扰）, 只用普通行x锁。
+场景: 事务 A 先更新 id=1 的记录，再更新 id=2 的记录；事务 B 先更新 id=2 的记录，再更新 id=1 的记录。
+如果两个事务并行执行，就可能出现这样的顺序：
+事务 A： UPDATE t_user SET balance = balance - 10 WHERE id = 1; 成功锁住 id=1 行 事务 B： UPDATE t_user SET balance = balance - 20 WHERE id = 2; 成功锁住 id=2 行 事务 A： UPDATE t_user SET balance = balance &#43; 10 WHERE id = 2; 要锁 id=2，但是这把锁被事务 B 占用，需要等待 事务 B： UPDATE t_user SET balance = balance &#43; 20 WHERE id = 1; 要锁 id=1，但是这把锁被事务 A 占用，需要等待 此时 A 等 B 释放锁，B 等 A 释放锁，形成死锁, 由于 InnoDB 检测到死锁，会自动回滚其中一个事务, 这种多发生在批量更新的情况, 可以标准化更新顺序，例如按 id 升序更新：
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/003-%E6%AD%BB%E9%94%81/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-03-06 12:56:19 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/003-%E6%AD%BB%E9%94%81/">数据库死锁以及排查</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-03-06</time><span class="post-reading-time">5 分钟阅读 (934 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9D%A2%E8%AF%95/">数据库面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-导致死锁的原因">1. 导致死锁的原因<a href="#1-导致死锁的原因" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>在 MySQL（尤其是 InnoDB 存储引擎）里，常见的死锁往往与行锁（Row Lock）、间隙锁（Gap Lock）、Next-Key Lock 等锁机制的细节紧密相关。要理解为什么会出现死锁，需要先明白 InnoDB 是如何在事务中为数据上锁的，以及不同类型的锁是如何导致冲突的。</p>
+<ul>
+<li>
+<p>行锁（Row Lock）：对索引记录本身加的锁（Record Lock）</p>
+</li>
+<li>
+<p>间隙锁（Gap Lock）：对索引记录之间的间隙加的锁，用于防止幻读（Phantom Read）</p>
+</li>
+<li>
+<p>Next-Key Lock：它实际上是“记录锁 + 间隙锁”的组合锁，会锁住“当前索引记录”以及紧邻的一段间隙</p>
+</li>
+</ul>
+<p>MySQL InnoDB 的默认隔离级别是 <strong>REPEATABLE READ</strong>。在该隔离级别下，对索引进行范围查询时，为了避免幻读，InnoDB 通常会通过 Next-Key Lock 把记录本身和相邻间隙一起锁定。正是因为这种锁定方式，当多事务并发执行时，如果它们的锁定范围出现交叠或顺序不一致，就比较容易引发死锁。</p>
+<h3 id="11-更新操作顺序不一致-普通行x锁">1.1. 更新操作顺序不一致 普通行x锁<a href="#11-更新操作顺序不一致-普通行x锁" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>这是最直观的死锁场景之一, 也是很多人最先想到的场景, 本质原因是两个事务以不同的顺序加锁, 从而彼此等待。先来举一个简单的例子（无 Gap Lock 干扰）, 只用普通行x锁。</p>
+<p><strong>场景:</strong> 事务 A 先更新 <code>id=1</code> 的记录，再更新 <code>id=2</code> 的记录；事务 B 先更新 <code>id=2</code> 的记录，再更新 <code>id=1</code> 的记录。</p>
+<p>如果两个事务并行执行，就可能出现这样的顺序：</p>
+<ol>
+<li>事务 A： <code>UPDATE t_user SET balance = balance - 10 WHERE id = 1;</code> 成功锁住 <code>id=1</code> 行</li>
+<li>事务 B： <code>UPDATE t_user SET balance = balance - 20 WHERE id = 2;</code> 成功锁住 <code>id=2</code> 行</li>
+<li>事务 A： <code>UPDATE t_user SET balance = balance + 10 WHERE id = 2;</code> 要锁 <code>id=2</code>，但是这把锁被事务 B 占用，需要等待</li>
+<li>事务 B： <code>UPDATE t_user SET balance = balance + 20 WHERE id = 1;</code> 要锁 <code>id=1</code>，但是这把锁被事务 A 占用，需要等待</li>
+</ol>
+<p>此时 A 等 B 释放锁，B 等 A 释放锁，形成死锁, 由于 InnoDB 检测到死锁，会自动回滚其中一个事务, 这种多发生在批量更新的情况, 可以标准化更新顺序，例如按 id 升序更新：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#75715e">-- 事务 A 和 B 都按 order_id 升序更新
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">UPDATE</span> orders <span style="color:#66d9ef">SET</span> status <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;xxx&#39;</span> <span style="color:#66d9ef">WHERE</span> order_id <span style="color:#66d9ef">IN</span> (<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>) <span style="color:#66d9ef">ORDER</span> <span style="color:#66d9ef">BY</span> order_id;
+</span></span></code></pre></div><h3 id="12-间隙锁导致的死锁">1.2. 间隙锁导致的死锁<a href="#12-间隙锁导致的死锁" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>下面这个场景更具代表性, 也更体现出 MySQL Next-Key Lock 如何导致死锁, 很多开发者在进行范围查询或插入时, 会因为不理解 Gap Lock 的触发条件而踩坑:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> products (
+</span></span><span style="display:flex;"><span>    id INT <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> AUTO_INCREMENT,
+</span></span><span style="display:flex;"><span>    name VARCHAR(<span style="color:#ae81ff">50</span>),
+</span></span><span style="display:flex;"><span>    price DECIMAL(<span style="color:#ae81ff">10</span>, <span style="color:#ae81ff">2</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">-- 间隙锁只会加在索引上, 如果不是索引则退化为全表扫描, 索引也分为唯一和不唯一索引
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">UNIQUE</span> <span style="color:#66d9ef">KEY</span> (price)
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><p>假设现在我们的表里有四条记录, price 分别是 1.00, 2.50, 3.00, 4.00,</p>
+<p>假设有两个事务, 它们都使用了范围查询, 由于 MySQL 默认隔离级别是 REPEATABLE READ, 所以<strong>范围查询 当前读</strong>会触发 Next-Key Lock, 导致锁住记录本身以及相邻的“间隙”:</p>
+<ul>
+<li>
+<p>T1 执行 <code>SELECT * FROM products WHERE price BETWEEN 2.00 AND 3.00 FOR UPDATE;</code>
+这是一个<strong>当前读</strong> <code>FOR UPDATE</code>, 虽然 price 唯一, 但这是范围查询, 所以会加  Next-Key Lock</p>
+</li>
+<li>
+<p>锁定范围：</p>
+<ul>
+<li>price = 2.50：Record Lock</li>
+<li>price = 3.00：Record Lock</li>
+<li>间隙：(1.00, 2.50) 和 (2.50, 3.00) 和 (3.00, 4.00)</li>
+</ul>
+</li>
+<li>
+<p>T2 执行 <code>SELECT * FROM products WHERE price BETWEEN 3.00 AND 4.00 FOR UPDATE;</code>
+尝试锁住 <code>price=3.00</code>、<code>price=4.00</code> 以及与其相邻的间隙</p>
+</li>
+<li>
+<p>由于 T1 已经锁住了 <code>price=3.00</code>, T2 在尝试加锁 <code>price=3.00</code> 时会被阻塞，等待 T1 释放</p>
+</li>
+<li>
+<p>如果这时候 T1 在同一个事务里又做了其他操作（例如插入一条 <code>price=3.50</code> 的记录）, 因为插入需要先获得插入意向锁即 <code>(3.00, 4.00)</code> 这个间隙锁，而这个间隙锁已经被 T2 拿到了一部分，也会等待</p>
+</li>
+</ul>
+<p>这样两边都在等对方释放锁, 就会出现死锁,</p>
+<h3 id="13-外键引起">1.3. 外键引起<a href="#13-外键引起" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>假设我们有两个表：Parent 和 Child, Child 表有一个外键引用 Parent 表的主键,</p>
+<ol>
+<li>
+<p><strong>事务 A</strong></p>
+<ul>
+<li>
+<p>启动事务后，执行</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">DELETE</span> <span style="color:#66d9ef">FROM</span> Parent <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span></code></pre></div></li>
+<li>
+<p>InnoDB 对 <code>Parent</code> 表中 <code>id = 1</code> 这条记录加上 <strong>排它锁(X 锁)</strong></p>
+</li>
+<li>
+<p>因为有外键约束，删除时必须确认 <code>Child</code> 表中是否还存在引用 <code>Parent(id=1)</code> 的行；如果存在并且外键约束是不允许删除(例如 <code>ON DELETE RESTRICT</code>)，那就会报错阻止删除；如果是 <code>ON DELETE CASCADE</code>，则要继续删除 <code>Child</code> 表里相应的记录</p>
+</li>
+<li>
+<p>无论哪种外键策略，InnoDB 都会去扫描 <code>Child</code> 表是否有 <code>parentId = 1</code> 的记录，并尝试对这些子记录（或相应索引）加锁</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>事务 B</strong></p>
+<ul>
+<li>
+<p>事务 A 还没结束时，事务 B 执行插入：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> Child (id, parentId, ...) <span style="color:#66d9ef">VALUES</span> (<span style="color:#ae81ff">101</span>, <span style="color:#ae81ff">1</span>, ...);
+</span></span></code></pre></div></li>
+<li>
+<p>InnoDB 在往 <code>Child</code> 表里插入新行之前，会先在 <code>Child</code> 表对应的索引上加 <strong>插入意向锁(或间隙锁)</strong></p>
+</li>
+<li>
+<p>接着，为了保证外键引用的有效性，需要去 <code>Parent</code> 表里确认 <code>id=1</code> 存在，这就要去给 <code>Parent(id=1)</code> 这条记录请求 <strong>锁(通常是 S 锁或者意向锁)</strong></p>
+</li>
+<li>
+<p>但是由于事务 A 已经对 <code>Parent(id=1)</code> 持有了 X 锁，事务 B 在此时会被阻塞</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>进入相互等待</strong></p>
+</li>
+</ol>
+<p>需要注意的点是, 在现实里要形成上述场景, 往往是因为：</p>
+<ul>
+<li>事务 A 删除 <code>Parent</code> 的时候，<code>ON DELETE RESTRICT</code> 或者 <code>ON DELETE NO ACTION</code> 外键策略没有立即报错, 而是先尝试获取 <code>Child</code> 那边的锁去检查/删除，这时刚好被另一个事务 B 插入或更新冲突；或者</li>
+<li>事务 A 是 “先删父，再删子” 但中间不小心被打断，事务 B 恰好要插入/更新同样引用的父记录从而引发冲突。</li>
+</ul>
+<h2 id="2-如何排查死锁">2. 如何排查死锁<a href="#2-如何排查死锁" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>在 MySQL（InnoDB 引擎）中，当 InnoDB 检测到死锁时，会主动回滚其中一个事务，并将死锁相关信息记录到 <code>SHOW ENGINE INNODB STATUS</code> 命令输出中。</p>
+<h3 id="21-查看异常日志">2.1. 查看异常日志<a href="#21-查看异常日志" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li><strong>Spring Boot 日志</strong>：在 Spring Boot 的运行日志中，通常会看到类似 <code>Deadlock found when trying to get lock; try restarting transaction</code> 的异常信息，这意味着某条 SQL 在执行时被 MySQL 判定发生死锁，从而回滚</li>
+<li><strong>MySQL 错误日志</strong>：有时还可以在 MySQL 服务器的错误日志中找到死锁相关信息（如果有开启记录）</li>
+</ul>
+<h3 id="22-使用-show-engine-innodb-status-命令">2.2. 使用 <code>SHOW ENGINE INNODB STATUS</code> 命令<a href="#22-使用-show-engine-innodb-status-命令" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>在 MySQL 客户端或者其他数据库管理工具中，执行：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SHOW</span> ENGINE INNODB STATUS <span style="color:#960050;background-color:#1e0010">\</span><span style="color:#66d9ef">G</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">------------------------
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>LATEST DETECTED DEADLOCK
+</span></span><span style="display:flex;"><span><span style="color:#75715e">------------------------
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#ae81ff">2025</span><span style="color:#f92672">-</span><span style="color:#ae81ff">03</span><span style="color:#f92672">-</span><span style="color:#ae81ff">06</span> <span style="color:#ae81ff">14</span>:<span style="color:#ae81ff">37</span>:<span style="color:#ae81ff">07</span> <span style="color:#ae81ff">0</span>x7f9bd9513700
+</span></span><span style="display:flex;"><span><span style="color:#f92672">***</span> (<span style="color:#ae81ff">1</span>) <span style="color:#66d9ef">TRANSACTION</span>:
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">TRANSACTION</span> <span style="color:#ae81ff">598373</span>, ACTIVE <span style="color:#ae81ff">7</span> sec
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">3</span> <span style="color:#66d9ef">lock</span> struct(s), heap <span style="color:#66d9ef">size</span> <span style="color:#ae81ff">1136</span>, <span style="color:#ae81ff">2</span> <span style="color:#66d9ef">row</span> <span style="color:#66d9ef">lock</span>(s), undo log entries <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>MySQL thread id <span style="color:#ae81ff">100</span>, OS thread handle <span style="color:#ae81ff">140309172537088</span>, query id <span style="color:#ae81ff">225</span> server <span style="color:#ae81ff">127</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">1</span> <span style="color:#66d9ef">user</span> <span style="color:#66d9ef">update</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">INSERT</span> <span style="color:#66d9ef">INTO</span> log_record (account_id, <span style="color:#66d9ef">operation</span>) <span style="color:#66d9ef">VALUES</span> (<span style="color:#ae81ff">1</span>, <span style="color:#e6db74">&#39;minus 100&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">***</span> (<span style="color:#ae81ff">1</span>) WAITING <span style="color:#66d9ef">FOR</span> THIS <span style="color:#66d9ef">LOCK</span> <span style="color:#66d9ef">TO</span> BE <span style="color:#66d9ef">GRANTED</span>:
+</span></span><span style="display:flex;"><span>RECORD LOCKS <span style="color:#66d9ef">space</span> id <span style="color:#ae81ff">63</span> page <span style="color:#66d9ef">no</span> <span style="color:#ae81ff">4</span> n bits <span style="color:#ae81ff">72</span> <span style="color:#66d9ef">index</span> <span style="color:#f92672">`</span><span style="color:#66d9ef">PRIMARY</span><span style="color:#f92672">`</span> <span style="color:#66d9ef">of</span> <span style="color:#66d9ef">table</span> <span style="color:#f92672">`</span>test<span style="color:#f92672">`</span>.<span style="color:#f92672">`</span>log_record<span style="color:#f92672">`</span>
+</span></span><span style="display:flex;"><span>trx id <span style="color:#ae81ff">598373</span> lock_mode X locks rec but <span style="color:#66d9ef">not</span> gap waiting
+</span></span><span style="display:flex;"><span>Record <span style="color:#66d9ef">lock</span>, heap <span style="color:#66d9ef">no</span> <span style="color:#ae81ff">3</span> PHYSICAL RECORD: n_fields <span style="color:#ae81ff">5</span>; compact format; info bits <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">***</span> (<span style="color:#ae81ff">2</span>) <span style="color:#66d9ef">TRANSACTION</span>:
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">TRANSACTION</span> <span style="color:#ae81ff">598374</span>, ACTIVE <span style="color:#ae81ff">5</span> sec
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span> <span style="color:#66d9ef">lock</span> struct(s), heap <span style="color:#66d9ef">size</span> <span style="color:#ae81ff">1136</span>, <span style="color:#ae81ff">2</span> <span style="color:#66d9ef">row</span> <span style="color:#66d9ef">lock</span>(s), undo log entries <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>MySQL thread id <span style="color:#ae81ff">101</span>, OS thread handle <span style="color:#ae81ff">140309172538112</span>, query id <span style="color:#ae81ff">226</span> server <span style="color:#ae81ff">127</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">1</span> <span style="color:#66d9ef">user</span> <span style="color:#66d9ef">update</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">UPDATE</span> account <span style="color:#66d9ef">SET</span> balance <span style="color:#f92672">=</span> balance <span style="color:#f92672">-</span> <span style="color:#ae81ff">50</span> <span style="color:#66d9ef">WHERE</span> id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">***</span> (<span style="color:#ae81ff">2</span>) HOLDS THE <span style="color:#66d9ef">LOCK</span>(S):
+</span></span><span style="display:flex;"><span>RECORD LOCKS <span style="color:#66d9ef">space</span> id <span style="color:#ae81ff">62</span> page <span style="color:#66d9ef">no</span> <span style="color:#ae81ff">5</span> n bits <span style="color:#ae81ff">80</span> <span style="color:#66d9ef">index</span> <span style="color:#f92672">`</span><span style="color:#66d9ef">PRIMARY</span><span style="color:#f92672">`</span> <span style="color:#66d9ef">of</span> <span style="color:#66d9ef">table</span> <span style="color:#f92672">`</span>test<span style="color:#f92672">`</span>.<span style="color:#f92672">`</span>account<span style="color:#f92672">`</span>
+</span></span><span style="display:flex;"><span>trx id <span style="color:#ae81ff">598374</span> lock_mode X
+</span></span><span style="display:flex;"><span>Record <span style="color:#66d9ef">lock</span>, heap <span style="color:#66d9ef">no</span> <span style="color:#ae81ff">2</span> PHYSICAL RECORD: n_fields <span style="color:#ae81ff">5</span>; compact format; info bits <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">***</span> (<span style="color:#ae81ff">2</span>) WAITING <span style="color:#66d9ef">FOR</span> THIS <span style="color:#66d9ef">LOCK</span> <span style="color:#66d9ef">TO</span> BE <span style="color:#66d9ef">GRANTED</span>:
+</span></span><span style="display:flex;"><span>RECORD LOCKS <span style="color:#66d9ef">space</span> id <span style="color:#ae81ff">63</span> page <span style="color:#66d9ef">no</span> <span style="color:#ae81ff">4</span> n bits <span style="color:#ae81ff">72</span> <span style="color:#66d9ef">index</span> <span style="color:#f92672">`</span><span style="color:#66d9ef">PRIMARY</span><span style="color:#f92672">`</span> <span style="color:#66d9ef">of</span> <span style="color:#66d9ef">table</span> <span style="color:#f92672">`</span>test<span style="color:#f92672">`</span>.<span style="color:#f92672">`</span>log_record<span style="color:#f92672">`</span>
+</span></span><span style="display:flex;"><span>trx id <span style="color:#ae81ff">598374</span> lock_mode X locks rec but <span style="color:#66d9ef">not</span> gap waiting
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">***</span> WE ROLL BACK <span style="color:#66d9ef">TRANSACTION</span> (<span style="color:#ae81ff">2</span>)
+</span></span></code></pre></div><p>这条命令可以查看最近一次死锁的详细信息，包括：</p>
+<ul>
+<li>具体冲突的表、行、<strong>SQL 语句</strong>等</li>
+<li>形成死锁的事务<strong>持有哪些锁</strong>、在<strong>等待哪些锁</strong>（Record lock、Gap lock、Next-key lock）</li>
+</ul>
+<p>根据这些信息, 我们可以判断代码中的 SQL 执行顺序, 因为多个事务以不同顺序申请锁而导致的死锁, 可以在业务层确保所有事务对资源的加锁顺序一致（例如，按主键 ID 升序加锁）</p>
+<p>也可以使用使用 <code>EXPLAIN</code> 分析 SQL 的执行计划, 检查 SQL 是否命中索引, 因为死锁也有可能是由于缺少合适的索引可能导致锁范围扩大(整张表)进而提高死锁概率,</p>
+<p>根据上面输出:</p>
+<pre tabindex="0"><code>*** (1) TRANSACTION:
+TRANSACTION 598373, ACTIVE 7 sec
+3 lock struct(s), heap size 1136, 2 row lock(s), undo log entries 1
+MySQL thread id 100, OS thread handle 140309172537088, query id 225 server 127.0.0.1 user update
+INSERT INTO log_record (account_id, operation) VALUES (1, &#39;minus 100&#39;)
+</code></pre><ul>
+<li>该事务(1) 持有 3 个锁结构, 其中包括 2 个行锁: <code>3 lock struct(s)</code>, <code>2 row lock(s)</code></li>
+<li>正在对表 ⁠<code>log_record</code> 进行 INSERT 操作</li>
+</ul>
+<pre tabindex="0"><code>*** (1) WAITING FOR THIS LOCK TO BE GRANTED:
+RECORD LOCKS space id 63 page no 4 n bits 72 index `PRIMARY` of table `test`.`log_record`
+trx id 598373 lock_mode X locks rec but not gap waiting
+Record lock, heap no 3 PHYSICAL RECORD: n_fields 5; compact format; info bits 0
+</code></pre><ul>
+<li>当前事务正在等待获取一个锁，但锁还未被授予, 换句话说，有另一个事务持有锁，导致当前事务被阻塞</li>
+<li><code>index PRIMARY of table test.log_record</code>
+<ul>
+<li>index PRIMARY: 锁的目标是表的主键索引（primary key index）</li>
+<li>table test.log_record: 锁发生在数据库 test 中的表 log_record 上</li>
+</ul>
+</li>
+<li><code>lock_mode X locks rec but not gap waiting</code>
+<ul>
+<li><code>lock_mode X</code>: 表示这是一个排他锁</li>
+<li><code>locks rec but not gap</code>: 表示这是一个记录锁 record lock, 而不是 间隙锁 gap lock, 记录锁锁定特定的行, 间隙锁锁定行之间的范围（常用于防止幻读）</li>
+<li><code>waiting</code>: 当前事务正在等待, 因为另一个事务已经持有了锁</li>
+</ul>
+</li>
+</ul>
+<h2 id="3-避免死锁">3. 避免死锁<a href="#3-避免死锁" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>统一加锁顺序</p>
+<ul>
+<li>例如：如果业务逻辑需要在一笔交易中更新 <code>A 表</code> 和 <code>B 表</code>，就应<strong>统一</strong>先更新 <code>A 表</code> 再更新 <code>B 表</code>（或者反之），避免在不同事务中出现“先 A 后 B”与“先 B 后 A”的交叉</li>
+<li>这种统一顺序减少了在数据库级别发生环形等待的可能</li>
+</ul>
+<p>尽量缩短事务执行时间</p>
+<ul>
+<li>在事务中只放真正需要保证原子性和一致性的 SQL 操作，把其他耗时操作（如外部 HTTP 调用、文件操作）放在事务外执行</li>
+<li>事务持有锁的时间越短，发生死锁的窗口就越小</li>
+</ul>
+<p>查看执行计划并监控慢查询</p>
+<ul>
+<li>除了使用 <code>EXPLAIN</code> 分析单条 SQL 的执行计划外，可配合开启 MySQL 慢查询日志，关注是否存在长时间占用锁的慢 SQL</li>
+<li>如果出现大量慢查询，也意味着事务执行时间变长，更容易导致死锁和高锁等待</li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/006-spring-cloud-building/" class="button inline prev">
+        Spring Cloud 核心组件和配置
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/002-%E5%90%84%E7%A7%8D%E9%94%81/" class="button inline next">
+        MySQL 中的事务隔离界别和各种锁
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

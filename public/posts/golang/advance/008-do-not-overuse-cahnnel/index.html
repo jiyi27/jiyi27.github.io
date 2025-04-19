@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Don&#39;t Overuse Channel - Go :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="In previous post we know that don&rsquo;t mediate the access to shared memory with locks and mutexes instead share that memory by communicating. However, is this always true? Sometimes you may want mutex and lock not channels, it depends on the situation. Channel is a way help mutiple groutines communicate with each other. I find some posts and share it here:
+Use a sync.Mutex or a channel?
+One of Go&rsquo;s mottos is &ldquo;Share memory by communicating, don&rsquo;t communicate by sharing memory.&rdquo;
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/advance/008-do-not-overuse-cahnnel/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Don&#39;t Overuse Channel - Go">
+<meta property="og:description" content="In previous post we know that don&rsquo;t mediate the access to shared memory with locks and mutexes instead share that memory by communicating. However, is this always true? Sometimes you may want mutex and lock not channels, it depends on the situation. Channel is a way help mutiple groutines communicate with each other. I find some posts and share it here:
+Use a sync.Mutex or a channel?
+One of Go&rsquo;s mottos is &ldquo;Share memory by communicating, don&rsquo;t communicate by sharing memory.&rdquo;
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/advance/008-do-not-overuse-cahnnel/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="golang" />
+
+
+  <meta property="article:published_time" content="2023-09-29 20:44:55 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/advance/008-do-not-overuse-cahnnel/">Don&rsquo;t Overuse Channel - Go</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-09-29</time><span class="post-reading-time">4 分钟阅读 (811 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">并发编程</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>In <a href="https://davidzhu.xyz/post/golang/advance/006-closures-go/#21-pass-behaviour">previous post</a> we know that <strong>don&rsquo;t mediate the access to shared memory with locks and mutexes</strong> instead share that memory by communicating. However, is this always true? Sometimes you may want mutex and lock not channels, it depends on the situation. Channel is a way help mutiple groutines communicate with each other. I find some posts and share it here:</p>
+<p><a href="https://github.com/golang/go/wiki/MutexOrChannel#use-a-syncmutex-or-a-channel"><strong>Use a sync.Mutex or a channel?</strong></a></p>
+<p>One of Go&rsquo;s mottos is <em>&ldquo;Share memory by communicating, don&rsquo;t communicate by sharing memory.&rdquo;</em></p>
+<p>That said, Go does provide traditional locking mechanisms in the <a href="https://pkg.go.dev/sync/">sync package</a>. Most locking issues can be solved using either channels or traditional locks. So which should you use?</p>
+<p>Use whichever is most expressive and/or most simple.</p>
+<p>A common Go newbie mistake is to over-use channels and goroutines just because it&rsquo;s possible, and/or because it&rsquo;s fun. Don&rsquo;t be afraid to use a <a href="https://pkg.go.dev/sync/#Mutex"><code>sync.Mutex</code></a> if that fits your problem best. Go is pragmatic in letting you use the tools that solve your problem best and not forcing you into one style of code.</p>
+<p>As a general guide, though:</p>
+<table>
+  <thead>
+      <tr>
+          <th><strong>Channel</strong></th>
+          <th><strong>Mutex</strong></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>passing ownership of data, distributing units of work, communicating async results</td>
+          <td>caches, state</td>
+      </tr>
+  </tbody>
+</table>
+<p>If you ever find your sync.Mutex locking rules are getting too complex, ask yourself whether using channel(s) might be simpler.</p>
+<p><a href="https://github.com/golang/go/wiki/MutexOrChannel#wait-group"><strong>Wait Group</strong></a></p>
+<p>Another important synchronisation primitive is sync.WaitGroup. These allow co-operating goroutines to collectively wait for a threshold event before proceeding independently again.</p>
+<p>Channel communication, mutexes and wait-groups are complementary and <strong>can be combined.</strong></p>
+<p>Source: <a href="https://github.com/golang/go/wiki/MutexOrChannel">MutexOrChannel · golang/go Wiki</a></p>
+<hr>
+<p><strong>Mutexes are faster than channels.</strong> My rule of thumb is, if you can do what you need to do with one mutex, there&rsquo;s no problem with that. For instance, <strong>concurrent map access, or some integer you need atomically incremented</strong>, or other such simple things.</p>
+<p>However, you want to <strong>never try to take two locks</strong>. This includes bearing in mind that <em>if you take a lock in your function, and call something else that takes a lock, that&rsquo;s two locks</em>. Threading hell is not caused by a single lock, it is caused by trying to use more than one at a time. At that point, you generally want channels and <code>select</code>. They don&rsquo;t magically solve the problem. Technically you can still deadlock with channels and <code>select</code>.</p>
+<p>Also, performance isn&rsquo;t everything, but I do find it helpful to bear in mind that when using <em>any</em> of these primitives, they aren&rsquo;t free, even if they are cheap, and they need to pay their way. In general the way you do that sort of thing is try to ensure that when you do take a lock or send a message over a channel, you do what you can to send as big a task or chunk of information as possible. Even in a local OS process, you need to be a bit careful not to design internal APIs in a way that two processes are constantly interacting over mutexes or channels. For instance, rather than a loop where you ask the user server for a user&rsquo;s real name one at a time, create an API where the user server will accept the full list and return the full set in one shot. Even 13.2ns is a couple hundred cycles, and that number is also the best case, it can get worse if there is contention.</p>
+<p>Source: <a href="https://www.reddit.com/r/golang/comments/d85d0l/comment/f17m5e8/?utm_source=share&amp;utm_medium=web2x&amp;context=3">https://www.reddit.com/r/golang/comments/d85d0l/comment/f17m5e8/?utm_source=share&utm_medium=web2x&context=3</a></p>
+<hr>
+<p>This is just an example for demonstrating passing behavior with function, don&rsquo;t over-use channel:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newChannelStore</span>() <span style="color:#f92672">*</span><span style="color:#a6e22e">Store</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Store</span>{<span style="color:#a6e22e">ops</span>: make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span>))}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">loop</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Store</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ops</span> <span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Store</span>) <span style="color:#a6e22e">addSession</span>(<span style="color:#a6e22e">session</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span>)  {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">ops</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">m</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// if the key has existed in map, change the value of the key.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// if key doesn&#39;t exist, create a new one</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">m</span>[<span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">id</span>] = <span style="color:#a6e22e">session</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Store</span>) <span style="color:#a6e22e">getSession</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">string</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">result</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span>, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">ops</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">m</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// everything copied by value, session is a copy of m[id]</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// you should consider if session has pointer field</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">session</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">m</span>[<span style="color:#a6e22e">id</span>]
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">ok</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">result</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">result</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">session</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// wait ops finish</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">result</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Store</span>) <span style="color:#a6e22e">loop</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">sessions</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">op</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">ops</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">op</span>(<span style="color:#a6e22e">sessions</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>The code below has a better performance compared with code above which achieves in channel style:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newMuxStore</span>() <span style="color:#f92672">*</span><span style="color:#a6e22e">store</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">store</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">mu</span>:       <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">RWMutex</span>{},
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">sessions</span>: make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span>),
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">store</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mu</span>    <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">RWMutex</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">sessions</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">store</span>) <span style="color:#a6e22e">addSession</span>(<span style="color:#a6e22e">session</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">sessions</span>[<span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">id</span>] = <span style="color:#a6e22e">session</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">store</span>) <span style="color:#a6e22e">getSession</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">string</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">RLock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">RUnlock</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">session</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">sessions</span>[<span style="color:#a6e22e">id</span>]
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">ok</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">session</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>session.go</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newSession</span>(<span style="color:#a6e22e">id</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">value</span> <span style="color:#66d9ef">int</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Session</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Session</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">id</span>:    <span style="color:#a6e22e">id</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">value</span>: <span style="color:#a6e22e">value</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">expiry</span>:  <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Duration</span>(<span style="color:#ae81ff">10</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>).<span style="color:#a6e22e">Unix</span>(),
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Session</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">id</span>    <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">value</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">expiry</span> <span style="color:#66d9ef">int64</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/redis/001-redis-commands/" class="button inline prev">
+        Useful Redis Commands
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/golang/advance/007-io-usages-go/" class="button inline next">
+        Useful Types and Packages for IO - Go
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

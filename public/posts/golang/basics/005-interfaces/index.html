@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Interfaces Basics - Go :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Type Admin isn&rsquo;t *Adimin I found an interesting question on stackoverflow, this is the code:
+type User interface { Name() string SetName(name string) } type Admin struct { name string } func (a *Admin) Name() string { return a.name } func (a *Admin) SetName(name string) { a.name = name } OP tries to copy user1&rsquo;s value below:
+func main() { var user1 User user1 = &amp;Admin{name:&#34;user1&#34;} fmt.Printf(&#34;User1&#39;s name: %s\n&#34;, user1.Name()) var user2 User user2 = user1 user2.SetName(&#34;user2&#34;) fmt.Printf(&#34;User2&#39;s name: %s\n&#34;, user2.Name()) // print: &#34;user2&#34; fmt.Printf(&#34;User1&#39;s name: %s\n&#34;, user1.Name()) // print: &#34;user2&#34; too, How to make the user1 name does not change？ } Everything pass by value in Golang, even assignment will make a copy. Therefore, I tried something like this:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/basics/005-interfaces/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Interfaces Basics - Go">
+<meta property="og:description" content="1. Type Admin isn&rsquo;t *Adimin I found an interesting question on stackoverflow, this is the code:
+type User interface { Name() string SetName(name string) } type Admin struct { name string } func (a *Admin) Name() string { return a.name } func (a *Admin) SetName(name string) { a.name = name } OP tries to copy user1&rsquo;s value below:
+func main() { var user1 User user1 = &amp;Admin{name:&#34;user1&#34;} fmt.Printf(&#34;User1&#39;s name: %s\n&#34;, user1.Name()) var user2 User user2 = user1 user2.SetName(&#34;user2&#34;) fmt.Printf(&#34;User2&#39;s name: %s\n&#34;, user2.Name()) // print: &#34;user2&#34; fmt.Printf(&#34;User1&#39;s name: %s\n&#34;, user1.Name()) // print: &#34;user2&#34; too, How to make the user1 name does not change？ } Everything pass by value in Golang, even assignment will make a copy. Therefore, I tried something like this:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/basics/005-interfaces/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="golang" />
+
+
+  <meta property="article:published_time" content="2023-12-07 15:12:32 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/basics/005-interfaces/">Interfaces Basics - Go</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-12-07</time><span class="post-reading-time">4 分钟阅读 (791 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/golang/">golang</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-type-admin-isnt-adimin">1. Type <code>Admin</code> isn&rsquo;t <code>*Adimin</code><a href="#1-type-admin-isnt-adimin" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>I found an <a href="https://stackoverflow.com/questions/37851500/how-to-copy-an-interface-value-in-go/37851764#37851764">interesting question</a> on stackoverflow, this is the code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">User</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Name</span>() <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">SetName</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Admin</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">a</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Admin</span>) <span style="color:#a6e22e">Name</span>() <span style="color:#66d9ef">string</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">name</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">a</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Admin</span>) <span style="color:#a6e22e">SetName</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">name</span> = <span style="color:#a6e22e">name</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>OP tries to copy <code>user1</code>&rsquo;s value below:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">user1</span> <span style="color:#a6e22e">User</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">user1</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Admin</span>{<span style="color:#a6e22e">name</span>:<span style="color:#e6db74">&#34;user1&#34;</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;User1&#39;s name: %s\n&#34;</span>, <span style="color:#a6e22e">user1</span>.<span style="color:#a6e22e">Name</span>())
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">user2</span> <span style="color:#a6e22e">User</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">user2</span> = <span style="color:#a6e22e">user1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">user2</span>.<span style="color:#a6e22e">SetName</span>(<span style="color:#e6db74">&#34;user2&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;User2&#39;s name: %s\n&#34;</span>, <span style="color:#a6e22e">user2</span>.<span style="color:#a6e22e">Name</span>()) <span style="color:#75715e">// print: &#34;user2&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;User1&#39;s name: %s\n&#34;</span>, <span style="color:#a6e22e">user1</span>.<span style="color:#a6e22e">Name</span>()) <span style="color:#75715e">// print: &#34;user2&#34; too, How to make the user1 name does not change？</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Everything pass by value in Golang, even assignment will make a copy. Therefore, I tried something like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">user1</span> <span style="color:#a6e22e">User</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">user1</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Admin</span>{<span style="color:#a6e22e">name</span>:<span style="color:#e6db74">&#34;user1&#34;</span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;User1&#39;s name: %s\n&#34;</span>, <span style="color:#a6e22e">user1</span>.<span style="color:#a6e22e">Name</span>())
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">user2</span> <span style="color:#a6e22e">User</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">user2</span> = <span style="color:#f92672">*</span><span style="color:#a6e22e">user1</span> <span style="color:#75715e">// got an error: Invalid indirect of &#39;user1&#39; (type &#39;User&#39;)</span>
+</span></span></code></pre></div><p>The erorr says that user&rsquo;s type is <code>User</code> not <code>*User</code>, so cannot dereference it. Why <code>user1 = &amp;Admin{name:&quot;user1&quot;}</code> works fine?</p>
+<p>An error occurred again below:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">user1</span> <span style="color:#a6e22e">User</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">user1</span> = <span style="color:#a6e22e">Admin</span>{<span style="color:#a6e22e">name</span>:<span style="color:#e6db74">&#34;user1&#34;</span>} 
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// error: Cannot use &#39;Admin{name:&#34;user1&#34;}&#39; (type Admin) as the type User Type does not implement &#39;User&#39; as the &#39;Name&#39; method has a pointer receiver. </span>
+</span></span></code></pre></div><p>This is confusing, it says type <code>Admin</code> doesn&rsquo;t implement interface <code>User</code>. You may wonder, you lied, <code>Admin</code> has implemented all methods of <code>User</code>, but wait, really?</p>
+<p>In fact, it&rsquo;s not type <code>Admin</code> implementing interface <code>User</code> but type <code>*Admin</code>. Checking the definition of <code>Name()</code> and <code>SetName()</code> above, both of these two method have a pointer receiver, not a value receiver. This means <strong>the <code>Name()</code> and <code>GetName()</code> method are in the <a href="https://golang.org/ref/spec#Method_sets">method set</a> of the <code>*Admin</code> type, but not in that of <code>Admin</code>.</strong></p>
+<h2 id="2-any-types-can-implement-an-interface">2. Any types can implement an interface<a href="#2-any-types-can-implement-an-interface" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>&ldquo;Any types can implement an interface.&rdquo; is not accurate.</p>
+<p>Any type can have its <a href="https://golang.org/ref/spec#Method_sets">method set</a>, and if there are all the methods of an interfacce in that type&rsquo;s method set, we say this type implements this interface. This type can be a struct, function, map, array even an integer.</p>
+<h3 id="21-array">2.1. Array<a href="#21-array" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Get multiple parameters from cli with <code>flag</code> package:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Var</span>(<span style="color:#a6e22e">value</span> <span style="color:#a6e22e">Value</span>, <span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">usage</span> <span style="color:#66d9ef">string</span>)
+</span></span></code></pre></div><p>According to the <a href="https://pkg.go.dev/flag#Var">docs</a>, custom a type <code>userFlag</code> to implement interface <code>flag.Value</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">usersFlag</span> []<span style="color:#a6e22e">user</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">u</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">usersFlag</span>) <span style="color:#a6e22e">String</span>() <span style="color:#66d9ef">string</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%v&#34;</span>, <span style="color:#f92672">*</span><span style="color:#a6e22e">u</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">u</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">usersFlag</span>) <span style="color:#a6e22e">Set</span>(<span style="color:#a6e22e">value</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">values</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">Split</span>(<span style="color:#a6e22e">value</span>, <span style="color:#e6db74">&#34;:&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">values</span>) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">3</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;wrong format of auth, format: path:username:password&#34;</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">*</span><span style="color:#a6e22e">u</span> = append(
+</span></span><span style="display:flex;"><span>		<span style="color:#f92672">*</span><span style="color:#a6e22e">u</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">user</span>{
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">username</span>: <span style="color:#a6e22e">values</span>[<span style="color:#ae81ff">1</span>],
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">password</span>: <span style="color:#a6e22e">values</span>[<span style="color:#ae81ff">2</span>],
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">path</span>:     <span style="color:#a6e22e">formatPath</span>(<span style="color:#a6e22e">values</span>[<span style="color:#ae81ff">0</span>]),
+</span></span><span style="display:flex;"><span>		},
+</span></span><span style="display:flex;"><span>	)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Then you can use as follows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Param</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">users</span> []<span style="color:#a6e22e">user</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Param</span>) <span style="color:#a6e22e">init</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">users</span> <span style="color:#a6e22e">usersFlag</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flag</span>.<span style="color:#a6e22e">Var</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">users</span>, <span style="color:#e6db74">&#34;auth&#34;</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;-auth &lt;path:username:password&gt;\n&#34;</span><span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#34;specify user for HTTP Basic Auth&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flag</span>.<span style="color:#a6e22e">Parse</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">users</span> = <span style="color:#a6e22e">users</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="22-function">2.2. function<a href="#22-function" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>There is another function called <code>http.Handle()</code> can be used to set routing info and callback, which has a different parameter compared with function <code>http.HandleFunc()</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Handle</span>(<span style="color:#a6e22e">pattern</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">handler</span> <span style="color:#a6e22e">Handler</span>)
+</span></span></code></pre></div><p>The second pamrameter is a <code>Handler</code> which is an interface type defined in http package:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Handler</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ServeHTTP</span>(<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#f92672">*</span><span style="color:#a6e22e">Request</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Function type <code>customHandler</code> implements interface <code>http.Handler</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">customHandler</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">mwh</span> <span style="color:#a6e22e">customHandler</span>) <span style="color:#a6e22e">ServeHTTP</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Method</span> <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;POST&#34;</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Error</span>(<span style="color:#a6e22e">w</span>, <span style="color:#e6db74">&#34;method not supported&#34;</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusMethodNotAllowed</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Fprintf</span>(<span style="color:#a6e22e">w</span>, <span style="color:#e6db74">&#34;do something before custom handler mwh(w, r)&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">mwh</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">r</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">callback</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">customHandler</span>(<span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Fprintf</span>(<span style="color:#a6e22e">w</span>, <span style="color:#e6db74">&#34;hello there&#34;</span>)
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span>	
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// customHandler implemented interface http.Handler, so its object can passed here</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handle</span>(<span style="color:#e6db74">&#34;/hello&#34;</span>, <span style="color:#a6e22e">callback</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:8080&#34;</span>, <span style="color:#66d9ef">nil</span>))
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>NOTE:</strong> for struct, when you gengerate a value (&ldquo;object&rdquo;) you should use curly brcket <code>{}</code> as below:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Cat</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">age</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">cat</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Cat</span>{<span style="color:#a6e22e">name</span>: <span style="color:#e6db74">&#34;Kitten&#34;</span>, <span style="color:#a6e22e">age</span>: <span style="color:#ae81ff">3</span>}
+</span></span></code></pre></div><p>for a function  type, we use parentheses to produce a value of that type:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">myWebHandler</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">callback</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">myWebHandler</span>(<span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Fprintf</span>(<span style="color:#a6e22e">w</span>, <span style="color:#e6db74">&#34;hello there&#34;</span>)
+</span></span><span style="display:flex;"><span>})
+</span></span></code></pre></div><h2 id="3-essence-of-interface-variables">3. Essence of interface variables<a href="#3-essence-of-interface-variables" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>An interface is conceptually a <code>struct</code> with two fields. If we were to describe an interface in Go, it would look something like this.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#66d9ef">interface</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>       <span style="color:#a6e22e">Type</span> <span style="color:#66d9ef">uintptr</span>     <span style="color:#75715e">// points to the type of the interface implementation</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#a6e22e">Data</span> <span style="color:#66d9ef">uintptr</span>     <span style="color:#75715e">// holds the data for the interface&#39;s receiver</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>Type</code> points to a structure that describes the type of the value that implements this interface. <code>Data</code> points to the value of the implementation itself. The contents of <code>Data</code> are passed as the receiver of any method called via the interface.</p>
+<p>The <a href="http://golang.org/ref/mem">Go memory model</a> says that writes to a single machine word will be atomic, but interfaces are two word values. It is possible that another goroutine may observe the contents of the interface value while it is being changed.</p>
+<p>Learn more: <a href="https://dave.cheney.net/2014/06/27/ice-cream-makers-and-data-races">https://dave.cheney.net/2014/06/27/ice-cream-makers-and-data-races</a></p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/build-website/009-google-cloud/" class="button inline prev">
+        Google Cloud Get Started
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/golang/basics/001-basics-go/" class="button inline next">
+        Value, Variable and Types - Go
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

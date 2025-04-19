@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Render Phases - React.js :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="一篇文章总结的比较好, 渲染的两个阶段: Render, Commit:
+Render
+construction of sub React-tree by recursively calling the React component function body (or the render method on class components)- in this article we call this update phase. passing this React-tree to the renderer that will figure out what’s sections of the DOM needs to be updated. Commit
+the renderer updates the DOM using React’s “diffing” algorithm. now the browser DOM is fully updated in memory but the browser has not painted it to the UI(the event loop has not yet ended). means that any access to the DOM here will get the updated DOM properties(such location and dimensions), but changes has not flushed to the UI just yet. useLayoutEffect cleanup from previous render useLayoutEffect is now called. javascript event loop has ended, and the browser paints the updated DOM (the UI is fully updated). useEffect cleanup from previous render useEffect is now called (asynchronously). 注意这里的 useEffect cleanup from previous render, 清理实际上指的是 执行 useEffect 返回的函数, 即 useEffect 函数体会在 commit 阶段执行然后返回一个清理函数(可选), 在下次 commit 阶段时, React 会先调用上次 useEffect 返回的清理函数, 然后再执行 useEffect,
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/frontend/next-js/005-render-phases-useeffect-react/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Render Phases - React.js">
+<meta property="og:description" content="一篇文章总结的比较好, 渲染的两个阶段: Render, Commit:
+Render
+construction of sub React-tree by recursively calling the React component function body (or the render method on class components)- in this article we call this update phase. passing this React-tree to the renderer that will figure out what’s sections of the DOM needs to be updated. Commit
+the renderer updates the DOM using React’s “diffing” algorithm. now the browser DOM is fully updated in memory but the browser has not painted it to the UI(the event loop has not yet ended). means that any access to the DOM here will get the updated DOM properties(such location and dimensions), but changes has not flushed to the UI just yet. useLayoutEffect cleanup from previous render useLayoutEffect is now called. javascript event loop has ended, and the browser paints the updated DOM (the UI is fully updated). useEffect cleanup from previous render useEffect is now called (asynchronously). 注意这里的 useEffect cleanup from previous render, 清理实际上指的是 执行 useEffect 返回的函数, 即 useEffect 函数体会在 commit 阶段执行然后返回一个清理函数(可选), 在下次 commit 阶段时, React 会先调用上次 useEffect 返回的清理函数, 然后再执行 useEffect,
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/frontend/next-js/005-render-phases-useeffect-react/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="前端开发" />
+
+
+  <meta property="article:published_time" content="2024-12-16 23:38:39 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/frontend/next-js/005-render-phases-useeffect-react/">Render Phases - React.js</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2024-12-16</time><span class="post-reading-time">3 分钟阅读 (480 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91/">前端开发</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/next.js/">next.js</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p><a href="https://eliav2.github.io/how-react-hooks-work/">一篇文章</a>总结的比较好, 渲染的两个阶段: Render, Commit:</p>
+<p><strong>Render</strong></p>
+<ul>
+<li>construction of sub React-tree by recursively calling the React component function body (or the render method on class components)- in this article we call this <strong>update phase</strong>.</li>
+<li>passing this React-tree to the renderer that will figure out what’s sections of the DOM needs to be updated.</li>
+</ul>
+<p><strong>Commit</strong></p>
+<ul>
+<li>the renderer updates the DOM using <a href="https://reactjs.org/docs/reconciliation.html#the-diffing-algorithm">React’s “diffing” algorithm</a>.</li>
+<li>now the browser DOM is fully updated in memory but the browser has not painted it to the UI(the event loop has not yet ended). means that any access to the DOM here will get the updated DOM properties(such location and dimensions), but changes has not flushed to the UI just yet.</li>
+<li><em>useLayoutEffect cleanup from previous render</em></li>
+<li><strong><a href="https://reactjs.org/docs/hooks-reference.html#uselayouteffect">useLayoutEffect</a></strong> is now called.</li>
+<li>javascript event loop has ended, and the browser paints the updated DOM (the UI is fully updated).</li>
+<li><em>useEffect cleanup from previous render</em></li>
+<li><strong><a href="https://reactjs.org/docs/hooks-reference.html#useeffect">useEffect</a></strong> is now called (asynchronously).</li>
+</ul>
+<p>注意这里的 <code>useEffect cleanup from previous render</code>, 清理实际上指的是 执行 useEffect 返回的函数,  即 useEffect 函数体会在 commit 阶段执行然后返回一个清理函数(可选), 在下次 commit 阶段时, React 会先调用上次 useEffect 返回的清理函数, 然后再执行 useEffect,</p>
+<p>返回清理函数可以防止内存泄漏, 不要忘了, useEffect 是用来执行副作用的地方, 比如我们可能在 useEffect 中建立了 TCP 连接, 组件多次渲染, 我们建立多个TCP连接, 可是同时只保存一个连接才是合理的, 这时候清理之前的, 就显得很必要:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// 1. 数据获取 - 最常见的用例
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">UserProfile</span> <span style="color:#f92672">=</span> () =&gt; {
+</span></span><span style="display:flex;"><span>  ...
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">useEffect</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 定义异步函数来获取用户数据
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fetchUser</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">async</span> () =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">response</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">&#39;https://api.example.com/user&#39;</span>);
+</span></span><span style="display:flex;"><span>      ...
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fetchUser</span>();
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 清理函数 - 组件卸载时取消请求
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> () =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// 如果使用 axios，可以用 cancelToken
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#75715e">// 如果使用 AbortController，可以在这里 abort
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    };
+</span></span><span style="display:flex;"><span>  }, []); <span style="color:#75715e">// 空依赖数组意味着只在组件挂载时执行一次
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">loading</span> <span style="color:#f92672">?</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">Loading</span>...<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/div&gt; : &lt;div&gt;{user?.name}&lt;/div&gt;;</span>
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>又或者是定时器, 有可能发生的是, 上次渲染因调用 useEffect 启动的定时器还没结束, 又发生了一次新的渲染, 此时在调用 useEffect 之前, 清理掉之前的的定时器:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// 2. 监听状态变化 - 响应特定状态的变化
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">SearchComponent</span> <span style="color:#f92672">=</span> () =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">searchTerm</span>, <span style="color:#a6e22e">setSearchTerm</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>(<span style="color:#e6db74">&#39;&#39;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">results</span>, <span style="color:#a6e22e">setResults</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>([]);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">useEffect</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 防抖处理，避免频繁请求
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">debounceTimeout</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">setTimeout</span>(<span style="color:#66d9ef">async</span> () =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">searchTerm</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">2</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">response</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">`/api/search?q=</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">searchTerm</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>        ...
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }, <span style="color:#ae81ff">500</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 清理函数 - 取消之前的延时操作
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> () =&gt; <span style="color:#a6e22e">clearTimeout</span>(<span style="color:#a6e22e">debounceTimeout</span>);
+</span></span><span style="display:flex;"><span>  }, [<span style="color:#a6e22e">searchTerm</span>]); <span style="color:#75715e">// 依赖于 searchTerm，每次搜索词变化都会触发
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">input</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">searchTerm</span>}
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">onChange</span><span style="color:#f92672">=</span>{(<span style="color:#a6e22e">e</span>) =&gt; <span style="color:#a6e22e">setSearchTerm</span>(<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">target</span>.<span style="color:#a6e22e">value</span>)}
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>  );
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><ol>
+<li>用户快速输入 abc</li>
+<li>SearchComponent 被渲染三次, 因为 searchTerm 改变了三次, a -&gt; ab -&gt; abc</li>
+<li>输入b的时候, 组件被重新渲染( render 阶段), React 执行上次 useEffect 返回的清理函数(commit 阶段), 即 定时器被清理, 请求也不会发出</li>
+<li>输出 c, 此时组件重新被渲染, 同理, 执行清理函数, 再次调用 useEffect, 即只会执行一次请求</li>
+</ol>
+<hr>
+<p>都知道, 在 Render Phase 已经完成了所有数据的计算和完整的 Virtual DOM 的生成, Commit Phase 则负责把这些变更实际应用到浏览器的 DOM 中, 并处理副作用 useEffect,</p>
+<p>可是有个问题, 组件已经渲染完了, 再执行 useEffect 还有什么意义呢, useEffect 不就是为了拉取数据 然后插入到组件吗? 看例子:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ts" data-lang="ts"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">UserProfile() {</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">user</span>, <span style="color:#a6e22e">setUser</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>(<span style="color:#66d9ef">null</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 第一次渲染
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;1. Render Phase 执行&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">content</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">user</span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">?</span> &lt;<span style="color:#f92672">h1</span>&gt;<span style="color:#a6e22e">Welcome</span>, {<span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">name</span>}&lt;/<span style="color:#f92672">h1</span>&gt; 
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">:</span> &lt;<span style="color:#f92672">h1</span>&gt;<span style="color:#a6e22e">Loading</span>...&lt;/<span style="color:#f92672">h1</span>&gt;;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">useEffect</span>(() <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;3. Commit Phase 之后执行 Effect&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 获取数据
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">&#39;/api/user&#39;</span>)
+</span></span><span style="display:flex;"><span>      .<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">r</span> <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">json</span>())
+</span></span><span style="display:flex;"><span>      .<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">userData</span> <span style="color:#f92672">=&gt;</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;4. 数据到达，调用 setUser&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">setUser</span>(<span style="color:#a6e22e">userData</span>);
+</span></span><span style="display:flex;"><span>      });
+</span></span><span style="display:flex;"><span>  }, []);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;2. 返回 JSX&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">content</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>执行的逻辑是</p>
+<ol>
+<li>组件首次渲染，显示 &ldquo;Loading&hellip;&rdquo;</li>
+<li>DOM 更新完成</li>
+<li>useEffect 执行，发起 API 请求</li>
+<li>数据返回后，setUser 触发新的渲染</li>
+<li>组件重新渲染，这次显示 &ldquo;Welcome, [name]&rdquo;</li>
+</ol>
+<p>所以 useEffect 不是为了&quot;把数据插入已渲染的视图&quot;，而是：</p>
+<ol>
+<li>触发一个新的数据获取流程</li>
+<li>通过 setState 引发新的<strong>渲染周期</strong></li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#75715e">// 🚫 错误理解：视图是个框架，等着数据填充
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;user&#34;</span>&gt;{<span style="color:#960050;background-color:#1e0010">等待</span> <span style="color:#a6e22e">useEffect</span> <span style="color:#960050;background-color:#1e0010">填充数据</span>}&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ✅ 正确理解：每次都是完整的渲染
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 第一次渲染
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;user&#34;</span>&gt;<span style="color:#a6e22e">Loading</span>...&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 数据到达后的第二次渲染
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;user&#34;</span>&gt;<span style="color:#a6e22e">Welcome</span>, <span style="color:#a6e22e">Alice</span>&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span></code></pre></div><p>useEffect 的依赖是空数组, 表示只在组件首次渲染后执行一次, 之后不会再执行,</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/database/postgres/001-postgres-basics/" class="button inline prev">
+        PostgreSQL 常用命令
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/next-js/009-definitions-react/" class="button inline next">
+        Definitions in React
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>C 标准库 运行时库(动静态链接库) 浅析 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. ISO 制定标准库规范 ISO/IEC 制定 C 和 C&#43;&#43; 编程语言的标准，其中包括标准库的规范。这些标准定义了语言的语法、语义以及标准库中包含的函数、类型和宏
+标准库是标准定义的一组函数和类型, 标准库的规范只定义了接口（即函数原型、类型定义等），而没有定义具体的实现
+glibc（GNU C Library）是 GNU 项目为 GNU 系统（包括 Linux）提供的 C 语言标准库的一种实现, 它是 Linux 系统中最常用的 C 库, 提供了符合 ISO C 标准的函数和类型, 以及一些 Linux 特有的扩展
+MSVCRT（Microsoft Visual C Runtime）是 Microsoft 为 Windows 操作系统提供的 C 和 C&#43;&#43; 运行时库, 其中包含了 C 语言标准库的一种实现, 它与 Microsoft Visual Studio 编译器紧密集成，为 Windows 应用程序提供必要的运行时支持。
+ISO 定义了标准库的规范, glibc 和 MSVCRT 是标准库的不同实现, 分别用于不同的操作系统（Linux 和 Windows）
+为什么要实现不同版本的运行时库: There are functions for memory allocation, creating threads, and input/output operations (such as those in stdio.h) in C language. All of these functions rely on system calls. Therefore, when third-party manufacturers implement the standard library of C language, they must create different versions for the different OS because each OS has its own set of system calls.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/cs-basics/002-standard-library/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="C 标准库 运行时库(动静态链接库) 浅析">
+<meta property="og:description" content="1. ISO 制定标准库规范 ISO/IEC 制定 C 和 C&#43;&#43; 编程语言的标准，其中包括标准库的规范。这些标准定义了语言的语法、语义以及标准库中包含的函数、类型和宏
+标准库是标准定义的一组函数和类型, 标准库的规范只定义了接口（即函数原型、类型定义等），而没有定义具体的实现
+glibc（GNU C Library）是 GNU 项目为 GNU 系统（包括 Linux）提供的 C 语言标准库的一种实现, 它是 Linux 系统中最常用的 C 库, 提供了符合 ISO C 标准的函数和类型, 以及一些 Linux 特有的扩展
+MSVCRT（Microsoft Visual C Runtime）是 Microsoft 为 Windows 操作系统提供的 C 和 C&#43;&#43; 运行时库, 其中包含了 C 语言标准库的一种实现, 它与 Microsoft Visual Studio 编译器紧密集成，为 Windows 应用程序提供必要的运行时支持。
+ISO 定义了标准库的规范, glibc 和 MSVCRT 是标准库的不同实现, 分别用于不同的操作系统（Linux 和 Windows）
+为什么要实现不同版本的运行时库: There are functions for memory allocation, creating threads, and input/output operations (such as those in stdio.h) in C language. All of these functions rely on system calls. Therefore, when third-party manufacturers implement the standard library of C language, they must create different versions for the different OS because each OS has its own set of system calls.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/cs-basics/002-standard-library/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="计算机基础" />
+
+
+  <meta property="article:published_time" content="2023-10-17 17:58:57 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/cs-basics/002-standard-library/">C 标准库 运行时库(动静态链接库) 浅析</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-10-17</time><span class="post-reading-time">4 分钟阅读 (641 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">计算机基础</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/">编译原理</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/c%E8%AF%AD%E8%A8%80/">c语言</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/c&#43;&#43;/">c&#43;&#43;</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-iso-制定标准库规范">1. ISO 制定标准库规范<a href="#1-iso-制定标准库规范" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>ISO/IEC</strong> 制定 C 和 C++ 编程语言的标准，其中包括<strong>标准库</strong>的规范。这些标准定义了语言的语法、语义以及标准库中包含的函数、类型和宏</p>
+<p><strong>标准库</strong>是标准定义的一组函数和类型, 标准库的规范只定义了接口（即函数原型、类型定义等），而没有定义具体的实现</p>
+<p><strong>glibc</strong>（GNU C Library）是 GNU 项目为 GNU 系统（包括 Linux）提供的 C 语言标准库的<strong>一种实现</strong>, 它是 Linux 系统中最常用的 C 库, 提供了符合 ISO C 标准的函数和类型, 以及一些 Linux 特有的扩展</p>
+<p><strong>MSVCRT</strong>（Microsoft Visual C Runtime）是 Microsoft 为 Windows 操作系统提供的 C 和 C++ 运行时库, 其中包含了 C 语言标准库的<strong>一种实现</strong>, 它与 Microsoft Visual Studio 编译器紧密集成，为 Windows 应用程序提供必要的运行时支持。</p>
+<blockquote>
+<p>ISO 定义了标准库的规范, glibc 和 MSVCRT 是标准库的不同实现, 分别用于不同的操作系统（Linux 和 Windows）</p>
+<p>为什么要实现不同版本的运行时库: There are functions for memory allocation, creating threads, and input/output operations (such as those in <code>stdio.h</code>)  in C language. All of these functions rely on system calls. Therefore, when third-party manufacturers implement the standard library of C language, they must create different versions for the different OS because each OS has its own set of system calls.</p>
+</blockquote>
+<h2 id="2-运行时-runtime-库">2. 运行时 (runtime) 库<a href="#2-运行时-runtime-库" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>运行时库分为静态链接库和动态链接库两种形式, 我们在源代码中使用 printf 时, 编译器看到的只是一个函数声明, 这些函数(比如 printf、malloc 等)的真正实现代码在运行时库文件中, 在 <strong>链接 阶段</strong>, 链接器会把运行时库中我们用到的函数实现和我们的代码链接到一起, 然后<strong>生成可执行文件</strong>, 有两种链接方式:</p>
+<ul>
+<li>静态链接方式：编译阶段 直接把 静态链接库文件 和obj 二进制文件链接, 生成可执行文件</li>
+<li>动态链接方式：程序运行时从动态链接库文件中加载运行时库的代码</li>
+</ul>
+<table>
+  <thead>
+      <tr>
+          <th></th>
+          <th>静态链接库</th>
+          <th>动态链接库</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Windows 扩展名</td>
+          <td>.lib</td>
+          <td>.dll (Dynamic Link Library)</td>
+      </tr>
+      <tr>
+          <td>Linux/Unix 扩展名</td>
+          <td>.a (archive)</td>
+          <td>.so (Shared Object)</td>
+      </tr>
+      <tr>
+          <td>加载时机</td>
+          <td>编译时完整复制到可执行文件</td>
+          <td>程序运行时才加载</td>
+      </tr>
+      <tr>
+          <td>优点</td>
+          <td>程序独立性强，不依赖外部环境</td>
+          <td>• 可执行文件较小<!-- raw HTML omitted -->• 多个程序可共享同一库文件<!-- raw HTML omitted -->• 库文件更新不需重新编译程序</td>
+      </tr>
+      <tr>
+          <td>缺点</td>
+          <td>生成的可执行文件较大，内存占用较多</td>
+          <td>• 程序运行依赖特定动态链接库<!-- raw HTML omitted -->• 可能出现版本兼容性问题</td>
+      </tr>
+      <tr>
+          <td>C语言标准库示例</td>
+          <td>• Linux/Unix: libc.a<!-- raw HTML omitted -->• Windows: libcmt.lib</td>
+          <td>• Linux/Unix: libc.so<!-- raw HTML omitted -->• Windows: msvcrt.dll</td>
+      </tr>
+  </tbody>
+</table>
+<blockquote>
+<p><strong>The term <code>library</code> (runtime library) and <code>header</code> are not same</strong>. <code>Library</code> are the implementations of the <code>header</code>, which exist as binary files (the static library <code>.a</code>/<code>.lib</code> or the dynamic library <code>.so</code>/<code>.dll</code> ), whereas headers are <code>.h</code> files. Therefore, we usually cannot find the source code of the implementation of C standard library, such as function <code>printf()</code>. Because the implementation of these functions are provided as compiled binary files. But you can find the glibc&rsquo;s implementation of <code>printf()</code> on  the internet, because glibc is open source.</p>
+</blockquote>
+<h2 id="3-libca-va-libcso">3. libc.a va libc.so<a href="#3-libca-va-libcso" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>The size of libc.a is <code>5.8 MB</code> which is huge for codes, <code>libc.a</code> is a static library, also known as a &ldquo;archive&rdquo; library, It contains compiled object code that gets linked into the final executable at compile time.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ ls -lh /usr/lib/x86_64-linux-gnu/libc.a
+</span></span><span style="display:flex;"><span>-rw-r--r-- <span style="color:#ae81ff">1</span> root root 5.8M Sep <span style="color:#ae81ff">25</span> 14:45 /usr/lib/x86_64-linux-gnu/libc.a
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e"># Don&#39;t archive libc.a directly, archive it on a different folder</span>
+</span></span><span style="display:flex;"><span>$ ar -x libc.a
+</span></span><span style="display:flex;"><span>$ ls | grep printf
+</span></span><span style="display:flex;"><span>printf.o
+</span></span><span style="display:flex;"><span>sprintf.o
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><blockquote>
+<p>为什么静态运行库里面一个目标文件只包含一个函数？比如libc.a里面printf.o只有printf()函数、strlen.o只有strlen()函数，为什么要这样组织？</p>
+<p>链接器在链接静态库的时候是以目标文件为单位的, 比如我们引用了<code>printf()</code>函数, 如果进行静态链接的话, 那么链接器就只会把库中包含printf()函数的那个目标文件链接进来, 由于运行库有成百上千个函数, 如果把这些函数都放在一个目标文件中就会很大&hellip;</p>
+<p>如果把整个链接过程比作一台计算机, 那么ld链接器就是计算机的CPU, 所有的目标文件、库文件就是输入, 链接结果输出的可执行文件就是输出, 而链接控制脚本正是这台计算机的“程序”, 它控制CPU的运行, 以“程序”要求的方式将输入加工成所须要的输出结果.</p>
+</blockquote>
+<p><code>libc.so</code> is a shared library, often referred to as a &ldquo;dynamic link library.&rdquo; It contains compiled code that is loaded into memory at runtime, allowing multiple programs to share the same code in memory.</p>
+<p>Both <code>libc.a</code> and <code>libc.so</code> are implementations of the C library, but they differ in their form and how they are linked to programs.</p>
+<p>When we staticlly compile a source file, then <code>libc.a</code> will be used at compiled time, if we dynamically compile a source file (compile with dynamically linked) then <code>libc.so</code> will be used at runtime.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ gcc -static -o main main.c         
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ file main
+</span></span><span style="display:flex;"><span>main: ELF 64-bit LSB executable, x86-64, version <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>GNU/Linux<span style="color:#f92672">)</span>, statically linked, BuildID<span style="color:#f92672">[</span>sha1<span style="color:#f92672">]=</span>7fd47f129d345aa2ef6c44b06ffa01be4174d098, <span style="color:#66d9ef">for</span> GNU/Linux 3.2.0, not stripped
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ ls -lh main
+</span></span><span style="display:flex;"><span>-rwxrwxr-x <span style="color:#ae81ff">1</span> ubuntu ubuntu 880K Oct <span style="color:#ae81ff">18</span> 00:51 main
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ gcc -o main main.c 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ file main
+</span></span><span style="display:flex;"><span>main: ELF 64-bit LSB pie executable, x86-64, version <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>SYSV<span style="color:#f92672">)</span>, dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID<span style="color:#f92672">[</span>sha1<span style="color:#f92672">]=</span>f14bf2e15cabc179d82a09a2de5bf15da6e5b75c, <span style="color:#66d9ef">for</span> GNU/Linux 3.2.0, not stripped
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ ls -lh main
+</span></span><span style="display:flex;"><span>-rwxrwxr-x <span style="color:#ae81ff">1</span> ubuntu ubuntu 16K Oct <span style="color:#ae81ff">18</span> 00:54 main
+</span></span></code></pre></div><p>As you can see, the dynamically linked binary is very small just 1<code>6k</code> compared with the statically linked binary <code>880K</code>.</p>
+<h2 id="4-glibc-vs-libc">4. glibc vs libc<a href="#4-glibc-vs-libc" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<table>
+  <thead>
+      <tr>
+          <th>特性</th>
+          <th>libc</th>
+          <th>glibc</th>
+          <th>其他libc实现(如musl/uClibc)</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>定义</td>
+          <td>C标准库的接口规范</td>
+          <td>GNU项目开发的libc具体实现</td>
+          <td>轻量级/嵌入式场景的libc实现</td>
+      </tr>
+      <tr>
+          <td>性质</td>
+          <td>概念性称呼</td>
+          <td>实际库文件</td>
+          <td>实际库文件</td>
+      </tr>
+      <tr>
+          <td>使用范围</td>
+          <td>-</td>
+          <td>Linux系统主流实现</td>
+          <td>嵌入式系统、资源受限环境</td>
+      </tr>
+      <tr>
+          <td>体积</td>
+          <td>-</td>
+          <td>较大</td>
+          <td>小巧精简</td>
+      </tr>
+      <tr>
+          <td>功能</td>
+          <td>定义基础接口</td>
+          <td>完整的功能实现，特性丰富</td>
+          <td>基础功能实现，针对性优化</td>
+      </tr>
+      <tr>
+          <td>运行环境</td>
+          <td>-</td>
+          <td>主要用于桌面和服务器</td>
+          <td>嵌入式设备、IoT设备等</td>
+      </tr>
+      <tr>
+          <td>特点</td>
+          <td>-</td>
+          <td>功能全面，向后兼容性好</td>
+          <td>启动快、内存占用小</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="5-conclusion">5. Conclusion<a href="#5-conclusion" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>程序如何使用操作系统提供的API(system call)? 在一般的情况下，一种语言的开发环境往往会附带有语言库（Language Library也可以说是标准库,运行时库）。这些库就是对操作系统的API的包装，比如我们经典的C语言版“Hello World”程序，它使用C语言标准库的“printf”函数来输出一个字符串，“printf”函数对字符串进行一些必要的处理以后，最后会调用操作系统提供的API。各个操作系统下，往终端输出字符串的API都不一样，在Linux下，它是一个“write”的系统调用，而在Windows下它是“WriteConsole”系统API。<strong>标准库函数(运行库)依赖的是system call</strong>。库里面还带有那些很常用的函数，比如C语言标准库里面有很常用一个函数取得一个字符串的长度叫strlen()，该函数即遍历整个字符串后返回字符串长度，这个函数并没有调用任何操作系统的API，也没有做任何输入输出。但是很大一部分库函数(运行库)都是要调用操作系统的API的.</p>
+<blockquote>
+<p>“Any problem in computer science can be solved by another layer of indirection.”</p>
+</blockquote>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/01/1f35f2b6abb298af70e6c922f5be2f32.png" alt=""></p>
+<p>每个层次之间都须要相互通信，既然须要通信就必须有一个通信的协议，我们一般将其称为接口（Interface），接口的下面那层是接口的提供者，由它定义接口；接口的上面那层是接口的使用者，它使用该接口来实现所需要的功能.</p>
+<blockquote>
+<p>运行时库(标准库, static library, dynamic library) 依赖 system call, 它提供头文件(<code>stdio.h</code>, <code>math.h</code>)供我们使用. 所以它很重要, 它在应用层和操作系统中间. 我们使用它提供的接口(<code>printf()</code>)和操作系统进行交流(通过system call).</p>
+</blockquote>
+<p>我们的软件体系中，位于最上层的是应用程序，比如我们平时用到的网络浏览器、Email客户端、多媒体播放器、图片浏览器等。从整个层次结构上来看，开发工具与应用程序是属于同一个层次的，因为它们都使用一个接口，那就是操作系统应用程序编程接口（Application Programming Interface, 就是标准库的头文件）。应用程序接口(头文件)的提供者是运行库，什么样的运行库提供什么样的API，比如Linux下的Glibc库提供POSIX的API；Windows的运行库提供Windows API，最常见的32位Windows提供的API又被称为Win32。</p>
+<p>运行库使用操作系统提供的系统调用接口（System call Interface），系统调用接口在实现中往往以软件中断（Software Interrupt）的方式提供，比如Linux使用0x80号中断作为系统调用接口，Windows使用0x2E号中断作为系统调用接口（从Windows XP Sp2开始，Windows开始采用一种新的系统调用方式）。</p>
+<p>操作系统内核层对于硬件层来说是硬件接口的使用者，而硬件是接口的定义者，硬件的接口定义决定了操作系统内核，具体来讲就是驱动程序如何操作硬件，如何与硬件进行通信。这种接口往往被叫做硬件规格（Hardware Specification），硬件的生产厂商负责提供硬件规格，操作系统和驱动程序的开发者通过阅读硬件规格文档所规定的各种硬件编程接口标准来编写操作系统和驱动程序。</p>
+<p>&mdash;程序员的自我修养：链接、装载与库</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/bugs/006-cgo-docker-image-build-error/" class="button inline prev">
+        CGO Compile Error Building Docker Image
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/networking/002-host-file-dns-stub-resolver/" class="button inline next">
+        DNS Stub and Recursive Resolver - Config Files
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

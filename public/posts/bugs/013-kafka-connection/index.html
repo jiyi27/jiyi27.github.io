@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Kafka 链接失败 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Spring Boot 应用在尝试连接 Kafka 时，不断抛出连接错误，提示无法连接到 localhost:127.0.0.1:9092 的 Kafka 节点:
+[Consumer clientId=consumer-like-group-1, groupId=like-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available. 检查 Kafka /opt/homebrew/etc/kafka/server.properties 配置:
+broker.id=0 只有这一行, 然后添加:
+broker.id=0 listeners=PLAINTEXT://0.0.0.0:9092 advertised.listeners=PLAINTEXT://localhost:9092 成功解决问题,
+在 Kafka 中，listeners 与 advertised.listeners 这两个配置项常常是“能否连通”的关键。简单来说：
+listeners：定义 Kafka Broker 实际监听的地址和端口, 告诉 Kafka Broker 监听在哪个接口上接收请求 advertised.listeners：Kafka “向外宣传”自己的地址，告诉客户端要用哪个 IP/域名 &#43; 端口来连 他们两个什么区别, 为什么都要单独设置, 而不是设置一个相同的值?
+listeners=PLAINTEXT://0.0.0.0:9092 0.0.0.0 表示监听所有网络接口，意味着 Kafka 允许来自任何 IP 地址的连接, 这样做的好处是，它允许本地机器和远程机器都可以连接到这个 Broker,
+如果你希望 Kafka 被远程访问，比如生产者和消费者运行在不同的机器上，你应该设置 advertised.listeners 为你的主机名或外部 IP：
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/bugs/013-kafka-connection/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Kafka 链接失败">
+<meta property="og:description" content="Spring Boot 应用在尝试连接 Kafka 时，不断抛出连接错误，提示无法连接到 localhost:127.0.0.1:9092 的 Kafka 节点:
+[Consumer clientId=consumer-like-group-1, groupId=like-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available. 检查 Kafka /opt/homebrew/etc/kafka/server.properties 配置:
+broker.id=0 只有这一行, 然后添加:
+broker.id=0 listeners=PLAINTEXT://0.0.0.0:9092 advertised.listeners=PLAINTEXT://localhost:9092 成功解决问题,
+在 Kafka 中，listeners 与 advertised.listeners 这两个配置项常常是“能否连通”的关键。简单来说：
+listeners：定义 Kafka Broker 实际监听的地址和端口, 告诉 Kafka Broker 监听在哪个接口上接收请求 advertised.listeners：Kafka “向外宣传”自己的地址，告诉客户端要用哪个 IP/域名 &#43; 端口来连 他们两个什么区别, 为什么都要单独设置, 而不是设置一个相同的值?
+listeners=PLAINTEXT://0.0.0.0:9092 0.0.0.0 表示监听所有网络接口，意味着 Kafka 允许来自任何 IP 地址的连接, 这样做的好处是，它允许本地机器和远程机器都可以连接到这个 Broker,
+如果你希望 Kafka 被远程访问，比如生产者和消费者运行在不同的机器上，你应该设置 advertised.listeners 为你的主机名或外部 IP：
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/bugs/013-kafka-connection/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="bugs" />
+
+
+  <meta property="article:published_time" content="2025-02-22 11:12:22 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/bugs/013-kafka-connection/">Kafka 链接失败</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-02-22</time><span class="post-reading-time">2 分钟阅读 (257 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/bugs/">bugs</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/kafka/">kafka</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>Spring Boot 应用在尝试连接 Kafka 时，不断抛出连接错误，提示无法连接到 localhost:127.0.0.1:9092 的 Kafka 节点:</p>
+<pre tabindex="0"><code>[Consumer clientId=consumer-like-group-1, groupId=like-group] Connection to node -1 (localhost/127.0.0.1:9092) could not be established. Node may not be available.
+</code></pre><p>检查 Kafka <code>/opt/homebrew/etc/kafka/server.properties</code> 配置:</p>
+<pre tabindex="0"><code>broker.id=0
+</code></pre><p>只有这一行, 然后添加:</p>
+<pre tabindex="0"><code>broker.id=0
+listeners=PLAINTEXT://0.0.0.0:9092
+advertised.listeners=PLAINTEXT://localhost:9092
+</code></pre><p>成功解决问题,</p>
+<p>在 Kafka 中，listeners 与 advertised.listeners 这两个配置项常常是“能否连通”的关键。简单来说：</p>
+<ul>
+<li>listeners：定义 Kafka Broker 实际监听的地址和端口, 告诉 Kafka Broker 监听在哪个接口上接收请求</li>
+<li>advertised.listeners：Kafka “向外宣传”自己的地址，告诉客户端要用哪个 IP/域名 + 端口来连</li>
+</ul>
+<p>他们两个什么区别, 为什么都要单独设置, 而不是设置一个相同的值?</p>
+<pre tabindex="0"><code>listeners=PLAINTEXT://0.0.0.0:9092
+</code></pre><p><code>0.0.0.0</code> 表示监听所有网络接口，意味着 Kafka 允许来自任何 IP 地址的连接, 这样做的好处是，它允许本地机器和远程机器都可以连接到这个 Broker,</p>
+<p>如果你希望 Kafka 被远程访问，比如生产者和消费者运行在不同的机器上，你应该设置 <code>advertised.listeners</code> 为你的主机名或外部 IP：</p>
+<pre tabindex="0"><code>listeners=PLAINTEXT://0.0.0.0:9092
+advertised.listeners=PLAINTEXT://your-public-ip:9092
+</code></pre><ul>
+<li>
+<p><code>listeners=0.0.0.0:9092</code> 允许 Kafka 在所有网络接口上监听连接</p>
+</li>
+<li>
+<p><code>advertised.listeners=your-public-ip:9092</code> 确保客户端能够正确地连接到 Kafka</p>
+</li>
+</ul>
+<p>上面说的是服务端, 当客户端启动时(Spring Boot 代码)，会用 <code>bootstrap.servers</code> 提供的地址列表来<strong>初次连接</strong> Kafka 集群。这个配置仅用于入口，帮助客户端找到集群中任意一个 broker，从而获取集群的元数据（例如 topic 信息、分区信息以及其它 broker 的地址）。配置内容可以是一台或多台 broker 的地址。通常，在单机开发环境中你可以设置为 <code>localhost:9092</code>，但在生产环境中，为了容错，通常会配置多个 broker 的地址。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> ConsumerFactory<span style="color:#f92672">&lt;</span>String, String<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">consumerFactory</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 配置 Kafka 消费者</span>
+</span></span><span style="display:flex;"><span>    Map<span style="color:#f92672">&lt;</span>String, Object<span style="color:#f92672">&gt;</span> configs <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> HashMap<span style="color:#f92672">&lt;&gt;</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 这些地址就是 broker 的公共 IP</span>
+</span></span><span style="display:flex;"><span>    configs.<span style="color:#a6e22e">put</span>(ConsumerConfig.<span style="color:#a6e22e">BOOTSTRAP_SERVERS_CONFIG</span>, <span style="color:#e6db74">&#34;broker1:9092,broker2:9092,broker3:9092&#34;</span>);
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> DefaultKafkaConsumerFactory<span style="color:#f92672">&lt;&gt;</span>(configs);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><hr>
+<p>运行程序, 发现 8080 端口被占用, 查看谁占用的, 然后关闭, 结果 8080 仍然被占用, 很奇怪, 输出如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e"># david @ Davids-Mac-mini in ~ [22:40:51]</span>
+</span></span><span style="display:flex;"><span>$ lsof -i :8080
+</span></span><span style="display:flex;"><span>COMMAND   PID  USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+</span></span><span style="display:flex;"><span>java    <span style="color:#ae81ff">85160</span> david   54u  IPv6 0xb9edb27e9f8be53e      0t0  TCP *:http-alt <span style="color:#f92672">(</span>LISTEN<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># david @ Davids-Mac-mini in ~ [22:40:58]</span>
+</span></span><span style="display:flex;"><span>$ kill <span style="color:#ae81ff">85160</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># david @ Davids-Mac-mini in ~ [22:41:09]</span>
+</span></span><span style="display:flex;"><span>$ lsof -i :8080
+</span></span><span style="display:flex;"><span>COMMAND   PID  USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+</span></span><span style="display:flex;"><span>java    <span style="color:#ae81ff">85345</span> david   54u  IPv6 0x84534af2d36abf6d      0t0  TCP *:http-alt <span style="color:#f92672">(</span>LISTEN<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>查看谁运行的 找出所有 Java 进程:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>$ ps aux | grep java
+</span></span></code></pre></div><p>发现一堆输出, 查了一下是 zookeeper 相关的东西,</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/02/8d06ca0c59cc392b20d402e9a3e0e563.png" alt=""></p>
+<p><code>/opt/homebrew/opt/openjdk/bin/java -Dzookeeper.log.dir=...</code>：进程执行的完整命令，说明这是一个 Java 进程，并且和 <strong>Zookeeper</strong> 相关,</p>
+<p>关闭 zookeeper 服务:</p>
+<pre tabindex="0"><code>$ brew services stop zookeeper
+</code></pre><p>成功解决问题</p>
+<blockquote>
+<p>因为通过 Homebrew 方式安装的 Zookeeper 默认会开启一个内置的 AdminServer（Zookeeper 3.5+ 版本开始就有这个特性），该服务的默认端口是 8080。当你 kill 了对应的 Java 进程后，brew services 还在负责“托管”并自动重启 Zookeeper 服务，所以很快就会有新的进程继续监听 8080 端口。</p>
+</blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/001-kafka-concepts/" class="button inline prev">
+        Kafka 消息队列
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E7%BC%93%E5%AD%98%E5%92%8C%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/001-redis-data-structure/" class="button inline next">
+        Redis 五种数据类型
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

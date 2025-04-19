@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>Go File Server Cannot Handle Large Files :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Problem description I&rsquo;ve discussed how to use Cloudflare as a reverse proxy for my web traffic in previous post.
+I write a file server in Go, when attempting to upload a file of approximately 200 MB, it becomes very slow (always uploading) and never succeed. Upon monitoring the server using tools like htop, it seems that the server might be unaware of the incoming large file upload. I come across a error by chance: 413 Request Entity Too Large.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/bugs/009-go-server-handle-large-file/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Go File Server Cannot Handle Large Files">
+<meta property="og:description" content="1. Problem description I&rsquo;ve discussed how to use Cloudflare as a reverse proxy for my web traffic in previous post.
+I write a file server in Go, when attempting to upload a file of approximately 200 MB, it becomes very slow (always uploading) and never succeed. Upon monitoring the server using tools like htop, it seems that the server might be unaware of the incoming large file upload. I come across a error by chance: 413 Request Entity Too Large.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/bugs/009-go-server-handle-large-file/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="bugs" />
+
+
+  <meta property="article:published_time" content="2023-11-30 21:43:22 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/bugs/009-go-server-handle-large-file/">Go File Server Cannot Handle Large Files</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2023-11-30</time><span class="post-reading-time">3 分钟阅读 (438 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/bugs/">bugs</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/cloudflare/">cloudflare</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/">后端开发</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-problem-description">1. Problem description<a href="#1-problem-description" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>I&rsquo;ve discussed how to use Cloudflare as a <a href="https://www.cloudflare.com/learning/cdn/glossary/reverse-proxy/">reverse proxy</a> for my web traffic in <a href="https://blog.yorforger.cc/post/build-website/008-cloudflare-cdn/">previous post</a>.</p>
+<p>I write a <a href="https://github.com/shwezhu/file-server">file server</a> in Go, when attempting to upload a file of approximately 200 MB, it becomes very slow (always uploading) and never succeed. Upon monitoring the server using tools like <code>htop</code>, it seems that the server might be unaware of the incoming large file upload. I come across a error by chance:  <strong>413 Request Entity Too Large</strong>.</p>
+<h2 id="2-cloudflare">2. Cloudflare<a href="#2-cloudflare" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Then I found this is because the limitation of Couldflare proxy:</p>
+<blockquote>
+<p>There’s a <strong>body size</strong> limit of 100 MB on Free and Pro, 200 MB on Business and <a href="https://community.cloudflare.com/t/community-tip-fixing-error-500-internal-server-error/44453">50074</a> MB on Enterprise. Only Enterprise customers can request to have the body size limit increased.</p>
+<p>Each user can only upload files with maximum size of 100MB at a time <strong>if your website is proxied by Cloudflare.</strong></p>
+<p><a href="https://community.cloudflare.com/t/does-the-100-mb-limit-apllies-to-all-users-on-my-website/297261">Does the 100 Mb limit apllies to all users on my website?</a></p>
+</blockquote>
+<p>So this is the thing, then I try to access my website directly by IP address (bypass the Cloudflare proxy).</p>
+<h2 id="3-vps-ram">3. VPS RAM<a href="#3-vps-ram" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Then I can see my file server handling the incoming request whose body larger than 100MB, I use <code>htop</code> to check the RAM usage status on my VPS, I can see the RAM increase from 50MB to 100MB then 200MB, then my file server get killed by the OS.</p>
+<p>My VPS RAM is 512MB, and there is 460MB left, I don&rsquo;t know why the OS kill my file server program.</p>
+<h2 id="4-golang">4. Golang<a href="#4-golang" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>Besides, when I tried to upload some files whose size is around 60MB, the RAM usage of my VPS increase from 50MB (total) to around 100MB, this makes sense, because the file server needs load the whole file to the RAM and copy the content to the disk.</p>
+<p>But after handling this request, the RAM usage is still around 100MB, if I upload another file (60MB), then the RAM usage increases to around 160MB. I thought there is memory leak on my program. But I was wrong. I found a post and share it here:</p>
+<blockquote>
+<p>Go does not release memory it allocated from the OS immediately. The reason is probably that allocating memory is costly (needs system calls) and the chance is high that it will be needed in the near future anyway again. But, if memory gets long enough unused it will be released eventually so that the <strong>RSS</strong> of the process decreases again.</p>
+<p>Learn more: <a href="https://stackoverflow.com/a/49843380/16317008">https://stackoverflow.com/a/49843380/16317008</a></p>
+</blockquote>
+<blockquote>
+<p>RSS indicates the actual physical memory consumed by a process, while VSZ includes not only the physical memory but also the virtual memory.</p>
+<p>Learn more: <a href="https://stackoverflow.com/a/21049737/16317008">https://stackoverflow.com/a/21049737/16317008</a></p>
+</blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/python/basics/002-nuggets-python/" class="button inline prev">
+        零碎知识 &#43; 踩坑 - Python
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/cs-basics/001-pass-by-value-reference/" class="button inline next">
+        Pass by Value or Reference
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
