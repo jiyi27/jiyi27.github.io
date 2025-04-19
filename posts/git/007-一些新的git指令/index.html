@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>git 一些魔法指令 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 挂载目录 部署博客, 根目录下有两类文件:
+关于笔记, 主题相关的文件 public 文件夹( hugo 模板自动生成的博客静态文件) 我不想把这两类文件放一起, 分别建仓库又麻烦, 我想在一个仓库的两个分支分别存这两个内容:
+hugo-blog 存放 markdown 和 主题配置相关文件 master 分支存储 public 文件夹下的文件, 用于 GitHub Pages 于是, 可以这么干
+提交 笔记主题等文件到 hugo-blog 分支
+git checkout -b hugo-blog echo &#34;public/&#34; &gt;&gt; .gitignore # 不追踪 public 文件夹 git add . git commit -m &#34;Add Hugo source files&#34; 准备 master 分支，用来部署 public 目录里的内容
+# 初始化主分支 git checkout --orphan master # 清空当前目录所有文件（只对 git 管理的文件有效） git rm -rf . # 将 public 目录复制到当前目录（临时做法） cp -r public/* . # 添加并提交 git add . git commit -m &#34;Deploy Hugo site&#34; # 可选：推送到远程仓库 git push origin master --force git checkout --orphan master
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/git/007-%E4%B8%80%E4%BA%9B%E6%96%B0%E7%9A%84git%E6%8C%87%E4%BB%A4/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="git 一些魔法指令">
+<meta property="og:description" content="1. 挂载目录 部署博客, 根目录下有两类文件:
+关于笔记, 主题相关的文件 public 文件夹( hugo 模板自动生成的博客静态文件) 我不想把这两类文件放一起, 分别建仓库又麻烦, 我想在一个仓库的两个分支分别存这两个内容:
+hugo-blog 存放 markdown 和 主题配置相关文件 master 分支存储 public 文件夹下的文件, 用于 GitHub Pages 于是, 可以这么干
+提交 笔记主题等文件到 hugo-blog 分支
+git checkout -b hugo-blog echo &#34;public/&#34; &gt;&gt; .gitignore # 不追踪 public 文件夹 git add . git commit -m &#34;Add Hugo source files&#34; 准备 master 分支，用来部署 public 目录里的内容
+# 初始化主分支 git checkout --orphan master # 清空当前目录所有文件（只对 git 管理的文件有效） git rm -rf . # 将 public 目录复制到当前目录（临时做法） cp -r public/* . # 添加并提交 git add . git commit -m &#34;Deploy Hugo site&#34; # 可选：推送到远程仓库 git push origin master --force git checkout --orphan master
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/git/007-%E4%B8%80%E4%BA%9B%E6%96%B0%E7%9A%84git%E6%8C%87%E4%BB%A4/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="git" />
+
+
+  <meta property="article:published_time" content="2025-04-19 22:52:20 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/git/007-%E4%B8%80%E4%BA%9B%E6%96%B0%E7%9A%84git%E6%8C%87%E4%BB%A4/">git 一些魔法指令</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-04-19</time><span class="post-reading-time">1 分钟阅读 (175 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/git/">git</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-挂载目录">1. 挂载目录<a href="#1-挂载目录" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>部署博客, 根目录下有两类文件:</p>
+<ul>
+<li>关于笔记, 主题相关的文件</li>
+<li><code>public</code> 文件夹( hugo 模板自动生成的博客静态文件)</li>
+</ul>
+<p>我不想把这两类文件放一起, 分别建仓库又麻烦, 我想在一个仓库的两个分支分别存这两个内容:</p>
+<ul>
+<li><code>hugo-blog</code> 存放 markdown 和 主题配置相关文件</li>
+<li><code>master</code> 分支存储 public 文件夹下的文件, 用于 GitHub Pages</li>
+</ul>
+<p>于是, 可以这么干</p>
+<p><strong>提交 笔记主题等文件到 <code>hugo-blog</code> 分支</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span>git checkout -b hugo-blog
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;public/&#34;</span> &gt;&gt; .gitignore  <span style="color:#75715e"># 不追踪 public 文件夹</span>
+</span></span><span style="display:flex;"><span>git add .
+</span></span><span style="display:flex;"><span>git commit -m <span style="color:#e6db74">&#34;Add Hugo source files&#34;</span>
+</span></span></code></pre></div><p><strong>准备 <code>master</code> 分支，用来部署 <code>public</code> 目录里的内容</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e"># 初始化主分支</span>
+</span></span><span style="display:flex;"><span>git checkout --orphan master
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 清空当前目录所有文件（只对 git 管理的文件有效）</span>
+</span></span><span style="display:flex;"><span>git rm -rf .
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 将 public 目录复制到当前目录（临时做法）</span>
+</span></span><span style="display:flex;"><span>cp -r public/* .
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 添加并提交</span>
+</span></span><span style="display:flex;"><span>git add .
+</span></span><span style="display:flex;"><span>git commit -m <span style="color:#e6db74">&#34;Deploy Hugo site&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 可选：推送到远程仓库</span>
+</span></span><span style="display:flex;"><span>git push origin master --force
+</span></span></code></pre></div><blockquote>
+<p><code>git checkout --orphan master</code></p>
+<p>如果一个项目的 Git 历史非常混乱（比如有很多无用提交、错误的 merge、测试文件没删干净等）我们就可以通过这个指令创建一个<strong>干净的新开始</strong>，等于是</p>
+<ul>
+<li>创建一个新的“<strong>孤立分支</strong>” orphan branch, 这个分支 <strong>没有历史记录</strong>，就像是一个全新的仓库起点</li>
+<li>不带历史；重新选择想保留的文件；重新写提交记录</li>
+</ul>
+</blockquote>
+<p>可是这样有个问题:</p>
+<p>运行 <code>hugo</code> 静态文件都生成在了 public 文件夹, 当我切换到 <code>master</code> 分支, 静态文件文件还是都在 public, 而不是根目录, 因为我必须要把 public 内的文件直接推送到 master, github pages 才能识别进行部署, 这个时候就可以使用一个神奇的指令:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e"># 在项目根目录执行 将 master 分支作为 public 文件夹的工作区</span>
+</span></span><span style="display:flex;"><span>git worktree add -B master public origin/master
+</span></span></code></pre></div><p>之后每次 <code>cd master</code> 之后, 都会自动跳转到 <code>master</code> 分支, 这样就会很方便, 于是写个简单的部署博客脚本:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>hugo
+</span></span><span style="display:flex;"><span>cd public/
+</span></span><span style="display:flex;"><span>git switch master  <span style="color:#75715e"># 现在这步没必要了</span>
+</span></span><span style="display:flex;"><span>git add .
+</span></span><span style="display:flex;"><span>git commit -m <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>date<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>git push origin master
+</span></span></code></pre></div>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+    
+    
+      <a href="https://blog.jiyi27.com/posts/database/mongodb/004-mongodb%E8%81%9A%E5%90%88%E5%87%BD%E6%95%B0/" class="button inline next">
+        MongoDB 聚合管道
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

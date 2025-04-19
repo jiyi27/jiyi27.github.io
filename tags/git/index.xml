@@ -6,7 +6,102 @@
     <description>Recent content in Git on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 25 Mar 2025 12:05:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/git/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 19 Apr 2025 22:52:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/git/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>git 一些魔法指令</title>
+      <link>https://blog.jiyi27.com/posts/git/007-%E4%B8%80%E4%BA%9B%E6%96%B0%E7%9A%84git%E6%8C%87%E4%BB%A4/</link>
+      <pubDate>Sat, 19 Apr 2025 22:52:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/git/007-%E4%B8%80%E4%BA%9B%E6%96%B0%E7%9A%84git%E6%8C%87%E4%BB%A4/</guid>
+      <description>&lt;h2 id=&#34;1-挂载目录&#34;&gt;1. 挂载目录&lt;/h2&gt;
+&lt;p&gt;部署博客, 根目录下有两类文件:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;关于笔记, 主题相关的文件&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;public&lt;/code&gt; 文件夹( hugo 模板自动生成的博客静态文件)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;我不想把这两类文件放一起, 分别建仓库又麻烦, 我想在一个仓库的两个分支分别存这两个内容:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;hugo-blog&lt;/code&gt; 存放 markdown 和 主题配置相关文件&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;master&lt;/code&gt; 分支存储 public 文件夹下的文件, 用于 GitHub Pages&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;于是, 可以这么干&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;提交 笔记主题等文件到 &lt;code&gt;hugo-blog&lt;/code&gt; 分支&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git checkout -b hugo-blog
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;echo &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;public/&amp;#34;&lt;/span&gt; &amp;gt;&amp;gt; .gitignore  &lt;span style=&#34;color:#75715e&#34;&gt;# 不追踪 public 文件夹&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git add .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git commit -m &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Add Hugo source files&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;准备 &lt;code&gt;master&lt;/code&gt; 分支，用来部署 &lt;code&gt;public&lt;/code&gt; 目录里的内容&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 初始化主分支&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git checkout --orphan master
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 清空当前目录所有文件（只对 git 管理的文件有效）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git rm -rf .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 将 public 目录复制到当前目录（临时做法）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cp -r public/* .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 添加并提交&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git add .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git commit -m &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Deploy Hugo site&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 可选：推送到远程仓库&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git push origin master --force
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;git checkout --orphan master&lt;/code&gt;&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-挂载目录&#34;&gt;1. 挂载目录&lt;/h2&gt;
+&lt;p&gt;部署博客, 根目录下有两类文件:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;关于笔记, 主题相关的文件&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;public&lt;/code&gt; 文件夹( hugo 模板自动生成的博客静态文件)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;我不想把这两类文件放一起, 分别建仓库又麻烦, 我想在一个仓库的两个分支分别存这两个内容:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;hugo-blog&lt;/code&gt; 存放 markdown 和 主题配置相关文件&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;master&lt;/code&gt; 分支存储 public 文件夹下的文件, 用于 GitHub Pages&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;于是, 可以这么干&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;提交 笔记主题等文件到 &lt;code&gt;hugo-blog&lt;/code&gt; 分支&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git checkout -b hugo-blog
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;echo &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;public/&amp;#34;&lt;/span&gt; &amp;gt;&amp;gt; .gitignore  &lt;span style=&#34;color:#75715e&#34;&gt;# 不追踪 public 文件夹&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git add .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git commit -m &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Add Hugo source files&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;准备 &lt;code&gt;master&lt;/code&gt; 分支，用来部署 &lt;code&gt;public&lt;/code&gt; 目录里的内容&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 初始化主分支&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git checkout --orphan master
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 清空当前目录所有文件（只对 git 管理的文件有效）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git rm -rf .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 将 public 目录复制到当前目录（临时做法）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cp -r public/* .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 添加并提交&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git add .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git commit -m &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Deploy Hugo site&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 可选：推送到远程仓库&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git push origin master --force
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;git checkout --orphan master&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如果一个项目的 Git 历史非常混乱（比如有很多无用提交、错误的 merge、测试文件没删干净等）我们就可以通过这个指令创建一个&lt;strong&gt;干净的新开始&lt;/strong&gt;，等于是&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;创建一个新的“&lt;strong&gt;孤立分支&lt;/strong&gt;” orphan branch, 这个分支 &lt;strong&gt;没有历史记录&lt;/strong&gt;，就像是一个全新的仓库起点&lt;/li&gt;
+&lt;li&gt;不带历史；重新选择想保留的文件；重新写提交记录&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;可是这样有个问题:&lt;/p&gt;
+&lt;p&gt;运行 &lt;code&gt;hugo&lt;/code&gt; 静态文件都生成在了 public 文件夹, 当我切换到 &lt;code&gt;master&lt;/code&gt; 分支, 静态文件文件还是都在 public, 而不是根目录, 因为我必须要把 public 内的文件直接推送到 master, github pages 才能识别进行部署, 这个时候就可以使用一个神奇的指令:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 在项目根目录执行 将 master 分支作为 public 文件夹的工作区&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git worktree add -B master public origin/master
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;之后每次 &lt;code&gt;cd master&lt;/code&gt; 之后, 都会自动跳转到 &lt;code&gt;master&lt;/code&gt; 分支, 这样就会很方便, 于是写个简单的部署博客脚本:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#!/bin/bash
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;hugo
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cd public/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git switch master  &lt;span style=&#34;color:#75715e&#34;&gt;# 现在这步没必要了&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git add .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git commit -m &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;$(&lt;/span&gt;date&lt;span style=&#34;color:#66d9ef&#34;&gt;)&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git push origin master
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+    </item>
+    
     <item>
       <title>解决 github 22 端口被禁用问题</title>
       <link>https://blog.jiyi27.com/posts/bugs/014-%E8%A7%A3%E5%86%B322%E7%AB%AF%E5%8F%A3%E8%A2%AB%E7%A6%81%E7%94%A8%E9%97%AE%E9%A2%98/</link>
