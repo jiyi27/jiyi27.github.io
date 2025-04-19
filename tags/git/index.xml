@@ -8,11 +8,11 @@
     <language>en</language>
     <lastBuildDate>Tue, 25 Mar 2025 12:05:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/git/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>git 22 端口被禁用</title>
-      <link>https://blog.jiyi27.com/posts/git/007-git-443-port/</link>
+      <title>解决 github 22 端口被禁用问题</title>
+      <link>https://blog.jiyi27.com/posts/bugs/014-%E8%A7%A3%E5%86%B322%E7%AB%AF%E5%8F%A3%E8%A2%AB%E7%A6%81%E7%94%A8%E9%97%AE%E9%A2%98/</link>
       <pubDate>Tue, 25 Mar 2025 12:05:20 +0000</pubDate>
       
-      <guid>https://blog.jiyi27.com/posts/git/007-git-443-port/</guid>
+      <guid>https://blog.jiyi27.com/posts/bugs/014-%E8%A7%A3%E5%86%B322%E7%AB%AF%E5%8F%A3%E8%A2%AB%E7%A6%81%E7%94%A8%E9%97%AE%E9%A2%98/</guid>
       <description>&lt;p&gt;有时后开了 VPN, 导致 22 端口无法使用, 因此通过终端提交文件时会出现失败的问题:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ssh -T git@github.com
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git@ssh.github.com: Permission denied &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;publickey&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.
@@ -56,17 +56,28 @@
     </item>
     
     <item>
-      <title>git 工作流</title>
+      <title>git 工作中用到的一些场景</title>
       <link>https://blog.jiyi27.com/posts/git/006-git-workflow/</link>
       <pubDate>Fri, 21 Mar 2025 13:05:20 +0000</pubDate>
       
       <guid>https://blog.jiyi27.com/posts/git/006-git-workflow/</guid>
-      <description>&lt;blockquote&gt;
-&lt;p&gt;每次 commit 前都要看一下当前分支, 确认是不是要在这个分支提交修改, 避免在 main 分支直接修改&lt;/p&gt;
-&lt;p&gt;同理, 每次 push 代码的时候, 再三确认 push 的分支, 永远不要直接 push 到 main 分支, 而应该 push 到功能分支或其他分支&lt;/p&gt;
+      <description>&lt;h2 id=&#34;1-不要忘记的事&#34;&gt;1. 不要忘记的事&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;git commit&lt;/code&gt; 前确认当前分支, 避免在 main 分支直接修改, &lt;strong&gt;本地修改应该提交到自己的分支上&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;git push&lt;/code&gt; 永远不要直接 push 到 main 分支, 而应该 push 到功能分支或其他分支&lt;/p&gt;
+&lt;p&gt;谨慎用 &lt;code&gt;git pull&lt;/code&gt;: &lt;code&gt;git pull origin master&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;从远程 &lt;code&gt;origin&lt;/code&gt; 拉取 &lt;code&gt;master&lt;/code&gt; 分支的最新提交&lt;/li&gt;
+&lt;li&gt;将这个远程 &lt;code&gt;master&lt;/code&gt; 分支的内容&lt;strong&gt;合并到当前所在的分支&lt;/strong&gt;，比如 &lt;code&gt;feat/message&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;git push origin master&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;将本地的 &lt;code&gt;master&lt;/code&gt; 分支推送到远程的 &lt;code&gt;origin&lt;/code&gt; 仓库的 &lt;code&gt;master&lt;/code&gt; 分支&lt;/li&gt;
+&lt;li&gt;与你当前所在的分支（如 &lt;code&gt;feat/message&lt;/code&gt;）无关&lt;/li&gt;
+&lt;/ul&gt;
 &lt;/blockquote&gt;
 &lt;h2 id=&#34;1-准备的事&#34;&gt;1. 准备的事&lt;/h2&gt;
-&lt;p&gt;一般入职后, 应该了解公司的开发要求, 一般会有文档, 大致内容有:&lt;/p&gt;
+&lt;p&gt;马上入职了, 在高铁上研究一下, 五个小时, 足够了, 一般入职后, 应该了解公司的开发要求, 一般会有文档, 大致内容有:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;变量 函数 文件 命名规则 (数据库 表 列 等等)&lt;/li&gt;
 &lt;li&gt;注释规则&lt;/li&gt;
@@ -76,19 +87,24 @@
 &lt;/ul&gt;
 &lt;h2 id=&#34;2-一般的工作流&#34;&gt;2. 一般的工作流&lt;/h2&gt;
 &lt;h3 id=&#34;21-克隆仓库--本地初始化&#34;&gt;2.1. 克隆仓库 &amp;amp; 本地初始化&lt;/h3&gt;
-&lt;p&gt;克隆公司仓库 查看分支&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 用 clone 命令会直接帮你在本地创建一个与远程关联好的仓库&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git clone git@github.com:Company/xxx.git
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;cd xxx
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git branch -a     &lt;span style=&#34;color:#75715e&#34;&gt;# 查看所有本地/远程分支&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;切换到 develop 分支（如果团队约定 develop 是主要的开发分支）&lt;/p&gt;</description>
-      <content>&lt;blockquote&gt;
-&lt;p&gt;每次 commit 前都要看一下当前分支, 确认是不是要在这个分支提交修改, 避免在 main 分支直接修改&lt;/p&gt;
-&lt;p&gt;同理, 每次 push 代码的时候, 再三确认 push 的分支, 永远不要直接 push 到 main 分支, 而应该 push 到功能分支或其他分支&lt;/p&gt;
+&lt;p&gt;克隆公司仓库 查看分支&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-不要忘记的事&#34;&gt;1. 不要忘记的事&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;code&gt;git commit&lt;/code&gt; 前确认当前分支, 避免在 main 分支直接修改, &lt;strong&gt;本地修改应该提交到自己的分支上&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;git push&lt;/code&gt; 永远不要直接 push 到 main 分支, 而应该 push 到功能分支或其他分支&lt;/p&gt;
+&lt;p&gt;谨慎用 &lt;code&gt;git pull&lt;/code&gt;: &lt;code&gt;git pull origin master&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;从远程 &lt;code&gt;origin&lt;/code&gt; 拉取 &lt;code&gt;master&lt;/code&gt; 分支的最新提交&lt;/li&gt;
+&lt;li&gt;将这个远程 &lt;code&gt;master&lt;/code&gt; 分支的内容&lt;strong&gt;合并到当前所在的分支&lt;/strong&gt;，比如 &lt;code&gt;feat/message&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;git push origin master&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;将本地的 &lt;code&gt;master&lt;/code&gt; 分支推送到远程的 &lt;code&gt;origin&lt;/code&gt; 仓库的 &lt;code&gt;master&lt;/code&gt; 分支&lt;/li&gt;
+&lt;li&gt;与你当前所在的分支（如 &lt;code&gt;feat/message&lt;/code&gt;）无关&lt;/li&gt;
+&lt;/ul&gt;
 &lt;/blockquote&gt;
 &lt;h2 id=&#34;1-准备的事&#34;&gt;1. 准备的事&lt;/h2&gt;
-&lt;p&gt;一般入职后, 应该了解公司的开发要求, 一般会有文档, 大致内容有:&lt;/p&gt;
+&lt;p&gt;马上入职了, 在高铁上研究一下, 五个小时, 足够了, 一般入职后, 应该了解公司的开发要求, 一般会有文档, 大致内容有:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;变量 函数 文件 命名规则 (数据库 表 列 等等)&lt;/li&gt;
 &lt;li&gt;注释规则&lt;/li&gt;
@@ -227,7 +243,7 @@ feature/user-auth:             D&amp;#39; --- E&amp;#39;
 &lt;li&gt;如果 &lt;code&gt;feature/user-auth&lt;/code&gt; 是你个人的特性分支（未被多人共享），rebase 是安全的，因为它重写历史不会影响他人&lt;/li&gt;
 &lt;li&gt;但如果 &lt;code&gt;feature/user-auth&lt;/code&gt; 是多人协作的分支，rebase 可能会导致问题（其他人需要同步重写后的历史），这时 merge 更合适&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;code&gt;develop&lt;/code&gt; 是公共分支, &lt;code&gt;feature/user-auth&lt;/code&gt; 是你自己的分支, 不要在 公共 分支上做 rebase, 只可以在自己的私有分支做 rebase, 就是记住一句话, 不要随便用 rebase, 用之前确认好, &lt;code&gt;git rebase origin/develop&lt;/code&gt; 的意思是在 &lt;code&gt;feature/user-auth&lt;/code&gt; 做 rebase, 不要理解错了&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;develop&lt;/code&gt; 是公共分支, &lt;code&gt;feature/user-auth&lt;/code&gt; 是你自己的分支, 不要在 公共 分支上做 rebase, 只可以在自己的私有分支做 rebase, 就是记住一句话, 不要随便用 rebase, 用之前确认好, &lt;strong&gt;&lt;code&gt;git rebase origin/develop&lt;/code&gt; 的意思是在 &lt;code&gt;feature/user-auth&lt;/code&gt; 做 rebase, 不要理解错了&lt;/strong&gt;&lt;/p&gt;
 &lt;h3 id=&#34;26-推送&#34;&gt;2.6. 推送&lt;/h3&gt;
 &lt;p&gt;&lt;strong&gt;用 merge 后的推送&lt;/strong&gt;&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git push

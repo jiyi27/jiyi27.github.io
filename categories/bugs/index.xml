@@ -6,7 +6,55 @@
     <description>Recent content in Bugs on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 22 Feb 2025 11:12:22 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/categories/bugs/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 25 Mar 2025 12:05:20 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/categories/bugs/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>解决 github 22 端口被禁用问题</title>
+      <link>https://blog.jiyi27.com/posts/bugs/014-%E8%A7%A3%E5%86%B322%E7%AB%AF%E5%8F%A3%E8%A2%AB%E7%A6%81%E7%94%A8%E9%97%AE%E9%A2%98/</link>
+      <pubDate>Tue, 25 Mar 2025 12:05:20 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/bugs/014-%E8%A7%A3%E5%86%B322%E7%AB%AF%E5%8F%A3%E8%A2%AB%E7%A6%81%E7%94%A8%E9%97%AE%E9%A2%98/</guid>
+      <description>&lt;p&gt;有时后开了 VPN, 导致 22 端口无法使用, 因此通过终端提交文件时会出现失败的问题:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ssh -T git@github.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git@ssh.github.com: Permission denied &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;publickey&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;修改 ssh 配置文件 &lt;code&gt;~/.ssh/config&lt;/code&gt;, 强制 Git 使用 443 端口连接 GitHub, 而不是默认的 22 端口&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Host github.com
+    Hostname ssh.github.com
+    User git
+    Port 443
+    IdentityFile ~/.ssh/id_rsa
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;查看当前 SSH 代理是否已加载 SSH Key&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ssh-add -l
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果输出 &lt;code&gt;The agent has no identities.&lt;/code&gt;, 说明 SSH Key 没有加载, 手动添加 SSH Key&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ssh-add ~/.ssh/id_rsa
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;同时别忘了在 github 账户添加这个 SSH Public Key&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;重新测试 SSH 连接&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ssh -T git@github.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Hi jiyi27! You&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;ve successfully authenticated, but GitHub does not provide shell access.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</description>
+      <content>&lt;p&gt;有时后开了 VPN, 导致 22 端口无法使用, 因此通过终端提交文件时会出现失败的问题:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ssh -T git@github.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;git@ssh.github.com: Permission denied &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;publickey&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;修改 ssh 配置文件 &lt;code&gt;~/.ssh/config&lt;/code&gt;, 强制 Git 使用 443 端口连接 GitHub, 而不是默认的 22 端口&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Host github.com
+    Hostname ssh.github.com
+    User git
+    Port 443
+    IdentityFile ~/.ssh/id_rsa
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;查看当前 SSH 代理是否已加载 SSH Key&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ssh-add -l
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果输出 &lt;code&gt;The agent has no identities.&lt;/code&gt;, 说明 SSH Key 没有加载, 手动添加 SSH Key&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ssh-add ~/.ssh/id_rsa
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;同时别忘了在 github 账户添加这个 SSH Public Key&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;重新测试 SSH 连接&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ ssh -T git@github.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Hi jiyi27! You&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&amp;#39;&lt;/span&gt;ve successfully authenticated, but GitHub does not provide shell access.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content>
+    </item>
+    
     <item>
       <title>Kafka 链接失败</title>
       <link>https://blog.jiyi27.com/posts/bugs/013-kafka-connection/</link>
