@@ -206,7 +206,7 @@ D' 和 E' 是 D 和 E 的新版本, 基于 C
 - 如果 `feature/user-auth` 是你个人的特性分支（未被多人共享），rebase 是安全的，因为它重写历史不会影响他人
 - 但如果 `feature/user-auth` 是多人协作的分支，rebase 可能会导致问题（其他人需要同步重写后的历史），这时 merge 更合适
 
-`develop` 是公共分支, `feature/user-auth` 是你自己的分支, 不要在 公共 分支上做 rebase, 只可以在自己的私有分支做 rebase, 就是记住一句话, 不要随便用 rebase, 用之前确认好, `git rebase origin/develop` 的意思是在 `feature/user-auth` 做 rebase, 不要理解错了
+`develop` 是公共分支, `feature/user-auth` 是你自己的分支, 不要在 公共 分支上做 rebase, 只可以在自己的私有分支做 rebase, 就是记住一句话, 不要随便用 rebase, 用之前确认好, **`git rebase origin/develop` 的意思是在 `feature/user-auth` 做 rebase, 不要理解错了**
 
 ### 2.6. 推送
 
