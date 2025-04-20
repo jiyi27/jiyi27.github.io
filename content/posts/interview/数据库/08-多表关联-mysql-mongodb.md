@@ -8,6 +8,58 @@ tags:
  - 数据库面试
 ---
 
+选 NoSQL 的几个理由, 一定不是多表关联 join 慢, 不是嵌套容易, 而是:
+
+- 想快速启动小专案测试idea
+- 资料格式不确定(unstable schema)，而未来很有可能调整
+- 资料之间没有复杂的关联(无结构, 无组织)、或未来读取资料时不需要使用JOIN 的功能
+
+我们来一一说明理由 ,首先为什么数据库结构不确定, 用 NoSQL 比较有优势?
+
+> In my 14 years of experience, most. It's not that there's anything wrong with using Mongo if it fits your use case, I've used it a handful of times, but I find that data, by nature, is almost always relational, or becomes relational very quickly as you start adding features. Then you either have to spend time and effort changing, or use Mongo like it's a relation database, which you should never do as it defeats the point. You'd be surprised how many times I've seen Mongo instances like this. Programs push data around, and it's usually related data.
+>
+> Tbh Mongo isn't used that much in production from what I've seen really. The world runs on SQL and that's not going to change. I think Mongo lends itself better to small "todo" apps and such, so it tends to get used in a lot of tutorials online. When you're starting out and you're watching these, it can give you a false sense that everyone is using it for everything.
+>
+> I'd say if you think you have a complete picture of all your data requirements and know that they're not going to change, and it's not relational, Mongo is a great choice.
+>
+> If you don't have the full picture yet, or something might change, going relational is more future proof. Relational databases can handle not having relations between tables just fine, and you can add them later if needed. Mongo doesn't really handle relational data well at all. [Reddit](https://www.reddit.com/r/learnprogramming/comments/gzvyoa/comment/ftiwqzm/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button)
+
+> MongoDB is not magically faster. If you store the same data, organised in basically the same fashion, and access it exactly the same way, then you really shouldn't expect your results to be wildly different. After all, MySQL and MongoDB are both GPL, so if Mongo had some magically better IO code in it, then the MySQL team could just incorporate it into their codebase.
+>
+> People are seeing real world MongoDB performance largely because MongoDB allows you to query in a different manner that is more sensible to your workload.
+>
+> For example, consider a design that persisted a lot of information about a complicated entity in a normalised fashion. This could easily use dozens of tables in MySQL (or any relational db) to store the data in normal form, with many indexes needed to ensure relational integrity between tables.
+>
+> Now consider the same design with a document store. If all of those related tables are subordinate to the main table (and they often are), then you might be able to model the data such that the entire entity is stored in a single document. In MongoDB you can store this as a single document, in a single collection. This is where MongoDB starts enabling superior performance.
+>
+> In MongoDB, to retrieve the whole entity, you have to perform:
+>
+> - One index lookup on the collection (assuming the entity is fetched by id)
+> - Retrieve the contents of one database page (the actual binary json document)
+>
+> So a b-tree lookup, and a binary page read. Log(n) + 1 IOs. If the indexes can reside entirely in memory, then 1 IO.
+>
+> In MySQL with 20 tables, you have to perform:
+>
+> - One index lookup on the root table (again, assuming the entity is fetched by id)
+> - With a clustered index, we can assume that the values for the root row are in the index
+> - 20+ range lookups (hopefully on an index) for the entity's pk value
+> - These probably aren't clustered indexes, so the same 20+ data lookups once we figure out what the appropriate child rows are.
+>
+> So the total for mysql, even assuming that all indexes are in memory (which is harder since there are 20 times more of them) is about 20 range lookups.
+>
+> These range lookups are likely comprised of random IO — different tables will definitely reside in different spots on disk, and it's possible that different rows in the same range in the same table for an entity might not be contiguous (depending on how the entity has been updated, etc).
+>
+> So for this example, the final tally is about *20 times* more IO with MySQL per logical access, compared to MongoDB.
+>
+> This is how MongoDB can boost performance *in some use cases*.
+>
+> [Stackoverflow](https://stackoverflow.com/a/9703513/16317008)
+
+- https://leetcode.cn/discuss/post/3106312/mysqlgao-pin-mian-shi-ti-wei-shi-yao-b-s-m0lx/
+- https://time.geekbang.org/column/article/112298
+- https://www.zhihu.com/question/26095333
+
 ## 1. 多表关联查询 MongoDB 处于劣势
 
 **MongoDB 不支持原生的 JOIN 操作**, MongoDB 并不像 MySQL 那样在**引擎层面原生支持 JOIN**，它是通过聚合管道的 `$lookup` 操作符来模拟关联查询的
