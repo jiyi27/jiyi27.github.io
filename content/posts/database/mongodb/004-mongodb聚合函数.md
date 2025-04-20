@@ -233,3 +233,225 @@ MongoDB 会把每个评论都**单独展开成一条结果文档**，像这样�
 
 💡 `comment` 字段里的内容被**提取成了顶层字段**，正是你最终想要的结构：一个干净的 `CommentModel`
 
+## 3. `$group`, `$sum`
+
+假设我们有一个集合 `orders`，它存储了客户订单，结构大概如下：
+
+```json
+[
+  { "_id": 1, "orderStatus": "pending", "amount": 100, "customer": "Alice" },
+  { "_id": 2, "orderStatus": "processing", "amount": 200, "customer": "Bob" },
+  { "_id": 3, "orderStatus": "completed", "amount": 150, "customer": "Charlie" },
+  { "_id": 4, "orderStatus": "pending", "amount": 300, "customer": "Dave" },
+  { "_id": 5, "orderStatus": "completed", "amount": 250, "customer": "Eve" },
+  { "_id": 6, "orderStatus": "processing", "amount": 400, "customer": "Frank" }
+]
+```
+
+目标是通过聚合管道统计每个订单状态（`orderStatus`）的订单数量，例如有多少订单是 `pending`、`processing` 和 `completed`, 使用一个 `$group` 聚合阶段配合一个聚合运算符 `$sum` 就可以实现:
+
+```c#
+{
+  "$group": {
+    "_id": "$orderStatus",
+    "count": { "$sum": 1 }
+  }
+}
+```
+
+- `"_id": "$orderStatus"` 告诉 MongoDB 根据 `orderStatus` 字段的值将文档分组
+- MongoDB 会**扫描集合中的每个文档**，读取 `orderStatus` 的值，并将具有相同 `orderStatus` 值的文档归为一组
+- `$sum: 1` 的计数过程
+  - 对于每个分组，MongoDB **创建一个新的文档**，包含 `_id`（分组键的值，例如 "pending"）和 `count` 字段（由 $sum: 1 定义） `count` 初始值为 0
+  - 也就是说, MongoDB 会创建三个文档(因为一共有三个状态), 每个文档的分组键 `_id` 的值都是对应的状态值  
+  - MongoDB 按顺序（或优化后的顺序）遍历集合中的每个文档，检查其 `orderStatus`，并将其分配到对应的分组
+  - 对于每个文档，`$sum: 1` 表示将该文档的  `count` 字段的值增加 1, 换句话说，每个文档为它所在分组的 `count` 贡献 1
+
+经过 `$group` 阶段，数据被转换为以下形式：
+
+```json
+[
+  { "_id": "pending", "count": 2 },
+  { "_id": "processing", "count": 2 },
+  { "_id": "completed", "count": 2 }
+]
+```
+
+## 4. Operators vs Stages
+
+### 4.1. 聚合阶段（Aggregation Stages）
+
+构成聚合管道的“每一步”
+
+| 聚合阶段           | 功能                                           |
+| ------------------ | ---------------------------------------------- |
+| `$match`           | 过滤文档（类似 SQL 的 `WHERE`）                |
+| `$group`           | 分组并进行聚合计算（类似 SQL 的 `GROUP BY`）   |
+| `$project`         | 投影字段（类似 SQL 的 `SELECT column AS ...`） |
+| `$sort`            | 排序                                           |
+| `$limit` / `$skip` | 分页                                           |
+| `$lookup`          | 类似 SQL 的 `JOIN`                             |
+
+### 4.2.  聚合运算符（Aggregation Operators）
+
+在某些阶段内部使用的“函数”，比如 `$group` 阶段里面常用的：
+
+| 聚合运算符      | 用法        | 类似 SQL 函数       |
+| --------------- | ----------- | ------------------- |
+| `$sum`          | 求和或计数  | `SUM()` / `COUNT()` |
+| `$avg`          | 求平均      | `AVG()`             |
+| `$min` / `$max` | 最小/最大值 | `MIN()` / `MAX()`   |
+
+## 5. `$sum` vs  `$group`
+
+`$sum` 是聚合运算符, 与 `$group` 聚合阶段不同, 整个聚合管道由多个聚合阶段组成, 每个聚合阶段都定义了一个新的文档, 我们可以通过查看整个聚合管道, 判断出每个阶段的对应的文档的结构
+
+可以理解为每个聚合阶段 stage 都会对输入的文档流进行处理，并生成一个新的文档流（可以是转换后的文档、过滤后的文档、分组后的文档等）
+
+### 5.1. 业务逻辑
+
+```json
+[
+  { "_id": 1, "product": "Laptop", "category": "Electronics", "price": 1000, "quantity": 2, "orderDate": "2023-01-10", "region": "North" },
+  { "_id": 2, "product": "Phone", "category": "Electronics", "price": 500, "quantity": 5, "orderDate": "2023-01-15", "region": "South" },
+  { "_id": 3, "product": "Desk", "category": "Furniture", "price": 200, "quantity": 1, "orderDate": "2023-02-01", "region": "North" },
+  { "_id": 4, "product": "Chair", "category": "Furniture", "price": 100, "quantity": 4, "orderDate": "2023-02-10", "region": "South" },
+  { "_id": 5, "product": "Tablet", "category": "Electronics", "price": 300, "quantity": 3, "orderDate": "2023-03-01", "region": "North" }
+]
+```
+
+我们想分析 2023 年 1 月和 2 月的销售数据，筛选出 `Electronics` 类别，按 `region` 分组，计算每个地区的总销售额（`price * quantity`），并按总销售额降序排序，输出特定字段, 以下是对应的聚合管道（用 MongoDB 的 `BSON` 格式表示）
+
+```json
+[
+  {
+    "$match": {
+      "category": "Electronics",
+      "orderDate": { "$gte": "2023-01-01", "$lte": "2023-02-28" }
+    }
+  },
+  {
+    "$project": {
+      "region": 1,
+      "totalSale": { "$multiply": ["$price", "$quantity"] }
+    }
+  },
+  {
+    "$group": {
+      "_id": "$region",
+      "totalRegionSale": { "$sum": "$totalSale" }
+    }
+  },
+  {
+    "$sort": {
+      "totalRegionSale": -1
+    }
+  }
+]
+```
+
+### 5.2. 初始数据 输入文档结构 
+
+```json
+{
+  "_id": ObjectId,
+  "product": String,
+  "category": String,
+  "price": Number,
+  "quantity": Number,
+  "orderDate": String,
+  "region": String
+}
+```
+
+### 5.3. 阶段 1: `$match`
+
+过滤文档，只保留 `category` 为 `"Electronics"` 且 `orderDate` 在 2023 年 1 月至 2 月之间的文档
+
+```json
+{
+  "$match": {
+    "category": "Electronics",
+    "orderDate": { "$gte": "2023-01-01", "$lte": "2023-02-28" }
+  }
+}
+```
+
+**输出文档结构**：与输入相同，因为 $match 只过滤文档，不改变结构
+
+### 5.4. 阶段 2: `$project`
+
+**操作**：选择并转换字段，只保留 `region` 字段，并计算每个订单的总销售额（`totalSale = price * quantity`）
+
+```json
+{
+  "$project": {
+    "region": 1,
+    "totalSale": { "$multiply": ["$price", "$quantity"] }
+  }
+}
+```
+
+**输入文档结构**：阶段 1 的输出（包含 `_id`、 `product`、 `category` 等）
+
+**输出文档结构**：
+
+- `region`: 保留原始 region 字段
+- `totalSale`: 新字段，计算 `price * quantity`
+- **注意**：默认情况下，`_id` 字段会保留，除非明确设置为 `"_id": 0`
+
+```json
+{
+  "_id": ObjectId,
+  "region": String,
+  "totalSale": Number
+}
+```
+
+**输出数据**：
+
+```json
+[
+  { "_id": 1, "region": "North", "totalSale": 2000 },
+  { "_id": 2, "region": "South", "totalSale": 2500 }
+]
+```
+
+### 5.5. 阶段 3: `$group`
+
+- **操作**：按 `region` 分组，计算每个地区的 `totalSale` 总和（`totalRegionSale`）
+
+```json
+{
+  "$group": {
+    "_id": "$region",
+    "totalRegionSale": { "$sum": "$totalSale" }
+  }
+}
+```
+
+**输入文档结构**：阶段 2 的输出（包含 `_id`、 `region`、 `totalSale`）
+
+**输出文档结构**：
+
+- `_id`: 分组键，即 `region` 的值
+
+- `totalRegionSale`: 每个组的 `totalSale` 字段总和（由 `$sum` 计算）
+
+```json
+{
+  "_id": String,
+  "totalRegionSale": Number
+}
+```
+
+**输出数据**：
+
+```json
+[
+  { "_id": "North", "totalRegionSale": 2000 },
+  { "_id": "South", "totalRegionSale": 2500 }
+]
+```
+
+...
