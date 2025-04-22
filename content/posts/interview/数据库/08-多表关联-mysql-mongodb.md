@@ -24,6 +24,8 @@ tags:
 >
 > If you don't have the full picture yet, or something might change, going relational is more future proof. Relational databases can handle not having relations between tables just fine, and you can add them later if needed. Mongo doesn't really handle relational data well at all. [Reddit](https://www.reddit.com/r/learnprogramming/comments/gzvyoa/comment/ftiwqzm/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button)
 
+> **边缘场景**
+>
 > MongoDB is not magically faster. If you store the same data, organised in basically the same fashion, and access it exactly the same way, then you really shouldn't expect your results to be wildly different. After all, MySQL and MongoDB are both GPL, so if Mongo had some magically better IO code in it, then the MySQL team could just incorporate it into their codebase.
 >
 > People are seeing real world MongoDB performance largely because MongoDB allows you to query in a different manner that is more sensible to your workload.
