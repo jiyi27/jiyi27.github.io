@@ -6,6 +6,8 @@ categories:
 tags:
  - 面试
  - 数据库面试
+ - mongodb
+ - mysql
 ---
 
 选 NoSQL 的几个理由, 一定不是多表关联 join 慢, 不是嵌套容易, 而是:
@@ -57,10 +59,6 @@ tags:
 > This is how MongoDB can boost performance *in some use cases*.
 >
 > [Stackoverflow](https://stackoverflow.com/a/9703513/16317008)
-
-- https://leetcode.cn/discuss/post/3106312/mysqlgao-pin-mian-shi-ti-wei-shi-yao-b-s-m0lx/
-- https://time.geekbang.org/column/article/112298
-- https://www.zhihu.com/question/26095333
 
 ## 1. 多表关联查询 MongoDB 处于劣势
 
@@ -382,19 +380,9 @@ MySQL 的查询优化器会根据以下因素选择：
 - **表大小**：大表无索引时可能用哈希连接。
 - **内存和 I/O**：内存不足时可能用块嵌套循环连接。
 
-## 3. 既然多表关联查询消耗大 为什么不把所有表嵌套在一起
+## 3. MySQL 中，索引的查找速度是否“接近 O(1)”
 
-
-
-
-
-
-
-
-
-## 4. MySQL 中，索引的查找速度是否“接近 O(1)”
-
-### 4.1. 最常见的索引：B-Tree 索引
+### 3.1. 最常见的索引：B-Tree 索引
 
 - MySQL 中默认和最常用的索引类型是 **B-Tree 索引**（特别是在 InnoDB 存储引擎中）。
 - B-Tree 是一种自平衡树结构，它的查找时间复杂度是 **O(log n)**，其中 n 是数据的条数
@@ -443,7 +431,7 @@ MySQL 的查询优化器会根据以下因素选择：
 > O(\log n)
 > $$
 
-### 4.2. **哈希索引：真正的 O(1)**
+### 3.2. **哈希索引：真正的 O(1)**
 
 - MySQL 也支持 **哈希索引**，它的查找时间复杂度在理想情况下是 **O(1)**
 - 但是，哈希索引的使用场景非常有限：
@@ -451,7 +439,7 @@ MySQL 的查询优化器会根据以下因素选择：
   - 哈希索引不支持范围查询（比如 >、<），所以适用性不如 B-Tree
 - 因此，在大多数情况下，说“有索引”时，指的并不是哈希索引，而是 B-Tree 索引
 
-### 4.3. **索引嵌套循环连接中的情况**
+### 3.3. **索引嵌套循环连接中的情况**
 
 - “因为有索引，查找速度很快”，很可能指的是 **索引嵌套循环连接 Index Nested Loop Join**
 - 在这种连接中，如果连接列上有 B-Tree 索引，每次对内层表的查找时间是 接近 O(1)
