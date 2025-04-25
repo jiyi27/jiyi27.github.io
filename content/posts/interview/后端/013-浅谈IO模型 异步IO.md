@@ -338,8 +338,6 @@ ngx_process_events_and_timers() {
 - **Node.js**：基于 `libuv` 的事件循环，异步处理文件、网络IO
 - **Python FastAPI**：依赖 `asyncio` 和 `uvicorn`，通过 `async/await` 实现异步Web服务
 - **Java Netty**：异步网络框架，基于NIO和事件驱动，广泛用于高性能服务器
-- **Go语言的 goroutine**：通过轻量级协程和 `select` 实现异步IO效果
-- **Linux AIO**：如 `libaio`，提供内核级异步文件IO
 
 ### 4.1. 异步 IO 的本质 ‼️
 
@@ -454,36 +452,242 @@ const response = await fetch(...);
 >
 > - 常用于需要简化并发处理的场景，如 Node.js 的异步文件操作、网络请求，或者数据库查询
 
+### 4.2. 事件驱动
+
+可以看 009-事件驱动-异步编程.md 文件
+
 ## 5. 事件循环 和 IO 复用的关系
 
 强调 epoll 相较 select 的性能优势（select的O(n) vs epoll的O(1)），并提到Nginx如何利用epoll实现高并发
 
 事件循环是什么? 怎么实现的?
 
-> 应用总结:
+> 应用总结: **高并发Web服务器**：如Node.js、FastAPI，处理大量HTTP请求
 >
-> - **高并发Web服务器**：如Node.js、FastAPI，处理大量HTTP请求
-> - 提到 Node.js 如何通过 libuv 和 事件循环实现单线程高并发，或 FastAPI 如何利用 asyncio 优化 Python Web 性能
->
-> 异步的本质就是通过回调函数来执行, 是这样吗, 异步好像也像是同步:
->
-> ```js
-> const response = await fetch(....);
-> ...
-> ```
 
 ### 5.1. 事件循环 Event Loop
 
-事件循环 是一种编程架构，用于处理和协调异步操作（主要是 IO 操作，如网络请求、文件读写等），它通过一个循环不断检查是否有事件（如 IO 操作完成、定时器触发、用户输入等）需要处理，并在事件发生时调用相应的回调函数
+事件循环 是一种编程架构，用于处理和协调异步操作（主要是 IO 操作，如网络请求、文件读写等），它通过一个循环不断检查是否有事件（如 IO 操作完成、定时器触发）需要处理，**并在事件发生时调用相应的回调函数**
 
 **事件循环的核心思想：**
 
-- **非阻塞**：事件循环允许程序在等待 IO 操作（如网络数据到达、文件读取完成）时不被阻塞，而是继续执行其他任务
-- **事件驱动**：程序通过注册事件（event）和回调函数（callback），当事件发生时，事件循环触发对应的回调来处理结果
+- **1 非阻塞**：事件循环允许程序在等待 IO 操作（如网络数据到达、文件读取完成）时不被阻塞，而是继续执行其他任务
+- **2 事件驱动**：程序通过注册事件（event）和回调函数（callback），当事件发生时，事件循环触发对应的回调来处理结果
 
 **事件循环的典型流程：**
 
-1. 检查事件队列（或事件源）是否有待处理的事件（如 socket 可读、定时器到期）
+1. 检查**事件队列**是否有待处理的事件
 2. 如果有事件，取出事件并执行对应的回调函数
 3. 执行完回调后，继续循环检查队列，直到程序结束
 4. 如果没有事件，事件循环可能进入休眠状态（阻塞等待新事件），以避免 CPU 空转
+
+### 5.2. libuv 库 - 事件循环 + IO 复用
+
+Node.js 的事件循环实现依赖于 **libuv** 库, 这是一个跨平台的异步 I/O 库, 用 C 语言编写, **libuv** 是 Node.js 的底层支柱, Node.js 通过 **V8 引擎**执行 JavaScript 代码, 并通过 **libuv** 处理异步事件和 I/O 操作
+
+事件循环是 libuv 的核心机制, 它本质上是一个**状态机**, 不断地检查是否有事件需要处理, 并按照特定顺序处理这些事件:
+
+```
+libuv 事件循环过程
+├── Timers
+│   ├── 处理 setTimeout() 和 setInterval() 的回调
+│   └── 回调放入 Timers 队列
+│
+├── I/O 回调
+│   ├── 处理一些系统操作的回调（如 TCP 错误）
+│   └── 回调放入 I/O 回调队列
+│
+├── Poll
+│   ├── 获取新的 I/O 事件
+│   ├── 执行与 I/O 相关的回调
+│   ├── 使用 IO 复用技术（如 epoll, kqueue, IOCP）
+│   └── 回调放入 Poll 队列
+│
+├── Check
+│   ├── 处理 setImmediate() 的回调
+│   └── 回调放入 Check 队列
+│
+├── Close Callbacks
+│   ├── 处理关闭事件的回调（如 socket.on('close')）
+│   └── 回调放入 Close Callbacks 队列
+```
+
+> IO 复用就是(只能) 用来监视多个文件描述符（网络连接、文件）变得可读或可写, 你猜他为什么叫 IO 复用
+
+```js
+const fs = require('fs');
+const http = require('http');
+
+console.log('1. 程序开始执行'); // 主线程直接执行，不属于事件循环的任何阶段
+
+// 设置一个定时器，回调将在 Timers 阶段执行
+setTimeout(() => {
+  console.log('2. 定时器回调执行'); // 由 libuv 的 Timers 阶段处理，V8 执行 JavaScript 回调
+  
+  // 在定时器回调中设置的 immediate 会在下一次事件循环的 Check 阶段执行
+  setImmediate(() => {
+    console.log('5. setImmediate 回调执行'); // 由 libuv 的 Check 阶段处理，V8 执行回调
+  });
+  
+  // 在定时器回调中发起的文件读取操作
+  fs.readFile('example.txt', (err, data) => {
+    // 文件 I/O 完成后，此回调会被放入 Poll 阶段的队列
+    // 由 libuv 通过操作系统的 IO 复用机制(epoll/kqueue/IOCP)监控文件描述符
+    console.log('6. 文件读取回调执行'); // 由 libuv 的 Poll 阶段处理，V8 执行回调
+    
+    // 在文件读取回调中设置的定时器
+    setTimeout(() => {
+      console.log('8. 嵌套定时器回调执行'); // 下一次事件循环的 Timers 阶段执行
+    }, 0);
+  });
+}, 0);
+
+// 创建 HTTP 服务器
+const server = http.createServer((req, res) => {
+  // 网络 I/O 回调，当有 HTTP 请求时，此回调会在 Poll 阶段执行
+  console.log('7. HTTP 请求回调执行'); // 由 libuv 的 Poll 阶段处理，V8 执行回调
+  
+  res.end('Hello World');
+  
+  // 关闭服务器
+  server.close(() => {
+    // 关闭回调会在 Close Callbacks 阶段执行
+    console.log('9. 服务器关闭回调执行'); // 由 libuv 的 Close Callbacks 阶段处理，V8 执行回调
+  });
+});
+
+// 立即设置的 immediate 会在当前事件循环的 Check 阶段执行
+setImmediate(() => {
+  console.log('4. 立即的 setImmediate 回调执行'); // 由 libuv 的 Check 阶段处理，V8 执行回调
+});
+
+// 发起一个网络请求
+http.get('http://localhost:3000', (res) => {
+  // 网络 I/O 回调，此回调会在 Poll 阶段执行
+  // 由 libuv 通过操作系统的 IO 复用机制监控网络套接字
+  res.on('data', (chunk) => {
+    console.log('收到数据:', chunk.toString());
+  });
+});
+
+// 启动服务器
+server.listen(3000, () => {
+  console.log('3. 服务器启动回调执行'); // 由 libuv 的 Poll 阶段处理，V8 执行回调
+});
+
+console.log('0. 主线程代码结束'); // 主线程直接执行，不属于事件循环的任何阶段
+```
+
+- **libuv 的角色**：负责管理事件循环和异步 I/O 操作，使用操作系统的 IO 复用机制（如 epoll、kqueue、IOCP）监控文件描述符和网络套接字
+
+- **V8 的角色**：执行 JavaScript 代码，包括回调函数
+
+- **回调队列**：每个阶段都有自己的回调队列，回调按照注册顺序执行
+
+```
+主线程执行
+├── console.log('1. 程序开始执行')
+├── 注册 setTimeout 回调
+├── 创建 HTTP 服务器
+├── 注册 setImmediate 回调
+├── 发起 HTTP GET 请求
+├── 启动服务器监听
+└── console.log('0. 主线程代码结束')
+    └── 进入事件循环
+        │
+        ├── 第一次事件循环迭代
+        │   ├── Timers 阶段
+        │   │   └── 执行 setTimeout 回调
+        │   │       ├── console.log('2. 定时器回调执行')
+        │   │       ├── 注册 setImmediate 回调
+        │   │       └── 启动异步文件读取操作
+        │   │
+        │   ├── I/O 回调阶段
+        │   │   └── (无回调执行)
+        │   │
+        │   ├── Poll 阶段
+        │   │   └── 执行服务器启动回调
+        │   │       └── console.log('3. 服务器启动回调执行')
+        │   │
+        │   ├── Check 阶段
+        │   │   └── 执行 setImmediate 回调
+        │   │       └── console.log('4. 立即的 setImmediate 回调执行')
+        │   │
+        │   └── Close Callbacks 阶段
+        │       └── (无回调执行)
+        │
+        ├── 第二次事件循环迭代
+        │   ├── Timers 阶段
+        │   │   └── (无回调执行)
+        │   │
+        │   ├── I/O 回调阶段
+        │   │   └── (无回调执行)
+        │   │
+        │   ├── Poll 阶段
+        │   │   └── (等待 I/O 事件)
+        │   │
+        │   ├── Check 阶段
+        │   │   └── 执行第一次循环中注册的 setImmediate 回调
+        │   │       └── console.log('5. setImmediate 回调执行')
+        │   │
+        │   └── Close Callbacks 阶段
+        │       └── (无回调执行)
+        │
+        ├── 文件读取完成
+        │   └── 第三次事件循环迭代
+        │       ├── Timers 阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       ├── I/O 回调阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       ├── Poll 阶段
+        │       │   └── 执行文件读取回调
+        │       │       ├── console.log('6. 文件读取回调执行')
+        │       │       └── 注册 setTimeout 回调
+        │       │
+        │       ├── Check 阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       └── Close Callbacks 阶段
+        │           └── (无回调执行)
+        │
+        ├── HTTP 请求到达
+        │   └── 第四次事件循环迭代
+        │       ├── Timers 阶段
+        │       │   └── 执行文件读取回调中注册的 setTimeout 回调
+        │       │       └── console.log('8. 嵌套定时器回调执行')
+        │       │
+        │       ├── I/O 回调阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       ├── Poll 阶段
+        │       │   └── 执行 HTTP 请求回调
+        │       │       ├── console.log('7. HTTP 请求回调执行')
+        │       │       └── 关闭服务器
+        │       │
+        │       ├── Check 阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       └── Close Callbacks 阶段
+        │           └── (无回调执行)
+        │
+        └── 服务器关闭
+            └── 最终事件循环迭代
+                ├── Timers 阶段
+                │   └── (无回调执行)
+                │
+                ├── I/O 回调阶段
+                │   └── (无回调执行)
+                │
+                ├── Poll 阶段
+                │   └── (无回调执行)
+                │
+                ├── Check 阶段
+                │   └── (无回调执行)
+                │
+                └── Close Callbacks 阶段
+                    └── 执行服务器关闭回调
+                        └── console.log('9. 服务器关闭回调执行')
+```
+
