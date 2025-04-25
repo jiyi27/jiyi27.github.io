@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>BSON 是什么 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. BSON vs JSON BSON（Binary JSON）与 JSON 类似，但以二进制形式存储, MongoDB 使用 BSON 存储文档，因为：
+高效性：二进制格式减少存储空间和解析时间, 快速序列化和反序列化 丰富的数据类型：支持 MongoDB 特有的类型（如 ObjectId 用于唯一标识） 在 MongoDB 官网看到这个表:
+JSON BSON Encoding UTF-8 string Binary Data Support String, boolean, number, array, object, null String, boolean, number (integer, float, long, decimal128&hellip;), array, null, date, BinData Readability Human and machine Machine only 看到上面这个表不仅有些疑惑, UTF-8 不也是把字符串编码成二进制码, 不也是 Binary 吗? 为什么说 JSON 编码方式是 UTF-8 string, 而 BSON 的编码就是 Binary?
+UTF-8 不是 Binary, 因为他就是简单的把 字符 和 二进制数 进行简单的一一映射, 而 BSON 的 Binary 是指, 在存储到内存的时候, 有固定的格式, 比如第一个字节表示数据长度, 第二个字节表示类型信息 等等, 以存储 {&quot;age&quot;: 42} 为例：
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/database/mongodb/001-bson-json-%E5%BA%8F%E5%88%97%E5%8C%96/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="BSON 是什么">
+<meta property="og:description" content="1. BSON vs JSON BSON（Binary JSON）与 JSON 类似，但以二进制形式存储, MongoDB 使用 BSON 存储文档，因为：
+高效性：二进制格式减少存储空间和解析时间, 快速序列化和反序列化 丰富的数据类型：支持 MongoDB 特有的类型（如 ObjectId 用于唯一标识） 在 MongoDB 官网看到这个表:
+JSON BSON Encoding UTF-8 string Binary Data Support String, boolean, number, array, object, null String, boolean, number (integer, float, long, decimal128&hellip;), array, null, date, BinData Readability Human and machine Machine only 看到上面这个表不仅有些疑惑, UTF-8 不也是把字符串编码成二进制码, 不也是 Binary 吗? 为什么说 JSON 编码方式是 UTF-8 string, 而 BSON 的编码就是 Binary?
+UTF-8 不是 Binary, 因为他就是简单的把 字符 和 二进制数 进行简单的一一映射, 而 BSON 的 Binary 是指, 在存储到内存的时候, 有固定的格式, 比如第一个字节表示数据长度, 第二个字节表示类型信息 等等, 以存储 {&quot;age&quot;: 42} 为例：
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/database/mongodb/001-bson-json-%E5%BA%8F%E5%88%97%E5%8C%96/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="数据库" />
+
+
+  <meta property="article:published_time" content="2025-04-16 21:32:19 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/database/mongodb/001-bson-json-%E5%BA%8F%E5%88%97%E5%8C%96/">BSON 是什么</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-04-16</time><span class="post-reading-time">2 分钟阅读 (273 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/mongodb/">mongodb</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-bson-vs-json">1. BSON vs JSON<a href="#1-bson-vs-json" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>BSON</strong>（Binary JSON）与 JSON 类似，但以二进制形式存储, MongoDB 使用 BSON 存储文档，因为：</p>
+<ul>
+<li><strong>高效性</strong>：二进制格式减少存储空间和解析时间, 快速序列化和反序列化</li>
+<li><strong>丰富的数据类型</strong>：支持 MongoDB 特有的类型（如 ObjectId 用于唯一标识）</li>
+</ul>
+<p>在 MongoDB 官网看到这个表:</p>
+<table>
+  <thead>
+      <tr>
+          <th><strong>JSON</strong></th>
+          <th><strong>BSON</strong></th>
+          <th></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Encoding</td>
+          <td>UTF-8 string</td>
+          <td>Binary</td>
+      </tr>
+      <tr>
+          <td>Data Support</td>
+          <td>String, boolean, number, array, object, null</td>
+          <td>String, boolean, number (integer, float, long, decimal128&hellip;), array, null, date, BinData</td>
+      </tr>
+      <tr>
+          <td>Readability</td>
+          <td>Human and machine</td>
+          <td>Machine only</td>
+      </tr>
+  </tbody>
+</table>
+<p>看到上面这个表不仅有些疑惑, UTF-8 不也是把字符串编码成二进制码, 不也是 Binary 吗? 为什么说 <strong>JSON</strong> 编码方式是 UTF-8 string, 而 BSON 的编码就是 Binary?</p>
+<p>UTF-8 不是 Binary, 因为他就是简单的把 字符 和 二进制数 进行简单的一一映射, 而 BSON 的 Binary 是指, 在存储到内存的时候, 有固定的格式, 比如第一个字节表示数据长度, 第二个字节表示类型信息 等等, 以存储 <code>{&quot;age&quot;: 42}</code> 为例：</p>
+<p><strong>JSON（UTF-8）</strong>：</p>
+<ul>
+<li>文本表示：<code>{&quot;age&quot;: 42}</code></li>
+<li>UTF-8 编码后：字节序列可能是 <code>[0x7B, 0x22, 0x61, 0x67, 0x65, 0x22, 0x3A, 0x20, 0x34, 0x32, 0x7D]</code></li>
+<li>解析：先将字节解码为 UTF-8 字符，再按 JSON 语法解析为键值对</li>
+</ul>
+<p><strong>BSON</strong>：</p>
+<ul>
+<li>二进制表示：可能是一个结构化的字节序列，比如 <code>[文档长度][字段类型:字符串][字段名:age][类型:整数][值:0x0000002A]</code></li>
+<li>解析：直接读取字节，按照 BSON 协议提取字段名、类型和值，无需文本解码</li>
+</ul>
+<p>UTF-8 的“二进制”只是字符的字节编码, 逻辑上是文本, 映射简单且无结构；BSON 的“二进制”是有固定格式的结构化数据，包含类型和长度等元信息, 直接按二进制协议处理, 这种区别决定了 JSON（基于 UTF-8）更适合人类可读场景, 而 BSON 更适合高效存储和传输, 如果不高效, 为啥还要额外的存储类型, 长度等元数据呢?</p>
+<h2 id="2-序列化和反序列化">2. 序列化和反序列化<a href="#2-序列化和反序列化" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<ul>
+<li><strong>序列化</strong> 是将内存中的对象转换为可存储或传输的格式</li>
+<li><strong>反序列化</strong> 是将存储的格式转换回内存中的数据结构</li>
+</ul>
+<h2 id="3--为什么-bson-序列化反序列化更快">3.  为什么 BSON 序列化/反序列化更快？<a href="#3--为什么-bson-序列化反序列化更快" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>JSON 的问题</strong></p>
+<ul>
+<li><strong>JSON 是纯文本格式</strong>, 序列化时需要将数据转换为字符串（比如数字 25 变成 &ldquo;25&rdquo;，加上引号、括号等）</li>
+<li>反序列化时, 程序需要逐字符解析文本，检查语法（比如 <code>{</code>、<code>&quot;</code>、<code>,</code>）, 然后将字符串转换回正确的数据类型（<code>&quot;25&quot;</code> 变回数字 <code>25</code>）</li>
+<li>这个过程涉及大量字符串操作，比较慢，尤其在处理大数据量时</li>
+</ul>
+<p><strong>BSON 的优势</strong></p>
+<ul>
+<li>BSON 是二进制格式，数据直接以字节形式存储，接近计算机内存中的表示方式</li>
+<li>序列化时, BSON 直接将数据（如数字、日期）按固定字节格式写入, 无需转换为文本</li>
+<li>反序列化时, 程序读取固定长度的字节, 直接还原为内存中的数据类型, 无需复杂的文本解析</li>
+</ul>
+<h2 id="4-bson-序列化过程">4. BSON 序列化过程<a href="#4-bson-序列化过程" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;Alice&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;age&#34;</span>: <span style="color:#ae81ff">25</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>1. 确定文档结构</strong></p>
+<ul>
+<li>MongoDB 客户端分析对象，识别字段名（name, age）和值（&ldquo;Alice&rdquo;, 25）以及类型（字符串、整数）</li>
+</ul>
+<p><strong>2. 分配二进制空间</strong></p>
+<ul>
+<li>BSON 为整个文档分配一个固定长度的二进制缓冲区</li>
+<li>文档开头记录总长度（字节数），方便快速读取</li>
+</ul>
+<p><strong>3. 编码字段, 每个字段按以下结构编码</strong></p>
+<ul>
+<li><strong>类型标识</strong>：1 字节，表示数据类型（比如 \x02 表示字符串，\x10 表示 32 位整数）</li>
+<li><strong>字段名</strong>：以空字节（\x00）终止的字符串</li>
+<li><strong>值</strong>：根据类型编码（字符串带长度前缀，整数直接写字节）</li>
+</ul>
+<p>示例</p>
+<ul>
+<li>
+<p>name: &ldquo;Alice&rdquo;</p>
+</li>
+<li>
+<p>类型：\x02（字符串）</p>
+</li>
+<li>
+<p>字段名：&ldquo;name\x00&rdquo;（5 字节）</p>
+</li>
+<li>
+<p>值：&quot;\x06\x00\x00\x00Alice\x00&quot;</p>
+</li>
+<li>
+<p>age: 25</p>
+</li>
+<li>
+<p>类型：\x10（32 位整数）</p>
+</li>
+<li>
+<p>字段名：&ldquo;age\x00&rdquo;（4 字节）</p>
+</li>
+<li>
+<p>值：&quot;\x19\x00\x00\x00&quot;（4 字节，25 的二进制表示）</p>
+</li>
+</ul>
+<p><strong>4. 写入文档</strong></p>
+<p>所有字段按顺序写入缓冲区，文档以 \x00 结尾, 最终 BSON 数据（简化表示）</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#ae81ff">\x</span>16<span style="color:#ae81ff">\x</span>00<span style="color:#ae81ff">\x</span>00<span style="color:#ae81ff">\x</span><span style="color:#ae81ff">00</span>               // 文档总长度（22 字节）
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">\x</span>02name<span style="color:#ae81ff">\x</span>00<span style="color:#ae81ff">\x</span>06<span style="color:#ae81ff">\x</span>00<span style="color:#ae81ff">\x</span>00<span style="color:#ae81ff">\x</span>00Alice<span style="color:#ae81ff">\x</span><span style="color:#ae81ff">00</span>  // name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Alice&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">\x</span>10age<span style="color:#ae81ff">\x</span>00<span style="color:#ae81ff">\x</span>19<span style="color:#ae81ff">\x</span>00<span style="color:#ae81ff">\x</span>00<span style="color:#ae81ff">\x</span><span style="color:#ae81ff">00</span>           // age<span style="color:#f92672">=</span><span style="color:#ae81ff">25</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">\x</span><span style="color:#ae81ff">00</span>                           // 文档结束
+</span></span></code></pre></div><blockquote>
+<p><strong>MongoDB 如何利用 BSON 元数据查询单个字段</strong></p>
+<p>在上面的例子中，BSON 数据是：</p>
+<pre tabindex="0"><code>\x16\x00\x00\x00               // 文档总长度（22 字节）
+\x02name\x00\x06\x00\x00\x00Alice\x00  // name=&#34;Alice&#34;
+\x10age\x00\x19\x00\x00\x00           // age=25
+\x00                           // 文档结束
+</code></pre><p>关键元数据：</p>
+<ul>
+<li>文档总长度（开头 4 字节）：告诉 MongoDB 整个文档有多大</li>
+<li>字段类型（如 \x02, \x10）：表示字段是字符串、整数等</li>
+<li>字段名（如 &ldquo;name\x00&rdquo;）：标识字段</li>
+<li>值长度（如 \x06\x00\x00\x00）：对于字符串等变长数据，标明值的字节数</li>
+</ul>
+<p>这些元数据让 MongoDB 可以快速定位字段，而无需读取无关部分</p>
+</blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/frontend/vue/001-vue-api-%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B/" class="button inline prev">
+        Vue 基础概念
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/011-%E9%9D%A2%E5%90%91%E5%88%87%E9%9D%A2-%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/" class="button inline next">
+        面向切面编程 控制反转
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

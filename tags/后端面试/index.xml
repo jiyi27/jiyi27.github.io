@@ -6,7 +6,1370 @@
     <description>Recent content in 后端面试 on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 16 Apr 2025 20:32:19 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 24 Apr 2025 22:35:26 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>浅谈IO模型 异步IO</title>
+      <link>https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/013-%E6%B5%85%E8%B0%88io%E6%A8%A1%E5%9E%8B-%E5%BC%82%E6%AD%A5io/</link>
+      <pubDate>Thu, 24 Apr 2025 22:35:26 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/013-%E6%B5%85%E8%B0%88io%E6%A8%A1%E5%9E%8B-%E5%BC%82%E6%AD%A5io/</guid>
+      <description>&lt;blockquote&gt;
+&lt;p&gt;其实面试的时候一个问题就可以看清是否对这些理解透彻了, Node.js 事件循环机制如何实现的,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;关键点是, 是否可以分清 libuv 库, 事件循环, v8 引擎, nodejs 这几个概念的关系, 以及 IO 复用在这里面的作用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;异步 IO 和 非阻塞 IO 的区别 又是什么&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;是否理解事件驱动&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;1-阻塞io-blocking-io&#34;&gt;1. 阻塞IO (Blocking IO)&lt;/h2&gt;
+&lt;p&gt;阻塞IO是指在进行IO操作（如读写文件或网络通信）时，调用线程会一直等待直到操作完成。阻塞IO通常实现简单，但在&lt;strong&gt;高并发场景下效率较低&lt;/strong&gt;，因为每个连接可能需要一个线程，线程切换和资源占用会成为瓶颈&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;传统的socket编程中 使用 &lt;code&gt;socket.recv()&lt;/code&gt; 读取网络数据时，线程会等待直到数据到达&lt;/li&gt;
+&lt;li&gt;MySQL客户端连接 传统数据库查询（如SELECT）通常是阻塞的，等待数据库返回结果&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;早期 Java 服务器为每个连接分配一个线程, 遇到高并发（如 C10K）时性能急剧下降, 促使了NIO（非阻塞IO）和 Netty 的流行&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;C10K（Concurrency 10K）问题&lt;/strong&gt; 指的是服务器如何高效地处理 1万个并发连接&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;当并发连接数增加（例如C10K问题，即1万个并发连接），服务器需要创建大量线程（每个连接一个线程）&lt;/li&gt;
+&lt;li&gt;因为线程很多, 操作系统需要处理大量&lt;strong&gt;线程上下文切换&lt;/strong&gt;, 这会消耗大量CPU资源&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;因此在高并发场景下, BIO模型效率低下, 性能会急剧下降, 这也是为什么 C10K 问题推动了非阻塞 IO（NIO）和异步框架（如Netty）的流行&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;现在的 Spring MVC 不也是为每个连接分配一个线程吗？&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Spring MVC 通常运行在 Servlet 容器（如Tomcat、Jetty）之上, 这些容器的线程模型决定了 Spring MVC 的并发处理方式, &lt;strong&gt;现代Servlet 容器&lt;/strong&gt;并不为每个客户端连接分配一个专用线程，而是使用&lt;strong&gt;线程池&lt;/strong&gt;和&lt;strong&gt;事件驱动&lt;/strong&gt;机制: 在高并发场景下，线程池的大小远小于并发连接数, &lt;strong&gt;线程可以复用&lt;/strong&gt;, 极大减少了线程切换和内存开销&lt;/p&gt;</description>
+      <content>&lt;blockquote&gt;
+&lt;p&gt;其实面试的时候一个问题就可以看清是否对这些理解透彻了, Node.js 事件循环机制如何实现的,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;关键点是, 是否可以分清 libuv 库, 事件循环, v8 引擎, nodejs 这几个概念的关系, 以及 IO 复用在这里面的作用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;异步 IO 和 非阻塞 IO 的区别 又是什么&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;是否理解事件驱动&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;1-阻塞io-blocking-io&#34;&gt;1. 阻塞IO (Blocking IO)&lt;/h2&gt;
+&lt;p&gt;阻塞IO是指在进行IO操作（如读写文件或网络通信）时，调用线程会一直等待直到操作完成。阻塞IO通常实现简单，但在&lt;strong&gt;高并发场景下效率较低&lt;/strong&gt;，因为每个连接可能需要一个线程，线程切换和资源占用会成为瓶颈&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;传统的socket编程中 使用 &lt;code&gt;socket.recv()&lt;/code&gt; 读取网络数据时，线程会等待直到数据到达&lt;/li&gt;
+&lt;li&gt;MySQL客户端连接 传统数据库查询（如SELECT）通常是阻塞的，等待数据库返回结果&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;早期 Java 服务器为每个连接分配一个线程, 遇到高并发（如 C10K）时性能急剧下降, 促使了NIO（非阻塞IO）和 Netty 的流行&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;C10K（Concurrency 10K）问题&lt;/strong&gt; 指的是服务器如何高效地处理 1万个并发连接&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;当并发连接数增加（例如C10K问题，即1万个并发连接），服务器需要创建大量线程（每个连接一个线程）&lt;/li&gt;
+&lt;li&gt;因为线程很多, 操作系统需要处理大量&lt;strong&gt;线程上下文切换&lt;/strong&gt;, 这会消耗大量CPU资源&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;因此在高并发场景下, BIO模型效率低下, 性能会急剧下降, 这也是为什么 C10K 问题推动了非阻塞 IO（NIO）和异步框架（如Netty）的流行&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;现在的 Spring MVC 不也是为每个连接分配一个线程吗？&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Spring MVC 通常运行在 Servlet 容器（如Tomcat、Jetty）之上, 这些容器的线程模型决定了 Spring MVC 的并发处理方式, &lt;strong&gt;现代Servlet 容器&lt;/strong&gt;并不为每个客户端连接分配一个专用线程，而是使用&lt;strong&gt;线程池&lt;/strong&gt;和&lt;strong&gt;事件驱动&lt;/strong&gt;机制: 在高并发场景下，线程池的大小远小于并发连接数, &lt;strong&gt;线程可以复用&lt;/strong&gt;, 极大减少了线程切换和内存开销&lt;/p&gt;
+&lt;p&gt;不太懂现代 Servlet 容器的 IO 模型, 为什么是事件驱动?&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-非阻塞io-non-blocking-io&#34;&gt;2. 非阻塞IO (Non-blocking IO)&lt;/h2&gt;
+&lt;p&gt;非阻塞IO允许线程在执行IO操作时立即返回，而不会等待操作完成。如果数据不可用，会返回一个错误或标志（如EAGAIN），调用者&lt;strong&gt;需要轮询（polling）来检查状态&lt;/strong&gt;。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;C语言的socket编程&lt;/strong&gt;：通过 &lt;code&gt;fcntl&lt;/code&gt; 设置 &lt;code&gt;socket&lt;/code&gt; 为 &lt;code&gt;O_NONBLOCK&lt;/code&gt;, 调用 &lt;code&gt;recv&lt;/code&gt; 时立即返回&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Java NIO（New IO）&lt;/strong&gt;：使用 &lt;code&gt;SocketChannel&lt;/code&gt; 配置为非阻塞模式，检查 &lt;code&gt;read()&lt;/code&gt; 返回值&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;非阻塞IO虽然避免了线程阻塞，但&lt;strong&gt;频繁轮询会消耗CPU资源&lt;/strong&gt;，因此单独使用非阻塞IO在高并发场景下效率也不高, &lt;strong&gt;非阻塞IO常与IO复用结合使用&lt;/strong&gt;（如 &lt;code&gt;select&lt;/code&gt; 或 &lt;code&gt;epoll&lt;/code&gt;），单独使用效率低&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;21-为什么非阻塞io需要与io复用结合&#34;&gt;2.1. 为什么非阻塞IO需要与IO复用结合？&lt;/h3&gt;
+&lt;p&gt;先看看非阻塞 I/O 的使用场景 理解了非阻塞 IO 的使用场景, 才能更好的了解为什么和 IO 复用搭配使用更好, 假设你正在开发一个简单的TCP服务器, 需要同时处理多个客户端连接, 但没有使用IO复用机制:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 简单的非阻塞TCP服务器轮询示例
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; server_fd, client_fds[MAX_CLIENTS] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; client_count &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 创建服务器socket并设置为非阻塞
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    server_fd &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;(AF_INET, SOCK_STREAM, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;fcntl&lt;/span&gt;(server_fd, F_SETFL, O_NONBLOCK);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 绑定和监听代码省略...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 1. 轮询接受新连接
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; sockaddr_in client_addr;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;socklen_t&lt;/span&gt; addr_len &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sizeof&lt;/span&gt;(client_addr);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; new_fd &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;accept&lt;/span&gt;(server_fd, (&lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; sockaddr&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;client_addr, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;addr_len);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(new_fd &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 新连接成功
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#a6e22e&#34;&gt;printf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;新客户端连接: %d&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;\n&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;, new_fd);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#a6e22e&#34;&gt;fcntl&lt;/span&gt;(new_fd, F_SETFL, O_NONBLOCK);  &lt;span style=&#34;color:#75715e&#34;&gt;// 设置客户端socket为非阻塞
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            client_fds[client_count&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; new_fd;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(errno &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; EAGAIN &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; errno &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; EWOULDBLOCK) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 真正的错误
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            &lt;span style=&#34;color:#a6e22e&#34;&gt;perror&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;accept失败&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 2. 轮询检查每个客户端是否有数据可读
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; client_count; i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;char&lt;/span&gt; buffer[&lt;span style=&#34;color:#ae81ff&#34;&gt;1024&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; ret &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;recv&lt;/span&gt;(client_fds[i], buffer, &lt;span style=&#34;color:#66d9ef&#34;&gt;sizeof&lt;/span&gt;(buffer), &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(ret &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 成功读取数据
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;                &lt;span style=&#34;color:#a6e22e&#34;&gt;printf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;从客户端%d接收: %s&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;\n&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;, client_fds[i], buffer);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 处理数据并回复
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;                &lt;span style=&#34;color:#a6e22e&#34;&gt;send&lt;/span&gt;(client_fds[i], &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;已收到消息&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(ret &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 客户端关闭连接
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;                &lt;span style=&#34;color:#a6e22e&#34;&gt;printf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;客户端%d断开连接&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;\n&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;, client_fds[i]);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#a6e22e&#34;&gt;close&lt;/span&gt;(client_fds[i]);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 移除该客户端
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;                client_fds[i] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; client_fds[&lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;client_count];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                i&lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;;  &lt;span style=&#34;color:#75715e&#34;&gt;// 重新检查当前位置
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;            } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(errno &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; EAGAIN &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; errno &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; EWOULDBLOCK) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#75715e&#34;&gt;// 真正的错误
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;                &lt;span style=&#34;color:#a6e22e&#34;&gt;perror&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;recv失败&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#a6e22e&#34;&gt;close&lt;/span&gt;(client_fds[i]);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                client_fds[i] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; client_fds[&lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;client_count];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                i&lt;span style=&#34;color:#f92672&#34;&gt;--&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 如果errno是EAGAIN或EWOULDBLOCK，表示没有数据可读，继续轮询下一个
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 可选：短暂休眠以减少CPU使用
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;usleep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;);  &lt;span style=&#34;color:#75715e&#34;&gt;// 休眠1毫秒
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在资源受限的嵌入式系统中，可能没有复杂的IO复用机制，需要轮询多个传感器：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 嵌入式系统传感器轮询示例
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main_loop&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 初始化传感器
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;init_sensors&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 轮询温度传感器
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; temp_ready &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;check_temperature_sensor&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(temp_ready) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;float&lt;/span&gt; temp &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;read_temperature&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#a6e22e&#34;&gt;process_temperature_data&lt;/span&gt;(temp);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 轮询湿度传感器
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        ...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 执行其他任务
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;perform_periodic_tasks&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 短暂休眠以节省电量
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;sleep_ms&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;轮询的主要问题&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;CPU资源浪费&lt;/strong&gt;：大部分时间在检查没有变化的资源&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;响应延迟&lt;/strong&gt;：轮询间隔决定了响应延迟&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;扩展性差&lt;/strong&gt;：随着监控资源数量增加，性能下降&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;轮询与IO复用的对比&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c#&#34; data-lang=&#34;c#&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 纯轮询方式&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; i = &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &amp;lt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;; i++) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 每次循环都要对100个socket调用recv系统调用&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        ret = recv(sockets[i], buffer, &lt;span style=&#34;color:#66d9ef&#34;&gt;sizeof&lt;/span&gt;(buffer), MSG_DONTWAIT);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 处理结果...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    usleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// IO复用方式 (epoll)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; epfd = epoll_create1(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 注册100个socket到epoll...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 只有当有事件发生时才会返回&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; nfds = epoll_wait(epfd, events, MAX_EVENTS, -&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 只处理有事件的socket，通常远少于100个&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; i = &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &amp;lt; nfds; i++) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; fd = events[i].data.fd;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        ret = recv(fd, buffer, &lt;span style=&#34;color:#66d9ef&#34;&gt;sizeof&lt;/span&gt;(buffer), &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 处理结果...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;非阻塞IO避免线程等待IO操作完成, 通过IO复用（如select、poll、epoll）高效监控多个IO描述符的状态, 从而&lt;strong&gt;减少轮询开销并提升性能&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;除此之外, 主动轮询, 频繁调用 &lt;code&gt;recv()&lt;/code&gt; 系统调用, 需要从用户态切换到内核态, 上下文切换也是一个不小的开销
+&lt;ul&gt;
+&lt;li&gt;这涉及到保存用户态的寄存器状态、切换到内核堆栈、执行内核代码等操作&lt;/li&gt;
+&lt;li&gt;IO复用通过一次系统调用（例如 &lt;code&gt;select()&lt;/code&gt; 或 &lt;code&gt;epoll_wait()&lt;/code&gt;）监控多个 &lt;code&gt;socket&lt;/code&gt; 的状态，而不是为每个 &lt;code&gt;socket&lt;/code&gt; 单独调用 &lt;code&gt;recv()&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;3-io复用-io-multiplexing&#34;&gt;3. IO复用 (IO Multiplexing)&lt;/h2&gt;
+&lt;p&gt;IO复用是指一个线程监控多个IO描述符, 当某个描述符就绪时通知应用程序, 常见的实现包括 &lt;code&gt;select&lt;/code&gt;、&lt;code&gt;poll&lt;/code&gt; 和 &lt;code&gt;epoll&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Nginx&lt;/strong&gt;：使用 &lt;code&gt;epoll&lt;/code&gt;（Linux）或 &lt;code&gt;kqueue&lt;/code&gt;（BSD）处理高并发连接&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Redis&lt;/strong&gt;：基于 &lt;code&gt;epoll/select&lt;/code&gt; 的单线程事件循环，高效处理客户端请求&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;libevent/libuv&lt;/strong&gt;：高性能事件循环库，广泛用于 Nginx、Node.js 等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;31-select-poll-epoll-kqueue&#34;&gt;3.1. select, poll, epoll, kqueue&lt;/h3&gt;
+&lt;p&gt;IO 复用 如何监听的文件描述符? 比如是否可读, 可写等&amp;hellip;&lt;/p&gt;
+&lt;p&gt;IO复用机制通过不同的API和数据结构来监听文件描述符的状态：&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;机制&lt;/th&gt;
+          &lt;th&gt;平台&lt;/th&gt;
+          &lt;th&gt;监听方式&lt;/th&gt;
+          &lt;th&gt;性能&lt;/th&gt;
+          &lt;th&gt;最大连接数&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;select&lt;/td&gt;
+          &lt;td&gt;全平台&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;fd_set&lt;/code&gt; 位图&lt;/td&gt;
+          &lt;td&gt;O(n)&lt;/td&gt;
+          &lt;td&gt;受限(通常1024)&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;poll&lt;/td&gt;
+          &lt;td&gt;全平台&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;pollfd&lt;/code&gt; 结构体数组&lt;/td&gt;
+          &lt;td&gt;O(n)&lt;/td&gt;
+          &lt;td&gt;不受限&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;epoll&lt;/td&gt;
+          &lt;td&gt;Linux&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;epoll_event&lt;/code&gt; 结构体&lt;/td&gt;
+          &lt;td&gt;O(1)&lt;/td&gt;
+          &lt;td&gt;不受限&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;kqueue&lt;/td&gt;
+          &lt;td&gt;BSD/macOS&lt;/td&gt;
+          &lt;td&gt;&lt;code&gt;kevent&lt;/code&gt; 结构体&lt;/td&gt;
+          &lt;td&gt;O(1)&lt;/td&gt;
+          &lt;td&gt;不受限&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;select epoll 核心区别：通知机制&lt;/strong&gt; &lt;strong&gt;最本质的区别&lt;/strong&gt;: select 是主动轮询，而 epoll 是被动通知&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;既然 select 也是轮询, 和 非阻塞 IO 中的主动轮询有什么区别呢, 为什么要用 select?&lt;/p&gt;
+&lt;p&gt;在纯非阻塞 IO 轮询中, 应用程序直接轮询每个文件描述符, 假设我们有 100 个连接, 但在某一时刻只有 5 个连接有数据可读,&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;纯非阻塞 IO 轮询&lt;/strong&gt;：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 每次循环需要 100 次系统调用
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;; i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;recv&lt;/span&gt;(sockets[i], buffer, &lt;span style=&#34;color:#66d9ef&#34;&gt;sizeof&lt;/span&gt;(buffer), MSG_DONTWAIT);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 95次调用会立即返回EAGAIN
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;select 轮询&lt;/strong&gt;：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 设置fd_set (一次系统调用)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;FD_ZERO&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;read_fds);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;; i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;FD_SET&lt;/span&gt;(sockets[i], &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;read_fds);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// select调用 (一次系统调用)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;select&lt;/span&gt;(max_fd &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;read_fds, NULL, NULL, NULL);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 只对就绪的5个连接调用recv (5次系统调用)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;; i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;FD_ISSET&lt;/span&gt;(sockets[i], &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;read_fds)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;recv&lt;/span&gt;(sockets[i], buffer, &lt;span style=&#34;color:#66d9ef&#34;&gt;sizeof&lt;/span&gt;(buffer), &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;h3 id=&#34;32-select-epoll-区别&#34;&gt;3.2. select epoll 区别&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;系统调用开销&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;select：每次调用都需要传递完整的文件描述符集合&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;epoll：通过 epoll_ctl 注册一次，之后无需重复传递&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;内存拷贝&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;select：每次调用需要在用户空间和内核空间之间复制 fd_set&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;epoll：通过 mmap 共享内存，减少数据拷贝&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;就绪通知方式&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;select：返回后需要遍历所有文件描述符检查状态&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;epoll：只返回就绪的文件描述符列表&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;33-实际应用中的io复用&#34;&gt;3.3. &lt;strong&gt;实际应用中的IO复用&lt;/strong&gt;&lt;/h3&gt;
+&lt;p&gt;Node.js使用 &lt;code&gt;libuv&lt;/code&gt; 库实现事件循环，根据平台自动选择最优的IO复用机制：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Node.js服务器示例
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;net&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;require&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;net&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;server&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;net&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;createServer&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;) =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;客户端连接&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 监听可读事件
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;on&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;data&amp;#39;&lt;/span&gt;, (&lt;span style=&#34;color:#a6e22e&#34;&gt;data&lt;/span&gt;) =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;收到数据:&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;data&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;toString&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 响应客户端
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;write&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;服务器已收到消息&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 监听关闭事件
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;on&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;close&amp;#39;&lt;/span&gt;, () =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;客户端断开连接&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 监听错误事件
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;on&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;error&amp;#39;&lt;/span&gt;, (&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;) =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;连接错误:&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;server&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;listen&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;8000&lt;/span&gt;, () =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;服务器启动在端口8000&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Nginx使用事件驱动架构，根据平台选择最佳的IO复用机制：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Nginx事件处理伪代码
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ngx_event_module_init&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 根据平台选择最佳的IO复用机制
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (epoll_supported) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;use_epoll&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (kqueue_supported) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;use_kqueue&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (poll_supported) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;use_poll&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;use_select&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 事件循环
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ngx_process_events_and_timers&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 等待事件
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    events &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;io_multiplexing_wait&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 处理所有事件
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (i &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;; i &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; events.count; i&lt;span style=&#34;color:#f92672&#34;&gt;++&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        event &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; events[i];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (event.read) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            event.&lt;span style=&#34;color:#a6e22e&#34;&gt;read_handler&lt;/span&gt;(event.connection);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (event.write) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            event.&lt;span style=&#34;color:#a6e22e&#34;&gt;write_handler&lt;/span&gt;(event.connection);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 处理定时器事件
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;process_timers&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;应用总结:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;高并发Web服务器&lt;/strong&gt;：如Nginx，处理数千个并发连接&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;单线程高性能系统&lt;/strong&gt;：如Redis，单线程处理大量客户端请求&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;4-异步-io-asynchronous-io&#34;&gt;4. 异步 IO (Asynchronous IO)&lt;/h2&gt;
+&lt;p&gt;异步IO是指发起IO操作后立即返回, 操作系统在后台完成IO, 完成后&lt;strong&gt;通过回调、协程或事件通知应用程序&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Node.js&lt;/strong&gt;：基于 &lt;code&gt;libuv&lt;/code&gt; 的事件循环，异步处理文件、网络IO&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Python FastAPI&lt;/strong&gt;：依赖 &lt;code&gt;asyncio&lt;/code&gt; 和 &lt;code&gt;uvicorn&lt;/code&gt;，通过 &lt;code&gt;async/await&lt;/code&gt; 实现异步Web服务&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Java Netty&lt;/strong&gt;：异步网络框架，基于NIO和事件驱动，广泛用于高性能服务器&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;41-异步-io-的本质-&#34;&gt;4.1. 异步 IO 的本质 ‼️&lt;/h3&gt;
+&lt;p&gt;思考一个问题 异步 IO (Asynchronous IO) 的本质是什么? 和非阻塞 IO 的区别呢?&lt;/p&gt;
+&lt;p&gt;我的理解 异步的本质就是通过回调函数来执行, 可是异步好像也像是同步:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;response&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;fetch&lt;/span&gt;(....);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 执行其他的任务
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;异步 IO 的本质是&lt;strong&gt;允许程序在 IO 操作进行时继续执行其他任务, 而不是等待 IO 操作完成&lt;/strong&gt;, 异步 IO 确实常常通过回调函数实现, 但这只是实现机制之一, 而非本质, 异步 IO 的核心在于: &lt;strong&gt;IO 操作的发起与结果的获取被分离&lt;/strong&gt;, 当 IO 操作完成后, 通过某种机制（回调函数、Promise、事件等）&lt;strong&gt;通知程序处理结果&lt;/strong&gt;, 中间的等待时间可以用来做其他事情&lt;/p&gt;
+&lt;p&gt;上面的例子:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;response&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;fetch&lt;/span&gt;(...);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 执行其他的
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这里的 ⁠await 并不意味着同步。它只是让代码看起来像同步，但实际上：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;⁠fetch&lt;/code&gt; 是异步操作，调用后立即返回 &lt;code&gt;Promise&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;⁠&lt;code&gt;await&lt;/code&gt; 暂停当前函数的执行，&lt;strong&gt;但不会阻塞 JavaScript 的主线程&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;在 IO 操作进行时，JavaScript 引擎可以执行其他任务（事件循环中的其他回调）&lt;/li&gt;
+&lt;li&gt;IO 完成后，事件循环会让暂停的函数继续执行&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;所以 ⁠&lt;code&gt;await&lt;/code&gt; 是异步 IO 的语法糖, 让异步代码更易读, 但底层仍然是异步的&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;虽然异步 IO 和非阻塞 IO 都允许程序在 IO 操作进行时继续执行其他任务&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;非阻塞 IO&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;非阻塞 IO 是指在发起 IO 操作时, 设置 IO 操作（如 socket 或文件描述符）为非阻塞模式, 如果 IO 操作无法立即完成, 系统调用会立即返回一个错误（如 &lt;code&gt;EAGAIN&lt;/code&gt; 或 &lt;code&gt;EWOULDBLOCK&lt;/code&gt;）, 而不是等待操作完成&lt;/li&gt;
+&lt;li&gt;程序需要**轮询（polling）**或通过其他机制（如 &lt;code&gt;select&lt;/code&gt;、&lt;code&gt;poll&lt;/code&gt;、&lt;code&gt;epoll&lt;/code&gt;）检查 IO 操作是否完成&lt;/li&gt;
+&lt;li&gt;非阻塞 IO 的核心是&lt;strong&gt;系统调用立即返回&lt;/strong&gt;, 但后续是否&lt;strong&gt;需要程序主动检查&lt;/strong&gt;状态取决于具体实现&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;set_socket_nonblocking&lt;/span&gt;(socket);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 轮询检查 + 做其他的事情 同时发生
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (true) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;socket_ready&lt;/span&gt;(socket)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;read&lt;/span&gt;(socket, buffer);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 做其他事情
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;异步 IO&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;异步 IO 是指程序发起 IO 操作后, &lt;strong&gt;操作系统接管整个 IO 过程&lt;/strong&gt;, 程序无需主动关心操作状态, 当 IO 操作完成时, 操作系统通过&lt;strong&gt;回调、事件通知或信号&lt;/strong&gt;等方式通知程序&lt;/li&gt;
+&lt;li&gt;异步 IO 的核心是&lt;strong&gt;完全将 IO 操作交给操作系统&lt;/strong&gt;, 程序只需在操作完成时处理结果, 中间&lt;strong&gt;无需轮询&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;async_read&lt;/span&gt;(socket, buffer, callback);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 直接做其他事情
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 操作系统会在完成后调用 callback
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;有没有发现 异步IO 有点像 非阻塞IO + IO复用, 只不过是 IO 复用的部分, 自动帮你实现了?&lt;/p&gt;
+&lt;p&gt;确实很像, 但并不是, 但你可以把 异步IO看作是&amp;quot;非阻塞IO + IO复用 + 自动通知机制&amp;quot; 的组合&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;模型&lt;/th&gt;
+          &lt;th&gt;组成部分&lt;/th&gt;
+          &lt;th&gt;谁负责轮询/等待&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;非阻塞IO&lt;/td&gt;
+          &lt;td&gt;仅非阻塞调用&lt;/td&gt;
+          &lt;td&gt;应用程序自己轮询&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;IO复用&lt;/td&gt;
+          &lt;td&gt;非阻塞IO + 集中式事件监听&lt;/td&gt;
+          &lt;td&gt;应用程序通过select/epoll等等待&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;异步IO&lt;/td&gt;
+          &lt;td&gt;非阻塞IO + 系统级事件监听 + 回调机制&lt;/td&gt;
+          &lt;td&gt;操作系统/运行时负责&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;在很多系统中, 异步IO 的实现确实是建立在非阻塞IO 和 IO复用的基础上的:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Node.js的libuv&lt;/strong&gt;：在Linux上，libuv使用epoll（一种IO复用机制）实现异步IO&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Windows的IOCP&lt;/strong&gt;：完整的异步IO实现&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Java的NIO&lt;/strong&gt;：基于非阻塞IO和Selector（IO复用）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;以 Node.js 为例, 其事件循环大致如下:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Node.js事件循环的简化伪代码
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 1. 处理定时器回调
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;processTimerCallbacks&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 2. 处理IO回调（使用epoll/kqueue/IOCP等实现）
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;processIOCallbacks&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 3. 处理其他类型的事件...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;processOtherEvents&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 如果没有待处理的事件，可能会退出
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;noMoreCallbacks&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;noMoreWork&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;break&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;在一些异步 IO 框架（如 Node.js 的 libuv）中，底层甚至可能使用 IO 复用机制（如 epoll 或 kqueue）来实现异步效果, 例如，Node.js 的事件循环会使用 epoll 监控 socket，并在就绪时触发回调，这让人感觉异步 IO 是“非阻塞 IO + IO 复用”的封装&lt;/p&gt;
+&lt;p&gt;但关键区别在于：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;异步 IO 更彻底地将 IO 操作的完成交给内核，程序无需主动执行后续的 IO 调用&lt;/li&gt;
+&lt;li&gt;异步 IO 的通知是&lt;strong&gt;操作完成&lt;/strong&gt;（数据已准备好），而 IO 复用通知的是&lt;strong&gt;描述符就绪&lt;/strong&gt;（仍需程序执行 IO）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;非阻塞 IO&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;常用于高性能服务器开发，如 Nginx、Redis 等，它们通过事件循环和非阻塞 socket 处理大量并发连接&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;适合需要细粒度控制 IO 行为的场景&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;异步 IO&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;常用于需要简化并发处理的场景，如 Node.js 的异步文件操作、网络请求，或者数据库查询&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;42-事件驱动&#34;&gt;4.2. 事件驱动&lt;/h3&gt;
+&lt;p&gt;可以看 009-事件驱动-异步编程.md 文件&lt;/p&gt;
+&lt;h2 id=&#34;5-事件循环-和-io-复用的关系&#34;&gt;5. 事件循环 和 IO 复用的关系&lt;/h2&gt;
+&lt;p&gt;强调 epoll 相较 select 的性能优势（select的O(n) vs epoll的O(1)），并提到Nginx如何利用epoll实现高并发&lt;/p&gt;
+&lt;p&gt;事件循环是什么? 怎么实现的?&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;应用总结: &lt;strong&gt;高并发Web服务器&lt;/strong&gt;：如Node.js、FastAPI，处理大量HTTP请求&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;51-事件循环-event-loop&#34;&gt;5.1. 事件循环 Event Loop&lt;/h3&gt;
+&lt;p&gt;事件循环 是一种编程架构，用于处理和协调异步操作（主要是 IO 操作，如网络请求、文件读写等），它通过一个循环不断检查是否有事件（如 IO 操作完成、定时器触发）需要处理，&lt;strong&gt;并在事件发生时调用相应的回调函数&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;事件循环的核心思想：&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;1 非阻塞&lt;/strong&gt;：事件循环允许程序在等待 IO 操作（如网络数据到达、文件读取完成）时不被阻塞，而是继续执行其他任务&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;2 事件驱动&lt;/strong&gt;：程序通过注册事件（event）和回调函数（callback），当事件发生时，事件循环触发对应的回调来处理结果&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;事件循环的典型流程：&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;检查&lt;strong&gt;事件队列&lt;/strong&gt;是否有待处理的事件&lt;/li&gt;
+&lt;li&gt;如果有事件，取出事件并执行对应的回调函数&lt;/li&gt;
+&lt;li&gt;执行完回调后，继续循环检查队列，直到程序结束&lt;/li&gt;
+&lt;li&gt;如果没有事件，事件循环可能进入休眠状态（阻塞等待新事件），以避免 CPU 空转&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;52-libuv-库---事件循环--io-复用&#34;&gt;5.2. libuv 库 - 事件循环 + IO 复用&lt;/h3&gt;
+&lt;p&gt;Node.js 的事件循环实现依赖于 &lt;strong&gt;libuv&lt;/strong&gt; 库, 这是一个跨平台的异步 I/O 库, 用 C 语言编写, &lt;strong&gt;libuv&lt;/strong&gt; 是 Node.js 的底层支柱, Node.js 通过 &lt;strong&gt;V8 引擎&lt;/strong&gt;执行 JavaScript 代码, 并通过 &lt;strong&gt;libuv&lt;/strong&gt; 处理异步事件和 I/O 操作&lt;/p&gt;
+&lt;p&gt;事件循环是 libuv 的核心机制, 它本质上是一个&lt;strong&gt;状态机&lt;/strong&gt;, 不断地检查是否有事件需要处理, 并按照特定顺序处理这些事件:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;libuv 事件循环过程
+├── Timers
+│   ├── 处理 setTimeout() 和 setInterval() 的回调
+│   └── 回调放入 Timers 队列
+│
+├── I/O 回调
+│   ├── 处理一些系统操作的回调（如 TCP 错误）
+│   └── 回调放入 I/O 回调队列
+│
+├── Poll
+│   ├── 获取新的 I/O 事件
+│   ├── 执行与 I/O 相关的回调
+│   ├── 使用 IO 复用技术（如 epoll, kqueue, IOCP）
+│   └── 回调放入 Poll 队列
+│
+├── Check
+│   ├── 处理 setImmediate() 的回调
+│   └── 回调放入 Check 队列
+│
+├── Close Callbacks
+│   ├── 处理关闭事件的回调（如 socket.on(&amp;#39;close&amp;#39;)）
+│   └── 回调放入 Close Callbacks 队列
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;IO 复用就是(只能) 用来监视多个文件描述符（网络连接、文件）变得可读或可写, 你猜他为什么叫 IO 复用&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;fs&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;require&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;fs&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;require&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;http&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;1. 程序开始执行&amp;#39;&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;// 主线程直接执行，不属于事件循环的任何阶段
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 设置一个定时器，回调将在 Timers 阶段执行
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;2. 定时器回调执行&amp;#39;&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;// 由 libuv 的 Timers 阶段处理，V8 执行 JavaScript 回调
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 在定时器回调中设置的 immediate 会在下一次事件循环的 Check 阶段执行
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;setImmediate&lt;/span&gt;(() =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;5. setImmediate 回调执行&amp;#39;&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;// 由 libuv 的 Check 阶段处理，V8 执行回调
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 在定时器回调中发起的文件读取操作
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;fs&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;readFile&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;example.txt&amp;#39;&lt;/span&gt;, (&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;data&lt;/span&gt;) =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 文件 I/O 完成后，此回调会被放入 Poll 阶段的队列
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 由 libuv 通过操作系统的 IO 复用机制(epoll/kqueue/IOCP)监控文件描述符
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;6. 文件读取回调执行&amp;#39;&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;// 由 libuv 的 Poll 阶段处理，V8 执行回调
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 在文件读取回调中设置的定时器
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;8. 嵌套定时器回调执行&amp;#39;&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;// 下一次事件循环的 Timers 阶段执行
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    }, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}, &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 创建 HTTP 服务器
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;server&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;createServer&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;req&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;res&lt;/span&gt;) =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 网络 I/O 回调，当有 HTTP 请求时，此回调会在 Poll 阶段执行
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;7. HTTP 请求回调执行&amp;#39;&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;// 由 libuv 的 Poll 阶段处理，V8 执行回调
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;res&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;end&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Hello World&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 关闭服务器
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;server&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;close&lt;/span&gt;(() =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 关闭回调会在 Close Callbacks 阶段执行
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;9. 服务器关闭回调执行&amp;#39;&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;// 由 libuv 的 Close Callbacks 阶段处理，V8 执行回调
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 立即设置的 immediate 会在当前事件循环的 Check 阶段执行
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;setImmediate&lt;/span&gt;(() =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;4. 立即的 setImmediate 回调执行&amp;#39;&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;// 由 libuv 的 Check 阶段处理，V8 执行回调
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 发起一个网络请求
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;http&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;get&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;http://localhost:3000&amp;#39;&lt;/span&gt;, (&lt;span style=&#34;color:#a6e22e&#34;&gt;res&lt;/span&gt;) =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 网络 I/O 回调，此回调会在 Poll 阶段执行
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 由 libuv 通过操作系统的 IO 复用机制监控网络套接字
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;res&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;on&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;data&amp;#39;&lt;/span&gt;, (&lt;span style=&#34;color:#a6e22e&#34;&gt;chunk&lt;/span&gt;) =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;收到数据:&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;chunk&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;toString&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 启动服务器
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;server&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;listen&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;3000&lt;/span&gt;, () =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;3. 服务器启动回调执行&amp;#39;&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;// 由 libuv 的 Poll 阶段处理，V8 执行回调
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;0. 主线程代码结束&amp;#39;&lt;/span&gt;); &lt;span style=&#34;color:#75715e&#34;&gt;// 主线程直接执行，不属于事件循环的任何阶段
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;libuv 的角色&lt;/strong&gt;：负责管理事件循环和异步 I/O 操作，使用操作系统的 IO 复用机制（如 epoll、kqueue、IOCP）监控文件描述符和网络套接字&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;V8 的角色&lt;/strong&gt;：执行 JavaScript 代码，包括回调函数&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;回调队列&lt;/strong&gt;：每个阶段都有自己的回调队列，回调按照注册顺序执行&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;主线程执行
+├── console.log(&amp;#39;1. 程序开始执行&amp;#39;)
+├── 注册 setTimeout 回调
+├── 创建 HTTP 服务器
+├── 注册 setImmediate 回调
+├── 发起 HTTP GET 请求
+├── 启动服务器监听
+└── console.log(&amp;#39;0. 主线程代码结束&amp;#39;)
+    └── 进入事件循环
+        │
+        ├── 第一次事件循环迭代
+        │   ├── Timers 阶段
+        │   │   └── 执行 setTimeout 回调
+        │   │       ├── console.log(&amp;#39;2. 定时器回调执行&amp;#39;)
+        │   │       ├── 注册 setImmediate 回调
+        │   │       └── 启动异步文件读取操作
+        │   │
+        │   ├── I/O 回调阶段
+        │   │   └── (无回调执行)
+        │   │
+        │   ├── Poll 阶段
+        │   │   └── 执行服务器启动回调
+        │   │       └── console.log(&amp;#39;3. 服务器启动回调执行&amp;#39;)
+        │   │
+        │   ├── Check 阶段
+        │   │   └── 执行 setImmediate 回调
+        │   │       └── console.log(&amp;#39;4. 立即的 setImmediate 回调执行&amp;#39;)
+        │   │
+        │   └── Close Callbacks 阶段
+        │       └── (无回调执行)
+        │
+        ├── 第二次事件循环迭代
+        │   ├── Timers 阶段
+        │   │   └── (无回调执行)
+        │   │
+        │   ├── I/O 回调阶段
+        │   │   └── (无回调执行)
+        │   │
+        │   ├── Poll 阶段
+        │   │   └── (等待 I/O 事件)
+        │   │
+        │   ├── Check 阶段
+        │   │   └── 执行第一次循环中注册的 setImmediate 回调
+        │   │       └── console.log(&amp;#39;5. setImmediate 回调执行&amp;#39;)
+        │   │
+        │   └── Close Callbacks 阶段
+        │       └── (无回调执行)
+        │
+        ├── 文件读取完成
+        │   └── 第三次事件循环迭代
+        │       ├── Timers 阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       ├── I/O 回调阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       ├── Poll 阶段
+        │       │   └── 执行文件读取回调
+        │       │       ├── console.log(&amp;#39;6. 文件读取回调执行&amp;#39;)
+        │       │       └── 注册 setTimeout 回调
+        │       │
+        │       ├── Check 阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       └── Close Callbacks 阶段
+        │           └── (无回调执行)
+        │
+        ├── HTTP 请求到达
+        │   └── 第四次事件循环迭代
+        │       ├── Timers 阶段
+        │       │   └── 执行文件读取回调中注册的 setTimeout 回调
+        │       │       └── console.log(&amp;#39;8. 嵌套定时器回调执行&amp;#39;)
+        │       │
+        │       ├── I/O 回调阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       ├── Poll 阶段
+        │       │   └── 执行 HTTP 请求回调
+        │       │       ├── console.log(&amp;#39;7. HTTP 请求回调执行&amp;#39;)
+        │       │       └── 关闭服务器
+        │       │
+        │       ├── Check 阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       └── Close Callbacks 阶段
+        │           └── (无回调执行)
+        │
+        └── 服务器关闭
+            └── 最终事件循环迭代
+                ├── Timers 阶段
+                │   └── (无回调执行)
+                │
+                ├── I/O 回调阶段
+                │   └── (无回调执行)
+                │
+                ├── Poll 阶段
+                │   └── (无回调执行)
+                │
+                ├── Check 阶段
+                │   └── (无回调执行)
+                │
+                └── Close Callbacks 阶段
+                    └── 执行服务器关闭回调
+                        └── console.log(&amp;#39;9. 服务器关闭回调执行&amp;#39;)
+&lt;/code&gt;&lt;/pre&gt;</content>
+    </item>
+    
+    <item>
+      <title>浅谈序列化</title>
+      <link>https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/012-%E6%B5%85%E8%B0%88%E5%BA%8F%E5%88%97%E5%8C%96/</link>
+      <pubDate>Tue, 22 Apr 2025 10:03:38 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/012-%E6%B5%85%E8%B0%88%E5%BA%8F%E5%88%97%E5%8C%96/</guid>
+      <description>&lt;h2 id=&#34;1-基本定义&#34;&gt;1. 基本定义&lt;/h2&gt;
+&lt;p&gt;看看&lt;a href=&#34;https://en.wikipedia.org/wiki/Serialization&#34;&gt;维基百科&lt;/a&gt;的定义:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In computing, serialization is process of translating a data structure or object state into a format that can be stored or transmitted. 序列化是将内存中的数据结构或对象转换为&lt;strong&gt;可存储&lt;/strong&gt;或&lt;strong&gt;传输&lt;/strong&gt;的格式的过程&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;不是很懂, 看来需要一个例子来解释, 下面是我看到的一段话, 有一些疑问:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;一个表述说: “序列化是将内存中的数据结构或对象转换为可存储或传输的格式（如二进制数据、XML、JSON等）”&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;内存中的数据结构或者对象 已经是二进制数据了  为什么不可以直接传输?&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;上面的表述说 “如二进制数据、XML、JSON等”, 网络传输不是只能传输 二进制数据吗, 为什么还有 xml 和 json 呢?&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-对象在内存中的样子&#34;&gt;2. 对象在内存中的样子&lt;/h2&gt;
+&lt;p&gt;表面上看, 内存中的数据确实是二进制字节（0 和 1）, 但这些字节的组织方式和语义高度依赖于程序的运行时环境, 直接传输这些字节会导致&lt;strong&gt;接收端无法正确解析&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;type&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Student&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;Name&lt;/span&gt;   &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;Age&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;Score&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;float64&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;Active&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;bool&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;student&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Student&lt;/span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;Name&lt;/span&gt;:   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;Age&lt;/span&gt;:    &lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;Score&lt;/span&gt;:  &lt;span style=&#34;color:#ae81ff&#34;&gt;95.5&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;Active&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Printf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Student: %+v\n&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;student&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Printf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Size of Student: %d bytes\n&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;unsafe&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Sizeof&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;student&lt;/span&gt;))
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;运行结果 arm64 系统:&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-基本定义&#34;&gt;1. 基本定义&lt;/h2&gt;
+&lt;p&gt;看看&lt;a href=&#34;https://en.wikipedia.org/wiki/Serialization&#34;&gt;维基百科&lt;/a&gt;的定义:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In computing, serialization is process of translating a data structure or object state into a format that can be stored or transmitted. 序列化是将内存中的数据结构或对象转换为&lt;strong&gt;可存储&lt;/strong&gt;或&lt;strong&gt;传输&lt;/strong&gt;的格式的过程&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;不是很懂, 看来需要一个例子来解释, 下面是我看到的一段话, 有一些疑问:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;一个表述说: “序列化是将内存中的数据结构或对象转换为可存储或传输的格式（如二进制数据、XML、JSON等）”&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;内存中的数据结构或者对象 已经是二进制数据了  为什么不可以直接传输?&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;上面的表述说 “如二进制数据、XML、JSON等”, 网络传输不是只能传输 二进制数据吗, 为什么还有 xml 和 json 呢?&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;2-对象在内存中的样子&#34;&gt;2. 对象在内存中的样子&lt;/h2&gt;
+&lt;p&gt;表面上看, 内存中的数据确实是二进制字节（0 和 1）, 但这些字节的组织方式和语义高度依赖于程序的运行时环境, 直接传输这些字节会导致&lt;strong&gt;接收端无法正确解析&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;type&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Student&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;Name&lt;/span&gt;   &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;Age&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;Score&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;float64&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;Active&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;bool&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;student&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Student&lt;/span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;Name&lt;/span&gt;:   &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;Age&lt;/span&gt;:    &lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;Score&lt;/span&gt;:  &lt;span style=&#34;color:#ae81ff&#34;&gt;95.5&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;Active&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Printf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Student: %+v\n&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;student&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Printf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Size of Student: %d bytes\n&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;unsafe&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Sizeof&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;student&lt;/span&gt;))
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;运行结果 arm64 系统:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Student: {Name:Alice Age:20 Score:95.5 Active:true}
+Size of Student: 40 bytes
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;为了理解为什么不能直接传输, 我们需要看看 &lt;code&gt;Student&lt;/code&gt; 结构体在内存中的实际布局:&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;字段&lt;/th&gt;
+          &lt;th&gt;大小&lt;/th&gt;
+          &lt;th&gt;内存内容（示例）&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Name (ptr)&lt;/td&gt;
+          &lt;td&gt;8 字节&lt;/td&gt;
+          &lt;td&gt;指针，指向 &amp;ldquo;Alice&amp;rdquo; 的内存地址（如 &lt;code&gt;0x12345678&lt;/code&gt;）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Name (len)&lt;/td&gt;
+          &lt;td&gt;8 字节&lt;/td&gt;
+          &lt;td&gt;字符串长度（&lt;code&gt;5&lt;/code&gt;，表示 &amp;ldquo;Alice&amp;rdquo; 的长度）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Age&lt;/td&gt;
+          &lt;td&gt;8 字节&lt;/td&gt;
+          &lt;td&gt;整数 &lt;code&gt;20&lt;/code&gt;（二进制表示）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Score&lt;/td&gt;
+          &lt;td&gt;8 字节&lt;/td&gt;
+          &lt;td&gt;浮点数 &lt;code&gt;95.5&lt;/code&gt;（IEEE 754 格式）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Active&lt;/td&gt;
+          &lt;td&gt;1 字节&lt;/td&gt;
+          &lt;td&gt;布尔值 &lt;code&gt;1&lt;/code&gt;（true）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;Padding&lt;/td&gt;
+          &lt;td&gt;7 字节&lt;/td&gt;
+          &lt;td&gt;填充字节（通常为 0，用于对齐）&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;blockquote&gt;
+&lt;p&gt;在 Go 中, string 是一个结构体, 包含两个字段:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;指向字符串数据的指针（&lt;code&gt;unsafe.Pointer&lt;/code&gt;, 8 字节）&lt;/li&gt;
+&lt;li&gt;字符串长度（&lt;code&gt;int&lt;/code&gt;, 8 字节）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;所以 string 总共占用 16 字节, 例如，&lt;code&gt;Name: &amp;quot;Alice&amp;quot;&lt;/code&gt; 的实际数据（&lt;code&gt;&amp;quot;Alice&amp;quot;&lt;/code&gt; 的字节 &lt;code&gt;[65, 108, 105, 99, 101]&lt;/code&gt;）存储在内存的某个区域，&lt;code&gt;Name&lt;/code&gt; 字段只保存指向该区域的指针和长度&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;假设 &lt;code&gt;student&lt;/code&gt; 结构体存储在内存地址 &lt;code&gt;0x1000&lt;/code&gt;，其二进制数据可能如下（简化表示）：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;0x1000 - 0x1007&lt;/code&gt;：&lt;code&gt;Name&lt;/code&gt; 的指针（例如 &lt;code&gt;0x12345678&lt;/code&gt;，指向 &lt;code&gt;&amp;quot;Alice&amp;quot;&lt;/code&gt; 的实际数据的地址）&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;0x1008 - 0x100F&lt;/code&gt;：&lt;code&gt;Name&lt;/code&gt; 的长度（&lt;code&gt;5&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;0x1010 - 0x1017&lt;/code&gt;：&lt;code&gt;Age&lt;/code&gt; 的值（&lt;code&gt;20&lt;/code&gt;，二进制 &lt;code&gt;00000014&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;0x1018 - 0x101F&lt;/code&gt;：&lt;code&gt;Score&lt;/code&gt; 的值（&lt;code&gt;95.5&lt;/code&gt;，IEEE 754 格式的二进制）&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;0x1020&lt;/code&gt;：&lt;code&gt;Active&lt;/code&gt; 的值（&lt;code&gt;1&lt;/code&gt;，表示 &lt;code&gt;true&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;0x1021 - 0x1027&lt;/code&gt;：填充字节（&lt;code&gt;0&lt;/code&gt;）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;关键点&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Name&lt;/code&gt; 字段的指针（&lt;code&gt;0x12345678&lt;/code&gt;）指向内存中 &lt;code&gt;&amp;quot;Alice&amp;quot;&lt;/code&gt; 的实际数据（&lt;code&gt;[65, 108, 105, 99, 101]&lt;/code&gt;）的地址&lt;/li&gt;
+&lt;li&gt;这些二进制数据高度依赖 Go 的运行时环境，比如：
+&lt;ul&gt;
+&lt;li&gt;指针地址（&lt;code&gt;0x12345678&lt;/code&gt;）只在当前程序的内存空间有效&lt;/li&gt;
+&lt;li&gt;内存对齐和填充字节依赖于 Go 编译器和 CPU 架构&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;quot;Alice&amp;quot;&lt;/code&gt; 的实际数据存储在堆上，由 Go 的垃圾回收器管理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-内存中的数据结构已经是二进制数据为什么不能直接传输&#34;&gt;3. 内存中的数据结构已经是二进制数据，为什么不能直接传输？&lt;/h2&gt;
+&lt;p&gt;现在，假设我们将这 40 字节的二进制数据（从 &lt;code&gt;0x1000&lt;/code&gt; 到 &lt;code&gt;0x1027&lt;/code&gt;）直接传输到另一台机器, 接收端会遇到以下问题:&lt;/p&gt;
+&lt;h3 id=&#34;31-指针无效&#34;&gt;3.1. 指针无效&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;问题&lt;/strong&gt;：&lt;code&gt;Name&lt;/code&gt; 字段的指针（&lt;code&gt;0x12345678&lt;/code&gt;）指向当前程序的内存地址, 在接收端的机器上, 这个地址要么无效（指向不存在的内存）, 要么指向完全无关的数据&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;后果&lt;/strong&gt;：接收端无法访问 &lt;code&gt;&amp;quot;Alice&amp;quot;&lt;/code&gt; 的实际数据（&lt;code&gt;[65, 108, 105, 99, 101]&lt;/code&gt;），因为这些数据没有随结构体一起传输&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;解决方法&lt;/strong&gt;：序列化（如 JSON）会将 &lt;code&gt;&amp;quot;Alice&amp;quot;&lt;/code&gt; 的实际内容嵌入到序列化数据中, 而不是只传输指针, 例如, JSON 会生成 &lt;code&gt;{&amp;quot;name&amp;quot;:&amp;quot;Alice&amp;quot;,...}&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;32-缺少类型信息&#34;&gt;3.2. 缺少类型信息&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;问题&lt;/strong&gt;：内存中的二进制数据没有显式的类型信息, 接收端不知道：
+&lt;ul&gt;
+&lt;li&gt;这 32 字节代表一个 &lt;code&gt;Student&lt;/code&gt; 结构体&lt;/li&gt;
+&lt;li&gt;前 16 字节是 &lt;code&gt;string&lt;/code&gt;，接下来的 8 字节是 &lt;code&gt;int&lt;/code&gt;，等等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;后果&lt;/strong&gt;：接收端无法正确解析二进制数据，除非它运行完全相同的 Go 程序（相同的结构体定义和编译器）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;解决方法&lt;/strong&gt;：序列化格式（如 JSON）通过键值对显式定义字段名和值（&lt;code&gt;{&amp;quot;name&amp;quot;:&amp;quot;Alice&amp;quot;,&amp;quot;age&amp;quot;:20}&lt;/code&gt;），接收端根据字段名重建数据结构&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;33-内存布局不兼容&#34;&gt;3.3. 内存布局不兼容&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;问题&lt;/strong&gt;：不同系统、编译器或 Go 版本可能有不同的内存布局：
+&lt;ul&gt;
+&lt;li&gt;32 位 vs. 64 位系统：&lt;code&gt;int&lt;/code&gt; 和指针的大小不同（4 字节 vs. 8 字节）&lt;/li&gt;
+&lt;li&gt;内存对齐规则：某些系统可能不使用 8 字节对齐，填充字节不同&lt;/li&gt;
+&lt;li&gt;字段顺序：编译器可能重新排列字段以优化内存访问（尽管 Go 通常按声明顺序）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;后果&lt;/strong&gt;：接收端可能错误解析字段, 例如，接收端可能将 &lt;code&gt;Age&lt;/code&gt; 的 8 字节解析为两个 4 字节字段，导致数据错乱&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;解决方法&lt;/strong&gt;：序列化格式（如 JSON）是标准化的，字段顺序和类型由格式定义（如 &lt;code&gt;{&amp;quot;name&amp;quot;:&amp;quot;Alice&amp;quot;,&amp;quot;age&amp;quot;:20}&lt;/code&gt;），与内存布局无关&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;34-跨语言和跨平台问题&#34;&gt;3.4. 跨语言和跨平台问题&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;问题&lt;/strong&gt;：如果接收端不是 Go 程序（比如 Python 或 Java），它无法理解 Go 的内存布局（指针、字符串结构体、内存对齐等）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;后果&lt;/strong&gt;：非 Go 程序无法解析这 32 字节的二进制数据&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;解决方法&lt;/strong&gt;：序列化格式（如 JSON、XML）是语言无关的，Python 和 Java 都能解析 &lt;code&gt;{&amp;quot;name&amp;quot;:&amp;quot;Alice&amp;quot;,&amp;quot;age&amp;quot;:20}&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;35-示例直接传输的失败场景&#34;&gt;3.5. 示例：直接传输的失败场景&lt;/h3&gt;
+&lt;p&gt;假设我们将 &lt;code&gt;student&lt;/code&gt; 的 32 字节内存数据传输到另一台机器：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;发送端：传输 &lt;code&gt;[0x12345678, 5, 20, 95.5, 1, 0, 0, 0, 0, 0, 0, 0]&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;接收端：
+&lt;ul&gt;
+&lt;li&gt;看到 &lt;code&gt;0x12345678&lt;/code&gt;，但这个地址无效，无法找到 &lt;code&gt;&amp;quot;Alice&amp;quot;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;不知道前 16 字节是 &lt;code&gt;string&lt;/code&gt;，可能误以为是两个 &lt;code&gt;int64&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;内存对齐不同，可能将 &lt;code&gt;Age&lt;/code&gt; 的 8 字节解析为其他类型&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;结果：数据完全不可用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;所以我对序列化的理解是:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;序列化&lt;/strong&gt;是将内存中的对象转换为一种&lt;strong&gt;约定好的格式&lt;/strong&gt;（如 Protobuf、JSON、Gob、XML 等）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;这些格式在网络传输时仍然是&lt;strong&gt;二进制数据&lt;/strong&gt;（字节流）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;但这些二进制数据是按照&lt;strong&gt;约定的格式&lt;/strong&gt;组织的，而不是内存中对象的&lt;strong&gt;原始内存格式&lt;/strong&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;4-更上一层楼-加深理解&#34;&gt;4. 更上一层楼 (加深理解)&lt;/h2&gt;
+&lt;h3 id=&#34;41-序列化是将内存对象转为约定格式&#34;&gt;4.1. 序列化是将内存对象转为约定格式&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;内存中的对象（比如 Go 的 &lt;code&gt;struct&lt;/code&gt;）包含复杂的信息：指针、类型元数据、内存对齐填充、运行时状态等&lt;/li&gt;
+&lt;li&gt;序列化的目的是将这些对象转换为一种标准化的、平台无关的格式
+&lt;ul&gt;
+&lt;li&gt;去除指针，直接嵌入实际数据（比如 &lt;code&gt;&amp;quot;Alice&amp;quot;&lt;/code&gt; 的字符），&lt;strong&gt;只保留数据的逻辑内容&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;去除了填充和运行时元数据&lt;/li&gt;
+&lt;li&gt;使用标准化的结构（键值对、字段标签等），确保跨平台、跨语言可解析&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;例如：
+&lt;ul&gt;
+&lt;li&gt;JSON：&lt;code&gt;{&amp;quot;name&amp;quot;:&amp;quot;Alice&amp;quot;,&amp;quot;age&amp;quot;:20}&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Protobuf：紧凑的二进制格式，包含字段标签和值&lt;/li&gt;
+&lt;li&gt;Gob：Go 专用的二进制格式，包含类型信息和数据&lt;/li&gt;
+&lt;li&gt;XML：&lt;code&gt;&amp;lt;person&amp;gt;&amp;lt;name&amp;gt;Alice&amp;lt;/name&amp;gt;&amp;lt;age&amp;gt;20&amp;lt;/age&amp;gt;&amp;lt;/person&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;42-传输时是二进制数据-但按约定格式组织&#34;&gt;4.2. 传输时是二进制数据, 但按约定格式组织：&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;网络传输只能传输二进制字节流（0 和 1）&lt;/li&gt;
+&lt;li&gt;序列化后的数据（JSON、XML 等）在传输前会被编码为二进制字节流。例如：
+&lt;ul&gt;
+&lt;li&gt;JSON 字符串 &lt;code&gt;{&amp;quot;name&amp;quot;:&amp;quot;Alice&amp;quot;}&lt;/code&gt; 编码为 UTF-8 字节（&lt;code&gt;[123, 34, 110, 97, 109, 101, 34, ...]&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;Protobuf 直接生成紧凑的二进制字节，包含字段编号和值&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;这些字节流的组织方式遵循约定的格式规则（比如 JSON 的键值对结构，Protobuf 的字段标签），&lt;strong&gt;接收端根据相同的规则解析&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;44-代码示例&#34;&gt;4.4. 代码示例&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;type&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Student&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;Name&lt;/span&gt;   &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;Age&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;Score&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;float64&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;student&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Student&lt;/span&gt;{&lt;span style=&#34;color:#a6e22e&#34;&gt;Name&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;Age&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;Score&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;95.5&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// 1. 序列化为 JSON&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;jsonData&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;json&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Marshal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;student&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatalf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;JSON 序列化失败: %v&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;JSON 数据:&amp;#34;&lt;/span&gt;, string(&lt;span style=&#34;color:#a6e22e&#34;&gt;jsonData&lt;/span&gt;))
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;JSON 字节:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;jsonData&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// 2. 序列化为 Gob&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;bytes&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Buffer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;enc&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;gob&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;NewEncoder&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;enc&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Encode&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;student&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatalf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Gob 序列化失败: %v&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Gob 字节:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Bytes&lt;/span&gt;())
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// 3. 反序列化 JSON&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;jsonStudent&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Student&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;json&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Unmarshal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;jsonData&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;jsonStudent&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatalf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;JSON 反序列化失败: %v&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Printf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;JSON 反序列化结果: %+v\n&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;jsonStudent&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// 4. 反序列化 Gob&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;gobStudent&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Student&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;dec&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;gob&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;NewDecoder&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;dec&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Decode&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;gobStudent&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatalf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Gob 反序列化失败: %v&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Printf&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Gob 反序列化结果: %+v\n&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;gobStudent&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;输出（部分简化）&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;JSON 数据: {&amp;#34;Name&amp;#34;:&amp;#34;Alice&amp;#34;,&amp;#34;Age&amp;#34;:20,&amp;#34;Score&amp;#34;:95.5}
+JSON 字节: [123 34 78 97 109 101 34 58 34 65 108 105 99 101 34 44 ...]
+Gob 字节: [40 255 129 3 1 1 7 83 116 117 100 101 110 116 ...]
+JSON 反序列化结果: {Name:Alice Age:20 Score:95.5}
+Gob 反序列化结果: {Name:Alice Age:20 Score:95.5}
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;45-内存数据-vs-序列化数据的对比&#34;&gt;4.5. 内存数据 vs. 序列化数据的对比&lt;/h3&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;特性&lt;/th&gt;
+          &lt;th&gt;内存中的二进制数据&lt;/th&gt;
+          &lt;th&gt;序列化数据（JSON）&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;内容&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;指针、长度、值、填充字节&lt;/td&gt;
+          &lt;td&gt;实际数据（&lt;code&gt;&amp;quot;Alice&amp;quot;&lt;/code&gt;、20、95.5、true）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;大小&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;32 字节（固定，含指针和填充）&lt;/td&gt;
+          &lt;td&gt;变长（约 50 字节，视数据内容）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;平台依赖&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;高度依赖（指针、内存对齐、架构）&lt;/td&gt;
+          &lt;td&gt;平台无关（标准化的文本格式）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;类型信息&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;隐式（依赖 Go 运行时）&lt;/td&gt;
+          &lt;td&gt;显式（键值对定义字段和类型）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;跨语言支持&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;不支持（仅 Go 程序可解析）&lt;/td&gt;
+          &lt;td&gt;支持（JSON 被广泛支持）&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;传输后可用性&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;不可用（指针无效，布局不同）&lt;/td&gt;
+          &lt;td&gt;可用（接收端可直接解析）&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;5-常见的序列化库&#34;&gt;5. 常见的序列化库&lt;/h2&gt;
+&lt;p&gt;因为不同格式有特定的编码/解码规则和数据结构, 通常每种序列化格式（如 JSON、Gob、Protobuf）都会有对应的库来处理:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;JSON 是跨语言的通用格式, 几乎每种语言都有 JSON 库&lt;/li&gt;
+&lt;li&gt;Gob 是 Go 特有的二进制格式，仅由 Go 的 encoding/gob 支持&lt;/li&gt;
+&lt;li&gt;Protobuf 是一种高效的跨语言二进制格式，需专用库支持&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;我们分别举例看一下各自怎么做序列化的&lt;/p&gt;
+&lt;h3 id=&#34;51-go-序列化&#34;&gt;5.1. Go 序列化&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;JSON 序列化 - 使用 &lt;code&gt;encoding/json&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;encoding/json&lt;/code&gt; 是 Go 标准库提供的 JSON 序列化工具, 最流行且易用:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 创建对象&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Person&lt;/span&gt;{&lt;span style=&#34;color:#a6e22e&#34;&gt;Name&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;Age&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 序列化：对象 -&amp;gt; JSON&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;jsonData&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;json&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Marshal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;JSON:&amp;#34;&lt;/span&gt;, string(&lt;span style=&#34;color:#a6e22e&#34;&gt;jsonData&lt;/span&gt;)) &lt;span style=&#34;color:#75715e&#34;&gt;// 输出：JSON: {&amp;#34;name&amp;#34;:&amp;#34;Alice&amp;#34;,&amp;#34;age&amp;#34;:30}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 反序列化：JSON -&amp;gt; 对象&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;p2&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Person&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;json&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Unmarshal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;jsonData&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;p2&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Deserialized:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;p2&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;// 输出：Deserialized: {Alice 30}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Gob 序列化 - 使用 &lt;code&gt;encoding/gob&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;encoding/gob&lt;/code&gt; 是 Go 标准库提供的二进制序列化工具，&lt;strong&gt;仅用于 Go 程序间通信&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-golang&#34; data-lang=&#34;golang&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;type&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Person&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;Name&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;Age&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 创建对象&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Person&lt;/span&gt;{&lt;span style=&#34;color:#a6e22e&#34;&gt;Name&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;Age&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 序列化：对象 -&amp;gt; Gob&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;bytes&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Buffer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;enc&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;gob&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;NewEncoder&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;enc&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Encode&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Gob bytes:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Bytes&lt;/span&gt;()) &lt;span style=&#34;color:#75715e&#34;&gt;// 输出：Gob bytes: [二进制数据]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 反序列化：Gob -&amp;gt; 对象&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;p2&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Person&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;dec&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;gob&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;NewDecoder&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;buf&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;dec&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Decode&lt;/span&gt;(&lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;p2&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Deserialized:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;p2&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;// 输出：Deserialized: {Alice 30}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;Protobuf 序列化 - 使用 &lt;code&gt;github.com/golang/protobuf&lt;/code&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Protobuf 是一种高效的跨语言二进制序列化格式, 需定义 &lt;code&gt;.proto&lt;/code&gt; 文件并生成 Go 代码, &lt;code&gt;github.com/golang/protobuf&lt;/code&gt; 是最流行的 Protobuf 实现:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-protobuf&#34; data-lang=&#34;protobuf&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;syntax &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;proto3&amp;#34;&lt;/span&gt;;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;package&lt;/span&gt; main;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;option&lt;/span&gt; go_package &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./main&amp;#34;&lt;/span&gt;;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;message&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Person&lt;/span&gt; {&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int32&lt;/span&gt; age &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;}&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-shell&#34; data-lang=&#34;shell&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ protoc --go_out&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;. person.proto
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-golang&#34; data-lang=&#34;golang&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 创建 Protobuf 对象&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;Person&lt;/span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;Name&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;Age&lt;/span&gt;:  &lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 序列化：对象 -&amp;gt; Protobuf&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;protoData&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;proto&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Marshal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Protobuf bytes:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;protoData&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;// 输出：Protobuf bytes: [二进制数据]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 反序列化：Protobuf -&amp;gt; 对象&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;p2&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Person&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; = &lt;span style=&#34;color:#a6e22e&#34;&gt;proto&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Unmarshal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;protoData&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;p2&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Fatal&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;fmt&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Deserialized:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;p2&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;// 输出：Deserialized: name:&amp;#34;Alice&amp;#34; age:30&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;Protobuf 需要预定义 &lt;code&gt;.proto&lt;/code&gt; 文件，生成 Go 结构体和序列化代码&lt;/li&gt;
+&lt;li&gt;使用 &lt;code&gt;proto.Marshal&lt;/code&gt; 和 &lt;code&gt;proto.Unmarshal&lt;/code&gt; 进行序列化/反序列化&lt;/li&gt;
+&lt;li&gt;Protobuf 是高效的二进制格式，适合跨语言、高性能场景&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;52-java-序列化&#34;&gt;5.2. Java 序列化&lt;/h3&gt;
+&lt;p&gt;Java 这里只讨论 JSON 序列化, 至于其其他格式, 类似 Golang, 就不讨论了,  &lt;strong&gt;Jackson&lt;/strong&gt; 是 Java 中最流行的 JSON 序列化库&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Main&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 定义 Person 类&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Person&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; String name;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; age;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// 构造函数&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        ...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// Getter 和 Setter&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        ...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;@Override&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; String &lt;span style=&#34;color:#a6e22e&#34;&gt;toString&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Person{name=&amp;#39;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; name &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#39;, age=&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; age &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;}&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;main&lt;/span&gt;(String&lt;span style=&#34;color:#f92672&#34;&gt;[]&lt;/span&gt; args) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 创建 ObjectMapper&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            ObjectMapper mapper &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; ObjectMapper();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 创建对象&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            Person p &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Person(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt;, 30);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 序列化：对象 -&amp;gt; JSON&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            String json &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; mapper.&lt;span style=&#34;color:#a6e22e&#34;&gt;writeValueAsString&lt;/span&gt;(p);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;JSON: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; json); &lt;span style=&#34;color:#75715e&#34;&gt;// 输出：JSON: {&amp;#34;name&amp;#34;:&amp;#34;Alice&amp;#34;,&amp;#34;age&amp;#34;:30}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#75715e&#34;&gt;// 反序列化：JSON -&amp;gt; 对象&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            Person p2 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; mapper.&lt;span style=&#34;color:#a6e22e&#34;&gt;readValue&lt;/span&gt;(json, Person.&lt;span style=&#34;color:#a6e22e&#34;&gt;class&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            System.&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Deserialized: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; p2); &lt;span style=&#34;color:#75715e&#34;&gt;// 输出：Deserialized: Person{name=&amp;#39;Alice&amp;#39;, age=30}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        } &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (Exception e) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            e.&lt;span style=&#34;color:#a6e22e&#34;&gt;printStackTrace&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ObjectMapper&lt;/code&gt; 是 &lt;code&gt;Jackson&lt;/code&gt; 的核心类，&lt;code&gt;writeValueAsString&lt;/code&gt; 序列化为 JSON 字符串，&lt;code&gt;readValue&lt;/code&gt; 反序列化为对象&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;53-c-序列化&#34;&gt;5.3. C# 序列化&lt;/h3&gt;
+&lt;p&gt;C# 中最流行的 JSON 库是 Json.NET  (&lt;code&gt;Newtonsoft.Json&lt;/code&gt;), 在 .NET 社区中广为人知, 它提供了一组类和方法, 用于:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;序列化&lt;/strong&gt;：将 C# 对象转换为 JSON 字符串&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;反序列化&lt;/strong&gt;：将 JSON 字符串转换回 C# 对象&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;自定义序列化&lt;/strong&gt;：通过特性（如 &lt;code&gt;[JsonConverter]&lt;/code&gt;）或配置，允许开发者控制 JSON 的格式和行为&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c#&#34; data-lang=&#34;c#&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; person = &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; { Name = &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt;, Age = &lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; json = JsonConvert.SerializeObject(person);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 输出: {&amp;#34;Name&amp;#34;:&amp;#34;Alice&amp;#34;,&amp;#34;Age&amp;#34;:30}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; json = &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;{\&amp;#34;Name\&amp;#34;:\&amp;#34;Alice\&amp;#34;,\&amp;#34;Age\&amp;#34;:30}&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; person = JsonConvert.DeserializeObject&amp;lt;&lt;span style=&#34;color:#66d9ef&#34;&gt;dynamic&lt;/span&gt;&amp;gt;(json);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// person.Name == &amp;#34;Alice&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;JsonConvert&lt;/strong&gt; 是 &lt;strong&gt;Newtonsoft.Json&lt;/strong&gt; 命名空间中的一个静态类, 属于 Json.NET 库&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;6-protobuf-vs-json&#34;&gt;6. &lt;code&gt;protobuf&lt;/code&gt; vs &lt;code&gt;json&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;protobuf&lt;/code&gt; 是用来序列化的, 主要用在进程间通信尤其是 RPC 中, 前面讨论的时候说到:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;序列化是将内存中的数据结构或对象转换为&lt;strong&gt;可存储&lt;/strong&gt;或&lt;strong&gt;传输&lt;/strong&gt;的格式的过程&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;所以 &lt;code&gt;protobuf&lt;/code&gt; 也是用来干这个的, 可是为什么要用 &lt;code&gt;protobuf&lt;/code&gt;  呢, 它很快?&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;紧凑的二进制格式&lt;/strong&gt;：Protobuf 相比 JSON 的文本格式，数据体积更小（通常比 JSON 小 &lt;strong&gt;3-10 倍&lt;/strong&gt;，具体取决于数据结构）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;高效的序列化/反序列化&lt;/strong&gt;：Protobuf 的编码规则（如变长编码 Varint）优化了 CPU 和内存使用，解析速度比 JSON 快（通常快 &lt;strong&gt;5-100 倍&lt;/strong&gt;，视场景而定）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;61-为什么体积这么小&#34;&gt;6.1. 为什么体积这么小&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;type&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Person&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;Name&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;// &amp;#34;Alice&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;Age&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 30&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;1-json-的编码&#34;&gt;(1) JSON 的编码&lt;/h4&gt;
+&lt;p&gt;JSON 是文本格式，序列化后的结果是：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt;,&lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;age&amp;#34;&lt;/span&gt;:&lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;数据体积&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;{&amp;quot;name&amp;quot;:&amp;quot;Alice&amp;quot;,&amp;quot;age&amp;quot;:30}&lt;/code&gt; 总共 24 个字符（假设 UTF-8 编码，每个字符 1 字节）
+&lt;ul&gt;
+&lt;li&gt;字段名：&lt;code&gt;&amp;quot;name&amp;quot;&lt;/code&gt;（6 字节，含引号），&lt;code&gt;&amp;quot;age&amp;quot;&lt;/code&gt;（5 字节）&lt;/li&gt;
+&lt;li&gt;值：&lt;code&gt;&amp;quot;Alice&amp;quot;&lt;/code&gt;（7 字节，含引号），&lt;code&gt;30&lt;/code&gt;（2 字节）&lt;/li&gt;
+&lt;li&gt;分隔符：&lt;code&gt;{&lt;/code&gt;, &lt;code&gt;}&lt;/code&gt;, &lt;code&gt;,&lt;/code&gt;, &lt;code&gt;:&lt;/code&gt;（4 字节）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;总计&lt;/strong&gt;：24 字节&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;2-protobuf-的编码&#34;&gt;(2) Protobuf 的编码&lt;/h4&gt;
+&lt;p&gt;Protobuf 需要先定义 &lt;code&gt;.proto&lt;/code&gt; 文件：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-proto&#34; data-lang=&#34;proto&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;syntax &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;proto3&amp;#34;&lt;/span&gt;;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;message&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Person&lt;/span&gt; {&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int32&lt;/span&gt; age &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;}&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;序列化后的结果是二进制数据（不可读），我们逐步分析其编码&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;数据体积&lt;/strong&gt;：&lt;/p&gt;
+&lt;p&gt;Protobuf 的二进制编码格式为 &lt;code&gt;[field_number][type][value]&lt;/code&gt; 的组合：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;字段 &lt;code&gt;name&lt;/code&gt;（字符串，编号 1）&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;字段编号和类型：编号 &lt;code&gt;1&lt;/code&gt;，类型为 &lt;code&gt;string&lt;/code&gt;（长度编码，Wire Type = 2）
+&lt;ul&gt;
+&lt;li&gt;编号 &lt;code&gt;1&lt;/code&gt; 和 Wire Type 组合编码为 1 字节：&lt;code&gt;00001010&lt;/code&gt;（二进制，&lt;code&gt;0x0A&lt;/code&gt;）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;值：字符串 &lt;code&gt;&amp;quot;Alice&amp;quot;&lt;/code&gt;（5 字节）
+&lt;ul&gt;
+&lt;li&gt;字符串前缀长度：&lt;code&gt;5&lt;/code&gt;（1 字节，Varint 编码）&lt;/li&gt;
+&lt;li&gt;字符串内容：&lt;code&gt;Alice&lt;/code&gt;（5 字节）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;小计&lt;/strong&gt;：1（编号+类型） + 1（长度） + 5（内容） = 7 字节&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;字段 &lt;code&gt;age&lt;/code&gt;（int32，编号 2）&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;字段编号和类型：编号 &lt;code&gt;2&lt;/code&gt;，类型为 &lt;code&gt;int32&lt;/code&gt;（Varint，Wire Type = 0）
+&lt;ul&gt;
+&lt;li&gt;编号 &lt;code&gt;2&lt;/code&gt; 和 Wire Type 组合编码为 1 字节：&lt;code&gt;00010000&lt;/code&gt;（二进制，&lt;code&gt;0x10&lt;/code&gt;）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;值：整数 &lt;code&gt;30&lt;/code&gt;（Varint 编码）
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;30&lt;/code&gt; 在 Varint 中编码为 1 字节：&lt;code&gt;00011110&lt;/code&gt;（二进制，&lt;code&gt;0x1E&lt;/code&gt;）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;小计：1（编号+类型） + 1（值） = 2 字节&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;总计：7（name） + 2（age） = 9 字节&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;性能优势&lt;/strong&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Varint 编码&lt;/strong&gt;：&lt;code&gt;age = 30&lt;/code&gt; 只用 1 字节，JSON 用 2 字节（文本 &lt;code&gt;&amp;quot;30&amp;quot;&lt;/code&gt;）, 对于小整数，Varint 极大地节省空间&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;无字段名&lt;/strong&gt;：Protobuf 用编号 &lt;code&gt;1&lt;/code&gt; 和 &lt;code&gt;2&lt;/code&gt;（1 字节）替代 &lt;code&gt;&amp;quot;name&amp;quot;&lt;/code&gt;（6 字节）和 &lt;code&gt;&amp;quot;age&amp;quot;&lt;/code&gt;（5 字节）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;无分隔符&lt;/strong&gt;：JSON 的 &lt;code&gt;{&lt;/code&gt;, &lt;code&gt;}&lt;/code&gt;, &lt;code&gt;,&lt;/code&gt; 等占用 4 字节，Protobuf 无需这些&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;硬编码逻辑&lt;/strong&gt;：Protobuf 的生成代码避免了 JSON 的动态解析和反射&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;62-为什么这么快&#34;&gt;6.2. 为什么这么快?&lt;/h3&gt;
+&lt;p&gt;JSON序列化本质上是一个&lt;strong&gt;数据转换&lt;/strong&gt;过程，目标是将内存中的数据结构（例如Python的字典、Java的对象、Go的结构体等）转换为符合JSON规范的字符串, &lt;strong&gt;JSON规范定义了数据结构&lt;/strong&gt;，包括对象（&lt;code&gt;{}&lt;/code&gt;）、数组（&lt;code&gt;[]&lt;/code&gt;）、字符串（&lt;code&gt;&amp;quot;&amp;quot;&lt;/code&gt;）、数字、布尔值（&lt;code&gt;true&lt;/code&gt;/&lt;code&gt;false&lt;/code&gt;）、&lt;code&gt;null&lt;/code&gt;等, 序列化的底层实现通常涉及:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;数据结构解析&lt;/strong&gt;：递归遍历输入数据结构的层次结构&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;类型映射&lt;/strong&gt;：将编程语言的原生类型映射到JSON支持的类型&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;编码&lt;/strong&gt;：将数据按照JSON语法规则生成字符串，通常使用UTF-8编码&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;内存管理&lt;/strong&gt;：高效分配和操作字符串缓冲区&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;错误处理&lt;/strong&gt;：处理不支持的类型或循环引用等问题&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Protobuf 使用 &lt;code&gt;protoc&lt;/code&gt; 生成&lt;strong&gt;静态 Go 代码&lt;/strong&gt;，序列化逻辑是&lt;strong&gt;硬编码&lt;/strong&gt;的，直接访问结构体字段（通过偏移量），无需反射&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;protoc&lt;/code&gt; 是 Protobuf 的编译器（Protocol Buffers Compiler），用于将用户定义的 &lt;code&gt;.proto&lt;/code&gt; 文件（描述数据结构的 Schema）转换为特定语言（如 Go）的源代码, &lt;code&gt;.proto&lt;/code&gt; 文件定义了消息（message）的结构，例如：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-protobuf&#34; data-lang=&#34;protobuf&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;message&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;User&lt;/span&gt; {&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;int32&lt;/span&gt; age &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;&lt;/span&gt;}&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;运行命令 protoc &amp;ndash;go_out=. user.proto，protoc 会生成一个 Go 文件（例如 user.pb.go），包含：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Go 结构体（如 &lt;code&gt;type User struct&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;硬编码:&lt;/strong&gt; 序列化/反序列化方法（如 &lt;code&gt;Marshal 和 Unmarshal&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;其他辅助代码&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;什么是静态 Go 代码？&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;“静态”意味着这些代码在&lt;strong&gt;编译时&lt;/strong&gt;生成, 运行时&lt;strong&gt;无需动态解析数据结构&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;生成的代码是针对特定 &lt;code&gt;.proto&lt;/code&gt; 文件的, 包含了所有必要的序列化逻辑, 例如, &lt;code&gt;user.pb.go&lt;/code&gt; 中会为 &lt;code&gt;User&lt;/code&gt; 结构体生成一个 &lt;code&gt;Marshal&lt;/code&gt; 方法，明确知道如何处理 &lt;code&gt;name&lt;/code&gt; 和 &lt;code&gt;age&lt;/code&gt; 字段&lt;/li&gt;
+&lt;li&gt;对比 JSON 的 &lt;code&gt;encoding/json&lt;/code&gt;, 后者在运行时通过&lt;strong&gt;反射动态解析任意结构体&lt;/strong&gt;, 生成的 JSON 依赖于运行时的类型信息&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;.proto&lt;/code&gt; 文件定义了 &lt;code&gt;User&lt;/code&gt; 消息，&lt;code&gt;protoc&lt;/code&gt; 生成的 &lt;code&gt;user.pb.go&lt;/code&gt; 可能包含：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;type&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;User&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;Name&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;`protobuf:&amp;#34;bytes,1,opt,name=name&amp;#34; json:&amp;#34;name,omitempty&amp;#34;`&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;Age&lt;/span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;int32&lt;/span&gt;  &lt;span style=&#34;color:#e6db74&#34;&gt;`protobuf:&amp;#34;varint,2,opt,name=age&amp;#34; json:&amp;#34;age,omitempty&amp;#34;`&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;m&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;User&lt;/span&gt;) &lt;span style=&#34;color:#a6e22e&#34;&gt;Marshal&lt;/span&gt;() ([]&lt;span style=&#34;color:#66d9ef&#34;&gt;byte&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;error&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// 硬编码的序列化逻辑&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;什么是硬编码？&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;“硬编码”意味着序列化逻辑是直接写死的代码，针对特定的数据结构（如 &lt;code&gt;User&lt;/code&gt; 结构体），而不是通用的解析逻辑&lt;/li&gt;
+&lt;li&gt;在 JSON 中，&lt;code&gt;encoding/json&lt;/code&gt; 使用通用的反射逻辑，适用于任何 Go 数据结构（结构体、映射、切片等）它在运行时检查类型、字段名、标签等，逻辑是“通用的”&lt;/li&gt;
+&lt;li&gt;在 Protobuf 中，&lt;code&gt;protoc&lt;/code&gt; 生成的 Marshal 方法是针对特定结构体的专用代码, 例如，&lt;code&gt;User.Marshal&lt;/code&gt; 只知道如何序列化 &lt;code&gt;User&lt;/code&gt; 结构体的 &lt;code&gt;Name&lt;/code&gt; 和 &lt;code&gt;Age&lt;/code&gt; 字段，逻辑是固定的&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;综上效率更高是因为 &lt;code&gt;protoc&lt;/code&gt; 根据 预先定义的 &lt;code&gt;.proto&lt;/code&gt; 文件, &lt;strong&gt;专门为 User 结构生成静态的&lt;/strong&gt;  &lt;code&gt;user.pb.go&lt;/code&gt;, 也就是生成 &lt;strong&gt;硬编码的序列化和反序列化方法&lt;/strong&gt;, 而 &lt;strong&gt;JSON 序列化逻辑是通用的,&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
     <item>
       <title>面向切面编程 控制反转</title>
       <link>https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/011-%E9%9D%A2%E5%90%91%E5%88%87%E9%9D%A2-%E6%8E%A7%E5%88%B6%E5%8F%8D%E8%BD%AC/</link>
@@ -471,14 +1834,39 @@
     </item>
     
     <item>
-      <title>事件驱动 非阻塞IO 异步编程的概念</title>
+      <title>事件驱动 异步编程的概念</title>
       <link>https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/009-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8-%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B/</link>
       <pubDate>Sat, 29 Mar 2025 13:43:26 +0000</pubDate>
       
       <guid>https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/009-%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8-%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B/</guid>
-      <description>&lt;h2 id=&#34;1-事件驱动--event-driven&#34;&gt;1. 事件驱动  Event-Driven&lt;/h2&gt;
-&lt;p&gt;事件驱动编程是一种设计模式, 其中程序的执行流程由事件（如用户操作、数据到达、定时器到期等）决定, 程序会等待事件发生, 然后触发相应的处理函数或回调函数,&lt;/p&gt;
-&lt;p&gt;事件可以理解为系统中发生的某种状态变化或动作，比如用户点击操作, 数据库读取完成、网络请求返回结果、文件读取完成等, 这些事件发生的时间是不确定的, 程序无法提前知道什么时候会触发, 所以我们需要一个监听器 (也就是事件循环) , 它不断地检查是否有事件发生, 如果有, 就调用对应的处理函数, 那这里你可能有个疑问, 为什么事件循环这个组件会知道在事件发生时调用其对应的函数呢?&lt;/p&gt;
+      <description>&lt;h2 id=&#34;1-事件驱动-event-driven&#34;&gt;1. 事件驱动 Event-Driven&lt;/h2&gt;
+&lt;p&gt;事件驱动编程是一种设计模式, 其中程序的执行流程由事件（如用户操作、数据到达、定时器到期等）决定, 程序会等待事件发生, 然后触发相应的处理函数或回调函数, 事件可以理解为系统中发生的某种状态变化或动作, 比如用户点击操作, 数据库读取完成、网络请求返回结果、文件读取完成等, 这些事件发生的时间是不确定的, 程序无法提前知道什么时候会触发, 所以我们需要一个监听器 (也就是事件循环) , 它不断地检查是否有事件发生, 如果有, 就调用对应的处理函数, 那这里你可能有个疑问, 为什么事件循环这个组件会知道在事件发生时调用其对应的函数呢?&lt;/p&gt;
+&lt;p&gt;当然是因为我们写代码的时候会注册, 比如 写 JS 的时候, 我们可以通过下面的方式为一个事件注册一个回调函数, 告诉事件循环, 当此事件发生时, 执行这个函数:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// DOM事件处理
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 方式1：使用addEventListener
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;document.&lt;span style=&#34;color:#a6e22e&#34;&gt;getElementById&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;myButton&amp;#39;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;click&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;按钮被点击了&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 方式2：使用on属性
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;document.&lt;span style=&#34;color:#a6e22e&#34;&gt;getElementById&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;myButton&amp;#39;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;onclick&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;按钮被点击了&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 创建自定义事件
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;eventEmitter&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;EventTarget&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 注册事件监听器
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;eventEmitter&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;customEvent&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;自定义事件被触发:&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;detail&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 触发自定义事件
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;CustomEvent&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;customEvent&amp;#39;&lt;/span&gt;, { &lt;span style=&#34;color:#a6e22e&#34;&gt;detail&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;message&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;这是自定义数据&amp;#39;&lt;/span&gt; } });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;eventEmitter&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;dispatchEvent&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-异步编程&#34;&gt;2. 异步编程&lt;/h2&gt;
+&lt;p&gt;异步编程在处理 &lt;strong&gt;I/O 密集型任务&lt;/strong&gt;（如网络请求、文件操作、数据库查询）时特别有用, 可以显著提高程序的响应性和吞吐量:&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-事件驱动-event-driven&#34;&gt;1. 事件驱动 Event-Driven&lt;/h2&gt;
+&lt;p&gt;事件驱动编程是一种设计模式, 其中程序的执行流程由事件（如用户操作、数据到达、定时器到期等）决定, 程序会等待事件发生, 然后触发相应的处理函数或回调函数, 事件可以理解为系统中发生的某种状态变化或动作, 比如用户点击操作, 数据库读取完成、网络请求返回结果、文件读取完成等, 这些事件发生的时间是不确定的, 程序无法提前知道什么时候会触发, 所以我们需要一个监听器 (也就是事件循环) , 它不断地检查是否有事件发生, 如果有, 就调用对应的处理函数, 那这里你可能有个疑问, 为什么事件循环这个组件会知道在事件发生时调用其对应的函数呢?&lt;/p&gt;
 &lt;p&gt;当然是因为我们写代码的时候会注册, 比如 写 JS 的时候, 我们可以通过下面的方式为一个事件注册一个回调函数, 告诉事件循环, 当此事件发生时, 执行这个函数:&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// DOM事件处理
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 方式1：使用addEventListener
@@ -507,43 +1895,11 @@
 &lt;li&gt;Python 通过 &lt;code&gt;asyncio&lt;/code&gt; 库和 &lt;code&gt;async/await&lt;/code&gt; 语法实现异步编程&lt;/li&gt;
 &lt;li&gt;JavaScript 使用 &lt;code&gt;Promise/.then().then()&lt;/code&gt;、&lt;code&gt;async/await&lt;/code&gt; 和回调函数来处理异步操作&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;Promise 是 JavaScript 中处理异步操作的一种机制, 它&lt;strong&gt;本质上是一个对象&lt;/strong&gt;, 代表一个异步操作的最终完成（或失败）及其结果值, Promise 有三种状态：pending（等待）、fulfilled（成功）、rejected（失败）, 通过 .then() 和 .catch() 方法, 你可以注册回调函数来处理成功或失败的结果: 虽然 Promise 使用回调函数, 但它和上面的注册事件并不是一回事, 事件驱动通常是通过事件监听器（比如 addEventListener）注册回调函数, 当特定事件触发时执行, 而 Promise 更像是一种“一次性的异步任务封装”, 它的回调是在异步操作完成时由 Promise 自身调度, 而不是依赖外部事件触发。&lt;/p&gt;</description>
-      <content>&lt;h2 id=&#34;1-事件驱动--event-driven&#34;&gt;1. 事件驱动  Event-Driven&lt;/h2&gt;
-&lt;p&gt;事件驱动编程是一种设计模式, 其中程序的执行流程由事件（如用户操作、数据到达、定时器到期等）决定, 程序会等待事件发生, 然后触发相应的处理函数或回调函数,&lt;/p&gt;
-&lt;p&gt;事件可以理解为系统中发生的某种状态变化或动作，比如用户点击操作, 数据库读取完成、网络请求返回结果、文件读取完成等, 这些事件发生的时间是不确定的, 程序无法提前知道什么时候会触发, 所以我们需要一个监听器 (也就是事件循环) , 它不断地检查是否有事件发生, 如果有, 就调用对应的处理函数, 那这里你可能有个疑问, 为什么事件循环这个组件会知道在事件发生时调用其对应的函数呢?&lt;/p&gt;
-&lt;p&gt;当然是因为我们写代码的时候会注册, 比如 写 JS 的时候, 我们可以通过下面的方式为一个事件注册一个回调函数, 告诉事件循环, 当此事件发生时, 执行这个函数:&lt;/p&gt;
-&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// DOM事件处理
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 方式1：使用addEventListener
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;document.&lt;span style=&#34;color:#a6e22e&#34;&gt;getElementById&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;myButton&amp;#39;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;click&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;() {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;按钮被点击了&amp;#39;&lt;/span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 方式2：使用on属性
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;document.&lt;span style=&#34;color:#a6e22e&#34;&gt;getElementById&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;myButton&amp;#39;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;onclick&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;() {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;按钮被点击了&amp;#39;&lt;/span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 创建自定义事件
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;eventEmitter&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;EventTarget&lt;/span&gt;();
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 注册事件监听器
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;eventEmitter&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;customEvent&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt;) {
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;自定义事件被触发:&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;detail&lt;/span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 触发自定义事件
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;CustomEvent&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;customEvent&amp;#39;&lt;/span&gt;, { &lt;span style=&#34;color:#a6e22e&#34;&gt;detail&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;message&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;这是自定义数据&amp;#39;&lt;/span&gt; } });
-&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;eventEmitter&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;dispatchEvent&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt;);
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;2-异步编程&#34;&gt;2. 异步编程&lt;/h2&gt;
-&lt;p&gt;异步编程在处理 &lt;strong&gt;I/O 密集型任务&lt;/strong&gt;（如网络请求、文件操作、数据库查询）时特别有用, 可以显著提高程序的响应性和吞吐量:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Python 通过 &lt;code&gt;asyncio&lt;/code&gt; 库和 &lt;code&gt;async/await&lt;/code&gt; 语法实现异步编程&lt;/li&gt;
-&lt;li&gt;JavaScript 使用 &lt;code&gt;Promise/.then().then()&lt;/code&gt;、&lt;code&gt;async/await&lt;/code&gt; 和回调函数来处理异步操作&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Promise 是 JavaScript 中处理异步操作的一种机制, 它&lt;strong&gt;本质上是一个对象&lt;/strong&gt;, 代表一个异步操作的最终完成（或失败）及其结果值, Promise 有三种状态：pending（等待）、fulfilled（成功）、rejected（失败）, 通过 .then() 和 .catch() 方法, 你可以注册回调函数来处理成功或失败的结果: 虽然 Promise 使用回调函数, 但它和上面的注册事件并不是一回事, 事件驱动通常是通过事件监听器（比如 addEventListener）注册回调函数, 当特定事件触发时执行, 而 Promise 更像是一种“一次性的异步任务封装”, 它的回调是在异步操作完成时由 Promise 自身调度, 而不是依赖外部事件触发。&lt;/p&gt;
-&lt;p&gt;Javascript 中的 &lt;code&gt;async/await&lt;/code&gt; 是建立在 Promise 之上的语法糖, 目的是让异步代码看起来更像同步代码, &lt;code&gt;async&lt;/code&gt; 函数返回一个 &lt;code&gt;Promise&lt;/code&gt;, 而 &lt;code&gt;await&lt;/code&gt; 暂停函数执行, 直到 &lt;code&gt;Promise&lt;/code&gt; 解析完成, 它的核心仍然是 Promise, 因此它本质上也是异步编程的一种实现方式。&lt;/p&gt;
+&lt;p&gt;Promise 是 JavaScript 中处理异步操作的一种机制, 它&lt;strong&gt;本质上是一个对象&lt;/strong&gt;, 代表一个异步操作的最终完成（或失败）及其结果值, Promise 有三种状态：pending（等待）、fulfilled（成功）、rejected（失败）, 通过 .then() 和 .catch() 方法, 你可以注册回调函数来处理成功或失败的结果: 虽然 Promise 使用回调函数, 但它和上面的注册事件并不是一回事, 事件驱动通常是通过事件监听器（比如 addEventListener）注册回调函数, 当特定事件触发时执行, 而 Promise 更像是一种“一次性的异步任务封装”, 它的回调是在异步操作完成时由 Promise 自身调度, 而不是依赖外部事件触发&lt;/p&gt;
+&lt;p&gt;Javascript 中的 &lt;code&gt;async/await&lt;/code&gt; 是建立在 Promise 之上的语法糖, 目的是让异步代码看起来更像同步代码, &lt;code&gt;async&lt;/code&gt; 函数返回一个 &lt;code&gt;Promise&lt;/code&gt;, 而 &lt;code&gt;await&lt;/code&gt; 暂停函数执行, 直到 &lt;code&gt;Promise&lt;/code&gt; 解析完成, 它的核心仍然是 Promise, 因此它本质上也是异步编程的一种实现方式&lt;/p&gt;
 &lt;h2 id=&#34;3-事件驱动-vs-异步编程&#34;&gt;3. 事件驱动 vs 异步编程&lt;/h2&gt;
-&lt;p&gt;&lt;strong&gt;事件驱动&lt;/strong&gt;：强调通过事件监听器注册回调，等待外部事件（如用户点击、定时器触发、网络响应）来驱动程序执行。典型例子是 DOM 事件监听或 Node.js 中的 EventEmitter。&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;异步编程&lt;/strong&gt;：关注如何处理耗时操作（如 I/O、网络请求），不阻塞主线程 (非阻塞 IO)。Promise 和 async/await 是异步编程的工具，解决的是“等待结果”的问题，而不是“监听事件”的问题。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;事件驱动&lt;/strong&gt;：强调通过事件监听器注册回调，等待外部事件（如用户点击、定时器触发、网络响应）来驱动程序执行。典型例子是 DOM 事件监听或 Node.js 中的 EventEmitter&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;异步编程&lt;/strong&gt;：关注如何处理耗时操作（如 I/O、网络请求），不阻塞主线程 (非阻塞 IO), Promise 和 async/await 是异步编程的工具，解决的是“等待结果”的问题，而不是“监听事件”的问题&lt;/p&gt;
 &lt;h2 id=&#34;4-为什么事件驱动模型适合做高并发web服务器&#34;&gt;4. 为什么事件驱动模型适合做高并发web服务器&lt;/h2&gt;
 &lt;p&gt;&lt;strong&gt;高效的资源利用&lt;/strong&gt;&lt;/p&gt;
 &lt;ul&gt;

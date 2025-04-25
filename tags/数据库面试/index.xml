@@ -6,7 +6,628 @@
     <description>Recent content in 数据库面试 on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sun, 30 Mar 2025 11:09:56 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 23 Apr 2025 20:18:45 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9D%A2%E8%AF%95/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>影响数据库查询的主要因素</title>
+      <link>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/009-%E5%BD%B1%E5%93%8D%E6%95%B0%E6%8D%AE%E5%BA%93%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%B8%BB%E8%A6%81%E5%9B%A0%E7%B4%A0/</link>
+      <pubDate>Wed, 23 Apr 2025 20:18:45 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/009-%E5%BD%B1%E5%93%8D%E6%95%B0%E6%8D%AE%E5%BA%93%E6%9F%A5%E8%AF%A2%E7%9A%84%E4%B8%BB%E8%A6%81%E5%9B%A0%E7%B4%A0/</guid>
+      <description>&lt;p&gt;&lt;strong&gt;(1) 磁盘 I/O 次数&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;磁盘访问速度远低于内存. 频繁的磁盘读取/写入会严重影响性能, &lt;strong&gt;最主要的瓶颈之一&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;比如：查询没有命中索引，就要扫描大量数据页，导致大量 I/O&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;(2) 网络 I/O&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;通常在本地数据库中影响较小，除非是跨地域、大量数据传输&lt;/li&gt;
+&lt;li&gt;主要在&lt;strong&gt;分布式数据库&lt;/strong&gt;或&lt;strong&gt;客户端-服务器&lt;/strong&gt;架构下才会成为瓶颈&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;(3) Join 的实现方式与次数&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Join 本质上会涉及多个表的数据访问&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Join 的次数和方式&lt;/strong&gt;（Nested Loop、Hash Join、Merge Join）会直接影响 I/O 次数和 CPU 计算量&lt;/li&gt;
+&lt;li&gt;可以理解为“Join 越多，可能导致 I/O 次数越多”，但不等同于“Join 次数 = I/O 次数”&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;现在有一个问题, 一般我们如何粗略计算 磁盘 IO 次数 来判断查询效率? 比如一次查询, 需要考虑哪些呢?&lt;/p&gt;
+&lt;p&gt;数据库把数据存储在 page 里, 常见的大小是 8KB（MySQL/InnoDB）或 4KB（PostgreSQL）, &lt;strong&gt;一次磁盘 I/O 一般指读取一个页到内存&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;是否命中索引？&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;命中索引：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;需要读取索引页（几页）+ 数据页（通常 1 页）&lt;/li&gt;
+&lt;li&gt;查询主键，一般只需要 &lt;strong&gt;1~3 次 I/O&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;未命中索引（全表扫描）：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;需要读取整个表的数据页数&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;数据页数 = 表大小 / 页大小（如 1GB 表 / 8KB = ~131,000 页 = 131,000 次 I/O）&lt;/p&gt;</description>
+      <content>&lt;p&gt;&lt;strong&gt;(1) 磁盘 I/O 次数&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;磁盘访问速度远低于内存. 频繁的磁盘读取/写入会严重影响性能, &lt;strong&gt;最主要的瓶颈之一&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;比如：查询没有命中索引，就要扫描大量数据页，导致大量 I/O&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;(2) 网络 I/O&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;通常在本地数据库中影响较小，除非是跨地域、大量数据传输&lt;/li&gt;
+&lt;li&gt;主要在&lt;strong&gt;分布式数据库&lt;/strong&gt;或&lt;strong&gt;客户端-服务器&lt;/strong&gt;架构下才会成为瓶颈&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;(3) Join 的实现方式与次数&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Join 本质上会涉及多个表的数据访问&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Join 的次数和方式&lt;/strong&gt;（Nested Loop、Hash Join、Merge Join）会直接影响 I/O 次数和 CPU 计算量&lt;/li&gt;
+&lt;li&gt;可以理解为“Join 越多，可能导致 I/O 次数越多”，但不等同于“Join 次数 = I/O 次数”&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;现在有一个问题, 一般我们如何粗略计算 磁盘 IO 次数 来判断查询效率? 比如一次查询, 需要考虑哪些呢?&lt;/p&gt;
+&lt;p&gt;数据库把数据存储在 page 里, 常见的大小是 8KB（MySQL/InnoDB）或 4KB（PostgreSQL）, &lt;strong&gt;一次磁盘 I/O 一般指读取一个页到内存&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;是否命中索引？&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;命中索引：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;需要读取索引页（几页）+ 数据页（通常 1 页）&lt;/li&gt;
+&lt;li&gt;查询主键，一般只需要 &lt;strong&gt;1~3 次 I/O&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;未命中索引（全表扫描）：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;需要读取整个表的数据页数&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;数据页数 = 表大小 / 页大小（如 1GB 表 / 8KB = ~131,000 页 = 131,000 次 I/O）&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;索引结构的深度（B+树）&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;假设一棵 B+树高度为 3：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;查询需要读取 &lt;strong&gt;根节点 + 中间节点 + 叶子节点&lt;/strong&gt; = 3 次 I/O&lt;/li&gt;
+&lt;li&gt;如果再加上数据行本身，也许是 4 次&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;是否走了回表？&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;如果你查询了非聚簇索引上的字段，还需要回到聚簇索引找完整行&lt;/li&gt;
+&lt;li&gt;一次“回表”= 至少 1 次 I/O&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;缓存命中&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;若数据页已在内存，I/O 为 0&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;我觉得有几点需要澄清:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;索引和数据是分开存储的吗?&lt;/li&gt;
+&lt;li&gt;找到索引后, 直接就能定位到数据吗 类似 O(1) 复杂度?&lt;/li&gt;
+&lt;li&gt;查找索引的复杂度为什么只和 B+ 树的高度有关系&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;第一个问题:&lt;/strong&gt;&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;索引类型&lt;/th&gt;
+          &lt;th&gt;数据存储在哪里？&lt;/th&gt;
+          &lt;th&gt;是否需要回表&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;主键（聚簇索引）&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;&lt;strong&gt;数据直接存储在索引的叶子节点&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;❌ 不需要回表&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;&lt;strong&gt;辅助索引（非聚簇索引）&lt;/strong&gt;&lt;/td&gt;
+          &lt;td&gt;索引只存储“键 + 主键值”，不含整行数据&lt;/td&gt;
+          &lt;td&gt;✅ 需要回表&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;ul&gt;
+&lt;li&gt;也就是说如果你查的是主键（聚簇索引），查到了叶子节点，&lt;strong&gt;就等于查到了整行数据&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;如果你查的是非主键（辅助索引），叶子节点只有部分信息，需要**“通过主键值再去聚簇索引查一次”**，这就是所谓“回表”&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;第二个问题:&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;分两种情况, 如果找到的是主键索引, 那就等于找到了数据行本身, 因为主键索引的顺序就是实际数据的顺序, 他们的位置是一样的, 都在 B+ 树的同一个叶子上&lt;/p&gt;
+&lt;p&gt;如果找到的是二级索引, 也就是相当于你知道了主键是什么, 此时想获取数据行的所有数据, 需要回表, 那就要在 主键的 B+ 树上再走一边,  也是 &lt;code&gt;O(lgn)&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;例如，假设有一个表 &lt;code&gt;users(id, name, age)&lt;/code&gt;，其中 &lt;code&gt;id&lt;/code&gt; 是主键，&lt;code&gt;name&lt;/code&gt; 上有一个辅助索引, 如果你执行 &lt;code&gt;SELECT id, name FROM users WHERE name = &#39;Alice&#39;&lt;/code&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;MySQL 会在 &lt;code&gt;name&lt;/code&gt; 的辅助索引 B+ 树中查找，找到 &lt;code&gt;name = &#39;Alice&#39;&lt;/code&gt; 的叶子节点，这个节点会包含 &lt;code&gt;name&lt;/code&gt; 和对应的 &lt;code&gt;id&lt;/code&gt;（主键值）&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;如果查询需要的数据不在辅助索引中（例如，你需要 &lt;code&gt;age&lt;/code&gt; 列，而 &lt;code&gt;age&lt;/code&gt; 不在 &lt;code&gt;name&lt;/code&gt; 的辅助索引中），MySQL 需要拿着查到的主键值（&lt;code&gt;id&lt;/code&gt;），去聚簇索引（主键索引）的 B+ 树中查找整行数据, 这个过程叫&lt;strong&gt;回表&lt;/strong&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;回表的查找仍然是基于 B+ 树，时间复杂度为 &lt;code&gt;O(log n)&lt;/code&gt;，因为需要从聚簇索引的根节点遍历到叶子节点&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+</content>
+    </item>
+    
+    <item>
+      <title>多表关联 MySQL 还是 MongoDB?</title>
+      <link>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/008-%E5%A4%9A%E8%A1%A8%E5%85%B3%E8%81%94-mysql-mongodb/</link>
+      <pubDate>Sun, 30 Mar 2025 11:09:56 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/008-%E5%A4%9A%E8%A1%A8%E5%85%B3%E8%81%94-mysql-mongodb/</guid>
+      <description>&lt;p&gt;选 NoSQL 的几个理由, 一定不是多表关联 join 慢, 不是嵌套容易, 而是:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;想快速启动小专案测试idea&lt;/li&gt;
+&lt;li&gt;资料格式不确定(unstable schema)，而未来很有可能调整&lt;/li&gt;
+&lt;li&gt;资料之间没有复杂的关联(无结构, 无组织)、或未来读取资料时不需要使用JOIN 的功能&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;我们来一一说明理由 ,首先为什么数据库结构不确定, 用 NoSQL 比较有优势?&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In my 14 years of experience, most. It&amp;rsquo;s not that there&amp;rsquo;s anything wrong with using Mongo if it fits your use case, I&amp;rsquo;ve used it a handful of times, but I find that data, by nature, is almost always relational, or becomes relational very quickly as you start adding features. Then you either have to spend time and effort changing, or use Mongo like it&amp;rsquo;s a relation database, which you should never do as it defeats the point. You&amp;rsquo;d be surprised how many times I&amp;rsquo;ve seen Mongo instances like this. Programs push data around, and it&amp;rsquo;s usually related data.&lt;/p&gt;</description>
+      <content>&lt;p&gt;选 NoSQL 的几个理由, 一定不是多表关联 join 慢, 不是嵌套容易, 而是:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;想快速启动小专案测试idea&lt;/li&gt;
+&lt;li&gt;资料格式不确定(unstable schema)，而未来很有可能调整&lt;/li&gt;
+&lt;li&gt;资料之间没有复杂的关联(无结构, 无组织)、或未来读取资料时不需要使用JOIN 的功能&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;我们来一一说明理由 ,首先为什么数据库结构不确定, 用 NoSQL 比较有优势?&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In my 14 years of experience, most. It&amp;rsquo;s not that there&amp;rsquo;s anything wrong with using Mongo if it fits your use case, I&amp;rsquo;ve used it a handful of times, but I find that data, by nature, is almost always relational, or becomes relational very quickly as you start adding features. Then you either have to spend time and effort changing, or use Mongo like it&amp;rsquo;s a relation database, which you should never do as it defeats the point. You&amp;rsquo;d be surprised how many times I&amp;rsquo;ve seen Mongo instances like this. Programs push data around, and it&amp;rsquo;s usually related data.&lt;/p&gt;
+&lt;p&gt;Tbh Mongo isn&amp;rsquo;t used that much in production from what I&amp;rsquo;ve seen really. The world runs on SQL and that&amp;rsquo;s not going to change. I think Mongo lends itself better to small &amp;ldquo;todo&amp;rdquo; apps and such, so it tends to get used in a lot of tutorials online. When you&amp;rsquo;re starting out and you&amp;rsquo;re watching these, it can give you a false sense that everyone is using it for everything.&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;d say if you think you have a complete picture of all your data requirements and know that they&amp;rsquo;re not going to change, and it&amp;rsquo;s not relational, Mongo is a great choice.&lt;/p&gt;
+&lt;p&gt;If you don&amp;rsquo;t have the full picture yet, or something might change, going relational is more future proof. Relational databases can handle not having relations between tables just fine, and you can add them later if needed. Mongo doesn&amp;rsquo;t really handle relational data well at all. &lt;a href=&#34;https://www.reddit.com/r/learnprogramming/comments/gzvyoa/comment/ftiwqzm/?utm_source=share&amp;amp;utm_medium=web3x&amp;amp;utm_name=web3xcss&amp;amp;utm_term=1&amp;amp;utm_content=share_button&#34;&gt;Reddit&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;边缘场景&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;MongoDB is not magically faster. If you store the same data, organised in basically the same fashion, and access it exactly the same way, then you really shouldn&amp;rsquo;t expect your results to be wildly different. After all, MySQL and MongoDB are both GPL, so if Mongo had some magically better IO code in it, then the MySQL team could just incorporate it into their codebase.&lt;/p&gt;
+&lt;p&gt;People are seeing real world MongoDB performance largely because MongoDB allows you to query in a different manner that is more sensible to your workload.&lt;/p&gt;
+&lt;p&gt;For example, consider a design that persisted a lot of information about a complicated entity in a normalised fashion. This could easily use dozens of tables in MySQL (or any relational db) to store the data in normal form, with many indexes needed to ensure relational integrity between tables.&lt;/p&gt;
+&lt;p&gt;Now consider the same design with a document store. If all of those related tables are subordinate to the main table (and they often are), then you might be able to model the data such that the entire entity is stored in a single document. In MongoDB you can store this as a single document, in a single collection. This is where MongoDB starts enabling superior performance.&lt;/p&gt;
+&lt;p&gt;In MongoDB, to retrieve the whole entity, you have to perform:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;One index lookup on the collection (assuming the entity is fetched by id)&lt;/li&gt;
+&lt;li&gt;Retrieve the contents of one database page (the actual binary json document)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;So a b-tree lookup, and a binary page read. Log(n) + 1 IOs. If the indexes can reside entirely in memory, then 1 IO.&lt;/p&gt;
+&lt;p&gt;In MySQL with 20 tables, you have to perform:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;One index lookup on the root table (again, assuming the entity is fetched by id)&lt;/li&gt;
+&lt;li&gt;With a clustered index, we can assume that the values for the root row are in the index&lt;/li&gt;
+&lt;li&gt;20+ range lookups (hopefully on an index) for the entity&amp;rsquo;s pk value&lt;/li&gt;
+&lt;li&gt;These probably aren&amp;rsquo;t clustered indexes, so the same 20+ data lookups once we figure out what the appropriate child rows are.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;So the total for mysql, even assuming that all indexes are in memory (which is harder since there are 20 times more of them) is about 20 range lookups.&lt;/p&gt;
+&lt;p&gt;These range lookups are likely comprised of random IO — different tables will definitely reside in different spots on disk, and it&amp;rsquo;s possible that different rows in the same range in the same table for an entity might not be contiguous (depending on how the entity has been updated, etc).&lt;/p&gt;
+&lt;p&gt;So for this example, the final tally is about &lt;em&gt;20 times&lt;/em&gt; more IO with MySQL per logical access, compared to MongoDB.&lt;/p&gt;
+&lt;p&gt;This is how MongoDB can boost performance &lt;em&gt;in some use cases&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://stackoverflow.com/a/9703513/16317008&#34;&gt;Stackoverflow&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;1-多表关联查询-mongodb-处于劣势&#34;&gt;1. 多表关联查询 MongoDB 处于劣势&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;MongoDB 不支持原生的 JOIN 操作&lt;/strong&gt;, MongoDB 并不像 MySQL 那样在&lt;strong&gt;引擎层面原生支持 JOIN&lt;/strong&gt;，它是通过聚合管道的 &lt;code&gt;$lookup&lt;/code&gt; 操作符来模拟关联查询的&lt;/p&gt;
+&lt;h3 id=&#34;11-mysql-如何做关联查询&#34;&gt;1.1. MySQL 如何做关联查询&lt;/h3&gt;
+&lt;p&gt;假设我们有四个数据集合/表：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;users&lt;/code&gt;：存储用户信息&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;orders&lt;/code&gt;：存储订单信息，关联到用户&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;order_items&lt;/code&gt;：存储订单中的商品项，关联到订单和商品&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;products&lt;/code&gt;：存储商品信息&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; users (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id INT &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; AUTO_INCREMENT,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    name VARCHAR(&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    email VARCHAR(&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; orders (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    order_id INT &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; AUTO_INCREMENT,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    user_id INT, &lt;span style=&#34;color:#75715e&#34;&gt;-- Foreign Key to users
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    order_date DATE,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;FOREIGN&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; (user_id) &lt;span style=&#34;color:#66d9ef&#34;&gt;REFERENCES&lt;/span&gt; users(user_id)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; products (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    product_id INT &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; AUTO_INCREMENT,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    name VARCHAR(&lt;span style=&#34;color:#ae81ff&#34;&gt;100&lt;/span&gt;),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    price DECIMAL(&lt;span style=&#34;color:#ae81ff&#34;&gt;10&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt; order_items (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    item_id INT &lt;span style=&#34;color:#66d9ef&#34;&gt;PRIMARY&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; AUTO_INCREMENT,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    order_id INT, &lt;span style=&#34;color:#75715e&#34;&gt;-- Foreign Key to orders
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    product_id INT, &lt;span style=&#34;color:#75715e&#34;&gt;-- Foreign Key to products
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    quantity INT,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;FOREIGN&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; (order_id) &lt;span style=&#34;color:#66d9ef&#34;&gt;REFERENCES&lt;/span&gt; orders(order_id),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;FOREIGN&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;KEY&lt;/span&gt; (product_id) &lt;span style=&#34;color:#66d9ef&#34;&gt;REFERENCES&lt;/span&gt; products(product_id)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;-- 假设在所有 Foreign Key 字段上都建立了索引
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INDEX&lt;/span&gt; idx_orders_user &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; orders (user_id);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INDEX&lt;/span&gt; idx_items_order &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; order_items (order_id);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;CREATE&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;INDEX&lt;/span&gt; idx_items_product &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; order_items (product_id);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;目标:&lt;/strong&gt; 查询用户 &amp;ldquo;Alice&amp;rdquo; 购买过的所有商品的名称和价格，以及对应的订单 ID&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    o.order_id,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    p.name &lt;span style=&#34;color:#66d9ef&#34;&gt;AS&lt;/span&gt; product_name,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    p.price &lt;span style=&#34;color:#66d9ef&#34;&gt;AS&lt;/span&gt; product_price
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    users u
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;JOIN&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;-- 第 1 次连接: users -&amp;gt; orders
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    orders o &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; u.user_id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; o.user_id
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;JOIN&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;-- 第 2 次连接: orders -&amp;gt; order_items
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    order_items oi &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; o.order_id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; oi.order_id
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;JOIN&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;-- 第 3 次连接: order_items -&amp;gt; products
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    products p &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; oi.product_id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; p.product_id
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    u.name &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;Alice&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;MySQL 处理过程（概念性）：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;查询优化器分析阶段&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;当你执行一个包含多表 JOIN 的 SQL 语句时，MySQL 不会简单地按照你编写的顺序执行&lt;/li&gt;
+&lt;li&gt;优化器会分析表的统计信息，包括：
+&lt;ul&gt;
+&lt;li&gt;表的大小（行数）&lt;/li&gt;
+&lt;li&gt;每个列的数据分布情况&lt;/li&gt;
+&lt;li&gt;可用的索引&lt;/li&gt;
+&lt;li&gt;条件谓词的选择性（如 &lt;code&gt;WHERE u.name = &#39;Alice&#39;&lt;/code&gt; 会过滤掉多少行）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;执行计划生成&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;优化器会评估多种可能的连接顺序&lt;/li&gt;
+&lt;li&gt;例如，虽然您编写的是 &lt;code&gt;users → orders → order_items → products&lt;/code&gt;，但优化器可能决定使用 &lt;code&gt;users(过滤Alice) → orders → products → order_items&lt;/code&gt; 或其他顺序&lt;/li&gt;
+&lt;li&gt;优化器会选择估计成本最低的执行计划&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;连接算法选择&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;根据表的大小和索引情况，MySQL 会选择不同的连接算法&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;12-mongodb-的实现&#34;&gt;1.2. MongoDB 的实现&lt;/h3&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// users collection
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;{ &lt;span style=&#34;color:#a6e22e&#34;&gt;_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;user1&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;email&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;alice@example.com&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// orders collection
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;{ &lt;span style=&#34;color:#a6e22e&#34;&gt;_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;order1&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;user_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;user1&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;order_date&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ISODate&lt;/span&gt;(...) }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{ &lt;span style=&#34;color:#a6e22e&#34;&gt;_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;order2&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;user_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;user1&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;order_date&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ISODate&lt;/span&gt;(...) }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// products collection
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;{ &lt;span style=&#34;color:#a6e22e&#34;&gt;_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;prodA&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Laptop&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;price&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1200&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{ &lt;span style=&#34;color:#a6e22e&#34;&gt;_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;prodB&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Mouse&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;price&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;25&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// order_items collection
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;{ &lt;span style=&#34;color:#a6e22e&#34;&gt;_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;item1&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;order_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;order1&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;product_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;prodA&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;quantity&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{ &lt;span style=&#34;color:#a6e22e&#34;&gt;_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;item2&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;order_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;order1&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;product_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;prodB&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;quantity&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{ &lt;span style=&#34;color:#a6e22e&#34;&gt;_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;item3&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;order_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;order2&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;product_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ObjectId&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;prodA&amp;#34;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;quantity&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 假设在 `orders.user_id`, `order_items.order_id`, `order_items.product_id` 上有索引
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;db&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;orders&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;createIndex&lt;/span&gt;({ &lt;span style=&#34;color:#a6e22e&#34;&gt;user_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;db&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;order_items&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;createIndex&lt;/span&gt;({ &lt;span style=&#34;color:#a6e22e&#34;&gt;order_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;db&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;order_items&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;createIndex&lt;/span&gt;({ &lt;span style=&#34;color:#a6e22e&#34;&gt;product_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; });
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;查询语句 (使用聚合管道和 &lt;code&gt;$lookup&lt;/code&gt;):&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;db&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;users&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;aggregate&lt;/span&gt;([
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 阶段 1: 找到用户 Alice
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  { &lt;span style=&#34;color:#a6e22e&#34;&gt;$match&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt; } },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 阶段 2: 关联 orders 集合 (类似 JOIN users ON users._id = orders.user_id)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;$lookup&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;from&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;orders&amp;#34;&lt;/span&gt;,           &lt;span style=&#34;color:#75715e&#34;&gt;// 目标集合
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;localField&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;,        &lt;span style=&#34;color:#75715e&#34;&gt;// 当前集合 (users) 的字段
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;foreignField&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;user_id&amp;#34;&lt;/span&gt;,  &lt;span style=&#34;color:#75715e&#34;&gt;// 目标集合 (orders) 的字段
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;as&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;user_orders&amp;#34;&lt;/span&gt;       &lt;span style=&#34;color:#75715e&#34;&gt;// 输出数组的字段名
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 结果: Alice 文档 + user_orders: [ {order1 doc}, {order2 doc} ]
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 阶段 3: 展开 user_orders 数组 (每个订单成为一个独立文档)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  { &lt;span style=&#34;color:#a6e22e&#34;&gt;$unwind&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$user_orders&amp;#34;&lt;/span&gt; },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 结果: { Alice doc, user_orders: {order1 doc} }, { Alice doc, user_orders: {order2 doc} }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 阶段 4: 关联 order_items 集合 (类似 JOIN orders ON orders._id = order_items.order_id)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;$lookup&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;from&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;order_items&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;localField&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;user_orders._id&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#75715e&#34;&gt;// 上一阶段展开后的订单 ID
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;foreignField&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;order_id&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;as&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;items&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 结果: { Alice doc, user_orders: {order1}, items: [ {item1}, {item2} ] }, { Alice doc, user_orders: {order2}, items: [ {item3} ] }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 阶段 5: 展开 items 数组
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  { &lt;span style=&#34;color:#a6e22e&#34;&gt;$unwind&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$items&amp;#34;&lt;/span&gt; },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 结果: {..., items: {item1}}, {..., items: {item2}}, {..., items: {item3}}
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 阶段 6: 关联 products 集合 (类似 JOIN order_items ON order_items.product_id = products._id)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;$lookup&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;from&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;products&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;localField&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;items.product_id&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#75715e&#34;&gt;// 上一阶段展开后的商品 ID
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;foreignField&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;_id&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;as&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;product_details&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 结果: {..., items: {item1}, product_details: [{prodA}]}, {..., items: {item2}, product_details: [{prodB}]}, {..., items: {item3}, product_details: [{prodA}]}
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 阶段 7: 展开 product_details 数组
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  { &lt;span style=&#34;color:#a6e22e&#34;&gt;$unwind&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$product_details&amp;#34;&lt;/span&gt; },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 结果: {..., product_details: {prodA}}, {..., product_details: {prodB}}, {..., product_details: {prodA}}
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 阶段 8: 投影 (选择最终需要的字段)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;$project&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, &lt;span style=&#34;color:#75715e&#34;&gt;// 不显示 user 的 _id
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;order_id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$user_orders._id&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;product_name&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$product_details.name&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;product_price&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;$product_details.price&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// 最终结果: { order_id: &amp;#34;order1&amp;#34;, product_name: &amp;#34;Laptop&amp;#34;, price: 1200 }, { order_id: &amp;#34;order1&amp;#34;, product_name: &amp;#34;Mouse&amp;#34;, price: 25 }, { order_id: &amp;#34;order2&amp;#34;, product_name: &amp;#34;Laptop&amp;#34;, price: 1200 }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;])
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;strong&gt;MongoDB 处理过程及潜在性能问题分析：&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;阶段式执行：&lt;/strong&gt; 聚合管道是按顺序执行每个阶段的, 每个阶段的输出是下一个阶段的输入&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$lookup&lt;/code&gt; 的代价：
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;阶段 2 (&lt;code&gt;$lookup&lt;/code&gt; orders):&lt;/strong&gt; 找到 Alice 后，拿着 Alice 的 &lt;code&gt;_id&lt;/code&gt; 去 &lt;code&gt;orders&lt;/code&gt; 集合查询, 如果 &lt;code&gt;orders.user_id&lt;/code&gt; 有索引，这一步通常很快&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;阶段 4 (&lt;code&gt;$lookup&lt;/code&gt; order_items):&lt;/strong&gt; 经过 &lt;code&gt;$unwind&lt;/code&gt; 后，假设 Alice 有 M 个订单, MongoDB 需要对这 M 个文档&lt;strong&gt;分别&lt;/strong&gt;执行 &lt;code&gt;lookup&lt;/code&gt; 操作, 即，拿着每个订单的 &lt;code&gt;_id&lt;/code&gt; 去 &lt;code&gt;order_items&lt;/code&gt; 集合中查询, 相当于 M 次对 &lt;code&gt;order_items&lt;/code&gt; 的查询&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;阶段 6 (&lt;code&gt;$lookup&lt;/code&gt; products):&lt;/strong&gt; 假设 Alice 的 M 个订单总共有 N 个商品项（经过 &lt;code&gt;$unwind&lt;/code&gt; 后产生 N 个文档）MongoDB 需要对这 N 个文档&lt;strong&gt;分别&lt;/strong&gt;执行 &lt;code&gt;lookup&lt;/code&gt; 操作，拿着每个商品项的 &lt;code&gt;product_id&lt;/code&gt; 去 &lt;code&gt;products&lt;/code&gt; 集合查询。这相当于 N 次对 &lt;code&gt;products&lt;/code&gt; 的查询&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;$unwind&lt;/code&gt; 的代价：&lt;/strong&gt; &lt;code&gt;$unwind&lt;/code&gt; 操作会增加管道中流动的文档数量, 如果一个用户有很多订单，每个订单有很多商品，那么中间阶段的文档数量会急剧膨胀，加大了后续阶段的处理负担&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;重复查询：&lt;/strong&gt; 注意在阶段 6，如果 Alice 多次购买了同一个商品 &lt;code&gt;prodA&lt;/code&gt;（来自不同订单或同一订单的不同 &lt;code&gt;item&lt;/code&gt; 记录），&lt;code&gt;$lookup&lt;/code&gt; 可能会多次去 &lt;code&gt;products&lt;/code&gt; 集合查找 &lt;code&gt;prodA&lt;/code&gt; 的信息（虽然缓存可能有所帮助，但查询动作本身是针对每个输入文档触发的）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;优化限制：&lt;/strong&gt; 虽然 MongoDB 的聚合框架和 &lt;code&gt;$lookup&lt;/code&gt; 也在不断优化，但这种&lt;strong&gt;按文档流逐步处理和多次独立查询外部集合&lt;/strong&gt;的模式，相比于关系型数据库&lt;strong&gt;全局优化、基于集合的连接算法&lt;/strong&gt;，在多层关联、数据量大的情况下，更容易遇到性能瓶颈, 优化器很难像 SQL 那样进行彻底的连接顺序重排或选择根本不同的连接算法（如 Hash Join）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;对比之下性能明显低于 MySQL 的 JOIN 操作&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id=&#34;2-连接-join-算法&#34;&gt;2. 连接 join 算法&lt;/h2&gt;
+&lt;h3 id=&#34;21-什么是表连接&#34;&gt;2.1. 什么是表连接？&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;users 表&lt;/strong&gt;：&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;id&lt;/th&gt;
+          &lt;th&gt;name&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;1&lt;/td&gt;
+          &lt;td&gt;Alice&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;2&lt;/td&gt;
+          &lt;td&gt;Bob&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;3&lt;/td&gt;
+          &lt;td&gt;Charlie&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;orders 表&lt;/strong&gt;：&lt;/p&gt;
+&lt;table&gt;
+  &lt;thead&gt;
+      &lt;tr&gt;
+          &lt;th&gt;id&lt;/th&gt;
+          &lt;th&gt;user_id&lt;/th&gt;
+          &lt;th&gt;amount&lt;/th&gt;
+      &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+      &lt;tr&gt;
+          &lt;td&gt;1&lt;/td&gt;
+          &lt;td&gt;1&lt;/td&gt;
+          &lt;td&gt;100&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;2&lt;/td&gt;
+          &lt;td&gt;2&lt;/td&gt;
+          &lt;td&gt;200&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+          &lt;td&gt;3&lt;/td&gt;
+          &lt;td&gt;1&lt;/td&gt;
+          &lt;td&gt;150&lt;/td&gt;
+      &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;查询每个用户的所有订单：&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; u.name, o.amount &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; users u &lt;span style=&#34;color:#66d9ef&#34;&gt;JOIN&lt;/span&gt; orders o &lt;span style=&#34;color:#66d9ef&#34;&gt;ON&lt;/span&gt; u.id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; o.user_id;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;22-索引嵌套循环连接index-nested-loop-join-inlj&#34;&gt;2.2. 索引嵌套循环连接（Index Nested-Loop Join, INLJ）&lt;/h3&gt;
+&lt;h4 id=&#34;221-基本思想&#34;&gt;2.2.1. 基本思想&lt;/h4&gt;
+&lt;p&gt;索引嵌套循环连接利用&lt;strong&gt;索引&lt;/strong&gt;来加速连接过程, 当连接列（比如 &lt;code&gt;orders.user_id&lt;/code&gt;）上有索引时，这种方式非常高效&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;一般建立外键约束的时候, 就应该手动在该列上建立索引, 因为外键基本上都是 一对多 关系中用来连接查询的, 比如 用户 - 订单, 一个用户对应多个订单, 那订单表中就应该放一个用户 id, 建立外键约束和索引, 因为未来一定会用到查找某个用户的订单&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h4 id=&#34;222-工作原理&#34;&gt;2.2.2. 工作原理&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;MySQL 选择一个表作为&lt;strong&gt;外层表&lt;/strong&gt;（通常是行数较少的表），比如 &lt;code&gt;users&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;对于 &lt;code&gt;users&lt;/code&gt; 表的每一行，MySQL 用 &lt;code&gt;id&lt;/code&gt; 的值在 &lt;code&gt;orders&lt;/code&gt; 表的 &lt;code&gt;user_id&lt;/code&gt; 索引上查找匹配的行&lt;/li&gt;
+&lt;li&gt;因为有索引，查找速度很快（接近 O(1)）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;为什么索引的查询速度接近 O(1) ?&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;在实际应用中，由于 B-Tree 的高度很小（即使数据量很大1亿, 可能高度就3~4），所以查找的实际时间几乎是个很小的常数, 注意  B-Tree 和 二叉搜索树不是一个东西, 后面会详细讨论这部分&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h4 id=&#34;223-举例&#34;&gt;2.2.3. 举例&lt;/h4&gt;
+&lt;p&gt;假设 &lt;code&gt;orders.user_id&lt;/code&gt; 列上有索引：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;从 &lt;code&gt;users&lt;/code&gt; 表取第一行：&lt;code&gt;id = 1, name = Alice&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;用 &lt;code&gt;id = 1&lt;/code&gt; 在 &lt;code&gt;orders&lt;/code&gt; 表的 &lt;code&gt;user_id&lt;/code&gt; 索引中查找，找到两行：
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;user_id = 1, amount = 100&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;user_id = 1, amount = 150&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;移动到 &lt;code&gt;users&lt;/code&gt; 表的第二行：&lt;code&gt;id = 2, name = Bob&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;用 &lt;code&gt;id = 2&lt;/code&gt; 在索引中查找，找到一行：
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;user_id = 2, amount = 200&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;继续，直到处理完所有行&lt;/li&gt;
+&lt;/ol&gt;
+&lt;blockquote&gt;
+&lt;p&gt;就像是 for 循环:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 模拟索引：把 orders 按 user_id 分组（类似哈希索引）&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;order_index &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; order &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; orders:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    uid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; order[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;user_id&amp;#34;&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; uid &lt;span style=&#34;color:#f92672&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; order_index:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        order_index[uid] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; []
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    order_index[uid]&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;append(order)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 模拟 JOIN 查询：users 是驱动表&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; user &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; users:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    uid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; user[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;# 利用“索引”直接查找匹配的订单&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; uid &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; order_index:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; order &lt;span style=&#34;color:#f92672&#34;&gt;in&lt;/span&gt; order_index[uid]:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            print(&lt;span style=&#34;color:#e6db74&#34;&gt;f&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;{&lt;/span&gt;user[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;name&amp;#39;&lt;/span&gt;]&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; bought &lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;{&lt;/span&gt;order[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;item&amp;#39;&lt;/span&gt;]&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/blockquote&gt;
+&lt;h4 id=&#34;224-特点&#34;&gt;2.2.4. 特点&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;当有良好索引支持时最快，因为索引让查找变得高效&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;如果 &lt;code&gt;orders.user_id&lt;/code&gt; 上没有索引，MySQL 不会选择这种方式&lt;/strong&gt;, 可能会选择其他连接方式
+&lt;ul&gt;
+&lt;li&gt;哈希连接（Hash Join）：构建哈希表来加速匹配，适合大表无索引的场景&lt;/li&gt;
+&lt;li&gt;块嵌套循环连接（Block Nested-Loop Join, BNLJ）：扫描两表，分块处理以减少 I/O&lt;/li&gt;
+&lt;li&gt;简单嵌套循环连接（Simple Nested-Loop Join, SNLJ）：最慢，通常不会选&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;23-哈希连接hash-join&#34;&gt;2.3 哈希连接（Hash Join）&lt;/h3&gt;
+&lt;h4 id=&#34;231-基本思想&#34;&gt;2.3.1. 基本思想&lt;/h4&gt;
+&lt;p&gt;哈希连接使用&lt;strong&gt;哈希表&lt;/strong&gt;来加速连接过程，特别适合&lt;strong&gt;大表且没有合适索引&lt;/strong&gt;的情况&lt;/p&gt;
+&lt;h4 id=&#34;232-工作原理&#34;&gt;2.3.2. 工作原理&lt;/h4&gt;
+&lt;ol&gt;
+&lt;li&gt;MySQL 选择一个表（通常较小的表）作为&lt;strong&gt;构建表&lt;/strong&gt;，比如 &lt;code&gt;users&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;为 &lt;code&gt;users&lt;/code&gt; 表的连接列 &lt;code&gt;id&lt;/code&gt; 创建一个哈希表：
+&lt;ul&gt;
+&lt;li&gt;键是 &lt;code&gt;id&lt;/code&gt;，值是对应的行&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;对另一个表（&lt;strong&gt;探针表&lt;/strong&gt;，比如 &lt;code&gt;orders&lt;/code&gt;）的每一行，计算 &lt;code&gt;user_id&lt;/code&gt; 的哈希值，在哈希表中查找匹配的行&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h4 id=&#34;233-举例&#34;&gt;2.3.3. 举例&lt;/h4&gt;
+&lt;p&gt;假设 &lt;code&gt;orders.user_id&lt;/code&gt; 没有索引：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;构建阶段&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;从 &lt;code&gt;users&lt;/code&gt; 表创建哈希表：
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;1 -&amp;gt; {id = 1, name = Alice}&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;2 -&amp;gt; {id = 2, name = Bob}&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;3 -&amp;gt; {id = 3, name = Charlie}&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;探针阶段&lt;/strong&gt;：
+&lt;ul&gt;
+&lt;li&gt;取 &lt;code&gt;orders&lt;/code&gt; 第一行：&lt;code&gt;user_id = 1, amount = 100&lt;/code&gt;，哈希表中找到 &lt;code&gt;name = Alice&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;取 &lt;code&gt;orders&lt;/code&gt; 第二行：&lt;code&gt;user_id = 2, amount = 200&lt;/code&gt;，哈希表中找到 &lt;code&gt;name = Bob&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;取 &lt;code&gt;orders&lt;/code&gt; 第三行：&lt;code&gt;user_id = 1, amount = 150&lt;/code&gt;，哈希表中找到 &lt;code&gt;name = Alice&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h4 id=&#34;234-特点&#34;&gt;2.3.4. 特点&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;优点&lt;/strong&gt;：对于大表且无适合索引时最佳选择，哈希表查找速度是 O(1)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;缺点&lt;/strong&gt;：需要内存存储哈希表，如果表太大可能内存不足&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;24-其他连接方式&#34;&gt;2.4. 其他连接方式&lt;/h3&gt;
+&lt;h4 id=&#34;241-块嵌套循环连接block-nested-loop-join-bnlj&#34;&gt;2.4.1. 块嵌套循环连接（Block Nested-Loop Join, BNLJ）&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;基本思想&lt;/strong&gt;：这是嵌套循环的优化版，一次读取多行（一个块）来减少 I/O&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;特点&lt;/strong&gt;：是简单嵌套循环连接的改进版本，但通常不如哈希连接或索引嵌套循环连接快&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;举例&lt;/strong&gt;：MySQL 从 &lt;code&gt;users&lt;/code&gt; 读取一组行（比如 2 行），然后扫描 &lt;code&gt;orders&lt;/code&gt; 找匹配，效率比逐行扫描高&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;BNLJ的基本思想是将外表（Outer Table）的数据分块读取到内存中，然后对每个块内的元组与内表（Inner Table）的所有元组进行比较，从而减少对内表的重复扫描&lt;/p&gt;
+&lt;p&gt;比如每次 从 users 表中 拿出 多行数据 而不是 1个, 每次分别把多行数据跟内表进行比较,  虽然 比较次数没变, 但内表加载次数变少了, 减少了 磁盘 IO, 因为内表只需要为每个外表块加载一次，而不是为每行外表记录加载一次, 所以更高效一些&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h4 id=&#34;242-简单嵌套循环连接simple-nested-loop-join-snlj&#34;&gt;2.4.2. 简单嵌套循环连接（Simple Nested-Loop Join, SNLJ）&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;基本思想：最原始的方式，对 &lt;code&gt;users&lt;/code&gt; 的每一行，扫描 &lt;code&gt;orders&lt;/code&gt; 的所有行&lt;/li&gt;
+&lt;li&gt;特点：最慢，时间复杂度 &lt;strong&gt;O(N * M)&lt;/strong&gt;，通常被优化为其他形式&lt;/li&gt;
+&lt;li&gt;举例：对 &lt;code&gt;users&lt;/code&gt; 的 &lt;code&gt;id = 1&lt;/code&gt;，扫描 &lt;code&gt;orders&lt;/code&gt; 所有行找 &lt;code&gt;user_id = 1&lt;/code&gt;，重复此过程，效率极低&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;25-mysql-如何选择连接方式&#34;&gt;2.5. MySQL 如何选择连接方式？&lt;/h3&gt;
+&lt;p&gt;MySQL 的查询优化器会根据以下因素选择：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;索引情况&lt;/strong&gt;：有索引时优先用索引嵌套循环连接。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;表大小&lt;/strong&gt;：大表无索引时可能用哈希连接。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;内存和 I/O&lt;/strong&gt;：内存不足时可能用块嵌套循环连接。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;3-mysql-中索引的查找速度是否接近-o1&#34;&gt;3. MySQL 中，索引的查找速度是否“接近 O(1)”&lt;/h2&gt;
+&lt;h3 id=&#34;31-最常见的索引b-tree-索引&#34;&gt;3.1. 最常见的索引：B-Tree 索引&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;MySQL 中默认和最常用的索引类型是 &lt;strong&gt;B-Tree 索引&lt;/strong&gt;（特别是在 InnoDB 存储引擎中）。&lt;/li&gt;
+&lt;li&gt;B-Tree 是一种自平衡树结构，它的查找时间复杂度是 &lt;strong&gt;O(log n)&lt;/strong&gt;，其中 n 是数据的条数&lt;/li&gt;
+&lt;li&gt;为什么是 O(log n)？因为 B-Tree 的查找过程依赖于树的高度，而树的高度通常是 O(log n)比如：
+&lt;ul&gt;
+&lt;li&gt;即使存储数百万条记录，B-Tree 的高度也不会超过几层&lt;/li&gt;
+&lt;li&gt;每次查找只需要沿着树的高度走几步，所以实际耗时非常短&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;为什么常说“接近 O(1)”？&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;在实际应用中，由于 B-Tree 的高度很小（即使数据量很大），查找的实际时间几乎是个很小的常数&lt;/li&gt;
+&lt;li&gt;因此，虽然理论上是 O(log n)，但表现上“感觉”像是接近 O(1)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;在理想情况下（即完全平衡的二叉搜索树）一棵满二叉树的节点总数是：&lt;/p&gt;
+&lt;p&gt;$$
+n = 2^0 + 2^1 + 2^2 + \cdots + 2^h = \sum_{i=0}^{h} 2^i
+$$&lt;/p&gt;
+&lt;p&gt;这是一个等比数列，求和公式为：&lt;/p&gt;
+&lt;p&gt;$$
+n = 2^{h+1} - 1
+$$&lt;/p&gt;
+&lt;p&gt;两边取对数，解出高度 &lt;code&gt;h&lt;/code&gt;：&lt;/p&gt;
+&lt;p&gt;$$
+n + 1 = 2^{h+1}
+$$&lt;/p&gt;
+&lt;p&gt;$$
+\log_2(n + 1) = h + 1
+$$&lt;/p&gt;
+&lt;p&gt;$$
+h = \log_2(n + 1) - 1
+$$&lt;/p&gt;
+&lt;p&gt;因此，在最理想的情况下，树的高度近似为：&lt;/p&gt;
+&lt;p&gt;$$
+h \approx \log_2 n
+$$&lt;/p&gt;
+&lt;p&gt;这说明，在平衡的二叉搜索树中，查找、插入、删除等操作的时间复杂度为：&lt;/p&gt;
+&lt;p&gt;$$
+O(\log n)
+$$&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;32-哈希索引真正的-o1&#34;&gt;3.2. &lt;strong&gt;哈希索引：真正的 O(1)&lt;/strong&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;MySQL 也支持 &lt;strong&gt;哈希索引&lt;/strong&gt;，它的查找时间复杂度在理想情况下是 &lt;strong&gt;O(1)&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;但是，哈希索引的使用场景非常有限：
+&lt;ul&gt;
+&lt;li&gt;它主要用于 &lt;strong&gt;MEMORY 存储引擎&lt;/strong&gt;，而 InnoDB 默认不支持哈希索引（除非通过特殊配置）。&lt;/li&gt;
+&lt;li&gt;哈希索引不支持范围查询（比如 &amp;gt;、&amp;lt;），所以适用性不如 B-Tree&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;因此，在大多数情况下，说“有索引”时，指的并不是哈希索引，而是 B-Tree 索引&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;33-索引嵌套循环连接中的情况&#34;&gt;3.3. &lt;strong&gt;索引嵌套循环连接中的情况&lt;/strong&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;“因为有索引，查找速度很快”，很可能指的是 &lt;strong&gt;索引嵌套循环连接 Index Nested Loop Join&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;在这种连接中，如果连接列上有 B-Tree 索引，每次对内层表的查找时间是 接近 O(1)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;B-Tree 接近 O(1) 是怎么做到的? 不应该是 像二叉搜索树那样的 就是 lgn 吗, 如果高度很低, 横向数据就很多吧, 不也是需要遍历, 这不就成 O(n) 了吗?&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;B-Tree 和二叉搜索树的区别&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;二叉搜索树 (BST)&lt;/strong&gt;：每个节点最多只有 2 个子节点, 对于 n 个元素, 如果树是平衡的, 高度是 O(log₂ n), 比如，n = 10 亿时，高度 ≈ 30&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;B-Tree&lt;/strong&gt;：一种自平衡的&lt;strong&gt;多路搜索树&lt;/strong&gt;, 它的设计目标是保持树的高度很低(即使存储数百万条记录，B-Tree 的高度也不会超过几层)，同时允许每个节点有多个子节点（通常是几十到几百个）这种结构特别适合数据库，因为它能减少磁盘 I/O 的次数，而磁盘 I/O 是查询中最耗时的部分&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;在数据库中, 查询效率主要取决于磁盘 I/O 的次数, 而不是单纯的计算次数, B-Tree 的每一层对应一次磁盘 I/O，而高度低意味着 I/O 次数少&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
     <item>
       <title>窗口函数 聚合函数</title>
       <link>https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/007-%E7%AA%97%E5%8F%A3%E5%87%BD%E6%95%B0-%E8%81%9A%E5%90%88%E5%87%BD%E6%95%B0/</link>

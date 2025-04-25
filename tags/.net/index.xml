@@ -6,7 +6,97 @@
     <description>Recent content in .Net on 为霜的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Thu, 17 Apr 2025 21:15:52 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/.net/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 23 Apr 2025 19:50:52 +0000</lastBuildDate><atom:link href="https://blog.jiyi27.com/tags/.net/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>注解如何工作的 C#</title>
+      <link>https://blog.jiyi27.com/posts/csharp/dot-net/004-%E6%B3%A8%E8%A7%A3%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C%E7%9A%84/</link>
+      <pubDate>Wed, 23 Apr 2025 19:50:52 +0000</pubDate>
+      
+      <guid>https://blog.jiyi27.com/posts/csharp/dot-net/004-%E6%B3%A8%E8%A7%A3%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C%E7%9A%84/</guid>
+      <description>&lt;h2 id=&#34;1-mongodb-net-driver&#34;&gt;1. MongoDB .Net Driver&lt;/h2&gt;
+&lt;p&gt;不禁好奇为什么当存储对象到 mongodb 序列化为 BSON 或者 序列化为 json 时, 如果字段上有一些注解, 他们就会自动被对应的序列化框架识别, 这是怎么实现的呢:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c#&#34; data-lang=&#34;c#&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;using&lt;/span&gt; MongoDB.Bson;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;using&lt;/span&gt; Newtonsoft.Json;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;MessageModel&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// MongoDB .Net Driver 相关注解&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;    [BsonId]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;    [BsonRepresentation(BsonType.ObjectId)]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; Id { &lt;span style=&#34;color:#66d9ef&#34;&gt;get&lt;/span&gt;; &lt;span style=&#34;color:#66d9ef&#34;&gt;set&lt;/span&gt;; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// JSON 注解&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;    [JsonConverter(typeof(CustomDateTimeConverter))]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; DateTime CreateTime { &lt;span style=&#34;color:#66d9ef&#34;&gt;get&lt;/span&gt;; &lt;span style=&#34;color:#66d9ef&#34;&gt;set&lt;/span&gt;; } = DateTime.Now;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;11-mongodb-注解&#34;&gt;1.1. MongoDB 注解&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;反射（Reflection）&lt;/strong&gt;：MongoDB .Net Driver 在序列化或反序列化对象时，会通过反射检查类的结构，识别是否有特定的属性（如 &lt;code&gt;[BsonId]&lt;/code&gt;、&lt;code&gt;[BsonRepresentation]&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;序列化器（Serializer）&lt;/strong&gt;：MongoDB .Net Driver 内置了一套序列化器（&lt;code&gt;IBsonSerializer&lt;/code&gt;），它们会根据注解动态调整序列化行为
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;[BsonId]&lt;/code&gt;：标记某个字段为主键（MongoDB 中的 &lt;code&gt;_id&lt;/code&gt; 字段），驱动会确保这个字段被正确映射到 &lt;code&gt;_id&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;[BsonRepresentation(BsonType.ObjectId)]&lt;/code&gt;：指定字段在 MongoDB 中存储为 ObjectId 类型，而不是普通的字符串&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;具体流程：&lt;/strong&gt;&lt;/p&gt;</description>
+      <content>&lt;h2 id=&#34;1-mongodb-net-driver&#34;&gt;1. MongoDB .Net Driver&lt;/h2&gt;
+&lt;p&gt;不禁好奇为什么当存储对象到 mongodb 序列化为 BSON 或者 序列化为 json 时, 如果字段上有一些注解, 他们就会自动被对应的序列化框架识别, 这是怎么实现的呢:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c#&#34; data-lang=&#34;c#&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;using&lt;/span&gt; MongoDB.Bson;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;using&lt;/span&gt; Newtonsoft.Json;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;MessageModel&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// MongoDB .Net Driver 相关注解&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;    [BsonId]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;    [BsonRepresentation(BsonType.ObjectId)]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; Id { &lt;span style=&#34;color:#66d9ef&#34;&gt;get&lt;/span&gt;; &lt;span style=&#34;color:#66d9ef&#34;&gt;set&lt;/span&gt;; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// JSON 注解&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;    [JsonConverter(typeof(CustomDateTimeConverter))]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; DateTime CreateTime { &lt;span style=&#34;color:#66d9ef&#34;&gt;get&lt;/span&gt;; &lt;span style=&#34;color:#66d9ef&#34;&gt;set&lt;/span&gt;; } = DateTime.Now;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;11-mongodb-注解&#34;&gt;1.1. MongoDB 注解&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;反射（Reflection）&lt;/strong&gt;：MongoDB .Net Driver 在序列化或反序列化对象时，会通过反射检查类的结构，识别是否有特定的属性（如 &lt;code&gt;[BsonId]&lt;/code&gt;、&lt;code&gt;[BsonRepresentation]&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;序列化器（Serializer）&lt;/strong&gt;：MongoDB .Net Driver 内置了一套序列化器（&lt;code&gt;IBsonSerializer&lt;/code&gt;），它们会根据注解动态调整序列化行为
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;[BsonId]&lt;/code&gt;：标记某个字段为主键（MongoDB 中的 &lt;code&gt;_id&lt;/code&gt; 字段），驱动会确保这个字段被正确映射到 &lt;code&gt;_id&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;[BsonRepresentation(BsonType.ObjectId)]&lt;/code&gt;：指定字段在 MongoDB 中存储为 ObjectId 类型，而不是普通的字符串&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;具体流程：&lt;/strong&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;创建一个 MessageModel 实例&lt;/li&gt;
+&lt;li&gt;当你调用 MongoDB 驱动的插入方法（如 &lt;code&gt;collection.InsertOneAsync(model)&lt;/code&gt;）&lt;/li&gt;
+&lt;li&gt;驱动通过反射读取 &lt;code&gt;MessageModel&lt;/code&gt; 类的元数据，发现 &lt;code&gt;Id&lt;/code&gt; 字段有 &lt;code&gt;[BsonId]&lt;/code&gt; 和 &lt;code&gt;[BsonRepresentation(BsonType.ObjectId)]&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;驱动将 &lt;code&gt;Id&lt;/code&gt; 字段映射为 MongoDB 文档的 &lt;code&gt;_id&lt;/code&gt; 字段，并确保其值符合 ObjectId 格式&lt;/li&gt;
+&lt;li&gt;其他字段（如 &lt;code&gt;CreateTime&lt;/code&gt;）也会根据默认或自定义的序列化规则转换为 BSON 格式&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;12-json-注解&#34;&gt;1.2. JSON 注解&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;反射（Reflection）&lt;/strong&gt;：Json.NET 在序列化或反序列化对象时，会通过反射检查类的属性，查找是否有 &lt;code&gt;[JsonConverter]&lt;/code&gt; 等注解&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;自定义转换器（JsonConverter）&lt;/strong&gt;：&lt;code&gt;[JsonConverter(typeof(CustomDateTimeConverter))]&lt;/code&gt; 告诉 Json.NET 在序列化 &lt;code&gt;CreateTime&lt;/code&gt; 字段时，使用 &lt;code&gt;CustomDateTimeConverter&lt;/code&gt; 类来控制输出格式（例如，格式化日期时间为特定的字符串格式）&lt;/p&gt;
+&lt;h2 id=&#34;2-jsonnet--newtonsoftjson&#34;&gt;2. Json.NET  (Newtonsoft.Json)&lt;/h2&gt;
+&lt;p&gt;非常流行的开源 .NET 库，用于处理 JSON 数据，它在 .NET 社区中广为人知，因此很多人直接称它为 Json.NET，而不是完整的命名空间 &lt;code&gt;Newtonsoft.Json&lt;/code&gt;，它提供了一组类和方法，用于：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;序列化&lt;/strong&gt;：将 C# 对象转换为 JSON 字符串&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;反序列化&lt;/strong&gt;：将 JSON 字符串转换回 C# 对象&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;自定义序列化&lt;/strong&gt;：通过特性（如 &lt;code&gt;[JsonConverter]&lt;/code&gt; 注解）或配置，允许开发者控制 JSON 的格式和行为&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c#&#34; data-lang=&#34;c#&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; person = &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; { Name = &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Alice&amp;#34;&lt;/span&gt;, Age = &lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; json = JsonConvert.SerializeObject(person);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 输出: {&amp;#34;Name&amp;#34;:&amp;#34;Alice&amp;#34;,&amp;#34;Age&amp;#34;:30}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt; json = &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;{\&amp;#34;Name\&amp;#34;:\&amp;#34;Alice\&amp;#34;,\&amp;#34;Age\&amp;#34;:30}&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; person = JsonConvert.DeserializeObject&amp;lt;&lt;span style=&#34;color:#66d9ef&#34;&gt;dynamic&lt;/span&gt;&amp;gt;(json);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// person.Name == &amp;#34;Alice&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;JsonConvert&lt;/strong&gt; 是 &lt;strong&gt;Newtonsoft.Json&lt;/strong&gt; 命名空间中的一个静态类，属于 Json.NET 库&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+    </item>
+    
     <item>
       <title>IMapper &amp; Model Binding</title>
       <link>https://blog.jiyi27.com/posts/csharp/dot-net/003-mapper-model-binding/</link>

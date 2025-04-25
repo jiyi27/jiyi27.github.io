@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>浅谈IO模型 异步IO :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content=" 其实面试的时候一个问题就可以看清是否对这些理解透彻了, Node.js 事件循环机制如何实现的,
+关键点是, 是否可以分清 libuv 库, 事件循环, v8 引擎, nodejs 这几个概念的关系, 以及 IO 复用在这里面的作用 异步 IO 和 非阻塞 IO 的区别 又是什么
+是否理解事件驱动 1. 阻塞IO (Blocking IO) 阻塞IO是指在进行IO操作（如读写文件或网络通信）时，调用线程会一直等待直到操作完成。阻塞IO通常实现简单，但在高并发场景下效率较低，因为每个连接可能需要一个线程，线程切换和资源占用会成为瓶颈
+传统的socket编程中 使用 socket.recv() 读取网络数据时，线程会等待直到数据到达 MySQL客户端连接 传统数据库查询（如SELECT）通常是阻塞的，等待数据库返回结果 早期 Java 服务器为每个连接分配一个线程, 遇到高并发（如 C10K）时性能急剧下降, 促使了NIO（非阻塞IO）和 Netty 的流行
+C10K（Concurrency 10K）问题 指的是服务器如何高效地处理 1万个并发连接
+当并发连接数增加（例如C10K问题，即1万个并发连接），服务器需要创建大量线程（每个连接一个线程） 因为线程很多, 操作系统需要处理大量线程上下文切换, 这会消耗大量CPU资源 因此在高并发场景下, BIO模型效率低下, 性能会急剧下降, 这也是为什么 C10K 问题推动了非阻塞 IO（NIO）和异步框架（如Netty）的流行
+现在的 Spring MVC 不也是为每个连接分配一个线程吗？
+Spring MVC 通常运行在 Servlet 容器（如Tomcat、Jetty）之上, 这些容器的线程模型决定了 Spring MVC 的并发处理方式, 现代Servlet 容器并不为每个客户端连接分配一个专用线程，而是使用线程池和事件驱动机制: 在高并发场景下，线程池的大小远小于并发连接数, 线程可以复用, 极大减少了线程切换和内存开销
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/013-%E6%B5%85%E8%B0%88io%E6%A8%A1%E5%9E%8B-%E5%BC%82%E6%AD%A5io/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="浅谈IO模型 异步IO">
+<meta property="og:description" content=" 其实面试的时候一个问题就可以看清是否对这些理解透彻了, Node.js 事件循环机制如何实现的,
+关键点是, 是否可以分清 libuv 库, 事件循环, v8 引擎, nodejs 这几个概念的关系, 以及 IO 复用在这里面的作用 异步 IO 和 非阻塞 IO 的区别 又是什么
+是否理解事件驱动 1. 阻塞IO (Blocking IO) 阻塞IO是指在进行IO操作（如读写文件或网络通信）时，调用线程会一直等待直到操作完成。阻塞IO通常实现简单，但在高并发场景下效率较低，因为每个连接可能需要一个线程，线程切换和资源占用会成为瓶颈
+传统的socket编程中 使用 socket.recv() 读取网络数据时，线程会等待直到数据到达 MySQL客户端连接 传统数据库查询（如SELECT）通常是阻塞的，等待数据库返回结果 早期 Java 服务器为每个连接分配一个线程, 遇到高并发（如 C10K）时性能急剧下降, 促使了NIO（非阻塞IO）和 Netty 的流行
+C10K（Concurrency 10K）问题 指的是服务器如何高效地处理 1万个并发连接
+当并发连接数增加（例如C10K问题，即1万个并发连接），服务器需要创建大量线程（每个连接一个线程） 因为线程很多, 操作系统需要处理大量线程上下文切换, 这会消耗大量CPU资源 因此在高并发场景下, BIO模型效率低下, 性能会急剧下降, 这也是为什么 C10K 问题推动了非阻塞 IO（NIO）和异步框架（如Netty）的流行
+现在的 Spring MVC 不也是为每个连接分配一个线程吗？
+Spring MVC 通常运行在 Servlet 容器（如Tomcat、Jetty）之上, 这些容器的线程模型决定了 Spring MVC 的并发处理方式, 现代Servlet 容器并不为每个客户端连接分配一个专用线程，而是使用线程池和事件驱动机制: 在高并发场景下，线程池的大小远小于并发连接数, 线程可以复用, 极大减少了线程切换和内存开销
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/013-%E6%B5%85%E8%B0%88io%E6%A8%A1%E5%9E%8B-%E5%BC%82%E6%AD%A5io/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-04-24 22:35:26 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/013-%E6%B5%85%E8%B0%88io%E6%A8%A1%E5%9E%8B-%E5%BC%82%E6%AD%A5io/">浅谈IO模型 异步IO</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-04-24</time><span class="post-reading-time">9 分钟阅读 (1781 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E5%90%8E%E7%AB%AF%E9%9D%A2%E8%AF%95/">后端面试</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <blockquote>
+<p>其实面试的时候一个问题就可以看清是否对这些理解透彻了, Node.js 事件循环机制如何实现的,</p>
+<ul>
+<li>关键点是, 是否可以分清 libuv 库, 事件循环, v8 引擎, nodejs 这几个概念的关系, 以及 IO 复用在这里面的作用</li>
+</ul>
+<p>异步 IO 和 非阻塞 IO 的区别 又是什么</p>
+<ul>
+<li>是否理解事件驱动</li>
+</ul>
+</blockquote>
+<h2 id="1-阻塞io-blocking-io">1. 阻塞IO (Blocking IO)<a href="#1-阻塞io-blocking-io" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>阻塞IO是指在进行IO操作（如读写文件或网络通信）时，调用线程会一直等待直到操作完成。阻塞IO通常实现简单，但在<strong>高并发场景下效率较低</strong>，因为每个连接可能需要一个线程，线程切换和资源占用会成为瓶颈</p>
+<ul>
+<li>传统的socket编程中 使用 <code>socket.recv()</code> 读取网络数据时，线程会等待直到数据到达</li>
+<li>MySQL客户端连接 传统数据库查询（如SELECT）通常是阻塞的，等待数据库返回结果</li>
+</ul>
+<p>早期 Java 服务器为每个连接分配一个线程, 遇到高并发（如 C10K）时性能急剧下降, 促使了NIO（非阻塞IO）和 Netty 的流行</p>
+<blockquote>
+<p><strong>C10K（Concurrency 10K）问题</strong> 指的是服务器如何高效地处理 1万个并发连接</p>
+<ul>
+<li>当并发连接数增加（例如C10K问题，即1万个并发连接），服务器需要创建大量线程（每个连接一个线程）</li>
+<li>因为线程很多, 操作系统需要处理大量<strong>线程上下文切换</strong>, 这会消耗大量CPU资源</li>
+</ul>
+<p>因此在高并发场景下, BIO模型效率低下, 性能会急剧下降, 这也是为什么 C10K 问题推动了非阻塞 IO（NIO）和异步框架（如Netty）的流行</p>
+</blockquote>
+<blockquote>
+<p><strong>现在的 Spring MVC 不也是为每个连接分配一个线程吗？</strong></p>
+<p>Spring MVC 通常运行在 Servlet 容器（如Tomcat、Jetty）之上, 这些容器的线程模型决定了 Spring MVC 的并发处理方式, <strong>现代Servlet 容器</strong>并不为每个客户端连接分配一个专用线程，而是使用<strong>线程池</strong>和<strong>事件驱动</strong>机制: 在高并发场景下，线程池的大小远小于并发连接数, <strong>线程可以复用</strong>, 极大减少了线程切换和内存开销</p>
+<p>不太懂现代 Servlet 容器的 IO 模型, 为什么是事件驱动?</p>
+</blockquote>
+<h2 id="2-非阻塞io-non-blocking-io">2. 非阻塞IO (Non-blocking IO)<a href="#2-非阻塞io-non-blocking-io" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>非阻塞IO允许线程在执行IO操作时立即返回，而不会等待操作完成。如果数据不可用，会返回一个错误或标志（如EAGAIN），调用者<strong>需要轮询（polling）来检查状态</strong>。</p>
+<ul>
+<li><strong>C语言的socket编程</strong>：通过 <code>fcntl</code> 设置 <code>socket</code> 为 <code>O_NONBLOCK</code>, 调用 <code>recv</code> 时立即返回</li>
+<li><strong>Java NIO（New IO）</strong>：使用 <code>SocketChannel</code> 配置为非阻塞模式，检查 <code>read()</code> 返回值</li>
+</ul>
+<blockquote>
+<p>非阻塞IO虽然避免了线程阻塞，但<strong>频繁轮询会消耗CPU资源</strong>，因此单独使用非阻塞IO在高并发场景下效率也不高, <strong>非阻塞IO常与IO复用结合使用</strong>（如 <code>select</code> 或 <code>epoll</code>），单独使用效率低</p>
+</blockquote>
+<h3 id="21-为什么非阻塞io需要与io复用结合">2.1. 为什么非阻塞IO需要与IO复用结合？<a href="#21-为什么非阻塞io需要与io复用结合" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>先看看非阻塞 I/O 的使用场景 理解了非阻塞 IO 的使用场景, 才能更好的了解为什么和 IO 复用搭配使用更好, 假设你正在开发一个简单的TCP服务器, 需要同时处理多个客户端连接, 但没有使用IO复用机制:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// 简单的非阻塞TCP服务器轮询示例
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> server_fd, client_fds[MAX_CLIENTS] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> client_count <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 创建服务器socket并设置为非阻塞
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    server_fd <span style="color:#f92672">=</span> <span style="color:#a6e22e">socket</span>(AF_INET, SOCK_STREAM, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fcntl</span>(server_fd, F_SETFL, O_NONBLOCK);
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 绑定和监听代码省略...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span>(<span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 1. 轮询接受新连接
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">struct</span> sockaddr_in client_addr;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">socklen_t</span> addr_len <span style="color:#f92672">=</span> <span style="color:#66d9ef">sizeof</span>(client_addr);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">int</span> new_fd <span style="color:#f92672">=</span> <span style="color:#a6e22e">accept</span>(server_fd, (<span style="color:#66d9ef">struct</span> sockaddr<span style="color:#f92672">*</span>)<span style="color:#f92672">&amp;</span>client_addr, <span style="color:#f92672">&amp;</span>addr_len);
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(new_fd <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 新连接成功
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;新客户端连接: %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, new_fd);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">fcntl</span>(new_fd, F_SETFL, O_NONBLOCK);  <span style="color:#75715e">// 设置客户端socket为非阻塞
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            client_fds[client_count<span style="color:#f92672">++</span>] <span style="color:#f92672">=</span> new_fd;
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span>(errno <span style="color:#f92672">!=</span> EAGAIN <span style="color:#f92672">&amp;&amp;</span> errno <span style="color:#f92672">!=</span> EWOULDBLOCK) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 真正的错误
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;accept失败&#34;</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 2. 轮询检查每个客户端是否有数据可读
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> client_count; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">char</span> buffer[<span style="color:#ae81ff">1024</span>] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">int</span> ret <span style="color:#f92672">=</span> <span style="color:#a6e22e">recv</span>(client_fds[i], buffer, <span style="color:#66d9ef">sizeof</span>(buffer), <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span>(ret <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">// 成功读取数据
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;从客户端%d接收: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, client_fds[i], buffer);
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">// 处理数据并回复
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">send</span>(client_fds[i], <span style="color:#e6db74">&#34;已收到消息&#34;</span>, <span style="color:#ae81ff">12</span>, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>            } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span>(ret <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">// 客户端关闭连接
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;客户端%d断开连接</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, client_fds[i]);
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">close</span>(client_fds[i]);
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">// 移除该客户端
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                client_fds[i] <span style="color:#f92672">=</span> client_fds[<span style="color:#f92672">--</span>client_count];
+</span></span><span style="display:flex;"><span>                i<span style="color:#f92672">--</span>;  <span style="color:#75715e">// 重新检查当前位置
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span>(errno <span style="color:#f92672">!=</span> EAGAIN <span style="color:#f92672">&amp;&amp;</span> errno <span style="color:#f92672">!=</span> EWOULDBLOCK) {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">// 真正的错误
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;recv失败&#34;</span>);
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">close</span>(client_fds[i]);
+</span></span><span style="display:flex;"><span>                client_fds[i] <span style="color:#f92672">=</span> client_fds[<span style="color:#f92672">--</span>client_count];
+</span></span><span style="display:flex;"><span>                i<span style="color:#f92672">--</span>;
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 如果errno是EAGAIN或EWOULDBLOCK，表示没有数据可读，继续轮询下一个
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        }
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 可选：短暂休眠以减少CPU使用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">usleep</span>(<span style="color:#ae81ff">1000</span>);  <span style="color:#75715e">// 休眠1毫秒
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在资源受限的嵌入式系统中，可能没有复杂的IO复用机制，需要轮询多个传感器：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// 嵌入式系统传感器轮询示例
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">main_loop</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 初始化传感器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">init_sensors</span>();
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span>(<span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 轮询温度传感器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">int</span> temp_ready <span style="color:#f92672">=</span> <span style="color:#a6e22e">check_temperature_sensor</span>();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(temp_ready) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">float</span> temp <span style="color:#f92672">=</span> <span style="color:#a6e22e">read_temperature</span>();
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">process_temperature_data</span>(temp);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 轮询湿度传感器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        ...
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 执行其他任务
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">perform_periodic_tasks</span>();
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 短暂休眠以节省电量
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">sleep_ms</span>(<span style="color:#ae81ff">10</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>轮询的主要问题</strong></p>
+<ul>
+<li><strong>CPU资源浪费</strong>：大部分时间在检查没有变化的资源</li>
+<li><strong>响应延迟</strong>：轮询间隔决定了响应延迟</li>
+<li><strong>扩展性差</strong>：随着监控资源数量增加，性能下降</li>
+</ul>
+<p><strong>轮询与IO复用的对比</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c#" data-lang="c#"><span style="display:flex;"><span><span style="color:#75715e">// 纯轮询方式</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span>(<span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">int</span> i = <span style="color:#ae81ff">0</span>; i &lt; <span style="color:#ae81ff">100</span>; i++) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 每次循环都要对100个socket调用recv系统调用</span>
+</span></span><span style="display:flex;"><span>        ret = recv(sockets[i], buffer, <span style="color:#66d9ef">sizeof</span>(buffer), MSG_DONTWAIT);
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 处理结果...</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    usleep(<span style="color:#ae81ff">1000</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// IO复用方式 (epoll)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> epfd = epoll_create1(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 注册100个socket到epoll...</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span>(<span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 只有当有事件发生时才会返回</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> nfds = epoll_wait(epfd, events, MAX_EVENTS, -<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 只处理有事件的socket，通常远少于100个</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">int</span> i = <span style="color:#ae81ff">0</span>; i &lt; nfds; i++) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">int</span> fd = events[i].data.fd;
+</span></span><span style="display:flex;"><span>        ret = recv(fd, buffer, <span style="color:#66d9ef">sizeof</span>(buffer), <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 处理结果...</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<ul>
+<li>非阻塞IO避免线程等待IO操作完成, 通过IO复用（如select、poll、epoll）高效监控多个IO描述符的状态, 从而<strong>减少轮询开销并提升性能</strong></li>
+<li>除此之外, 主动轮询, 频繁调用 <code>recv()</code> 系统调用, 需要从用户态切换到内核态, 上下文切换也是一个不小的开销
+<ul>
+<li>这涉及到保存用户态的寄存器状态、切换到内核堆栈、执行内核代码等操作</li>
+<li>IO复用通过一次系统调用（例如 <code>select()</code> 或 <code>epoll_wait()</code>）监控多个 <code>socket</code> 的状态，而不是为每个 <code>socket</code> 单独调用 <code>recv()</code></li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<h2 id="3-io复用-io-multiplexing">3. IO复用 (IO Multiplexing)<a href="#3-io复用-io-multiplexing" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>IO复用是指一个线程监控多个IO描述符, 当某个描述符就绪时通知应用程序, 常见的实现包括 <code>select</code>、<code>poll</code> 和 <code>epoll</code></p>
+<ul>
+<li><strong>Nginx</strong>：使用 <code>epoll</code>（Linux）或 <code>kqueue</code>（BSD）处理高并发连接</li>
+<li><strong>Redis</strong>：基于 <code>epoll/select</code> 的单线程事件循环，高效处理客户端请求</li>
+<li><strong>libevent/libuv</strong>：高性能事件循环库，广泛用于 Nginx、Node.js 等</li>
+</ul>
+<h3 id="31-select-poll-epoll-kqueue">3.1. select, poll, epoll, kqueue<a href="#31-select-poll-epoll-kqueue" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>IO 复用 如何监听的文件描述符? 比如是否可读, 可写等&hellip;</p>
+<p>IO复用机制通过不同的API和数据结构来监听文件描述符的状态：</p>
+<table>
+  <thead>
+      <tr>
+          <th>机制</th>
+          <th>平台</th>
+          <th>监听方式</th>
+          <th>性能</th>
+          <th>最大连接数</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>select</td>
+          <td>全平台</td>
+          <td><code>fd_set</code> 位图</td>
+          <td>O(n)</td>
+          <td>受限(通常1024)</td>
+      </tr>
+      <tr>
+          <td>poll</td>
+          <td>全平台</td>
+          <td><code>pollfd</code> 结构体数组</td>
+          <td>O(n)</td>
+          <td>不受限</td>
+      </tr>
+      <tr>
+          <td>epoll</td>
+          <td>Linux</td>
+          <td><code>epoll_event</code> 结构体</td>
+          <td>O(1)</td>
+          <td>不受限</td>
+      </tr>
+      <tr>
+          <td>kqueue</td>
+          <td>BSD/macOS</td>
+          <td><code>kevent</code> 结构体</td>
+          <td>O(1)</td>
+          <td>不受限</td>
+      </tr>
+  </tbody>
+</table>
+<blockquote>
+<p><strong>select epoll 核心区别：通知机制</strong> <strong>最本质的区别</strong>: select 是主动轮询，而 epoll 是被动通知</p>
+</blockquote>
+<blockquote>
+<p>既然 select 也是轮询, 和 非阻塞 IO 中的主动轮询有什么区别呢, 为什么要用 select?</p>
+<p>在纯非阻塞 IO 轮询中, 应用程序直接轮询每个文件描述符, 假设我们有 100 个连接, 但在某一时刻只有 5 个连接有数据可读,</p>
+<p><strong>纯非阻塞 IO 轮询</strong>：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// 每次循环需要 100 次系统调用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">100</span>; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">recv</span>(sockets[i], buffer, <span style="color:#66d9ef">sizeof</span>(buffer), MSG_DONTWAIT);
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 95次调用会立即返回EAGAIN
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p><strong>select 轮询</strong>：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// 设置fd_set (一次系统调用)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">FD_ZERO</span>(<span style="color:#f92672">&amp;</span>read_fds);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">100</span>; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">FD_SET</span>(sockets[i], <span style="color:#f92672">&amp;</span>read_fds);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// select调用 (一次系统调用)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">select</span>(max_fd <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>, <span style="color:#f92672">&amp;</span>read_fds, NULL, NULL, NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 只对就绪的5个连接调用recv (5次系统调用)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">100</span>; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">FD_ISSET</span>(sockets[i], <span style="color:#f92672">&amp;</span>read_fds)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">recv</span>(sockets[i], buffer, <span style="color:#66d9ef">sizeof</span>(buffer), <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></blockquote>
+<h3 id="32-select-epoll-区别">3.2. select epoll 区别<a href="#32-select-epoll-区别" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>系统调用开销</strong>：</p>
+<ul>
+<li>
+<p>select：每次调用都需要传递完整的文件描述符集合</p>
+</li>
+<li>
+<p>epoll：通过 epoll_ctl 注册一次，之后无需重复传递</p>
+</li>
+</ul>
+<p><strong>内存拷贝</strong>：</p>
+<ul>
+<li>
+<p>select：每次调用需要在用户空间和内核空间之间复制 fd_set</p>
+</li>
+<li>
+<p>epoll：通过 mmap 共享内存，减少数据拷贝</p>
+</li>
+</ul>
+<p><strong>就绪通知方式</strong>：</p>
+<ul>
+<li>
+<p>select：返回后需要遍历所有文件描述符检查状态</p>
+</li>
+<li>
+<p>epoll：只返回就绪的文件描述符列表</p>
+</li>
+</ul>
+<h3 id="33-实际应用中的io复用">3.3. <strong>实际应用中的IO复用</strong><a href="#33-实际应用中的io复用" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Node.js使用 <code>libuv</code> 库实现事件循环，根据平台自动选择最优的IO复用机制：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// Node.js服务器示例
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">net</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;net&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">server</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">createServer</span>((<span style="color:#a6e22e">socket</span>) =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;客户端连接&#39;</span>);
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 监听可读事件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;data&#39;</span>, (<span style="color:#a6e22e">data</span>) =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;收到数据:&#39;</span>, <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">toString</span>());
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 响应客户端
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">write</span>(<span style="color:#e6db74">&#39;服务器已收到消息&#39;</span>);
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 监听关闭事件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;close&#39;</span>, () =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;客户端断开连接&#39;</span>);
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 监听错误事件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;error&#39;</span>, (<span style="color:#a6e22e">err</span>) =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#e6db74">&#39;连接错误:&#39;</span>, <span style="color:#a6e22e">err</span>);
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">server</span>.<span style="color:#a6e22e">listen</span>(<span style="color:#ae81ff">8000</span>, () =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;服务器启动在端口8000&#39;</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>Nginx使用事件驱动架构，根据平台选择最佳的IO复用机制：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// Nginx事件处理伪代码
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">ngx_event_module_init</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 根据平台选择最佳的IO复用机制
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (epoll_supported) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">use_epoll</span>();
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (kqueue_supported) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">use_kqueue</span>();
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (poll_supported) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">use_poll</span>();
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">use_select</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 事件循环
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">ngx_process_events_and_timers</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 等待事件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    events <span style="color:#f92672">=</span> <span style="color:#a6e22e">io_multiplexing_wait</span>();
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 处理所有事件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> events.count; i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        event <span style="color:#f92672">=</span> events[i];
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (event.read) {
+</span></span><span style="display:flex;"><span>            event.<span style="color:#a6e22e">read_handler</span>(event.connection);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (event.write) {
+</span></span><span style="display:flex;"><span>            event.<span style="color:#a6e22e">write_handler</span>(event.connection);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 处理定时器事件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">process_timers</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<p>应用总结:</p>
+<ul>
+<li>
+<p><strong>高并发Web服务器</strong>：如Nginx，处理数千个并发连接</p>
+</li>
+<li>
+<p><strong>单线程高性能系统</strong>：如Redis，单线程处理大量客户端请求</p>
+</li>
+</ul>
+</blockquote>
+<h2 id="4-异步-io-asynchronous-io">4. 异步 IO (Asynchronous IO)<a href="#4-异步-io-asynchronous-io" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>异步IO是指发起IO操作后立即返回, 操作系统在后台完成IO, 完成后<strong>通过回调、协程或事件通知应用程序</strong></p>
+<ul>
+<li><strong>Node.js</strong>：基于 <code>libuv</code> 的事件循环，异步处理文件、网络IO</li>
+<li><strong>Python FastAPI</strong>：依赖 <code>asyncio</code> 和 <code>uvicorn</code>，通过 <code>async/await</code> 实现异步Web服务</li>
+<li><strong>Java Netty</strong>：异步网络框架，基于NIO和事件驱动，广泛用于高性能服务器</li>
+</ul>
+<h3 id="41-异步-io-的本质-">4.1. 异步 IO 的本质 ‼️<a href="#41-异步-io-的本质-" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>思考一个问题 异步 IO (Asynchronous IO) 的本质是什么? 和非阻塞 IO 的区别呢?</p>
+<p>我的理解 异步的本质就是通过回调函数来执行, 可是异步好像也像是同步:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">response</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(....);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 执行其他的任务
+</span></span></span></code></pre></div><p>异步 IO 的本质是<strong>允许程序在 IO 操作进行时继续执行其他任务, 而不是等待 IO 操作完成</strong>, 异步 IO 确实常常通过回调函数实现, 但这只是实现机制之一, 而非本质, 异步 IO 的核心在于: <strong>IO 操作的发起与结果的获取被分离</strong>, 当 IO 操作完成后, 通过某种机制（回调函数、Promise、事件等）<strong>通知程序处理结果</strong>, 中间的等待时间可以用来做其他事情</p>
+<p>上面的例子:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">response</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">fetch</span>(...);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 执行其他的
+</span></span></span></code></pre></div><p>这里的 ⁠await 并不意味着同步。它只是让代码看起来像同步，但实际上：</p>
+<ol>
+<li><code>⁠fetch</code> 是异步操作，调用后立即返回 <code>Promise</code></li>
+<li>⁠<code>await</code> 暂停当前函数的执行，<strong>但不会阻塞 JavaScript 的主线程</strong></li>
+<li>在 IO 操作进行时，JavaScript 引擎可以执行其他任务（事件循环中的其他回调）</li>
+<li>IO 完成后，事件循环会让暂停的函数继续执行</li>
+</ol>
+<p>所以 ⁠<code>await</code> 是异步 IO 的语法糖, 让异步代码更易读, 但底层仍然是异步的</p>
+<blockquote>
+<p>虽然异步 IO 和非阻塞 IO 都允许程序在 IO 操作进行时继续执行其他任务</p>
+<p><strong>非阻塞 IO</strong>：</p>
+<ul>
+<li>非阻塞 IO 是指在发起 IO 操作时, 设置 IO 操作（如 socket 或文件描述符）为非阻塞模式, 如果 IO 操作无法立即完成, 系统调用会立即返回一个错误（如 <code>EAGAIN</code> 或 <code>EWOULDBLOCK</code>）, 而不是等待操作完成</li>
+<li>程序需要**轮询（polling）**或通过其他机制（如 <code>select</code>、<code>poll</code>、<code>epoll</code>）检查 IO 操作是否完成</li>
+<li>非阻塞 IO 的核心是<strong>系统调用立即返回</strong>, 但后续是否<strong>需要程序主动检查</strong>状态取决于具体实现</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">set_socket_nonblocking</span>(socket);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 轮询检查 + 做其他的事情 同时发生
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">while</span> (true) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">socket_ready</span>(socket)) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">read</span>(socket, buffer);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 做其他事情
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p><strong>异步 IO</strong>：</p>
+<ul>
+<li>异步 IO 是指程序发起 IO 操作后, <strong>操作系统接管整个 IO 过程</strong>, 程序无需主动关心操作状态, 当 IO 操作完成时, 操作系统通过<strong>回调、事件通知或信号</strong>等方式通知程序</li>
+<li>异步 IO 的核心是<strong>完全将 IO 操作交给操作系统</strong>, 程序只需在操作完成时处理结果, 中间<strong>无需轮询</strong></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">async_read</span>(socket, buffer, callback);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 直接做其他事情
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 操作系统会在完成后调用 callback
+</span></span></span></code></pre></div><p>有没有发现 异步IO 有点像 非阻塞IO + IO复用, 只不过是 IO 复用的部分, 自动帮你实现了?</p>
+<p>确实很像, 但并不是, 但你可以把 异步IO看作是&quot;非阻塞IO + IO复用 + 自动通知机制&quot; 的组合</p>
+<table>
+  <thead>
+      <tr>
+          <th>模型</th>
+          <th>组成部分</th>
+          <th>谁负责轮询/等待</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>非阻塞IO</td>
+          <td>仅非阻塞调用</td>
+          <td>应用程序自己轮询</td>
+      </tr>
+      <tr>
+          <td>IO复用</td>
+          <td>非阻塞IO + 集中式事件监听</td>
+          <td>应用程序通过select/epoll等等待</td>
+      </tr>
+      <tr>
+          <td>异步IO</td>
+          <td>非阻塞IO + 系统级事件监听 + 回调机制</td>
+          <td>操作系统/运行时负责</td>
+      </tr>
+  </tbody>
+</table>
+<p>在很多系统中, 异步IO 的实现确实是建立在非阻塞IO 和 IO复用的基础上的:</p>
+<ol>
+<li><strong>Node.js的libuv</strong>：在Linux上，libuv使用epoll（一种IO复用机制）实现异步IO</li>
+<li><strong>Windows的IOCP</strong>：完整的异步IO实现</li>
+<li><strong>Java的NIO</strong>：基于非阻塞IO和Selector（IO复用）</li>
+</ol>
+<p>以 Node.js 为例, 其事件循环大致如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// Node.js事件循环的简化伪代码
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">while</span> (<span style="color:#66d9ef">true</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 1. 处理定时器回调
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">processTimerCallbacks</span>();
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 2. 处理IO回调（使用epoll/kqueue/IOCP等实现）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">processIOCallbacks</span>();
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 3. 处理其他类型的事件...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">processOtherEvents</span>();
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 如果没有待处理的事件，可能会退出
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">noMoreCallbacks</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">noMoreWork</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></blockquote>
+<blockquote>
+<p>在一些异步 IO 框架（如 Node.js 的 libuv）中，底层甚至可能使用 IO 复用机制（如 epoll 或 kqueue）来实现异步效果, 例如，Node.js 的事件循环会使用 epoll 监控 socket，并在就绪时触发回调，这让人感觉异步 IO 是“非阻塞 IO + IO 复用”的封装</p>
+<p>但关键区别在于：</p>
+<ul>
+<li>异步 IO 更彻底地将 IO 操作的完成交给内核，程序无需主动执行后续的 IO 调用</li>
+<li>异步 IO 的通知是<strong>操作完成</strong>（数据已准备好），而 IO 复用通知的是<strong>描述符就绪</strong>（仍需程序执行 IO）</li>
+</ul>
+<p><strong>非阻塞 IO</strong>：</p>
+<ul>
+<li>
+<p>常用于高性能服务器开发，如 Nginx、Redis 等，它们通过事件循环和非阻塞 socket 处理大量并发连接</p>
+</li>
+<li>
+<p>适合需要细粒度控制 IO 行为的场景</p>
+</li>
+</ul>
+<p><strong>异步 IO</strong>：</p>
+<ul>
+<li>常用于需要简化并发处理的场景，如 Node.js 的异步文件操作、网络请求，或者数据库查询</li>
+</ul>
+</blockquote>
+<h3 id="42-事件驱动">4.2. 事件驱动<a href="#42-事件驱动" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>可以看 009-事件驱动-异步编程.md 文件</p>
+<h2 id="5-事件循环-和-io-复用的关系">5. 事件循环 和 IO 复用的关系<a href="#5-事件循环-和-io-复用的关系" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>强调 epoll 相较 select 的性能优势（select的O(n) vs epoll的O(1)），并提到Nginx如何利用epoll实现高并发</p>
+<p>事件循环是什么? 怎么实现的?</p>
+<blockquote>
+<p>应用总结: <strong>高并发Web服务器</strong>：如Node.js、FastAPI，处理大量HTTP请求</p>
+</blockquote>
+<h3 id="51-事件循环-event-loop">5.1. 事件循环 Event Loop<a href="#51-事件循环-event-loop" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>事件循环 是一种编程架构，用于处理和协调异步操作（主要是 IO 操作，如网络请求、文件读写等），它通过一个循环不断检查是否有事件（如 IO 操作完成、定时器触发）需要处理，<strong>并在事件发生时调用相应的回调函数</strong></p>
+<p><strong>事件循环的核心思想：</strong></p>
+<ul>
+<li><strong>1 非阻塞</strong>：事件循环允许程序在等待 IO 操作（如网络数据到达、文件读取完成）时不被阻塞，而是继续执行其他任务</li>
+<li><strong>2 事件驱动</strong>：程序通过注册事件（event）和回调函数（callback），当事件发生时，事件循环触发对应的回调来处理结果</li>
+</ul>
+<p><strong>事件循环的典型流程：</strong></p>
+<ol>
+<li>检查<strong>事件队列</strong>是否有待处理的事件</li>
+<li>如果有事件，取出事件并执行对应的回调函数</li>
+<li>执行完回调后，继续循环检查队列，直到程序结束</li>
+<li>如果没有事件，事件循环可能进入休眠状态（阻塞等待新事件），以避免 CPU 空转</li>
+</ol>
+<h3 id="52-libuv-库---事件循环--io-复用">5.2. libuv 库 - 事件循环 + IO 复用<a href="#52-libuv-库---事件循环--io-复用" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>Node.js 的事件循环实现依赖于 <strong>libuv</strong> 库, 这是一个跨平台的异步 I/O 库, 用 C 语言编写, <strong>libuv</strong> 是 Node.js 的底层支柱, Node.js 通过 <strong>V8 引擎</strong>执行 JavaScript 代码, 并通过 <strong>libuv</strong> 处理异步事件和 I/O 操作</p>
+<p>事件循环是 libuv 的核心机制, 它本质上是一个<strong>状态机</strong>, 不断地检查是否有事件需要处理, 并按照特定顺序处理这些事件:</p>
+<pre tabindex="0"><code>libuv 事件循环过程
+├── Timers
+│   ├── 处理 setTimeout() 和 setInterval() 的回调
+│   └── 回调放入 Timers 队列
+│
+├── I/O 回调
+│   ├── 处理一些系统操作的回调（如 TCP 错误）
+│   └── 回调放入 I/O 回调队列
+│
+├── Poll
+│   ├── 获取新的 I/O 事件
+│   ├── 执行与 I/O 相关的回调
+│   ├── 使用 IO 复用技术（如 epoll, kqueue, IOCP）
+│   └── 回调放入 Poll 队列
+│
+├── Check
+│   ├── 处理 setImmediate() 的回调
+│   └── 回调放入 Check 队列
+│
+├── Close Callbacks
+│   ├── 处理关闭事件的回调（如 socket.on(&#39;close&#39;)）
+│   └── 回调放入 Close Callbacks 队列
+</code></pre><blockquote>
+<p>IO 复用就是(只能) 用来监视多个文件描述符（网络连接、文件）变得可读或可写, 你猜他为什么叫 IO 复用</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fs</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;fs&#39;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">http</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;http&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;1. 程序开始执行&#39;</span>); <span style="color:#75715e">// 主线程直接执行，不属于事件循环的任何阶段
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 设置一个定时器，回调将在 Timers 阶段执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">setTimeout</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;2. 定时器回调执行&#39;</span>); <span style="color:#75715e">// 由 libuv 的 Timers 阶段处理，V8 执行 JavaScript 回调
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 在定时器回调中设置的 immediate 会在下一次事件循环的 Check 阶段执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">setImmediate</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;5. setImmediate 回调执行&#39;</span>); <span style="color:#75715e">// 由 libuv 的 Check 阶段处理，V8 执行回调
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  });
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 在定时器回调中发起的文件读取操作
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">readFile</span>(<span style="color:#e6db74">&#39;example.txt&#39;</span>, (<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">data</span>) =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 文件 I/O 完成后，此回调会被放入 Poll 阶段的队列
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// 由 libuv 通过操作系统的 IO 复用机制(epoll/kqueue/IOCP)监控文件描述符
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;6. 文件读取回调执行&#39;</span>); <span style="color:#75715e">// 由 libuv 的 Poll 阶段处理，V8 执行回调
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 在文件读取回调中设置的定时器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">setTimeout</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;8. 嵌套定时器回调执行&#39;</span>); <span style="color:#75715e">// 下一次事件循环的 Timers 阶段执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>}, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 创建 HTTP 服务器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">server</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">createServer</span>((<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 网络 I/O 回调，当有 HTTP 请求时，此回调会在 Poll 阶段执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;7. HTTP 请求回调执行&#39;</span>); <span style="color:#75715e">// 由 libuv 的 Poll 阶段处理，V8 执行回调
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">end</span>(<span style="color:#e6db74">&#39;Hello World&#39;</span>);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 关闭服务器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">server</span>.<span style="color:#a6e22e">close</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 关闭回调会在 Close Callbacks 阶段执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;9. 服务器关闭回调执行&#39;</span>); <span style="color:#75715e">// 由 libuv 的 Close Callbacks 阶段处理，V8 执行回调
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  });
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 立即设置的 immediate 会在当前事件循环的 Check 阶段执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">setImmediate</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;4. 立即的 setImmediate 回调执行&#39;</span>); <span style="color:#75715e">// 由 libuv 的 Check 阶段处理，V8 执行回调
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 发起一个网络请求
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">get</span>(<span style="color:#e6db74">&#39;http://localhost:3000&#39;</span>, (<span style="color:#a6e22e">res</span>) =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 网络 I/O 回调，此回调会在 Poll 阶段执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// 由 libuv 通过操作系统的 IO 复用机制监控网络套接字
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;data&#39;</span>, (<span style="color:#a6e22e">chunk</span>) =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;收到数据:&#39;</span>, <span style="color:#a6e22e">chunk</span>.<span style="color:#a6e22e">toString</span>());
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 启动服务器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">server</span>.<span style="color:#a6e22e">listen</span>(<span style="color:#ae81ff">3000</span>, () =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;3. 服务器启动回调执行&#39;</span>); <span style="color:#75715e">// 由 libuv 的 Poll 阶段处理，V8 执行回调
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>});
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;0. 主线程代码结束&#39;</span>); <span style="color:#75715e">// 主线程直接执行，不属于事件循环的任何阶段
+</span></span></span></code></pre></div><ul>
+<li>
+<p><strong>libuv 的角色</strong>：负责管理事件循环和异步 I/O 操作，使用操作系统的 IO 复用机制（如 epoll、kqueue、IOCP）监控文件描述符和网络套接字</p>
+</li>
+<li>
+<p><strong>V8 的角色</strong>：执行 JavaScript 代码，包括回调函数</p>
+</li>
+<li>
+<p><strong>回调队列</strong>：每个阶段都有自己的回调队列，回调按照注册顺序执行</p>
+</li>
+</ul>
+<pre tabindex="0"><code>主线程执行
+├── console.log(&#39;1. 程序开始执行&#39;)
+├── 注册 setTimeout 回调
+├── 创建 HTTP 服务器
+├── 注册 setImmediate 回调
+├── 发起 HTTP GET 请求
+├── 启动服务器监听
+└── console.log(&#39;0. 主线程代码结束&#39;)
+    └── 进入事件循环
+        │
+        ├── 第一次事件循环迭代
+        │   ├── Timers 阶段
+        │   │   └── 执行 setTimeout 回调
+        │   │       ├── console.log(&#39;2. 定时器回调执行&#39;)
+        │   │       ├── 注册 setImmediate 回调
+        │   │       └── 启动异步文件读取操作
+        │   │
+        │   ├── I/O 回调阶段
+        │   │   └── (无回调执行)
+        │   │
+        │   ├── Poll 阶段
+        │   │   └── 执行服务器启动回调
+        │   │       └── console.log(&#39;3. 服务器启动回调执行&#39;)
+        │   │
+        │   ├── Check 阶段
+        │   │   └── 执行 setImmediate 回调
+        │   │       └── console.log(&#39;4. 立即的 setImmediate 回调执行&#39;)
+        │   │
+        │   └── Close Callbacks 阶段
+        │       └── (无回调执行)
+        │
+        ├── 第二次事件循环迭代
+        │   ├── Timers 阶段
+        │   │   └── (无回调执行)
+        │   │
+        │   ├── I/O 回调阶段
+        │   │   └── (无回调执行)
+        │   │
+        │   ├── Poll 阶段
+        │   │   └── (等待 I/O 事件)
+        │   │
+        │   ├── Check 阶段
+        │   │   └── 执行第一次循环中注册的 setImmediate 回调
+        │   │       └── console.log(&#39;5. setImmediate 回调执行&#39;)
+        │   │
+        │   └── Close Callbacks 阶段
+        │       └── (无回调执行)
+        │
+        ├── 文件读取完成
+        │   └── 第三次事件循环迭代
+        │       ├── Timers 阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       ├── I/O 回调阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       ├── Poll 阶段
+        │       │   └── 执行文件读取回调
+        │       │       ├── console.log(&#39;6. 文件读取回调执行&#39;)
+        │       │       └── 注册 setTimeout 回调
+        │       │
+        │       ├── Check 阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       └── Close Callbacks 阶段
+        │           └── (无回调执行)
+        │
+        ├── HTTP 请求到达
+        │   └── 第四次事件循环迭代
+        │       ├── Timers 阶段
+        │       │   └── 执行文件读取回调中注册的 setTimeout 回调
+        │       │       └── console.log(&#39;8. 嵌套定时器回调执行&#39;)
+        │       │
+        │       ├── I/O 回调阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       ├── Poll 阶段
+        │       │   └── 执行 HTTP 请求回调
+        │       │       ├── console.log(&#39;7. HTTP 请求回调执行&#39;)
+        │       │       └── 关闭服务器
+        │       │
+        │       ├── Check 阶段
+        │       │   └── (无回调执行)
+        │       │
+        │       └── Close Callbacks 阶段
+        │           └── (无回调执行)
+        │
+        └── 服务器关闭
+            └── 最终事件循环迭代
+                ├── Timers 阶段
+                │   └── (无回调执行)
+                │
+                ├── I/O 回调阶段
+                │   └── (无回调执行)
+                │
+                ├── Poll 阶段
+                │   └── (无回调执行)
+                │
+                ├── Check 阶段
+                │   └── (无回调执行)
+                │
+                └── Close Callbacks 阶段
+                    └── 执行服务器关闭回调
+                        └── console.log(&#39;9. 服务器关闭回调执行&#39;)
+</code></pre>
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+    
+    
+      <a href="https://blog.jiyi27.com/posts/database/mongodb/003-lookup%E8%81%9A%E5%90%88%E7%AE%A1%E9%81%93/" class="button inline next">
+        MongoDB $lookup 聚合管道
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>MongoDB Docs - Golang Basics :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. Bson &amp; Marshalling &amp; Unmarshalling The process of converting a Go type to BSON is called marshalling, while the reverse process is called unmarshalling.
+Why need convert Go type to BSON? MongoDB stores documents in BSON, when we store data (our struct) into MongoDB, MongoDB Go-driver convert our struct value into bson automatically.
+The Go driver provides four main types for working with BSON data:
+D: An ordered representation of a BSON document (slice) M: An unordered representation of a BSON document (map) &hellip; D is an ordered representation of a BSON document. This type should be used when the order of the elements matters, such as MongoDB command documents. If the order of the elements does not matter, an M should be used instead. This usually used as filter in a query operation.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/golang/practice/007-mongodb-golang/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="MongoDB Docs - Golang Basics">
+<meta property="og:description" content="1. Bson &amp; Marshalling &amp; Unmarshalling The process of converting a Go type to BSON is called marshalling, while the reverse process is called unmarshalling.
+Why need convert Go type to BSON? MongoDB stores documents in BSON, when we store data (our struct) into MongoDB, MongoDB Go-driver convert our struct value into bson automatically.
+The Go driver provides four main types for working with BSON data:
+D: An ordered representation of a BSON document (slice) M: An unordered representation of a BSON document (map) &hellip; D is an ordered representation of a BSON document. This type should be used when the order of the elements matters, such as MongoDB command documents. If the order of the elements does not matter, an M should be used instead. This usually used as filter in a query operation.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/golang/practice/007-mongodb-golang/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="数据库" />
+
+
+  <meta property="article:published_time" content="2024-04-23 08:38:35 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/golang/practice/007-mongodb-golang/">MongoDB Docs - Golang Basics</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2024-04-23</time><span class="post-reading-time">4 分钟阅读 (751 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/mongodb/">mongodb</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-bson--marshalling--unmarshalling">1. Bson &amp; Marshalling &amp; Unmarshalling<a href="#1-bson--marshalling--unmarshalling" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>The process of converting a Go type to BSON is called <strong>marshalling</strong>, while the reverse process is called <strong>unmarshalling</strong>.</p>
+<p><strong>Why need convert Go type to BSON?</strong> MongoDB stores documents in <a href="https://www.mongodb.com/docs/manual/reference/bson-types/">BSON</a>, when we store data (our struct) into MongoDB,  MongoDB Go-driver convert our struct value into bson automatically.</p>
+<p>The Go driver provides four main types for working with BSON data:</p>
+<ul>
+<li><code>D</code>: An ordered representation of a BSON document (slice)</li>
+<li><code>M</code>: An unordered representation of a BSON document (map)</li>
+<li>&hellip;</li>
+</ul>
+<p>D is an ordered representation of a BSON document. This type should be used when the order of the elements matters, such as MongoDB command documents. If the order of the elements does not matter, an M should be used instead. This usually used as filter in a query operation.</p>
+<p>Like what we said before, our Go struct value needs to be converted to bson, there are <strong>Struct Tags</strong>, which is used to modify the default marshalling and unmarshalling behavior of a struct field.</p>
+<p>After we read data from MongoDB, we need to convert bson to Go struct, this is called <strong>unmarshalling</strong>. You can unmarshal BSON documents by using the <code>Decode()</code> method on the result of the <code>FindOne</code> method or any <code>*mongo.Cursor</code> instance.</p>
+<blockquote>
+<p>Note that when using <code>FindOne()</code> it returns a bson document, so you need decode it back to a Go struct value.</p>
+<p>Method <code>Find()</code> returns a <code>*mongo.Cursor</code>, we usually iterate through it so get more than one (probably) result. And <code>*mongo.Cursor</code> needs to be closed usually to free resources.</p>
+</blockquote>
+<p>Learn more:</p>
+<p><a href="https://stackoverflow.com/questions/64281675/bson-d-vs-bson-m-for-find-queries">mongodb - bson.D vs bson.M for find queries - Stack Overflow</a></p>
+<p><a href="https://www.mongodb.com/docs/drivers/go/current/fundamentals/bson/">Work with BSON - Go Driver v1.15</a></p>
+<h2 id="2-read-operation---cursor">2. Read Operation - Cursor<a href="#2-read-operation---cursor" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>To match a subset of documents, specify a <strong>query filter</strong>. In a query filter, you can match fields with <a href="https://www.mongodb.com/docs/drivers/go/current/fundamentals/crud/read-operations/query-document/#std-label-golang-literal-values">literal values</a> or with <a href="https://www.mongodb.com/docs/drivers/go/current/fundamentals/crud/read-operations/query-document/#std-label-golang-query-operators">query operators</a>. When you don&rsquo;t know which method you should use, you can go to the <a href="https://pkg.go.dev/go.mongodb.org/mongo-driver/mongo@v1.15.0#Collection">mongo driver go API</a> to check how to use them.</p>
+<h3 id="mongocursor"><code>*mongo.Cursor</code><a href="#mongocursor" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>A cursor is used to iterate over database results from read operations. <strong>A cursor is not goroutine safe</strong>. Do not use the same cursor in multiple goroutines at the same time. Method <code>Find()</code> returns a cursor.</p>
+<p>You can retrieve results individually or get all results at a time, it depends on if the number of the result is very large.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">cursor</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">coll</span>.<span style="color:#a6e22e">Find</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">TODO</span>(), <span style="color:#a6e22e">bson</span>.<span style="color:#a6e22e">D</span>{})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// retrieve results individually</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">cursor</span>.<span style="color:#a6e22e">Next</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">TODO</span>()) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">result</span> <span style="color:#a6e22e">MyStruct</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">cursor</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">result</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%+v\n&#34;</span>, <span style="color:#a6e22e">result</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// get all results at a time</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">results</span> []<span style="color:#a6e22e">MyStruct</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">cursor</span>.<span style="color:#a6e22e">All</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">TODO</span>(), <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">results</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>	panic(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>If the number and size of documents returned by your query exceeds available application memory, your program will crash. If you except a large result set, you should <a href="https://www.mongodb.com/docs/drivers/go/current/fundamentals/crud/read-operations/cursor/#std-label-golang-individual-documents">consume your cursor iteratively.</a></p>
+<blockquote>
+<p>When your application no longer requires a cursor, close the cursor with the <code>Close()</code> method. This method frees the resources your cursor consumes in both the client application and the MongoDB server.  Close the cursor when you <a href="https://www.mongodb.com/docs/drivers/go/current/fundamentals/crud/read-operations/cursor/#std-label-golang-individual-documents">retrieve documents individually</a> because those methods make a cursor <a href="https://www.mongodb.com/docs/manual/core/tailable-cursors/">tailable.</a></p>
+</blockquote>
+<h2 id="3-others">3. Others<a href="#3-others" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<ul>
+<li>
+<p>If the necessary database and collection don&rsquo;t exist when you perform a write operation, the server implicitly creates them. So you don&rsquo;t need to create database explicitly when use MongoDB.</p>
+</li>
+<li>
+<p>collection: you can use it concurrentlly</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Repository</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">db</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">mongo</span>.<span style="color:#a6e22e">Client</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">//Collection is safe for concurrent use by multiple goroutines.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">PokemonColl</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">mongo</span>.<span style="color:#a6e22e">Collection</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">NewRepository</span>(<span style="color:#a6e22e">db</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">mongo</span>.<span style="color:#a6e22e">Client</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Repository</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Repository</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">db</span>:          <span style="color:#a6e22e">db</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">PokemonColl</span>: <span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">Database</span>(<span style="color:#e6db74">&#34;pokemon&#34;</span>).<span style="color:#a6e22e">Collection</span>(<span style="color:#e6db74">&#34;pokemons&#34;</span>),
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></li>
+<li>
+<p>modify behvavior when query: opts third parameter</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Note that there is three parameters, last is optional. </span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">coll</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Collection</span>) <span style="color:#a6e22e">Find</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">filter</span> <span style="color:#66d9ef">interface</span>{},
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">opts</span> <span style="color:#f92672">...*</span><span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">FindOptions</span>) (<span style="color:#a6e22e">cur</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Cursor</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div></li>
+<li>
+<p><code>findByIdAndUpdate()</code>: <code>FindOneAndUpdate</code> returns the original document <strong>before updating</strong>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">opts</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">FindOneAndUpdate</span>().<span style="color:#a6e22e">SetReturnDocument</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">After</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">result</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">coll</span>.<span style="color:#a6e22e">FindOneAndUpdate</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">TODO</span>(), <span style="color:#a6e22e">filter</span>, <span style="color:#a6e22e">update</span>, <span style="color:#a6e22e">opts</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span></code></pre></div></li>
+</ul>
+<p>You may wonder how do I know <code>opts := options.FindOneAndUpdate().SetReturnDocument(options.After)</code> this to create an operation? And how can I know the behavior of a method? The answer is the <a href="https://pkg.go.dev/go.mongodb.org/mongo-driver@v1.15.0/mongo#Collection.FindOneAndUpdate">mongo-api</a>, you can see there is the behavor and example and all the thing you need to know before you use it.</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/04/d835acb545649837f06bbc2ce323cb3f.jpg" alt=""></p>
+<p>And you can check the <code>FindOneAndUpdateOptions</code> just click, to check what is it:</p>
+<p><img src="https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/04/e8455c6379df455fee9182e24b45305e.jpg" alt=""></p>
+<p>You can see this option is in the <code>options</code> package, and you can create it with <code>FindOneAndUpdate()</code>, so it&rsquo;s not difficult to write the codes like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">opts</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">FindOneAndUpdate</span>().<span style="color:#a6e22e">SetReturnDocument</span>(<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">After</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">result</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">coll</span>.<span style="color:#a6e22e">FindOneAndUpdate</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">TODO</span>(), <span style="color:#a6e22e">filter</span>, <span style="color:#a6e22e">update</span>, <span style="color:#a6e22e">opts</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span></code></pre></div><h2 id="references">References<a href="#references" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><a href="https://pkg.go.dev/go.mongodb.org/mongo-driver/mongo@v1.15.0#pkg-overview">mongo package - go.mongodb.org/mongo-driver/mongo - Go Packages</a></p>
+<p><a href="https://www.mongodb.com/docs/drivers/go/current/fundamentals/crud/">CRUD Operations - Go Driver v1.15</a></p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/rust/syntax/001-basics/" class="button inline prev">
+        Rust Basics - Syntax, Types
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/bugs/010-post-large-file/" class="button inline next">
+        An Analysis of high CPU and RAM usage caused by Go Program
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
