@@ -1,5 +1,5 @@
 ---
-title: 多表关联 MySQL 还是 MongoDB?
+title: 技术选型 MySQL 还是 MongoDB?
 date: 2025-03-30 11:09:56
 categories:
  - 面试
@@ -10,13 +10,11 @@ tags:
  - mysql
 ---
 
-选 NoSQL 的几个理由, 一定不是多表关联 join 慢, 不是嵌套容易, 而是:
+选 NoSQL 的几个理由, 一定不是多表关联 join 慢, 所以选嵌套, 而是:
 
-- 想快速启动小专案测试idea
+- 想快速启动小专案测试 idea
 - 资料格式不确定(unstable schema)，而未来很有可能调整
 - 资料之间没有复杂的关联(无结构, 无组织)、或未来读取资料时不需要使用JOIN 的功能
-
-我们来一一说明理由 ,首先为什么数据库结构不确定, 用 NoSQL 比较有优势?
 
 > In my 14 years of experience, most. It's not that there's anything wrong with using Mongo if it fits your use case, I've used it a handful of times, but I find that data, by nature, is almost always relational, or becomes relational very quickly as you start adding features. Then you either have to spend time and effort changing, or use Mongo like it's a relation database, which you should never do as it defeats the point. You'd be surprised how many times I've seen Mongo instances like this. Programs push data around, and it's usually related data.
 >
@@ -251,7 +249,7 @@ db.users.aggregate([
 
 **对比之下性能明显低于 MySQL 的 JOIN 操作**
 
-## 2. 连接 join 算法
+## 2. join 算法
 
 ### 2.1. 什么是表连接？
 **users 表**：
@@ -289,7 +287,7 @@ SELECT u.name, o.amount FROM users u JOIN orders o ON u.id = o.user_id;
 
 > **为什么索引的查询速度接近 O(1) ?**
 >
-> 在实际应用中，由于 B-Tree 的高度很小（即使数据量很大1亿, 可能高度就3~4），所以查找的实际时间几乎是个很小的常数, 注意  B-Tree 和 二叉搜索树不是一个东西, 后面会详细讨论这部分
+> B+ Tree 的高度很小（即使数据量很大 几百万,可能高度就3~4）, 所以查找的实际时间几乎是个很小的常数, 注意  B+ Tree 和 二叉搜索树不是一个东西, 后面会详细讨论这部分
 
 #### 2.2.3. 举例
 假设 `orders.user_id` 列上有索引：
@@ -380,17 +378,17 @@ MySQL 的查询优化器会根据以下因素选择：
 - **表大小**：大表无索引时可能用哈希连接。
 - **内存和 I/O**：内存不足时可能用块嵌套循环连接。
 
-## 3. MySQL 中，索引的查找速度是否“接近 O(1)”
+## 3. MySQL 中, 索引的查找速度是否“接近 O(1)”
 
-### 3.1. 最常见的索引：B-Tree 索引
+### 3.1. 最常见的索引：B+ Tree 索引
 
-- MySQL 中默认和最常用的索引类型是 **B-Tree 索引**（特别是在 InnoDB 存储引擎中）。
-- B-Tree 是一种自平衡树结构，它的查找时间复杂度是 **O(log n)**，其中 n 是数据的条数
-- 为什么是 O(log n)？因为 B-Tree 的查找过程依赖于树的高度，而树的高度通常是 O(log n)比如：
-  - 即使存储数百万条记录，B-Tree 的高度也不会超过几层
+- MySQL InnoDB 引擎默认的索引类型是 B+ Tree
+- B+ Tree 是一种自平衡树结构, 它的查找时间复杂度是 **O(log n)**, 其中 n 是数据的条数
+- 为什么是 `O(log n)`？因为 B-Tree 的查找过程依赖于树的高度，而树的高度通常是 `O(log n)`
+  - 即使存储数百万条记录，B+ Tree 的高度也不会超过几层
   - 每次查找只需要沿着树的高度走几步，所以实际耗时非常短
 - **为什么常说“接近 O(1)”？**
-  - 在实际应用中，由于 B-Tree 的高度很小（即使数据量很大），查找的实际时间几乎是个很小的常数
+  - 在实际应用中, 由于 B+ Tree 的高度很小（即使数据量很大），查找的实际时间几乎是个很小的常数
   - 因此，虽然理论上是 O(log n)，但表现上“感觉”像是接近 O(1)
 
 > 在理想情况下（即完全平衡的二叉搜索树）一棵满二叉树的节点总数是：
@@ -433,23 +431,8 @@ MySQL 的查询优化器会根据以下因素选择：
 
 ### 3.2. **哈希索引：真正的 O(1)**
 
-- MySQL 也支持 **哈希索引**，它的查找时间复杂度在理想情况下是 **O(1)**
-- 但是，哈希索引的使用场景非常有限：
-  - 它主要用于 **MEMORY 存储引擎**，而 InnoDB 默认不支持哈希索引（除非通过特殊配置）。
-  - 哈希索引不支持范围查询（比如 >、<），所以适用性不如 B-Tree
-- 因此，在大多数情况下，说“有索引”时，指的并不是哈希索引，而是 B-Tree 索引
-
-### 3.3. **索引嵌套循环连接中的情况**
-
-- “因为有索引，查找速度很快”，很可能指的是 **索引嵌套循环连接 Index Nested Loop Join**
-- 在这种连接中，如果连接列上有 B-Tree 索引，每次对内层表的查找时间是 接近 O(1)
-
-> B-Tree 接近 O(1) 是怎么做到的? 不应该是 像二叉搜索树那样的 就是 lgn 吗, 如果高度很低, 横向数据就很多吧, 不也是需要遍历, 这不就成 O(n) 了吗?
->
->  **B-Tree 和二叉搜索树的区别**
->
-> - **二叉搜索树 (BST)**：每个节点最多只有 2 个子节点, 对于 n 个元素, 如果树是平衡的, 高度是 O(log₂ n), 比如，n = 10 亿时，高度 ≈ 30
-> - **B-Tree**：一种自平衡的**多路搜索树**, 它的设计目标是保持树的高度很低(即使存储数百万条记录，B-Tree 的高度也不会超过几层)，同时允许每个节点有多个子节点（通常是几十到几百个）这种结构特别适合数据库，因为它能减少磁盘 I/O 的次数，而磁盘 I/O 是查询中最耗时的部分
->
-> 在数据库中, 查询效率主要取决于磁盘 I/O 的次数, 而不是单纯的计算次数, B-Tree 的每一层对应一次磁盘 I/O，而高度低意味着 I/O 次数少
-
+- MySQL 也支持 哈希索引，它的查找时间复杂度在理想情况下是 O(1)
+- 但是，哈希索引的使用场景非常有限
+  - 它主要用于 **MEMORY 存储引擎**, 而 InnoDB 默认不支持哈希索引（除非通过特殊配置）
+  - 哈希索引不支持范围查询（比如 >、<），所以适用性不如 B+ Tree
+- 因此，在大多数情况下，说“有索引”时，指的并不是哈希索引，而是 B+ Tree 索引
