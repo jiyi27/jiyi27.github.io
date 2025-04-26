@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>解释大名鼎鼎的 B&#43; Tree :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 节点 键值 指针 是什么 好奇 B&#43; Tree 接近 O(1) 是怎么做到的, 不应该是 像二叉搜索树那样的 就是 lgn 吗, 如果高度很低, 横向数据就很多吧, 不也是需要遍历, 单是横向数据这不就是 O(n) 了吗?
+想要了解这些问题, 还是需要了解一下 B&#43; Tree 的结构
+术语 含义 节点 (Node) 磁盘页 (默认 16 KB)，在 B&#43; 树层次结构中的一个元素 非叶子节点 (Internal / Branch page) 存放键值 &#43; 子页指针，负责导航 叶子节点 (Leaf page) 1) 聚簇索引：存放键值 &#43; 整行数据 2) 二级索引：存放键值 &#43; 主键值 指针 在磁盘实现里是“页号 &#43; 槽号”或 RowID；在逻辑图中可视作“去哪个子节点” 键值 (Key) 用来比较、决定走哪条路径的字段值 一个节点可以存多个数据, 并不是一个节点只能存一个数据, 非叶子节点, 叶子节点都是这样, 比如下面的描述:
+一个聚簇索引的叶子节点可以存 200 行数据 一个二级索引的叶子节点可以存 200 个主键 也就是说一个节点可以存多个数据, 只是节点种类不同, 索引种类不同(聚簇索引, 二级索引), 存储的数据是不一样的:
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/009-b&#43;-tree/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="解释大名鼎鼎的 B&#43; Tree">
+<meta property="og:description" content="1. 节点 键值 指针 是什么 好奇 B&#43; Tree 接近 O(1) 是怎么做到的, 不应该是 像二叉搜索树那样的 就是 lgn 吗, 如果高度很低, 横向数据就很多吧, 不也是需要遍历, 单是横向数据这不就是 O(n) 了吗?
+想要了解这些问题, 还是需要了解一下 B&#43; Tree 的结构
+术语 含义 节点 (Node) 磁盘页 (默认 16 KB)，在 B&#43; 树层次结构中的一个元素 非叶子节点 (Internal / Branch page) 存放键值 &#43; 子页指针，负责导航 叶子节点 (Leaf page) 1) 聚簇索引：存放键值 &#43; 整行数据 2) 二级索引：存放键值 &#43; 主键值 指针 在磁盘实现里是“页号 &#43; 槽号”或 RowID；在逻辑图中可视作“去哪个子节点” 键值 (Key) 用来比较、决定走哪条路径的字段值 一个节点可以存多个数据, 并不是一个节点只能存一个数据, 非叶子节点, 叶子节点都是这样, 比如下面的描述:
+一个聚簇索引的叶子节点可以存 200 行数据 一个二级索引的叶子节点可以存 200 个主键 也就是说一个节点可以存多个数据, 只是节点种类不同, 索引种类不同(聚簇索引, 二级索引), 存储的数据是不一样的:
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/009-b&#43;-tree/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-04-26 17:15:56 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/009-b&#43;-tree/">解释大名鼎鼎的 B+ Tree</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-04-26</time><span class="post-reading-time">6 分钟阅读 (1238 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9D%A2%E8%AF%95/">数据库面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/mysql/">mysql</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-节点-键值-指针-是什么">1. 节点 键值 指针 是什么<a href="#1-节点-键值-指针-是什么" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>好奇 B+ Tree 接近 O(1) 是怎么做到的, 不应该是 像二叉搜索树那样的 就是 <code>lgn</code> 吗, 如果高度很低, 横向数据就很多吧, 不也是需要遍历, 单是横向数据这不就是 <code>O(n) </code>了吗?</p>
+<p>想要了解这些问题, 还是需要了解一下 B+ Tree 的结构</p>
+<table>
+  <thead>
+      <tr>
+          <th>术语</th>
+          <th>含义</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>节点 (Node)</td>
+          <td>磁盘页 (默认 16 KB)，在 B+ 树层次结构中的一个元素</td>
+      </tr>
+      <tr>
+          <td>非叶子节点 (Internal / Branch page)</td>
+          <td>存放<strong>键值 + 子页指针</strong>，负责导航</td>
+      </tr>
+      <tr>
+          <td>叶子节点 (Leaf page)</td>
+          <td>1) 聚簇索引：存放<strong>键值 + 整行数据</strong> 2) 二级索引：存放<strong>键值 + 主键值</strong></td>
+      </tr>
+      <tr>
+          <td>指针</td>
+          <td>在磁盘实现里是“页号 + 槽号”或 RowID；在逻辑图中可视作“去哪个子节点”</td>
+      </tr>
+      <tr>
+          <td>键值 (Key)</td>
+          <td>用来比较、决定走哪条路径的字段值</td>
+      </tr>
+  </tbody>
+</table>
+<blockquote>
+<p>一个节点可以存多个数据, 并不是一个节点只能存一个数据, 非叶子节点, 叶子节点都是这样, 比如下面的描述:</p>
+<ul>
+<li>一个聚簇索引的叶子节点可以存 200 行数据</li>
+<li>一个二级索引的叶子节点可以存 200 个主键</li>
+</ul>
+<p>也就是说一个节点可以存多个数据, 只是节点种类不同, 索引种类不同(聚簇索引, 二级索引), 存储的数据是不一样的:</p>
+<ul>
+<li>无论聚簇索引还是二级索引, 非叶子节点存的都是 多个指针 + 多个键值
+<ul>
+<li>键值用来与要查询的条件 (比如 id, name) 比较接下来 (下一层) 去哪个指针找下一个节点</li>
+<li>指针用来指向子节点 (子页) 的位置</li>
+</ul>
+</li>
+<li>叶子节点就有所不同了
+<ul>
+<li>聚簇索引的叶子节点存储的是 <strong>键值 + 整行数据</strong></li>
+<li>二级索引存放<strong>键值 + 主键值</strong></li>
+</ul>
+</li>
+</ul>
+<p>注意哪个列的索引, 对应的 B+ Tree 的节点的键值类型, 就是那个列的类型, 比如 <code>name</code> 对应的索引 B+ Tree 每个节点的多个键值的类型肯定是 <code>name</code>, 而聚簇索引是根据 id 建立的 B+ Tree, 所以每个非叶子节点 存的是很多个 id + 指针 这样的数据, 此时 id 是键值:</p>
+<p>所以上面我们说: <em>键值用来与要查询的条件 (比如 id, name) 比较接下来 (下一层) 去哪个指针找下一个节点</em>, 现在可以理解了吧</p>
+</blockquote>
+<h2 id="2-详细结构介绍">2. 详细结构介绍<a href="#2-详细结构介绍" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>叶子节点</strong>：存储所有键值和数据, 并通过<strong>双向链表</strong>连接, 便于范围查询</p>
+<p><strong>非叶子节点</strong>：由&quot;键值&quot;和&quot;指针&quot;组成, 用于导航, <strong>不存储实际数据</strong></p>
+<ul>
+<li><strong>键值(Key)</strong>: 用于比较和决策的值</li>
+<li><strong>指针(Pointer)</strong>: 指向下一层节点的地址</li>
+</ul>
+<p>在一个非叶子节点中, 指针的数量总是比键值的数量多1个, 每个指针指向下一层的一个节点, 非叶子节点在物理结构上是一个连续的数据区域, 其中键值和指针是按特定顺序交替排列的:</p>
+<pre tabindex="0"><code>[指针P1] [键值K1] [指针P2] [键值K2] [指针P3]
+</code></pre><p>其实指针笔键值多一个很好理解, 比如一个节点有 3 个键值 010, 020, 030, 那数据就有四个范围:</p>
+<ul>
+<li>x &lt; 010</li>
+<li>010 &lt;= x &lt; 020</li>
+<li>020 &lt;= x &lt; 030</li>
+<li>030 &lt;= x</li>
+</ul>
+<p>所以需要四个指针来指明 x 在哪个节点上, 通过实际例子解释一下 聚簇索引 B+ Tree 的结构</p>
+<h3 id="22-primary-key-聚簇索引结构">2.2. PRIMARY KEY 聚簇索引结构<a href="#22-primary-key-聚簇索引结构" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<table>
+  <thead>
+      <tr>
+          <th>id</th>
+          <th>name</th>
+          <th>age</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>1</td>
+          <td>Alice</td>
+          <td>23</td>
+      </tr>
+      <tr>
+          <td>2</td>
+          <td>Bob</td>
+          <td>31</td>
+      </tr>
+      <tr>
+          <td>3</td>
+          <td>Cindy</td>
+          <td>27</td>
+      </tr>
+      <tr>
+          <td>4</td>
+          <td>David</td>
+          <td>35</td>
+      </tr>
+      <tr>
+          <td>5</td>
+          <td>Emma</td>
+          <td>22</td>
+      </tr>
+      <tr>
+          <td>6</td>
+          <td>Frank</td>
+          <td>28</td>
+      </tr>
+      <tr>
+          <td>7</td>
+          <td>Grace</td>
+          <td>30</td>
+      </tr>
+      <tr>
+          <td>8</td>
+          <td>Helen</td>
+          <td>26</td>
+      </tr>
+      <tr>
+          <td>9</td>
+          <td>Iris</td>
+          <td>24</td>
+      </tr>
+      <tr>
+          <td>10</td>
+          <td>Jack</td>
+          <td>29</td>
+      </tr>
+  </tbody>
+</table>
+<p>假设每个页能装 4 行记录（仅用于示意）:</p>
+<pre tabindex="0"><code>                 (Root, non-leaf page)
+                 +------------------+
+                 | key=5 | ptr(P2)  |
+ptr(P1)----------| key=9 | ptr(P3)  |
+                 +------------------+
+                    /         \
+         +--------------+   +--------------+
+         | leaf page P1 |   | leaf page P2 |    ……
+         +--------------+   +--------------+
+</code></pre><table>
+  <thead>
+      <tr>
+          <th>页号</th>
+          <th>类型</th>
+          <th>内容 (简化后的顺序存储)</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>P1</td>
+          <td>叶子</td>
+          <td>(1,Alice,23) (2,Bob,31) (3,Cindy,27) (4,David,35)</td>
+          <td>键≤5</td>
+      </tr>
+      <tr>
+          <td>P2</td>
+          <td>叶子</td>
+          <td>(5,Emma,22) (6,Frank,28) (7,Grace,30) (8,Helen,26)</td>
+          <td>5&lt;键≤9</td>
+      </tr>
+      <tr>
+          <td>P3</td>
+          <td>叶子</td>
+          <td>(9,Iris,24) (10,Jack,29)</td>
+          <td>键&gt;9</td>
+      </tr>
+      <tr>
+          <td>Root</td>
+          <td>非叶子</td>
+          <td>key=5 →P2, key=9 →P3</td>
+          <td>P1 通过最左指针隐式链接</td>
+      </tr>
+  </tbody>
+</table>
+<p>解释</p>
+<ul>
+<li>
+<p>非叶子节点 Root 里只保存分隔点 key=5、key=9 以及指向子页的指针</p>
+</li>
+<li>
+<p>叶子节点 P1/P2/P3 按主键顺序链表相连，保存 “键值 + 整行”</p>
+</li>
+</ul>
+<p>查询 <code>SELECT * FROM users WHERE id = 7;</code></p>
+<ol>
+<li>
+<p>从 Root 读取, 7 &gt; 5 走 ptr(P2)</p>
+</li>
+<li>
+<p>P2 里二分查找, 定位记录 (7,Grace,30)</p>
+</li>
+<li>
+<p>直接返回整行, 因为行数据就在叶子</p>
+</li>
+</ol>
+<blockquote>
+<p>聚簇索引和非聚簇索引的结构一样, 只是叶子节点存储的内容不一样, 前者存 键值 + 对应的一整行数据, 后者存 键值 + 主键值</p>
+</blockquote>
+<h3 id="22-二级索引-idx_name-结构">2.2. 二级索引 idx_name 结构<a href="#22-二级索引-idx_name-结构" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>假设每个页能装 4 行记录（仅用于示意）：</p>
+<pre tabindex="0"><code>             (Root, non-leaf)
+             +--------------------+
+             | key=Bob | ptr(S2)  |
+ptr(S1)------| key=Helen| ptr(S3) |
+             +--------------------+
+</code></pre><table>
+  <thead>
+      <tr>
+          <th>页号</th>
+          <th>类型</th>
+          <th>内容</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>S1</td>
+          <td>叶子</td>
+          <td>(Alice,1) (Bob,2) (Cindy,3) (David,4)</td>
+          <td>键 &lt; Bob</td>
+      </tr>
+      <tr>
+          <td>S2</td>
+          <td>叶子</td>
+          <td>(Emma,5) (Frank,6) (Grace,7) (Helen,8)</td>
+          <td>Bob ≤ 键 &lt; Helen</td>
+      </tr>
+      <tr>
+          <td>S3</td>
+          <td>叶子</td>
+          <td>(Iris,9) (Jack,10)</td>
+          <td>键 ≥ Helen</td>
+      </tr>
+      <tr>
+          <td>Root</td>
+          <td>非叶子</td>
+          <td>key=Bob →S2, key=Helen →S3</td>
+          <td>S1 通过最左指针隐式链接</td>
+      </tr>
+  </tbody>
+</table>
+<p>查询 <code>SELECT age FROM users WHERE name = 'Grace';</code> 步骤</p>
+<ol>
+<li>从 idx_name.Root 读，&lsquo;Grace&rsquo; &gt; &lsquo;Bob&rsquo; 且 &lt; &lsquo;Helen&rsquo; 走 S2</li>
+<li>在 S2 找到条目 (&lsquo;Grace&rsquo;, 7)</li>
+<li>拿到主键 id=7，用它去聚簇索引 Root，再走 P2，然后定位 (7,Grace,30)</li>
+<li>取出 age=30</li>
+</ol>
+<h3 id="23-决策流程总结">2.3. 决策流程总结<a href="#23-决策流程总结" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>优先检查能否用索引：</p>
+<ul>
+<li>查询包含 WHERE id = ? → 使用聚簇索引</li>
+<li>查询 WHERE name = ? → 使用 idx_name，然后回表</li>
+</ul>
+<p>执行器根据统计信息估算成本，再选择走哪个索引（或全表扫）, 一旦选定索引，引擎从 Root 开始，逐层比较键值直到叶子, 如果是二级索引，还需拿到主键，按同样 B+ 树规则走聚簇树</p>
+<h2 id="3-叶子节点是双向连表的优势">3. 叶子节点是双向连表的优势<a href="#3-叶子节点是双向连表的优势" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>假设我们有一个订单表<code>orders</code>，包含订单ID、客户名、订单日期和金额：</p>
+<pre tabindex="0"><code>orders(order_id, customer_name, order_date, amount)
+</code></pre><p>其中 <code>order_id</code> 是主键，在 <code>order_date</code> 上创建了索引:</p>
+<pre tabindex="0"><code>(1, &#39;张三&#39;, &#39;2023-01-15&#39;, 100)
+(2, &#39;李四&#39;, &#39;2023-02-20&#39;, 200)
+(3, &#39;王五&#39;, &#39;2023-03-10&#39;, 150)
+(4, &#39;赵六&#39;, &#39;2023-03-15&#39;, 300)
+(5, &#39;钱七&#39;, &#39;2023-04-05&#39;, 250)
+</code></pre><p>在B+ Tree索引结构中，<code>order_date</code> 索引的叶子节点可能如下所示:</p>
+<pre tabindex="0"><code>[2023-01-15, ID=1] &lt;-&gt; [2023-02-20, ID=2] &lt;-&gt; [2023-03-10, ID=3] &lt;-&gt; [2023-03-15, ID=4] &lt;-&gt; [2023-04-05, ID=5]
+</code></pre><p>这些节点通过双向链表连接, 每个节点都有指向前一个和后一个节点的指针,</p>
+<p><strong>范围查询</strong> 假设我们需要查询3月份的所有订单:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> orders <span style="color:#66d9ef">WHERE</span> order_date <span style="color:#66d9ef">BETWEEN</span> <span style="color:#e6db74">&#39;2023-03-01&#39;</span> <span style="color:#66d9ef">AND</span> <span style="color:#e6db74">&#39;2023-03-31&#39;</span>;
+</span></span></code></pre></div><p>数据库会：</p>
+<ul>
+<li>通过B+树索引结构找到第一个满足条件的叶子节点（&lsquo;2023-03-10&rsquo;）</li>
+<li>然后沿着链表顺序遍历，直到找到超出范围的节点</li>
+<li>无需回到树的上层节点再向下查找</li>
+</ul>
+<p>如果没有双向链表, 每找到一个节点都需要<strong>从根节点重新遍历</strong>, 效率会大大降低</p>
+<p><strong>排序查询</strong> 执行如下排序查询</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> orders <span style="color:#66d9ef">ORDER</span> <span style="color:#66d9ef">BY</span> order_date;
+</span></span></code></pre></div><p>由于叶子节点已经按 <code>order_date</code> 排序并通过链表连接, 数据库只需按链表顺序读取即可, 无需额外排序步骤</p>
+<p><strong>分页查询</strong> 当执行分页查询时：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> orders <span style="color:#66d9ef">ORDER</span> <span style="color:#66d9ef">BY</span> order_date <span style="color:#66d9ef">LIMIT</span> <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">2</span>;
+</span></span></code></pre></div><p>数据库可以：</p>
+<ul>
+<li>找到排序起始位置</li>
+<li>跳过前2条记录</li>
+<li>沿着链表读取接下来的2条记录</li>
+</ul>
+<p><strong>全表扫描</strong> 如果需要全表扫描，可以从第一个叶子节点开始，沿着链表顺序读取所有数据，这种顺序访问<strong>比随机访问磁盘更高效</strong></p>
+<h2 id="4-为什么索引查询速度接近-o1">4. 为什么索引查询速度接近 O(1)<a href="#4-为什么索引查询速度接近-o1" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>有人分析说 因为 B+ Tree 树的高度很低, 一般都是 3~4, 所以 I/O 次数 只有 3 ~ 4 次, 接近常数 1, 可是我认为, B+ Tree 不像 二叉搜索树那样, 只有每个节点只有两个子节点, 有可能会有多个节点, 比如 100 个, 这没关系, 因为每个节点页都由上层 的节点 通过指针指出, 可是每个节点也就是数据页可能会有多个数据啊, 比如 100 个, 这个时候 定位数据, 复杂度不应该是 O(n) 吗?</p>
+<h3 id="42-公式推导">4.2. 公式推导<a href="#42-公式推导" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>一次查找包含两个独立成本</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>步骤</th>
+          <th>在 B⁺Tree 中做什么</th>
+          <th>理论开销</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>A. 自根向叶走指针</td>
+          <td>需要读取「树高 h」个节点页</td>
+          <td>O(h) = O(logₘ N)</td>
+      </tr>
+      <tr>
+          <td>B. 在单个节点里找分隔键</td>
+          <td>对 m-1 个键比较，可做线性查找或二分查找</td>
+          <td>O(m) 或 O(log m)</td>
+      </tr>
+  </tbody>
+</table>
+<p>记号</p>
+<ul>
+<li>m = 分叉因子（一个非叶子能容纳的最大子页数）</li>
+<li>N = 总记录行数</li>
+</ul>
+<p>假设</p>
+<ul>
+<li>
+<p>页大小 = 16 KB</p>
+</li>
+<li>
+<p>非叶子节点：每条索引条目 24 B（键 + 子页号）</p>
+<ul>
+<li>每页可容纳 ⌊16384 / 24⌋ ≈ <strong>680 个分叉</strong>，即 m ≈ 680</li>
+</ul>
+</li>
+<li>
+<p>叶子节点：每条索引项 40 B（键 + 主键）</p>
+<ul>
+<li>每页 ≈ 400 条记录</li>
+</ul>
+</li>
+</ul>
+<p>计算树高 h
+$$
+h = \lceil \log_{m}(N) \rceil
+$$</p>
+<ul>
+<li>
+<p>N (行数)</p>
+</li>
+<li>
+<p>h (向上取整)</p>
+</li>
+</ul>
+<table>
+  <thead>
+      <tr>
+          <th>N (行数)</th>
+          <th>h (向上取整)</th>
+          <th>需要随机 I/O</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>100 万</td>
+          <td>⌈log₆₈₀(10⁶)⌉ = 2.4 → 3</td>
+          <td>3 次</td>
+      </tr>
+      <tr>
+          <td>1 亿</td>
+          <td>⌈log₆₈₀(10⁸)⌉ = 3.2 → 4</td>
+          <td>4 次</td>
+      </tr>
+      <tr>
+          <td>100 亿</td>
+          <td>⌈log₆₈₀(10¹⁰)⌉ = 4.0 → 4</td>
+          <td>4 次</td>
+      </tr>
+  </tbody>
+</table>
+<ul>
+<li>N 从 10⁶ ➜ 10¹⁰ 扩大一万倍，h 只从 3 ➜ 4</li>
+<li>若页缓存命中，步骤 A 甚至是 0 次磁盘 I/O，仅 CPU 比较</li>
+</ul>
+<p>节点内比较成本</p>
+<ul>
+<li>
+<p>线性查找：≤ 680 次比较</p>
+</li>
+<li>
+<p>二分查找：⌈log₂ 680⌉ ≈ 10 次比较</p>
+</li>
+</ul>
+<p>在现代 CPU 上比较 10~680 个整数几乎可忽略, 于是<strong>总体壁钟时间看起来几乎不随 N 增长</strong>，这就是「接近 O(1)」的直观感受</p>
+<blockquote>
+<p>壁钟时间是程序运行的“真实世界时间”, 而这里强调它几乎不受 N 影响, 直观上接近常数时间复杂度,</p>
+</blockquote>
+<h3 id="42-实际数据比较">4.2. 实际数据比较<a href="#42-实际数据比较" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>我们来比较一下 做一次随机磁盘 IO + 把数据页拷贝进内存 的时间 和 CPU 比较一次的耗时做对比:</p>
+<table>
+  <thead>
+      <tr>
+          <th>存储介质</th>
+          <th>一次随机 I/O 大概耗时(包括拷贝进内存的时间)</th>
+          <th>CPU 比较一次耗时</th>
+          <th>数量级差距</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>机械盘</td>
+          <td>≈ 5 ms</td>
+          <td>≈ 5 ns</td>
+          <td>≈ 1 000 000 : 1</td>
+      </tr>
+      <tr>
+          <td>SATA SSD</td>
+          <td>≈ 100 µs</td>
+          <td>≈ 5 ns</td>
+          <td>≈ 20 000 : 1</td>
+      </tr>
+      <tr>
+          <td>NVMe SSD</td>
+          <td>≈ 20 µs</td>
+          <td>≈ 5 ns</td>
+          <td>≈ 4 000 : 1</td>
+      </tr>
+  </tbody>
+</table>
+<ul>
+<li>即使换成 NVMe，随机 I/O 仍比 CPU 比较慢四个数量级</li>
+<li>因此<strong>决定查询延迟的第一因素仍是“要做几次随机 I/O”</strong></li>
+<li>B⁺Tree 通过把分叉数 m 做到几百，使树高 h≤3–4，从而把“随机 I/O 次数”限制到 3–4 次——这远比 “<strong>页内要比较多少键”</strong> 重要</li>
+</ul>
+<blockquote>
+<p><strong>为什么复杂度推导 没有包括 叶子页找目标记录的开销</strong></p>
+<p>在 <code>O(log N)</code> 级别推导中, 页内比较最多几百次, 比一次 I/O 快万倍, 可忽略不计</p>
+</blockquote>
+<p>有人可能会问 你把 在存储介质 <em>一次随机 I/O 耗时</em> 与 <em>CPU 比较一次耗时</em> 进行比较准确吗?</p>
+<p><em>一次磁盘随机 I/O 耗时</em> 不应该加上从内存读取数据的时间吗, 因为数据加载的过程, 是把该节点的整个数据页加载进内存, 然后再比较数据,</p>
+<p>下面把 <em>一次磁盘随机 I/O 到真正完成键值比较</em> 所经历的全部路径拆开, 给出各阶段的量级, 看看 <strong>磁盘→内存→CPU</strong> 各环节到底谁是瓶颈, 为便于对比, 以一次读取 16 KB InnoDB 页为例:</p>
+<table>
+  <thead>
+      <tr>
+          <th>阶段</th>
+          <th>机械盘</th>
+          <th>SATA SSD</th>
+          <th>NVMe SSD</th>
+          <th>仅 DRAM (页已在 Buffer Pool)</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>A. 设备随机寻道/寻址</td>
+          <td>≈ 5 ms</td>
+          <td>≈ 50 µs</td>
+          <td>≈ 10 µs</td>
+          <td>0</td>
+          <td>硬盘最耗时；SSD 仍需闪存地址译码+控制器排队</td>
+      </tr>
+      <tr>
+          <td>B. 媒体读出到控制器缓存</td>
+          <td>≈ 0.2 ms</td>
+          <td>≈ 40 µs</td>
+          <td>≈ 5 µs</td>
+          <td>0</td>
+          <td>顺序传输 16 KB 原始位流</td>
+      </tr>
+      <tr>
+          <td>C. PCIe/SATA DMA 传到主机 DRAM</td>
+          <td>≈ 50 µs</td>
+          <td>≈ 10 µs</td>
+          <td>≈ 3 µs</td>
+          <td>0</td>
+          <td>含协议栈、DMA 成本</td>
+      </tr>
+      <tr>
+          <td>D. OS/Buffer Pool 拷贝 + 校验</td>
+          <td>≈ 5 µs</td>
+          <td>≈ 5 µs</td>
+          <td>≈ 5 µs</td>
+          <td>≈ 5 µs</td>
+          <td>memcpy + CRC，一次 copy≈0.8 µs，算上校验约 5 µs</td>
+      </tr>
+      <tr>
+          <td>E. InnoDB 页目录二分 + 线性扫</td>
+          <td>≈ 0.05 µs</td>
+          <td>≈ 0.05 µs</td>
+          <td>≈ 0.05 µs</td>
+          <td>≈ 0.05 µs</td>
+          <td>几十次 CPU 指令：10–100 ns</td>
+      </tr>
+      <tr>
+          <td>总耗时</td>
+          <td>≈ 5.26 ms</td>
+          <td>≈ 115 µs</td>
+          <td>≈ 18 µs</td>
+          <td>≈ 5 µs</td>
+          <td>A+B+C 占主导，D、E 几乎可忽略</td>
+      </tr>
+  </tbody>
+</table>
+<p>数值按公开硬件数据取近似中位数, 偏差 1–2 倍不影响量级结论, 结论</p>
+<ul>
+<li>
+<p>随机 I/O 的主耗时就是 <strong>设备端寻址 + 媒体读出</strong>（A+B）</p>
+</li>
+<li>
+<p>对机械盘：&gt; 99 % 的时间耗在磁头定位和旋转等待（A）</p>
+</li>
+<li>
+<p>对 SSD：A 仍是大头，只是毫秒级→微秒级</p>
+</li>
+<li>
+<p><strong>DMA + 内存拷贝</strong>（C+D）加起来只是几个微秒，机械盘情况下占比 &lt; 0.1 %</p>
+<ul>
+<li>因此前面的表格 磁盘 IO 时间 <code>5 ms / 100 µs / 20 µs</code> 这种 “磁盘随机 I/O 耗时” 通常已经把拷贝进内存的时间统合在内；再细分也不改变大局——I/O 仍比内存-CPU 操作慢三个以上数量级</li>
+</ul>
+</li>
+<li>
+<p><strong>页内比较</strong>（E）只有几十纳秒；即便连带一次 L1→L2 缓存失效也就是百纳秒量级, 和微秒～毫秒的 I/O 相比同样可以忽略</p>
+</li>
+<li>
+<p>如果页已在 Buffer Pool（只需 D+E）：总耗时约 5 µs，比 NVMe 随机 I/O 快 3～4 倍，比机械盘快千倍；此时查找延迟主要是 <strong>CPU-DRAM</strong> 以及锁、版本检查等开销</p>
+</li>
+</ul>
+<p>所以说 “数据库查找最贵的是随机 I/O” 是对的: 只要页不在内存，I/O 时间会压倒后续所有 CPU 计算</p>
+<blockquote>
+<p>在数据库查询中, <strong>磁盘随机 I/O 操作是最耗时的部分</strong>, 而不是单纯的计算次数, B-Tree 的每一层对应一次磁盘 I/O, 而高度低意味着 I/O 次数少, 只要页不在内存, I/O 时间会压倒后续所有 CPU 计算, 因为 CPU 比较数据 &amp; 内存拷贝视为“几乎免费”在数量级上是成立的, B⁺ Tree 之所以追求低树高, 就是为了把这个昂贵的随机 I/O 次数从 <code>O(log N)</code> 压到 3–4 次, 之后<strong>页内二分或线性扫描</strong>的优化相对只是“锦上添花”</p>
+</blockquote>
+<h2 id="5-页的概念是什么意思">5. 页的概念是什么意思<a href="#5-页的概念是什么意思" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="51-什么是页page">5.1. 什么是页（Page）<a href="#51-什么是页page" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>在 InnoDB（MySQL 8.x 默认存储引擎）里, <strong>页是磁盘与内存之间读写的最小物理单元</strong></p>
+<ul>
+<li>任何数据（表、索引、Undo、字典等）都被切成若干页来管理</li>
+<li>数据库一次随机 I/O 最多只把一个完整页搬到 Buffer Pool，随后对该页里的记录做 CPU 运算</li>
+</ul>
+<p><strong>页的大小</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>参数</th>
+          <th>默认值</th>
+          <th>可否修改</th>
+          <th>作用</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>innodb_page_size</td>
+          <td>16 KB (16 384 字节)</td>
+          <td>初始化实例时可改为 4 KB / 8 KB / 32 KB / 64 KB</td>
+          <td>决定所有 InnoDB 页大小</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="52-页里存放什么">5.2. 页里存放什么？<a href="#52-页里存放什么" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>以一页 “索引页（INDEX PAGE，类型 0x45BF）” 为例</p>
+<pre tabindex="0"><code>+----------------------+  0     ← file offset
+| File Header (38 B)   |
+| Page Header (56 B)   |
+| Infimum / Supremum   | 伪记录做边界
+| User Records ...     | 按主键或二级索引键有序
+| Free Space           | 插入时向中间填充
+| Page Directory       | 每 128 条插一槽，向下增长
+| File Trailer (8 B)   |
++----------------------+ 16384  ← 16 KB
+</code></pre><ul>
+<li><strong>User Records</strong>：真正的行记录或索引条目</li>
+<li><strong>Page Directory</strong>：偏移量数组，用来做二分搜索</li>
+<li><strong>Header</strong> 包括页号、上一页/下一页指针、校验值、空闲链等元数据</li>
+</ul>
+<h3 id="53-页与-btree节点的关系">5.3. 页与 B⁺Tree节点的关系<a href="#53-页与-btree节点的关系" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<table>
+  <thead>
+      <tr>
+          <th>B⁺Tree 术语</th>
+          <th>InnoDB 对应</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Node (节点)</td>
+          <td>Page (16 KB)</td>
+          <td>一页就是一个节点</td>
+      </tr>
+      <tr>
+          <td>Child Pointer</td>
+          <td>在非叶子记录中的 page_no + slot</td>
+          <td>指向子页</td>
+      </tr>
+      <tr>
+          <td>Sibling Pointer</td>
+          <td>页头的 prev / next</td>
+          <td>把叶子页串成双向链表</td>
+      </tr>
+  </tbody>
+</table>
+<p>所以常听到“树高 = 3～4 页深”本质上是“从根页经 3～4 次指针跳到目标叶子页”</p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E5%90%8E%E7%AB%AF/013-%E6%B5%85%E8%B0%88io%E6%A8%A1%E5%9E%8B-%E5%BC%82%E6%AD%A5io/" class="button inline next">
+        浅谈IO模型 异步IO
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

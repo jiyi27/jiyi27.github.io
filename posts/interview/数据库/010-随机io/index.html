@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>数据库查询 随机 IO 的次数 :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 随机磁盘 I/O 1.1. 随机磁盘 I/O 的定义 B &#43; Tree 索引的时候总是提到 随机磁盘 IO, 这是什么意思呢?
+既然查询的主要事件就是 随机 IO 的时间, 一次查询怎么估算进行的随机 IO 的次数呢?
+读取或写入彼此不连续、位置不可预测的物理块（页、扇区）时，就叫随机（Random）I/O
+访问顺序跳来跳去 → 每次都要重新定位磁头或重新建立闪存地址映射
+在数据库语境里，随机 I/O 通常指 “把单个 4 KB/8 KB/16 KB 页从持久化介质搬进内存” 这一原子动作
+与之对立的是顺序（Sequential）I/O：按连续 LBA 逐块读写，一次“拉”大量数据，定位成本只付一次
+1.2. 为什么“随机”比“顺序”慢得多？ 介质 顺序 I/O 吞吐 随机 I/O 吞吐 随机单次延迟主要来源 机械硬盘 (HDD) 200 MB/s ≈ 1 MB/s (≈ 200×差) 寻道 &#43; 旋转等待 (ms) SATA SSD 550 MB/s 40 MB/s 闪存块映射、队列对齐 (µs) NVMe SSD 3 GB/s 500 MB/s 同上，但控制器更快 (µs) 随机 I/O 把定位成本均摊到 16 KB 这种很小的 payload 上, 顺序 I/O 则把定位成本摊到数百 KB ～数 MB, 故单位数据成本悬殊
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/010-%E9%9A%8F%E6%9C%BAio/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="数据库查询 随机 IO 的次数">
+<meta property="og:description" content="1. 随机磁盘 I/O 1.1. 随机磁盘 I/O 的定义 B &#43; Tree 索引的时候总是提到 随机磁盘 IO, 这是什么意思呢?
+既然查询的主要事件就是 随机 IO 的时间, 一次查询怎么估算进行的随机 IO 的次数呢?
+读取或写入彼此不连续、位置不可预测的物理块（页、扇区）时，就叫随机（Random）I/O
+访问顺序跳来跳去 → 每次都要重新定位磁头或重新建立闪存地址映射
+在数据库语境里，随机 I/O 通常指 “把单个 4 KB/8 KB/16 KB 页从持久化介质搬进内存” 这一原子动作
+与之对立的是顺序（Sequential）I/O：按连续 LBA 逐块读写，一次“拉”大量数据，定位成本只付一次
+1.2. 为什么“随机”比“顺序”慢得多？ 介质 顺序 I/O 吞吐 随机 I/O 吞吐 随机单次延迟主要来源 机械硬盘 (HDD) 200 MB/s ≈ 1 MB/s (≈ 200×差) 寻道 &#43; 旋转等待 (ms) SATA SSD 550 MB/s 40 MB/s 闪存块映射、队列对齐 (µs) NVMe SSD 3 GB/s 500 MB/s 同上，但控制器更快 (µs) 随机 I/O 把定位成本均摊到 16 KB 这种很小的 payload 上, 顺序 I/O 则把定位成本摊到数百 KB ～数 MB, 故单位数据成本悬殊
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/010-%E9%9A%8F%E6%9C%BAio/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-04-23 20:18:45 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/010-%E9%9A%8F%E6%9C%BAio/">数据库查询 随机 IO 的次数</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-04-23</time><span class="post-reading-time">4 分钟阅读 (771 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9D%A2%E8%AF%95/">数据库面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/mysql/">mysql</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="1-随机磁盘-io">1. 随机磁盘 I/O<a href="#1-随机磁盘-io" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="11-随机磁盘-io-的定义">1.1. 随机磁盘 I/O 的定义<a href="#11-随机磁盘-io-的定义" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>B + Tree 索引的时候总是提到 随机磁盘 IO, 这是什么意思呢?</p>
+<p>既然查询的主要事件就是 随机 IO 的时间, 一次查询怎么估算进行的随机 IO 的次数呢?</p>
+<p>读取或写入<strong>彼此不连续、位置不可预测</strong>的物理块（页、扇区）时，就叫随机（Random）I/O</p>
+<ul>
+<li>
+<p>访问顺序跳来跳去 → 每次都要重新定位磁头或重新建立闪存地址映射</p>
+</li>
+<li>
+<p>在数据库语境里，随机 I/O 通常指 “把单个 4 KB/8 KB/16 KB 页从持久化介质搬进内存” 这一原子动作</p>
+</li>
+<li>
+<p>与之对立的是<strong>顺序（Sequential）I/O</strong>：按连续 LBA 逐块读写，一次“拉”大量数据，<strong>定位成本只付一次</strong></p>
+</li>
+</ul>
+<h3 id="12-为什么随机比顺序慢得多">1.2. 为什么“随机”比“顺序”慢得多？<a href="#12-为什么随机比顺序慢得多" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<table>
+  <thead>
+      <tr>
+          <th>介质</th>
+          <th>顺序 I/O 吞吐</th>
+          <th>随机 I/O 吞吐</th>
+          <th>随机单次延迟主要来源</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>机械硬盘 (HDD)</td>
+          <td>200 MB/s</td>
+          <td>≈ 1 MB/s (≈ 200×差)</td>
+          <td>寻道 + 旋转等待 (ms)</td>
+      </tr>
+      <tr>
+          <td>SATA SSD</td>
+          <td>550 MB/s</td>
+          <td>40 MB/s</td>
+          <td>闪存块映射、队列对齐 (µs)</td>
+      </tr>
+      <tr>
+          <td>NVMe SSD</td>
+          <td>3 GB/s</td>
+          <td>500 MB/s</td>
+          <td>同上，但控制器更快 (µs)</td>
+      </tr>
+  </tbody>
+</table>
+<p>随机 I/O 把<strong>定位成本</strong>均摊到 16 KB 这种很小的 payload 上, 顺序 I/O 则把定位成本摊到数百 KB ～数 MB, 故单位数据成本悬殊</p>
+<h3 id="13-数据库为何经常出现随机-io">1.3. 数据库为何经常出现随机 I/O？<a href="#13-数据库为何经常出现随机-io" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ol>
+<li>
+<p>B⁺Tree 把整张表拆成很多 16 KB 页, 键值排序后<strong>物理位置不再按主键连续</strong></p>
+</li>
+<li>
+<p>一次查询只需要极少量行 ⇒ 只读几个离散页</p>
+</li>
+<li>
+<p>并发事务各跑各的语句 ⇒ 访问模式高度交错</p>
+</li>
+</ol>
+<h3 id="14-随机-io-在执行计划中的角色">1.4. 随机 I/O 在执行计划中的角色<a href="#14-随机-io-在执行计划中的角色" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>Optimizer 估算“若某条索引路径需 n 个<strong>未命中的页</strong>” ⇒ 代价 = n × (随机 I/O 单价)</li>
+<li>高度 h = 3 的 B⁺Tree：理论最坏 3 次随机读即可命中目标叶子 ⇒ 成本大幅低于全表顺序扫（需读很多页）</li>
+<li>Buffer Pool 命中 ⇒ 把“随机 I/O”降为“逻辑读”，代价由毫秒/微秒→纳秒级</li>
+</ul>
+<h3 id="15-典型日志指标中如何看到随机-io">1.5. 典型日志/指标中如何看到随机 I/O<a href="#15-典型日志指标中如何看到随机-io" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>
+<p><code>SHOW STATUS LIKE 'Innodb_buffer_pool_reads';</code> → 物理随机读次数</p>
+</li>
+<li>
+<p><code>Performance Schema 表 ⁠file_summary_by_instance.*</code> → 按文件统计随机 I/O 次数与平均延迟</p>
+</li>
+</ul>
+<h3 id="16-一次二级索引等值查找">1.6. 一次二级索引等值查找<a href="#16-一次二级索引等值查找" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ol>
+<li>
+<p>索引根页不在缓存 → 随机读取 16 KB</p>
+</li>
+<li>
+<p>内部页 miss → 再随机读取 16 KB</p>
+</li>
+<li>
+<p>叶子页 miss → 第三次随机读取</p>
+</li>
+</ol>
+<p>如果页面已缓存, 上述步骤变成 0 次随机 I/O, 仅逻辑读</p>
+<p>取到主键 → 去聚簇索引重走 1～3 步 ⇒ 最多再 3 次随机 I/O</p>
+<p>因此常说 “随机 I/O 次数 ≈ 树高（+回表）”</p>
+<h2 id="2-磁盘随机-io-次数怎么计算的">2. 磁盘随机 IO 次数怎么计算的<a href="#2-磁盘随机-io-次数怎么计算的" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p>下面只讨论 <strong>InnoDB</strong>（8.x）+ <strong>B⁺Tree</strong> 的情形, 重点说明</p>
+<ul>
+<li>
+<p>随机 I/O “怎么数”</p>
+</li>
+<li>
+<p>影响它的典型因素与估算方法</p>
+</li>
+</ul>
+<h3 id="21-概念对齐">2.1. 概念对齐<a href="#21-概念对齐" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<table>
+  <thead>
+      <tr>
+          <th>名词</th>
+          <th>含义</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>随机 I/O 次数</td>
+          <td>查询执行过程中<strong>不得不从磁盘把某个页读取进 Buffer Pool 的次数</strong>（若页已命中缓冲，则记作逻辑读，不计入随机 I/O）</td>
+      </tr>
+      <tr>
+          <td>树高 h</td>
+          <td>自根页 → 目标叶子页所需经过的层数；根也算 1</td>
+      </tr>
+      <tr>
+          <td>回表 (bookmark lookup)</td>
+          <td>二级索引命中后, 再去聚簇索引找整行所触发的额外路径</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="22-单条记录查询时的估算公式">2.2. 单条记录查询时的估算公式<a href="#22-单条记录查询时的估算公式" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>假设页都不在缓冲区（最坏情形）</p>
+<table>
+  <thead>
+      <tr>
+          <th>查询类型</th>
+          <th>随机 I/O 估算</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>PRIMARY KEY 等值</td>
+          <td>h(PK)</td>
+      </tr>
+      <tr>
+          <td>二级索引等值（唯一）</td>
+          <td>h(Secondary) + h(PK)</td>
+      </tr>
+      <tr>
+          <td>二级索引非唯一，匹配 k 条</td>
+          <td>h(Secondary) + k × h(PK) + (k – 1)（额外叶子页）</td>
+      </tr>
+  </tbody>
+</table>
+<p>说明</p>
+<ol>
+<li>根页通常常驻内存，可把最顶层减 1；但在“最坏估算”里仍按 h 计算</li>
+<li>如果同一叶子页内包含多条目标记录，只算 1 次随机 I/O</li>
+</ol>
+<h3 id="23-range-scan--全表扫描">2.3. Range-Scan / 全表扫描<a href="#23-range-scan--全表扫描" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<table>
+  <thead>
+      <tr>
+          <th>场景</th>
+          <th>随机 I/O 估算</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>主键顺序扫整表</td>
+          <td>页数 = <strong>⌈行数 ÷ 每页行数⌉</strong> → 近似顺序 I/O，成本常按“顺序读”估算而非随机</td>
+      </tr>
+      <tr>
+          <td>二级索引范围 (l ≈ r)</td>
+          <td>h(Secondary) + #命中叶子页 + 回表成本（同上）</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="24-多表-join-时如何累加">2.4. 多表 JOIN 时如何累加<a href="#24-多表-join-时如何累加" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>优化器使用**块嵌套循环（BNL）或索引嵌套循环（BKA）**等模型；以下给最常见的“嵌套循环 + 内表走索引”场景：</p>
+<pre tabindex="0"><code>随机 I/O ≈ outer_rows_not_in_cache × outer_row_cost + outer_rows × (inner_index_height + inner_pk_height)
+</code></pre><p>其中</p>
+<ul>
+<li>outer_row_cost 指外表行本身的读取成本（可能为 0，若外表已全缓冲）</li>
+<li>inner_index_height 与 inner_pk_height 计算规则同上</li>
+</ul>
+<h3 id="25-optimizer-如何拿到这些数字">2.5. Optimizer 如何拿到这些数字<a href="#25-optimizer-如何拿到这些数字" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ol>
+<li>统计信息 (⁠ANALYZE TABLE) 告诉它行数、基数、平均每页记录数</li>
+<li>⁠innodb_page_size 决定页大小；结合记录长度可推算每页能放几条</li>
+<li>根页、最热的几层常常假设缓存命中 → 物理 I/O 被扣掉</li>
+<li>剩余部分按一次访问 <em>=</em> 一次随机 <em>I/O</em>的假设累加</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">⁠</span><span style="color:#66d9ef">SHOW</span> STATUS <span style="color:#66d9ef">LIKE</span> <span style="color:#e6db74">&#39;InnoDB_buffer_pool_read%&#39;</span>;
+</span></span></code></pre></div><table>
+  <thead>
+      <tr>
+          <th>变量</th>
+          <th>含义</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Innodb_buffer_pool_read_requests</td>
+          <td>逻辑读（包括命中）</td>
+      </tr>
+      <tr>
+          <td>Innodb_buffer_pool_reads</td>
+          <td>物理随机读（未命中）</td>
+      </tr>
+      <tr>
+          <td>Innodb_buffer_pool_pages_flushed</td>
+          <td>物理写</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="26-例子-二级索引等值查询">2.6. 例子 二级索引等值查询<a href="#26-例子-二级索引等值查询" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> age 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span>   users 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">WHERE</span>  name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Grace&#39;</span>;
+</span></span></code></pre></div><p>已知</p>
+<ul>
+<li>
+<p><code>h(Secondary)=3</code>，<code>h(PK)=3</code></p>
+</li>
+<li>
+<p><code>'Grace'</code> 唯一</p>
+</li>
+</ul>
+<p>随机 I/O 估算</p>
+<ol>
+<li>
+<p>二级索引：3 页</p>
+</li>
+<li>
+<p>回表：再次走聚簇 3 页</p>
+</li>
+</ol>
+<p>==&gt; 总计 6 次（若根页 &amp; 内部页已缓存，可能只剩 1~2 次实际磁盘 I/O）</p>
+<h3 id="27-例子-索引嵌套循环连接-inlj">2.7. 例子 索引嵌套循环连接 INLJ<a href="#27-例子-索引嵌套循环连接-inlj" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>假设所有目标页<strong>最开始都不在 Buffer Pool</strong>（最坏路径）, 介质为 NVMe（一次随机 I/O≈ 20 µs）, 页大小 16 KB</p>
+<table>
+  <thead>
+      <tr>
+          <th>表</th>
+          <th>主键聚簇索引</th>
+          <th>辅助索引</th>
+          <th>行数 (N)</th>
+          <th>平均行长</th>
+          <th>行 / 页 (估)</th>
+          <th>页数</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>orders</td>
+          <td>(id)</td>
+          <td>(customer_id, id)</td>
+          <td>1 000 000</td>
+          <td>150 B</td>
+          <td>≈100</td>
+          <td>≈10 000</td>
+      </tr>
+      <tr>
+          <td>order_items</td>
+          <td>(id)</td>
+          <td>(order_id, id)</td>
+          <td>5 000 000</td>
+          <td>120 B</td>
+          <td>≈120</td>
+          <td>≈41 700</td>
+      </tr>
+  </tbody>
+</table>
+<ul>
+<li>两棵 B⁺Tree（聚簇 + 二级）高度都为 3：Root→Internal→Leaf</li>
+<li><strong>根页常驻内存</strong>，但在“最坏估算”里仍计 1 次 I/O</li>
+<li>每遇到一层，可能触发一次随机 I/O；一次 miss = 1 次 I/O</li>
+</ul>
+<p><strong>查询</strong></p>
+<pre tabindex="0"><code>SELECT  o.id, oi.product_id
+FROM    orders       o
+JOIN    order_items  oi  ON oi.order_id = o.id
+WHERE   o.customer_id = 123;
+</code></pre><p><strong>场景参数（假设）</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>名称</th>
+          <th>数值</th>
+          <th>说明</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>orders.customer_id = 123 的订单数</td>
+          <td>100 行</td>
+          <td>外表有 100 行</td>
+      </tr>
+      <tr>
+          <td>一张订单的明细数</td>
+          <td>5 行</td>
+          <td>内表平均值 5 行</td>
+      </tr>
+      <tr>
+          <td>B+Tree 高度</td>
+          <td>3</td>
+          <td>根 + 内部 + 叶子</td>
+      </tr>
+      <tr>
+          <td>查询开始时 Buffer Pool 为空</td>
+          <td>最坏路径；所有碰到的页都会 miss</td>
+          <td></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>访问外表 <code>orders</code> 的随机 I/O</strong></p>
+<table>
+  <thead>
+      <tr>
+          <th>步骤（一次性完成）</th>
+          <th>随机 I/O 次数</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>a. 走二级复合索引 ⁠(customer_id, id)</td>
+          <td>3 页</td>
+      </tr>
+      <tr>
+          <td>b. 回到聚簇索引拿整行</td>
+          <td>3 页</td>
+      </tr>
+      <tr>
+          <td>c. 继续扫描叶子页把 100 行都读完</td>
+          <td>1 页（100 行刚好在同一叶子）</td>
+      </tr>
+      <tr>
+          <td><strong>小计</strong></td>
+          <td><strong>7 次</strong></td>
+      </tr>
+  </tbody>
+</table>
+<blockquote>
+<p>说明</p>
+<ul>
+<li>“走索引 3 页”= 根 1 + 内部 1 + 叶子 1</li>
+<li>“回表再 3 页” 同理</li>
+<li>最后那张叶子页已经在内存，往后读同页不再算随机 I/O</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>查询 customer_id = 123 的所有订单及其订单中包含的商品信息, 这种查询场景 <code>orders</code> 是外表, <code>order_items oi</code> 是内表:</p>
+<ul>
+<li>
+<p>查询从 orders 表（外表）开始</p>
+</li>
+<li>
+<p><code>WHERE o.customer_id = 123</code> 条件会先筛选出 <code>orders</code> 表中所有 <code>customer_id = 123</code> 的记录</p>
+<ul>
+<li>一次成本 IO 次数: 7 次, 这 7 次 加载了一页数据, 假设这一页包含了 100 个订单数据,</li>
+<li>如果 100 个订单需要两页, 则需要 7 + 1 = 8 次 IO, 而不是 7 * 2 = 14, 第二个叶子页只有 <strong>1 I/O</strong>，而不是再付 7 I/O
+<ul>
+<li>路径上的根页、内部页已经在内存 → 不再 miss</li>
+<li>只需把第二个叶子页从磁盘搬进来 → 1 I/O</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>数据库将上一步的 <code>orders</code> 表结果与 <code>order_items</code> 表（内表）进行 <code>INNER JOIN</code>, 根据 <code>ON oi.order_id = o.id</code> 条件匹配</p>
+<ul>
+<li>一次成本 IO 次数: 同上 7 次, 这只是 对于一个订单, 找出其所有 items 的查询, 平均 5 个 items, 一页肯定放得下, 所以就是 7 次, 不是 上面的那种 可能为 7 + 1 次 或者 7 * 2 次, 即 不会是 2 页, 三页 只用来放了 5 个 item, 当然也有可能,除非 item 很大, 一个就超过 8kb, 2 * 8 &gt;= 16 kb &gt; 一页的大小</li>
+<li>因为有 100 个订单, 查询 100 次, 所以 100 * 7 = 700 次 IO
+<ul>
+<li>这么计算是错的, 因为 <strong>根页、内部页只在第一次 miss</strong>, 当处理第 2 ~ 100 张订单时:</li>
+<li>二级索引根 / 内部页 已经在 Buffer Pool</li>
+<li>聚簇索引根 / 内部页 也已在 Buffer Pool</li>
+<li>因此后 99 次只剩：</li>
+<li>索引叶子 1 次 IO + 聚簇叶子 1 次 IO = 2 次, 即 <code>2 IO / 订单</code> 而不是 7</li>
+</ul>
+</li>
+<li>第一张订单 7 I/O + 后面 99 张 × 2 I/O ≈ <strong>205 I/O</strong>, 远小于 700</li>
+</ul>
+</li>
+<li>
+<p>总计 内表 order_items 表进行了 205 次 IO + 外表 7 次 IO = 212 次IO</p>
+</li>
+</ul>
+<p>可见 <strong>真正决定数量级的是：根/内部页是否命中</strong>, 优化器在成本模型里正是用“根页大概率命中、内部页可能命中、叶子易 miss”这套概率，去预估 I/O 量</p>
+</blockquote>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/database/mongodb/003-lookup%E8%81%9A%E5%90%88%E7%AE%A1%E9%81%93/" class="button inline prev">
+        MongoDB $lookup 聚合管道
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/csharp/dot-net/004-%E6%B3%A8%E8%A7%A3%E5%A6%82%E4%BD%95%E5%B7%A5%E4%BD%9C%E7%9A%84/" class="button inline next">
+        注解如何工作的 C#
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    
+    <title>技术选型 MySQL 还是 MongoDB? :: 为霜的博客</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="选 NoSQL 的几个理由, 一定不是多表关联 join 慢, 所以选嵌套, 而是:
+想快速启动小专案测试 idea 资料格式不确定(unstable schema)，而未来很有可能调整 资料之间没有复杂的关联(无结构, 无组织)、或未来读取资料时不需要使用JOIN 的功能 In my 14 years of experience, most. It&rsquo;s not that there&rsquo;s anything wrong with using Mongo if it fits your use case, I&rsquo;ve used it a handful of times, but I find that data, by nature, is almost always relational, or becomes relational very quickly as you start adding features. Then you either have to spend time and effort changing, or use Mongo like it&rsquo;s a relation database, which you should never do as it defeats the point. You&rsquo;d be surprised how many times I&rsquo;ve seen Mongo instances like this. Programs push data around, and it&rsquo;s usually related data.
+" />
+<meta name="keywords" content="" />
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/008-mysql%E8%BF%98%E6%98%AFmongodb/" />
+
+
+
+
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/buttons.min.2bc533403a27dfe0e93105a92502b42ce4587e2e4a87d9f7d349e51e16e09478.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/categories.min.3202f75cbb294747099af3850a68a09ee94b3ce505fc39e134692d90ff0a9b2a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/code.min.dd73d157e77e82a3dc1cb06ba424cf6cc6811af0bb604ad6c68e70faf2439c8a.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/fonts.min.4881f0c525f3ce2a1864fb6e96676396cebe1e6fcef1933e8e1dde7041004fb5.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/footer.min.2e3eb191baee58dd05a9f0104ac1fab0827bca7c64dafe0b2579f934c33a1d69.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/gist.min.a751e8b0abe1ba8bc53ced52a38b19d8950fe78ca29454ea8c2595cf26aad5c0.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/header.min.b6fb4423cf82a9f9d7abc9cd010223fa3d70a6526a3f28f8e17d814c06e18f9e.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/main.min.3fb8954e26342ad3afabb4525959bfec6f9fc0d6929f0dda738ddeee30211690.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/menu.min.8cee75f73b9f9b1e40bd0dd53e6e770156b08bbfe1c579cd256c3f6cd3b6d32b.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/pagination.min.82f6400eae7c7c6dc3c866733c2ec0579e4089608fea69400ff85b3880aa0d3c.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/post.min.014a50745fbdd41d5f420a3e288730d5af4b7d90344dc6211d0e50c368b5b303.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/prism.min.b958d3d7c6c67361b945f9062d07d403422604b3d2cd33f93b88d41ed0ba634d.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/term.min.94de320c1b850e126e6d2c88a7c90acf58bb1313f0ea14a14cda2a42f2a88db2.css">
+
+  
+  <link rel="stylesheet" href="https://blog.jiyi27.com/css/terms.min.b81791663c3790e738e571cdbf802312390d30e4b1d8dc9d814a5b5454d0ac11.css">
+
+
+<link rel="stylesheet" href="https://blog.jiyi27.com/terminal.css">
+
+
+
+
+<link rel="shortcut icon" href="https://blog.jiyi27.com/favicon.png">
+<link rel="apple-touch-icon" href="https://blog.jiyi27.com/apple-touch-icon.png">
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="技术选型 MySQL 还是 MongoDB?">
+<meta property="og:description" content="选 NoSQL 的几个理由, 一定不是多表关联 join 慢, 所以选嵌套, 而是:
+想快速启动小专案测试 idea 资料格式不确定(unstable schema)，而未来很有可能调整 资料之间没有复杂的关联(无结构, 无组织)、或未来读取资料时不需要使用JOIN 的功能 In my 14 years of experience, most. It&rsquo;s not that there&rsquo;s anything wrong with using Mongo if it fits your use case, I&rsquo;ve used it a handful of times, but I find that data, by nature, is almost always relational, or becomes relational very quickly as you start adding features. Then you either have to spend time and effort changing, or use Mongo like it&rsquo;s a relation database, which you should never do as it defeats the point. You&rsquo;d be surprised how many times I&rsquo;ve seen Mongo instances like this. Programs push data around, and it&rsquo;s usually related data.
+" />
+<meta property="og:url" content="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/008-mysql%E8%BF%98%E6%98%AFmongodb/" />
+<meta property="og:site_name" content="为霜的博客" />
+
+  <meta property="og:image" content="https://blog.jiyi27.com/og-image.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+  <meta property="article:section" content="面试" />
+
+
+  <meta property="article:published_time" content="2025-03-30 11:09:56 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+
+
+<div class="container center">
+
+  
+  
+  
+
+  <div class="content">
+    
+<article class="post">
+  <h1 class="post-title">
+    <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/008-mysql%E8%BF%98%E6%98%AFmongodb/">技术选型 MySQL 还是 MongoDB?</a>
+  </h1>
+  <div class="post-meta"><time class="post-date">2025-03-30</time><span class="post-reading-time">10 分钟阅读 (1974 字数)</span></div>
+
+  
+    <span class="post-tags">
+      
+      #<a href="https://blog.jiyi27.com/tags/%E9%9D%A2%E8%AF%95/">面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9D%A2%E8%AF%95/">数据库面试</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/mongodb/">mongodb</a>&nbsp;
+      
+      #<a href="https://blog.jiyi27.com/tags/mysql/">mysql</a>&nbsp;
+      
+    </span>
+  
+  
+
+
+  
+
+  <div class="post-content"><div>
+        <p>选 NoSQL 的几个理由, 一定不是多表关联 join 慢, 所以选嵌套, 而是:</p>
+<ul>
+<li>想快速启动小专案测试 idea</li>
+<li>资料格式不确定(unstable schema)，而未来很有可能调整</li>
+<li>资料之间没有复杂的关联(无结构, 无组织)、或未来读取资料时不需要使用JOIN 的功能</li>
+</ul>
+<blockquote>
+<p>In my 14 years of experience, most. It&rsquo;s not that there&rsquo;s anything wrong with using Mongo if it fits your use case, I&rsquo;ve used it a handful of times, but I find that data, by nature, is almost always relational, or becomes relational very quickly as you start adding features. Then you either have to spend time and effort changing, or use Mongo like it&rsquo;s a relation database, which you should never do as it defeats the point. You&rsquo;d be surprised how many times I&rsquo;ve seen Mongo instances like this. Programs push data around, and it&rsquo;s usually related data.</p>
+<p>Tbh Mongo isn&rsquo;t used that much in production from what I&rsquo;ve seen really. The world runs on SQL and that&rsquo;s not going to change. I think Mongo lends itself better to small &ldquo;todo&rdquo; apps and such, so it tends to get used in a lot of tutorials online. When you&rsquo;re starting out and you&rsquo;re watching these, it can give you a false sense that everyone is using it for everything.</p>
+<p>I&rsquo;d say if you think you have a complete picture of all your data requirements and know that they&rsquo;re not going to change, and it&rsquo;s not relational, Mongo is a great choice.</p>
+<p>If you don&rsquo;t have the full picture yet, or something might change, going relational is more future proof. Relational databases can handle not having relations between tables just fine, and you can add them later if needed. Mongo doesn&rsquo;t really handle relational data well at all. <a href="https://www.reddit.com/r/learnprogramming/comments/gzvyoa/comment/ftiwqzm/?utm_source=share&amp;utm_medium=web3x&amp;utm_name=web3xcss&amp;utm_term=1&amp;utm_content=share_button">Reddit</a></p>
+</blockquote>
+<blockquote>
+<p><strong>边缘场景</strong></p>
+<p>MongoDB is not magically faster. If you store the same data, organised in basically the same fashion, and access it exactly the same way, then you really shouldn&rsquo;t expect your results to be wildly different. After all, MySQL and MongoDB are both GPL, so if Mongo had some magically better IO code in it, then the MySQL team could just incorporate it into their codebase.</p>
+<p>People are seeing real world MongoDB performance largely because MongoDB allows you to query in a different manner that is more sensible to your workload.</p>
+<p>For example, consider a design that persisted a lot of information about a complicated entity in a normalised fashion. This could easily use dozens of tables in MySQL (or any relational db) to store the data in normal form, with many indexes needed to ensure relational integrity between tables.</p>
+<p>Now consider the same design with a document store. If all of those related tables are subordinate to the main table (and they often are), then you might be able to model the data such that the entire entity is stored in a single document. In MongoDB you can store this as a single document, in a single collection. This is where MongoDB starts enabling superior performance.</p>
+<p>In MongoDB, to retrieve the whole entity, you have to perform:</p>
+<ul>
+<li>One index lookup on the collection (assuming the entity is fetched by id)</li>
+<li>Retrieve the contents of one database page (the actual binary json document)</li>
+</ul>
+<p>So a b-tree lookup, and a binary page read. Log(n) + 1 IOs. If the indexes can reside entirely in memory, then 1 IO.</p>
+<p>In MySQL with 20 tables, you have to perform:</p>
+<ul>
+<li>One index lookup on the root table (again, assuming the entity is fetched by id)</li>
+<li>With a clustered index, we can assume that the values for the root row are in the index</li>
+<li>20+ range lookups (hopefully on an index) for the entity&rsquo;s pk value</li>
+<li>These probably aren&rsquo;t clustered indexes, so the same 20+ data lookups once we figure out what the appropriate child rows are.</li>
+</ul>
+<p>So the total for mysql, even assuming that all indexes are in memory (which is harder since there are 20 times more of them) is about 20 range lookups.</p>
+<p>These range lookups are likely comprised of random IO — different tables will definitely reside in different spots on disk, and it&rsquo;s possible that different rows in the same range in the same table for an entity might not be contiguous (depending on how the entity has been updated, etc).</p>
+<p>So for this example, the final tally is about <em>20 times</em> more IO with MySQL per logical access, compared to MongoDB.</p>
+<p>This is how MongoDB can boost performance <em>in some use cases</em>.</p>
+<p><a href="https://stackoverflow.com/a/9703513/16317008">Stackoverflow</a></p>
+</blockquote>
+<h2 id="1-多表关联查询-mongodb-处于劣势">1. 多表关联查询 MongoDB 处于劣势<a href="#1-多表关联查询-mongodb-处于劣势" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<p><strong>MongoDB 不支持原生的 JOIN 操作</strong>, MongoDB 并不像 MySQL 那样在<strong>引擎层面原生支持 JOIN</strong>，它是通过聚合管道的 <code>$lookup</code> 操作符来模拟关联查询的</p>
+<h3 id="11-mysql-如何做关联查询">1.1. MySQL 如何做关联查询<a href="#11-mysql-如何做关联查询" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>假设我们有四个数据集合/表：</p>
+<ol>
+<li><code>users</code>：存储用户信息</li>
+<li><code>orders</code>：存储订单信息，关联到用户</li>
+<li><code>order_items</code>：存储订单中的商品项，关联到订单和商品</li>
+<li><code>products</code>：存储商品信息</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> users (
+</span></span><span style="display:flex;"><span>    user_id INT <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> AUTO_INCREMENT,
+</span></span><span style="display:flex;"><span>    name VARCHAR(<span style="color:#ae81ff">100</span>),
+</span></span><span style="display:flex;"><span>    email VARCHAR(<span style="color:#ae81ff">100</span>)
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> orders (
+</span></span><span style="display:flex;"><span>    order_id INT <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> AUTO_INCREMENT,
+</span></span><span style="display:flex;"><span>    user_id INT, <span style="color:#75715e">-- Foreign Key to users
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    order_date DATE,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">FOREIGN</span> <span style="color:#66d9ef">KEY</span> (user_id) <span style="color:#66d9ef">REFERENCES</span> users(user_id)
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> products (
+</span></span><span style="display:flex;"><span>    product_id INT <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> AUTO_INCREMENT,
+</span></span><span style="display:flex;"><span>    name VARCHAR(<span style="color:#ae81ff">100</span>),
+</span></span><span style="display:flex;"><span>    price DECIMAL(<span style="color:#ae81ff">10</span>, <span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">TABLE</span> order_items (
+</span></span><span style="display:flex;"><span>    item_id INT <span style="color:#66d9ef">PRIMARY</span> <span style="color:#66d9ef">KEY</span> AUTO_INCREMENT,
+</span></span><span style="display:flex;"><span>    order_id INT, <span style="color:#75715e">-- Foreign Key to orders
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    product_id INT, <span style="color:#75715e">-- Foreign Key to products
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    quantity INT,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">FOREIGN</span> <span style="color:#66d9ef">KEY</span> (order_id) <span style="color:#66d9ef">REFERENCES</span> orders(order_id),
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">FOREIGN</span> <span style="color:#66d9ef">KEY</span> (product_id) <span style="color:#66d9ef">REFERENCES</span> products(product_id)
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">-- 假设在所有 Foreign Key 字段上都建立了索引
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">INDEX</span> idx_orders_user <span style="color:#66d9ef">ON</span> orders (user_id);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">INDEX</span> idx_items_order <span style="color:#66d9ef">ON</span> order_items (order_id);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">INDEX</span> idx_items_product <span style="color:#66d9ef">ON</span> order_items (product_id);
+</span></span></code></pre></div><p><strong>目标:</strong> 查询用户 &ldquo;Alice&rdquo; 购买过的所有商品的名称和价格，以及对应的订单 ID</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span>
+</span></span><span style="display:flex;"><span>    o.order_id,
+</span></span><span style="display:flex;"><span>    p.name <span style="color:#66d9ef">AS</span> product_name,
+</span></span><span style="display:flex;"><span>    p.price <span style="color:#66d9ef">AS</span> product_price
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">FROM</span>
+</span></span><span style="display:flex;"><span>    users u
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">JOIN</span> <span style="color:#75715e">-- 第 1 次连接: users -&gt; orders
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    orders o <span style="color:#66d9ef">ON</span> u.user_id <span style="color:#f92672">=</span> o.user_id
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">JOIN</span> <span style="color:#75715e">-- 第 2 次连接: orders -&gt; order_items
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    order_items oi <span style="color:#66d9ef">ON</span> o.order_id <span style="color:#f92672">=</span> oi.order_id
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">JOIN</span> <span style="color:#75715e">-- 第 3 次连接: order_items -&gt; products
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    products p <span style="color:#66d9ef">ON</span> oi.product_id <span style="color:#f92672">=</span> p.product_id
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">WHERE</span>
+</span></span><span style="display:flex;"><span>    u.name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Alice&#39;</span>;
+</span></span></code></pre></div><p><strong>MySQL 处理过程（概念性）：</strong></p>
+<p><strong>查询优化器分析阶段</strong></p>
+<ul>
+<li>当你执行一个包含多表 JOIN 的 SQL 语句时，MySQL 不会简单地按照你编写的顺序执行</li>
+<li>优化器会分析表的统计信息，包括：
+<ul>
+<li>表的大小（行数）</li>
+<li>每个列的数据分布情况</li>
+<li>可用的索引</li>
+<li>条件谓词的选择性（如 <code>WHERE u.name = 'Alice'</code> 会过滤掉多少行）</li>
+</ul>
+</li>
+</ul>
+<p><strong>执行计划生成</strong></p>
+<ul>
+<li>优化器会评估多种可能的连接顺序</li>
+<li>例如，虽然您编写的是 <code>users → orders → order_items → products</code>，但优化器可能决定使用 <code>users(过滤Alice) → orders → products → order_items</code> 或其他顺序</li>
+<li>优化器会选择估计成本最低的执行计划</li>
+</ul>
+<p><strong>连接算法选择</strong></p>
+<ul>
+<li>根据表的大小和索引情况，MySQL 会选择不同的连接算法</li>
+</ul>
+<h3 id="12-mongodb-的实现">1.2. MongoDB 的实现<a href="#12-mongodb-的实现" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// users collection
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>{ <span style="color:#a6e22e">_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;user1&#34;</span>), <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;Alice&#34;</span>, <span style="color:#a6e22e">email</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;alice@example.com&#34;</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// orders collection
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>{ <span style="color:#a6e22e">_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;order1&#34;</span>), <span style="color:#a6e22e">user_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;user1&#34;</span>), <span style="color:#a6e22e">order_date</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ISODate</span>(...) }
+</span></span><span style="display:flex;"><span>{ <span style="color:#a6e22e">_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;order2&#34;</span>), <span style="color:#a6e22e">user_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;user1&#34;</span>), <span style="color:#a6e22e">order_date</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ISODate</span>(...) }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// products collection
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>{ <span style="color:#a6e22e">_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;prodA&#34;</span>), <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;Laptop&#34;</span>, <span style="color:#a6e22e">price</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">1200</span> }
+</span></span><span style="display:flex;"><span>{ <span style="color:#a6e22e">_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;prodB&#34;</span>), <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;Mouse&#34;</span>, <span style="color:#a6e22e">price</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">25</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// order_items collection
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>{ <span style="color:#a6e22e">_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;item1&#34;</span>), <span style="color:#a6e22e">order_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;order1&#34;</span>), <span style="color:#a6e22e">product_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;prodA&#34;</span>), <span style="color:#a6e22e">quantity</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">1</span> }
+</span></span><span style="display:flex;"><span>{ <span style="color:#a6e22e">_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;item2&#34;</span>), <span style="color:#a6e22e">order_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;order1&#34;</span>), <span style="color:#a6e22e">product_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;prodB&#34;</span>), <span style="color:#a6e22e">quantity</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">1</span> }
+</span></span><span style="display:flex;"><span>{ <span style="color:#a6e22e">_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;item3&#34;</span>), <span style="color:#a6e22e">order_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;order2&#34;</span>), <span style="color:#a6e22e">product_id</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ObjectId</span>(<span style="color:#e6db74">&#34;prodA&#34;</span>), <span style="color:#a6e22e">quantity</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">2</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 假设在 `orders.user_id`, `order_items.order_id`, `order_items.product_id` 上有索引
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">orders</span>.<span style="color:#a6e22e">createIndex</span>({ <span style="color:#a6e22e">user_id</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">1</span> });
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">order_items</span>.<span style="color:#a6e22e">createIndex</span>({ <span style="color:#a6e22e">order_id</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">1</span> });
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">order_items</span>.<span style="color:#a6e22e">createIndex</span>({ <span style="color:#a6e22e">product_id</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">1</span> });
+</span></span></code></pre></div><p>查询语句 (使用聚合管道和 <code>$lookup</code>):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">users</span>.<span style="color:#a6e22e">aggregate</span>([
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 阶段 1: 找到用户 Alice
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  { <span style="color:#a6e22e">$match</span><span style="color:#f92672">:</span> { <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;Alice&#34;</span> } },
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 阶段 2: 关联 orders 集合 (类似 JOIN users ON users._id = orders.user_id)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">$lookup</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">from</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;orders&#34;</span>,           <span style="color:#75715e">// 目标集合
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">localField</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;_id&#34;</span>,        <span style="color:#75715e">// 当前集合 (users) 的字段
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">foreignField</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;user_id&#34;</span>,  <span style="color:#75715e">// 目标集合 (orders) 的字段
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">as</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;user_orders&#34;</span>       <span style="color:#75715e">// 输出数组的字段名
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 结果: Alice 文档 + user_orders: [ {order1 doc}, {order2 doc} ]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 阶段 3: 展开 user_orders 数组 (每个订单成为一个独立文档)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  { <span style="color:#a6e22e">$unwind</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;$user_orders&#34;</span> },
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 结果: { Alice doc, user_orders: {order1 doc} }, { Alice doc, user_orders: {order2 doc} }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 阶段 4: 关联 order_items 集合 (类似 JOIN orders ON orders._id = order_items.order_id)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">$lookup</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">from</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;order_items&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">localField</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;user_orders._id&#34;</span>, <span style="color:#75715e">// 上一阶段展开后的订单 ID
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">foreignField</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;order_id&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">as</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;items&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 结果: { Alice doc, user_orders: {order1}, items: [ {item1}, {item2} ] }, { Alice doc, user_orders: {order2}, items: [ {item3} ] }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 阶段 5: 展开 items 数组
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  { <span style="color:#a6e22e">$unwind</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;$items&#34;</span> },
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 结果: {..., items: {item1}}, {..., items: {item2}}, {..., items: {item3}}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 阶段 6: 关联 products 集合 (类似 JOIN order_items ON order_items.product_id = products._id)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">$lookup</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">from</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;products&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">localField</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;items.product_id&#34;</span>, <span style="color:#75715e">// 上一阶段展开后的商品 ID
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">foreignField</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;_id&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">as</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;product_details&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 结果: {..., items: {item1}, product_details: [{prodA}]}, {..., items: {item2}, product_details: [{prodB}]}, {..., items: {item3}, product_details: [{prodA}]}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 阶段 7: 展开 product_details 数组
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  { <span style="color:#a6e22e">$unwind</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;$product_details&#34;</span> },
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 结果: {..., product_details: {prodA}}, {..., product_details: {prodB}}, {..., product_details: {prodA}}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 阶段 8: 投影 (选择最终需要的字段)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">$project</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">_id</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">0</span>, <span style="color:#75715e">// 不显示 user 的 _id
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">order_id</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;$user_orders._id&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">product_name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;$product_details.name&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">product_price</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;$product_details.price&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 最终结果: { order_id: &#34;order1&#34;, product_name: &#34;Laptop&#34;, price: 1200 }, { order_id: &#34;order1&#34;, product_name: &#34;Mouse&#34;, price: 25 }, { order_id: &#34;order2&#34;, product_name: &#34;Laptop&#34;, price: 1200 }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>])
+</span></span></code></pre></div><p><strong>MongoDB 处理过程及潜在性能问题分析：</strong></p>
+<ol>
+<li><strong>阶段式执行：</strong> 聚合管道是按顺序执行每个阶段的, 每个阶段的输出是下一个阶段的输入</li>
+<li><code>$lookup</code> 的代价：
+<ul>
+<li><strong>阶段 2 (<code>$lookup</code> orders):</strong> 找到 Alice 后，拿着 Alice 的 <code>_id</code> 去 <code>orders</code> 集合查询, 如果 <code>orders.user_id</code> 有索引，这一步通常很快</li>
+<li><strong>阶段 4 (<code>$lookup</code> order_items):</strong> 经过 <code>$unwind</code> 后，假设 Alice 有 M 个订单, MongoDB 需要对这 M 个文档<strong>分别</strong>执行 <code>lookup</code> 操作, 即，拿着每个订单的 <code>_id</code> 去 <code>order_items</code> 集合中查询, 相当于 M 次对 <code>order_items</code> 的查询</li>
+<li><strong>阶段 6 (<code>$lookup</code> products):</strong> 假设 Alice 的 M 个订单总共有 N 个商品项（经过 <code>$unwind</code> 后产生 N 个文档）MongoDB 需要对这 N 个文档<strong>分别</strong>执行 <code>lookup</code> 操作，拿着每个商品项的 <code>product_id</code> 去 <code>products</code> 集合查询。这相当于 N 次对 <code>products</code> 的查询</li>
+</ul>
+</li>
+<li><strong><code>$unwind</code> 的代价：</strong> <code>$unwind</code> 操作会增加管道中流动的文档数量, 如果一个用户有很多订单，每个订单有很多商品，那么中间阶段的文档数量会急剧膨胀，加大了后续阶段的处理负担</li>
+<li><strong>重复查询：</strong> 注意在阶段 6，如果 Alice 多次购买了同一个商品 <code>prodA</code>（来自不同订单或同一订单的不同 <code>item</code> 记录），<code>$lookup</code> 可能会多次去 <code>products</code> 集合查找 <code>prodA</code> 的信息（虽然缓存可能有所帮助，但查询动作本身是针对每个输入文档触发的）</li>
+<li><strong>优化限制：</strong> 虽然 MongoDB 的聚合框架和 <code>$lookup</code> 也在不断优化，但这种<strong>按文档流逐步处理和多次独立查询外部集合</strong>的模式，相比于关系型数据库<strong>全局优化、基于集合的连接算法</strong>，在多层关联、数据量大的情况下，更容易遇到性能瓶颈, 优化器很难像 SQL 那样进行彻底的连接顺序重排或选择根本不同的连接算法（如 Hash Join）</li>
+</ol>
+<p><strong>对比之下性能明显低于 MySQL 的 JOIN 操作</strong></p>
+<h2 id="2-join-算法">2. join 算法<a href="#2-join-算法" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="21-什么是表连接">2.1. 什么是表连接？<a href="#21-什么是表连接" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p><strong>users 表</strong>：</p>
+<table>
+  <thead>
+      <tr>
+          <th>id</th>
+          <th>name</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>1</td>
+          <td>Alice</td>
+      </tr>
+      <tr>
+          <td>2</td>
+          <td>Bob</td>
+      </tr>
+      <tr>
+          <td>3</td>
+          <td>Charlie</td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>orders 表</strong>：</p>
+<table>
+  <thead>
+      <tr>
+          <th>id</th>
+          <th>user_id</th>
+          <th>amount</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>1</td>
+          <td>1</td>
+          <td>100</td>
+      </tr>
+      <tr>
+          <td>2</td>
+          <td>2</td>
+          <td>200</td>
+      </tr>
+      <tr>
+          <td>3</td>
+          <td>1</td>
+          <td>150</td>
+      </tr>
+  </tbody>
+</table>
+<p>查询每个用户的所有订单：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> u.name, o.amount <span style="color:#66d9ef">FROM</span> users u <span style="color:#66d9ef">JOIN</span> orders o <span style="color:#66d9ef">ON</span> u.id <span style="color:#f92672">=</span> o.user_id;
+</span></span></code></pre></div><h3 id="22-索引嵌套循环连接index-nested-loop-join-inlj">2.2. 索引嵌套循环连接（Index Nested-Loop Join, INLJ）<a href="#22-索引嵌套循环连接index-nested-loop-join-inlj" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<h4 id="221-基本思想">2.2.1. 基本思想<a href="#221-基本思想" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p>索引嵌套循环连接利用<strong>索引</strong>来加速连接过程, 当连接列（比如 <code>orders.user_id</code>）上有索引时，这种方式非常高效</p>
+<blockquote>
+<p>一般建立外键约束的时候, 就应该手动在该列上建立索引, 因为外键基本上都是 一对多 关系中用来连接查询的, 比如 用户 - 订单, 一个用户对应多个订单, 那订单表中就应该放一个用户 id, 建立外键约束和索引, 因为未来一定会用到查找某个用户的订单</p>
+</blockquote>
+<h4 id="222-工作原理">2.2.2. 工作原理<a href="#222-工作原理" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ul>
+<li>MySQL 选择一个表作为<strong>外层表</strong>（通常是行数较少的表），比如 <code>users</code></li>
+<li>对于 <code>users</code> 表的每一行，MySQL 用 <code>id</code> 的值在 <code>orders</code> 表的 <code>user_id</code> 索引上查找匹配的行</li>
+<li>因为有索引，查找速度很快（接近 O(1)）</li>
+</ul>
+<blockquote>
+<p><strong>为什么索引的查询速度接近 O(1) ?</strong></p>
+<p>B+ Tree 的高度很小（即使数据量很大 几百万,可能高度就3~4）, 所以查找的实际时间几乎是个很小的常数, 注意  B+ Tree 和 二叉搜索树不是一个东西, 后面会详细讨论这部分</p>
+</blockquote>
+<h4 id="223-举例">2.2.3. 举例<a href="#223-举例" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p>假设 <code>orders.user_id</code> 列上有索引：</p>
+<ol>
+<li>从 <code>users</code> 表取第一行：<code>id = 1, name = Alice</code></li>
+<li>用 <code>id = 1</code> 在 <code>orders</code> 表的 <code>user_id</code> 索引中查找，找到两行：
+<ul>
+<li><code>user_id = 1, amount = 100</code></li>
+<li><code>user_id = 1, amount = 150</code></li>
+</ul>
+</li>
+<li>移动到 <code>users</code> 表的第二行：<code>id = 2, name = Bob</code></li>
+<li>用 <code>id = 2</code> 在索引中查找，找到一行：
+<ul>
+<li><code>user_id = 2, amount = 200</code></li>
+</ul>
+</li>
+<li>继续，直到处理完所有行</li>
+</ol>
+<blockquote>
+<p>就像是 for 循环:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># 模拟索引：把 orders 按 user_id 分组（类似哈希索引）</span>
+</span></span><span style="display:flex;"><span>order_index <span style="color:#f92672">=</span> {}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> order <span style="color:#f92672">in</span> orders:
+</span></span><span style="display:flex;"><span>    uid <span style="color:#f92672">=</span> order[<span style="color:#e6db74">&#34;user_id&#34;</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> uid <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> order_index:
+</span></span><span style="display:flex;"><span>        order_index[uid] <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    order_index[uid]<span style="color:#f92672">.</span>append(order)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 模拟 JOIN 查询：users 是驱动表</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> user <span style="color:#f92672">in</span> users:
+</span></span><span style="display:flex;"><span>    uid <span style="color:#f92672">=</span> user[<span style="color:#e6db74">&#34;id&#34;</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 利用“索引”直接查找匹配的订单</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> uid <span style="color:#f92672">in</span> order_index:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> order <span style="color:#f92672">in</span> order_index[uid]:
+</span></span><span style="display:flex;"><span>            print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>user[<span style="color:#e6db74">&#39;name&#39;</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74"> bought </span><span style="color:#e6db74">{</span>order[<span style="color:#e6db74">&#39;item&#39;</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span></code></pre></div></blockquote>
+<h4 id="224-特点">2.2.4. 特点<a href="#224-特点" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ul>
+<li>当有良好索引支持时最快，因为索引让查找变得高效</li>
+<li><strong>如果 <code>orders.user_id</code> 上没有索引，MySQL 不会选择这种方式</strong>, 可能会选择其他连接方式
+<ul>
+<li>哈希连接（Hash Join）：构建哈希表来加速匹配，适合大表无索引的场景</li>
+<li>块嵌套循环连接（Block Nested-Loop Join, BNLJ）：扫描两表，分块处理以减少 I/O</li>
+<li>简单嵌套循环连接（Simple Nested-Loop Join, SNLJ）：最慢，通常不会选</li>
+</ul>
+</li>
+</ul>
+<h3 id="23-哈希连接hash-join">2.3 哈希连接（Hash Join）<a href="#23-哈希连接hash-join" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<h4 id="231-基本思想">2.3.1. 基本思想<a href="#231-基本思想" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p>哈希连接使用<strong>哈希表</strong>来加速连接过程，特别适合<strong>大表且没有合适索引</strong>的情况</p>
+<h4 id="232-工作原理">2.3.2. 工作原理<a href="#232-工作原理" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ol>
+<li>MySQL 选择一个表（通常较小的表）作为<strong>构建表</strong>，比如 <code>users</code></li>
+<li>为 <code>users</code> 表的连接列 <code>id</code> 创建一个哈希表：
+<ul>
+<li>键是 <code>id</code>，值是对应的行</li>
+</ul>
+</li>
+<li>对另一个表（<strong>探针表</strong>，比如 <code>orders</code>）的每一行，计算 <code>user_id</code> 的哈希值，在哈希表中查找匹配的行</li>
+</ol>
+<h4 id="233-举例">2.3.3. 举例<a href="#233-举例" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<p>假设 <code>orders.user_id</code> 没有索引：</p>
+<ol>
+<li><strong>构建阶段</strong>：
+<ul>
+<li>从 <code>users</code> 表创建哈希表：
+<ul>
+<li><code>1 -&gt; {id = 1, name = Alice}</code></li>
+<li><code>2 -&gt; {id = 2, name = Bob}</code></li>
+<li><code>3 -&gt; {id = 3, name = Charlie}</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>探针阶段</strong>：
+<ul>
+<li>取 <code>orders</code> 第一行：<code>user_id = 1, amount = 100</code>，哈希表中找到 <code>name = Alice</code></li>
+<li>取 <code>orders</code> 第二行：<code>user_id = 2, amount = 200</code>，哈希表中找到 <code>name = Bob</code></li>
+<li>取 <code>orders</code> 第三行：<code>user_id = 1, amount = 150</code>，哈希表中找到 <code>name = Alice</code></li>
+</ul>
+</li>
+</ol>
+<h4 id="234-特点">2.3.4. 特点<a href="#234-特点" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ul>
+<li><strong>优点</strong>：对于大表且无适合索引时最佳选择，哈希表查找速度是 O(1)</li>
+<li><strong>缺点</strong>：需要内存存储哈希表，如果表太大可能内存不足</li>
+</ul>
+<h3 id="24-其他连接方式">2.4. 其他连接方式<a href="#24-其他连接方式" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<h4 id="241-块嵌套循环连接block-nested-loop-join-bnlj">2.4.1. 块嵌套循环连接（Block Nested-Loop Join, BNLJ）<a href="#241-块嵌套循环连接block-nested-loop-join-bnlj" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ul>
+<li><strong>基本思想</strong>：这是嵌套循环的优化版，一次读取多行（一个块）来减少 I/O</li>
+<li><strong>特点</strong>：是简单嵌套循环连接的改进版本，但通常不如哈希连接或索引嵌套循环连接快</li>
+<li><strong>举例</strong>：MySQL 从 <code>users</code> 读取一组行（比如 2 行），然后扫描 <code>orders</code> 找匹配，效率比逐行扫描高</li>
+</ul>
+<blockquote>
+<p>BNLJ的基本思想是将外表（Outer Table）的数据分块读取到内存中，然后对每个块内的元组与内表（Inner Table）的所有元组进行比较，从而减少对内表的重复扫描</p>
+<p>比如每次 从 users 表中 拿出 多行数据 而不是 1个, 每次分别把多行数据跟内表进行比较,  虽然 比较次数没变, 但内表加载次数变少了, 减少了 磁盘 IO, 因为内表只需要为每个外表块加载一次，而不是为每行外表记录加载一次, 所以更高效一些</p>
+</blockquote>
+<h4 id="242-简单嵌套循环连接simple-nested-loop-join-snlj">2.4.2. 简单嵌套循环连接（Simple Nested-Loop Join, SNLJ）<a href="#242-简单嵌套循环连接simple-nested-loop-join-snlj" class="hanchor" ariaLabel="Anchor">#</a> </h4>
+<ul>
+<li>基本思想：最原始的方式，对 <code>users</code> 的每一行，扫描 <code>orders</code> 的所有行</li>
+<li>特点：最慢，时间复杂度 <strong>O(N * M)</strong>，通常被优化为其他形式</li>
+<li>举例：对 <code>users</code> 的 <code>id = 1</code>，扫描 <code>orders</code> 所有行找 <code>user_id = 1</code>，重复此过程，效率极低</li>
+</ul>
+<h3 id="25-mysql-如何选择连接方式">2.5. MySQL 如何选择连接方式？<a href="#25-mysql-如何选择连接方式" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<p>MySQL 的查询优化器会根据以下因素选择：</p>
+<ul>
+<li><strong>索引情况</strong>：有索引时优先用索引嵌套循环连接。</li>
+<li><strong>表大小</strong>：大表无索引时可能用哈希连接。</li>
+<li><strong>内存和 I/O</strong>：内存不足时可能用块嵌套循环连接。</li>
+</ul>
+<h2 id="3-mysql-中-索引的查找速度是否接近-o1">3. MySQL 中, 索引的查找速度是否“接近 O(1)”<a href="#3-mysql-中-索引的查找速度是否接近-o1" class="hanchor" ariaLabel="Anchor">#</a> </h2>
+<h3 id="31-最常见的索引b-tree-索引">3.1. 最常见的索引：B+ Tree 索引<a href="#31-最常见的索引b-tree-索引" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>MySQL InnoDB 引擎默认的索引类型是 B+ Tree</li>
+<li>B+ Tree 是一种自平衡树结构, 它的查找时间复杂度是 <strong>O(log n)</strong>, 其中 n 是数据的条数</li>
+<li>为什么是 <code>O(log n)</code>？因为 B-Tree 的查找过程依赖于树的高度，而树的高度通常是 <code>O(log n)</code>
+<ul>
+<li>即使存储数百万条记录，B+ Tree 的高度也不会超过几层</li>
+<li>每次查找只需要沿着树的高度走几步，所以实际耗时非常短</li>
+</ul>
+</li>
+<li><strong>为什么常说“接近 O(1)”？</strong>
+<ul>
+<li>在实际应用中, 由于 B+ Tree 的高度很小（即使数据量很大），查找的实际时间几乎是个很小的常数</li>
+<li>因此，虽然理论上是 O(log n)，但表现上“感觉”像是接近 O(1)</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>在理想情况下（即完全平衡的二叉搜索树）一棵满二叉树的节点总数是：</p>
+<p>$$
+n = 2^0 + 2^1 + 2^2 + \cdots + 2^h = \sum_{i=0}^{h} 2^i
+$$</p>
+<p>这是一个等比数列，求和公式为：</p>
+<p>$$
+n = 2^{h+1} - 1
+$$</p>
+<p>两边取对数，解出高度 <code>h</code>：</p>
+<p>$$
+n + 1 = 2^{h+1}
+$$</p>
+<p>$$
+\log_2(n + 1) = h + 1
+$$</p>
+<p>$$
+h = \log_2(n + 1) - 1
+$$</p>
+<p>因此，在最理想的情况下，树的高度近似为：</p>
+<p>$$
+h \approx \log_2 n
+$$</p>
+<p>这说明，在平衡的二叉搜索树中，查找、插入、删除等操作的时间复杂度为：</p>
+<p>$$
+O(\log n)
+$$</p>
+</blockquote>
+<h3 id="32-哈希索引真正的-o1">3.2. <strong>哈希索引：真正的 O(1)</strong><a href="#32-哈希索引真正的-o1" class="hanchor" ariaLabel="Anchor">#</a> </h3>
+<ul>
+<li>MySQL 也支持 哈希索引，它的查找时间复杂度在理想情况下是 O(1)</li>
+<li>但是，哈希索引的使用场景非常有限
+<ul>
+<li>它主要用于 <strong>MEMORY 存储引擎</strong>, 而 InnoDB 默认不支持哈希索引（除非通过特殊配置）</li>
+<li>哈希索引不支持范围查询（比如 &gt;、&lt;），所以适用性不如 B+ Tree</li>
+</ul>
+</li>
+<li>因此，在大多数情况下，说“有索引”时，指的并不是哈希索引，而是 B+ Tree 索引</li>
+</ul>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+  <div class="pagination__title">
+    <span class="pagination__title-h">查看其他文章</span>
+    <hr />
+  </div>
+  <div class="pagination__buttons">
+    
+      <a href="https://blog.jiyi27.com/posts/blogs/001-nextjs-middleware-bypass-issue/" class="button inline prev">
+        Next.js 中间件漏洞
+      </a>
+    
+    
+      ::
+    
+    
+      <a href="https://blog.jiyi27.com/posts/interview/%E6%95%B0%E6%8D%AE%E5%BA%93/007-%E7%AA%97%E5%8F%A3%E5%87%BD%E6%95%B0-%E8%81%9A%E5%90%88%E5%87%BD%E6%95%B0/" class="button inline next">
+        窗口函数 聚合函数
+      </a>
+    
+  </div>
+</div>
+
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>Powered by <a href="https://gohugo.io">Hugo</a></span>
+    
+      <span>:: <a href="https://github.com/jiyi27/jiyi27.github.io" target="_blank">Theme</a></span>
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
