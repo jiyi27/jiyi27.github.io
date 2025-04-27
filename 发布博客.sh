@@ -17,5 +17,7 @@ cd public/
 git switch master
 git add .
 git commit -m "$(date)"
+git fetch origin master
+git merge origin/master
 git push origin master
 
