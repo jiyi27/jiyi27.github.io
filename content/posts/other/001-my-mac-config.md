@@ -239,6 +239,8 @@ git config --global user.name "你的名字"
 
 ![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/04/f5ac53d2398ab875aebf675b66667d58.jpeg)
 
+![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2025/05/1079bb977199fe92f655ece6fe2fe58a.png)
+
 ## 6. VSCode
 
 ### 6.1. Prettier - Code formatter
