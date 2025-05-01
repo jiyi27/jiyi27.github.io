@@ -6,6 +6,7 @@ categories:
 tags:
  - 面试
  - 缓存面试
+ - 分布式面试
 ---
 
 ## 1. String
