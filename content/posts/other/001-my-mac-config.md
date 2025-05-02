@@ -79,20 +79,21 @@ plugins=(git zsh-autosuggestions)
 6. Final Version `.zshrc`:
 
 ```bash
-# 定义常用路径变量
+# 定义常用指令路径, 为下面设置环境变量做准备
+# .my_scripts 放到了 Github
 CUSTOM_SCRIPTS="$HOME/.my_scripts"
 # 安装 pnpm 和 nodejs 之后才可以用, 安装方法可参考笔记 frontend/next-js.md
 #PNPM_HOME="/Users/david/Library/pnpm"
 #NODE_PATH="/opt/homebrew/opt/node@22/bin"
 
-# 定义函数: 仅当路径不存在时才添加到PATH
+# 设置环境变了函数: 仅当路径不存在时才添加到 PATH
 add_to_path() {
     if [[ ":$PATH:" != *":$1:"* ]]; then
         export PATH="$1:$PATH"
     fi
 }
 
-# 按优先级添加路径
+# 使用上面定义的幻术添加环境变了
 #add_to_path "$NODE_PATH"      # Node.js
 #add_to_path "$PNPM_HOME"      # pnpm
 add_to_path "$CUSTOM_SCRIPTS" # 自定义脚本
@@ -120,7 +121,7 @@ plugins=(
 # 3. 加载所有列出的插件
 source $ZSH/oh-my-zsh.sh
 
-# 加载 API KEY
+# API KEY 单独放到了一个文件夹, 需要从旧电脑拷贝过来 放到相同位置
 if [[ -f ~/.config/zsh/secrets.zsh ]]; then
     source ~/.config/zsh/secrets.zsh
 fi
