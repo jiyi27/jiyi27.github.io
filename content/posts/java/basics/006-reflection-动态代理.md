@@ -136,11 +136,160 @@ Class c = Class.forName("java.lang.String");
 String object = (String) c.newInstance();
 ```
 
-## 3. 动态代理
+## 3. 面向切面编程 - 动态代理
 
+### 3.1. 什么是动态代理
 
+动态代理是 Java 中一种在运行时动态创建代理对象的技术, 主要用于在不修改原始类代码的情况下, 对目标对象的方法进行拦截和增强, 主要基于 反射机制 和 代理模式实现, 面向切面编程的实现主要依赖的就是动态代理技术
 
+在Java中**代理模式** 是一种设计模式, 允许你通过“代理对象”来控制对“目标对象”的访问, Java有两种代理方式:
 
+- 静态代理: 提前写好代理类的代码, 手动实现
+
+- 动态代理: 运行时生成代理类, 使用 `java.lang.reflect.Proxy` 和 `InvocationHandler` 实现, 不需要提前写好代理类代码
+
+动态代理的核心是创建一个**代理对象**，代理对象会在调用目标对象的方法时，执行额外的逻辑（比如日志、事务、权限检查等）, 它的工作流程如下:
+
+- 创建代理对象：在运行时动态生成一个代理类，代理类实现与目标对象相同的接口或继承目标类
+- 拦截方法调用：代理对象的方法调用会被转发到指定的**处理器**（InvocationHandler 或 MethodInterceptor），由处理器决定如何处理方法调用
+- 增强逻辑：在调用目标方法**前后**，处理器可以添加额外的逻辑
+
+JDK 动态代理是基于接口的, 位于 `java.lang.reflect` 包中, 主要通过 `Proxy` 类和 `InvocationHandler` 接口实现:
+
+### 3.2. JDK 动态代理的实现逻辑
+
+定义目标接口和实现类, 目标对象必须实现一个或多个接口
+
+```java
+public interface UserService {
+    void sayHello(String name);
+}
+
+public class UserServiceImpl implements UserService {
+    public void sayHello(String name) {
+        System.out.println("Hello, " + name);
+    }
+}
+```
+
+实现 `InvocationHandler` 接口, 定义代理逻辑, `invoke()` 方法会在代理对象的方法被调用时执行
+
+```java
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+
+public class LoggingInvocationHandler implements InvocationHandler {
+    private Object target; // 目标对象
+
+    public LoggingInvocationHandler(Object target) {
+        this.target = target;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        System.out.println("Before method: " + method.getName()); // 前置增强
+        Object result = method.invoke(target, args); // 调用目标对象的方法
+        System.out.println("After method: " + method.getName()); // 后置增强
+        return result;
+    }
+}
+```
+
+使用 `Proxy.newProxyInstance` 方法生成代理对象
+
+```java
+import java.lang.reflect.Proxy;
+
+public class Main {
+    public static void main(String[] args) {
+        UserService target = new UserServiceImpl();
+        // 创建一个 LoggingInvocationHandler 类的实例
+        InvocationHandler handler = new LoggingInvocationHandler(target);
+        // 为 UserService 创建代理对象
+        UserService proxy = (UserService) Proxy.newProxyInstance(
+            target.getClass().getClassLoader(), // 类加载器
+            target.getClass().getInterfaces(),  // 目标接口
+            handler                             // InvocationHandler
+        );
+        proxy.sayHello("Alice"); // 调用代理对象的方法
+    }
+}
+
+// 输出：
+// Before: sayHello
+// Hello, Alice
+// After: sayHello
+```
+
+**`Proxy.newProxyInstance(...)` 做了什么?**
+
+它是 Java 提供的 用来创建动态代理对象的方法, 方法签名:
+
+```java
+public static Object newProxyInstance(
+    ClassLoader loader,        // 类加载器
+    Class<?>[] interfaces,     // 接口数组（代理哪些接口）
+    InvocationHandler h        // 调用处理器（怎么处理方法）
+)
+```
+
+返回的是一个实现了你指定接口的“代理对象”, 这也是为什么上面的代码 `new Proxy.newProxyInstance(...)` 返回的对象 `proxy` 可以类型转换为 `UserService` 接口类型的一个实例, 另外当你调用这个对象 `proxy` 的方法时, 实际上是由 `InvocationHandler` 中的 `invoke()` 方法来“拦截”处理的
+
+上面创建代理对象的代码:
+
+```java
+UserService proxy = (UserService) Proxy.newProxyInstance(
+    target.getClass().getClassLoader(),
+    target.getClass().getInterfaces(),
+    handler
+);
+```
+
+`proxy` 是一个动态生成的代理类的实例（例如 `$Proxy001`）, 它实现了 `UserService` 接口, 动态生成的代理类 `proxy` 大致是这样的
+
+```java
+class $Proxy0 extends java.lang.reflect.Proxy implements UserService {
+    // 构造函数，接收 InvocationHandler
+    public $Proxy0(InvocationHandler handler) {
+        super(handler); // 调用 Proxy 父类的构造函数，保存 handler
+    }
+
+    // 实现 UserService 的 sayHello 方法
+    public void sayHello(String name) {
+        try {
+            // 获取 sayHello 方法的 Method 对象
+            Method method = UserService.class.getMethod("sayHello", String.class);
+            // 调用 InvocationHandler 的 invoke 方法
+            handler.invoke(this, method, new Object[]{name});
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+}
+```
+
+当你调用 `proxy.sayHello("Alice")`, 并不是直接调用 `UserServiceImpl.sayHello`, 而是由代理机制转向调用 `LoggingInvocationHandler.invoke(...)`:
+
+```java
+@Override
+public Object invoke(Object proxy, Method method, Object[] args) {
+    System.out.println("Before method: " + method.getName());
+    Object result = method.invoke(target, args); // 调用目标对象的方法
+    System.out.println("After method: " + method.getName());
+    return result;
+}
+```
+
+**为什么这样写有优势?**
+
+我只用 实现一个 `LoggingInvocationHandler`, 之后所有的 xxxService 都可通过 `Proxy.newProxyInstance` 创建代理对象, 然后通过代理对象调用 service 对应的方法时, 执行的逻辑都是 `LoggingInvocationHandler` 的 `invoke()` 方法里的逻辑:
+
+```java
+System.out.println("Before method: " + method.getName()); // 前置增强
+Object result = method.invoke(target, args); // 调用目标对象的方法
+System.out.println("After method: " + method.getName()); // 后置增强
+return result;
+```
 
 > 动态代理就是在运行时创建一个“代理对象”, 它可以在不修改原始类代码的前提下, 对方法调用做增强处理（拦截、添加逻辑、记录日志、鉴权、事务等等）
 
