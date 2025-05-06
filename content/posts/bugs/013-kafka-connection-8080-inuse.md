@@ -1,5 +1,5 @@
 ---
-title: Kafka 链接失败
+title: Kafka 链接失败 - 8080 被占用
 date: 2025-02-22 11:12:22
 categories:
  - bugs
