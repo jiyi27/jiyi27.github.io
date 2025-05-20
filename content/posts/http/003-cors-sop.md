@@ -8,7 +8,29 @@ tags:
  - cors
 ---
 
-## 0. CORS Issue 1
+## 1. CORS（Cross-Origin Resource Sharing）是什么？
+
+**浏览器同源策略 SOP 限制**：默认情况下，浏览器禁止从一个域（协议+域名+端口）去请求另一个域的接口，防止恶意脚本窃取数据
+
+**本质**：浏览器的一种**同源策略**  Same-Origin Policy **补充机制**，后端经常通过该机制配合响应头来**决定“跨域请求”是否被允许**, 说白了它不是一个攻击, 就是一种机制, 后端 CORS 中间件经常用, 负责返回给用户相应的请求头, 以及接受 `OPTIONS` 请求, 返回给用户请求, 不然前端无法发送请求 
+
+**工作流程**：
+
+- **简单请求**：浏览器发送带有 `Origin` 请求头的请求，服务器在响应头中加上 `Access-Control-Allow-Origin: <域名>`，若该域名匹配，就允许调用响应数据
+- **预检请求（Preflight）**：对于非简单方法（如 `PUT`, `DELETE`）或自定义头，会先发 `OPTIONS` 请求；服务器同样通过 `Access-Control-Allow-*` 系列头来声明可接受的来源、方法和头部
+
+**常见配置**：
+
+```js
+Access-Control-Allow-Origin: https://example.com
+Access-Control-Allow-Methods: GET, POST, PUT
+Access-Control-Allow-Headers: Content-Type, Authorization
+Access-Control-Allow-Credentials: true
+```
+
+## 2. CORS Issue
+
+### 2.1. Issue 1
 
 Safari shows in console:
 
@@ -30,7 +52,7 @@ This means the OPTIONS calls is failing, even if all the headers (allow-origin e
 > 对于 JavaScript 发起 HTTP 请求，三要素有任何之一不匹配即是跨域，浏览器即会出于安全考虑进行限制，这时就需要使用 CORS （Cross-origin resource sharing）。CORS 主要由服务器端实现，对用户透明。
 > Source: https://ogr.xyz/p/js-cors/
 
-## 1. CORS Issue 2
+### 2.2. Issue 2
 
 My frontend application is deployed on `http://localhost:5173`, and backend application is deployed on `http://localhost:8080`. The frontend application sends HTTP requests to the backend application through `fetch`, but it fails with the following error:
 
@@ -51,13 +73,13 @@ CORS is a feature built into browsers for added security. **It prevents any rand
 
 如果你的后端服务器不允许CORS, 那么除了跟你后端服务器同源(Origin)的前端页面, 其他的前端页面都不能在浏览器访问你的后端 API. 当然你可以在终端使用 curl 命令访问你的后端 API, 因为 curl 命令不是浏览器, 它不会自动添加 origin 请求头. 另外 React 的 create-react-app 也有一个 proxy 功能, 可以让你在开发环境下绕过 CORS 限制, 但是这个代理功能**只在开发环境下有效**, 生产环境下还是要你自己配置后端服务器的 CORS.
 
-## 2. How to fix CORS issue
+## 3. How to fix CORS issue
 
-### 2.1. 简单场景
+### 3.1. 简单场景
 
 解决的办法很简单, 在后端 API 的响应头里添加 `Access-Control-Allow-Origin: *` 就可以了. 但这仅限于一些简单的场景, 如 GET 请求. 可参考: [Golang CORS Guide: What It Is and How to Enable It](https://www.stackhawk.com/blog/golang-cors-guide-what-it-is-and-how-to-enable-it/)
 
-### 2.2. 复杂场景
+### 3.2. 复杂场景
 
 如果你的 API 是 POST 请求, 并且需要带上一些请求头, 那么你可能还需要在响应头里添加 `Access-Control-Allow-Headers: *`, 这样才能让浏览器发送 POST 请求, 并且带上你需要的请求头. (具体规定可参考: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) 这也是为什么在有的前端JS fetch代码里, 你后端简单设置 `Access-Control-Allow-Origin: *` 就可以了, 但是有的并不会成功. 
 
@@ -88,7 +110,7 @@ func enableCors(w *http.ResponseWriter) {
 }
 ```
 
-## 3. CORS vs SOP
+## 4. CORS vs SOP
 
 The Same-Origin Policy (SOP) is a security feature **enforced by web browsers** that restricts web pages (javascript) from interacting with resources (such as making requests or accessing data) from different origins. 
 
