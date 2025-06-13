@@ -7,6 +7,36 @@ tags:
  - 面试
  - 算法面试
 ---
+## [121. 买卖股票的最佳时机](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/)
+
+这道题其实就是：**找到最低点买入，找到最低点之后的最高点卖出**
+
+```c#
+public int MaxProfit(int[] prices) 
+{
+    if (prices == null || prices.Length == 0)
+        return 0;
+    
+    int cost = int.MaxValue;
+    int profit = 0;
+    
+    foreach (int price in prices)
+    {
+        cost = Math.Min(cost, price);           // 更新最低价格
+        profit = Math.Max(profit, price - cost); // 更新最大利润
+    }
+    
+    return profit;
+}
+```
+
+> 为什么这题属于动态规划?
+>
+> 更新前 i 天的最高利润 profit ，即选择「前 i−1 天最高利润 profit 」和「第 i 天卖出的最高利润 price - cost 」中的最大值
+>
+> 这就相当于 `f(n) = max(f(n-1), Xn)`
+
+----
 
 递推公式:
 
