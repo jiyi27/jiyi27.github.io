@@ -10,7 +10,7 @@ tags:
 
 ### 1. The Order of Applying Modifiers matters
 
-可以看出 background 并没有作用在 frame 上, 即每个 modifier 都是返回了一个新的视图, 当前 modifier 都是作用在了前面的视图上, 所以使用 modifier 的顺序会影响最终视图的结果, 
+可以看出 background 并没有作用在 frame 上, 即每个 modifier 都是返回了一个新的视图, 当前 modifier 都是作用在了前面的视图上, 所以使用 modifier 的顺序会影响最终视图的结果
 
 ![](https://pub-2a6758f3b2d64ef5bb71ba1601101d35.r2.dev/blogs/2024/05/df1383f3a902606d7301b8da47bff81f.jpg)
 
