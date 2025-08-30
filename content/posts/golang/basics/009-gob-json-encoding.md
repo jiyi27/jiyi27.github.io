@@ -29,8 +29,8 @@ But for a Go-specific environment, such as communicating between two servers wri
 Gobs implements thress important features compared with Google's Protocol Buffers:
 
 - The type being encoded does't need to be a struct, it can be a map, slice, array etc...
-- Don't need all fields of a type exist when decoding and encoding. 
-- If the varibale being transmitted has "zero value" for its type, it doesn't need to be transmitted. Decoder know its type, it will set its default value automatically. 
+- Don't need all fields of a type exist when decoding and encoding
+- If the varibale being transmitted has "zero value" for its type, it doesn't need to be transmitted. Decoder know its type, it will set its default value automatically
 
 ### 2.3. How does gob work - value of encoded gob data is just integer
 

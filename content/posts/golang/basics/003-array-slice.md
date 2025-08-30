@@ -130,3 +130,9 @@ Bacsuse a slice likes a pointer, the two goroutines above share a same underlyin
 
 > Note that [iteration variable is re-used in each iteration](https://github.com/golang/go/wiki/CommonMistakes). 
 
+## 4. Slice Key Pointes
+
+- slice is a struct which has a point to underlaying array, so pass to function, has no overhead
+- var vs make, but you can append a element to nil slice
+- slicing shares a same array
+- passing a slice to channel, data race

@@ -36,11 +36,11 @@ func (b *BigStruct) ProcessEfficient() { }
 
 **表达意图:**
 
-使用指针接收器更清晰地表达这是一个有状态的对象, 不需要拷贝值, 而是所有方法都访问相同的一个值. 
+使用指针接收器更清晰地表达这是一个有状态的对象, 不需要拷贝值, 而是所有对该方法的调用操作都访问相同的一个值
 
 ## 2. 例子
 
-有如下接口, 
+有如下接口
 
 ```go
 type UserRepository interface {
@@ -133,7 +133,25 @@ func (s Stats) Sum() int {
 
 A similar pitfall can occur with types that maintain slices of values, and of course there is the possibility for an [unintended data race](http://dave.cheney.net/2015/11/18/wednesday-pop-quiz-spot-the-race).
 
-In short, I think that you should prefer declaring methods on `*T` unless you have a strong reason to do otherwise.
+In short, I think that you should prefer declaring methods on `*T` unless you have a strong reason to do otherwise
 
+## 4. Method Receiver Key Points
 
+- Pointer receiver methods operate on the original struct instance, allowing state mutation
+  - avoiding costly copies
+  - best practice: If one method requires a pointer receiver (e.g., because it modifies state), it’s often best to make all methods pointer receivers for consistency, performance, and predictable interface implementation. 不然有的方法可以同时在 struct 的 value 对象上调用, 有的只能在 pointer type 调用, 就会不一致, 用户觉得很奇怪, 这只是个习惯而已
+- value receiver copy struct value every time when the value receiver get called
+  - mutex field will be copied too, this is dangerous
+  - Go 本身没有 `const method` 的概念（不像 C++/Java 那样可以声明一个方法只读）
+  - 用 value receiver 就天然保证了方法内部改不了原始对象（因为拿到的是副本）
+  - 这种设计在某些场景下特别清晰：调用方知道 “不管你怎么写，这个方法不可能改动我的对象”
+  - Go 的 `time.Time` 是一个常见的 值接收者类型，它几乎所有方法都是 value receiver
+  - **value receiver 最大的优势就是表达“只读语义”**
 
+- 方法集（Method Set）
+
+  - 对 T（值类型），方法集只包含 value receiver 的方法，不包含 pointer receiver 的方法
+
+  - 对 *T（指针类型），方法集包含 value receiver + pointer receiver 的方法
+  - 也就是说 一个 struct 的 value 类型实现的方法, 该struct 的 pointer 类型和 value 类型的对象都可以调用, 但反之不行
+  - Value receiver methods can be called on both `T` and `*T` objects, but pointer receiver methods can only be guaranteed callable on `*T` (or addressable `T`).

@@ -188,9 +188,9 @@ The type of function returns is an `error` but it actually returns a pointer, a 
 
 You can create an `error` with these functions:
 
-- `errors.New()`, 
-- `fmt.Errorf()`, often used to provide conetxt. 
-- Use a custom error type, typically used for provide error details. 
+- `errors.New()`
+- `fmt.Errorf()`, often used to provide conetxt
+- Use a custom error type, typically used for provide error details
 
 ### 2.2. Summarize the context when create an error value
 

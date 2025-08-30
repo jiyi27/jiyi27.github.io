@@ -141,8 +141,20 @@ close(ch)
 ch <- true
 ```
 
-> Don't close a channel from the receiver side and don't close a channel if the channel has multiple concurrent senders. -> Don't close (or send values to) closed channels.
-> Close channel elegantly: https://qcrao91.gitbook.io/go/channel/ru-he-you-ya-di-guan-bi-channel
+> Don't close a channel from the receiver side and don't close a channel if the channel has multiple concurrent senders. -> **Don't close (or send values to) closed channels.** [Close channel elegantl](https://qcrao91.gitbook.io/go/channel/ru-he-you-ya-di-guan-bi-channel)
+
+> 根据 sender 和 receiver 的个数，分下面几种情况：
+>
+> 1. 一个 sender，一个 receiver
+> 2. 一个 sender， M 个 receiver
+> 3. N 个 sender，一个 reciver
+> 4. N 个 sender， M 个 receiver
+>
+> 对于 1，2，只有一个 sender 的情况就不用说了，直接从 sender 端关闭就好了，没有问题。重点关注第 3，4 种情况
+>
+> 第 3 种情形下，优雅关闭 channel 的方法是：the only receiver says "please stop sending more" by closing an additional signal channel, 解决方案就是增加一个传递关闭信号的 channel，receiver 通过信号 channel 下达关闭数据 channel 指令
+>
+> 最后一种情况，优雅关闭 channel 的方法是：any one of them says "let's end the game" by notifying a moderator to close an additional signal channel
 
 ### 2.5. Read & send on a nil channel
 
