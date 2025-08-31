@@ -136,3 +136,4 @@ Bacsuse a slice likes a pointer, the two goroutines above share a same underlyin
 - var vs make, but you can append a element to nil slice
 - slicing shares a same array
 - passing a slice to channel, data race
+- array is value, slice is pointer

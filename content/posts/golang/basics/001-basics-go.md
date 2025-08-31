@@ -212,7 +212,7 @@ var cat *Cat
 *cat = kitten  // runtime error: invalid memory address or nil pointer dereference
 ```
 
-### 6.3. `var` vs `new ` vs `make` 
+### 6.3. `var` vs `new` vs `make` 
 
 It's a little harder to justify `new`. The main thing it makes easier is creating pointers to non-composite types. The two functions below are equivalent. One's just a little more concise:
 
